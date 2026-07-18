@@ -1,0 +1,26 @@
+export const ROUTES = {
+  login: '/login',
+  dashboard: '/dashboard',
+  akademik: {
+    kurikulum: '/akademik/kurikulum',
+    mataKuliah: '/akademik/mata-kuliah',
+    kelasJadwal: '/akademik/kelas-jadwal',
+    krs: '/akademik/krs',
+    absensi: '/akademik/absensi',
+    penilaian: '/akademik/penilaian',
+  },
+  mahasiswa: '/mahasiswa',
+  dosen: '/dosen',
+  pegawai: '/pegawai',
+  keuangan: {
+    tagihan: '/keuangan/tagihan',
+    beasiswa: '/keuangan/beasiswa',
+  },
+  skripsi: '/skripsi',
+  magangMbkm: '/magang-mbkm',
+  perpustakaan: '/perpustakaan',
+  alumni: '/alumni',
+  pengumuman: '/pengumuman',
+  laporan: '/laporan',
+  pengaturan: '/pengaturan',
+} as const

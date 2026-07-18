@@ -1,0 +1,51 @@
+/**
+ * Design tokens derived from the Atma Jaya crest (deep green shield,
+ * gold/orange dove-and-rays). Light/dark mode only swap these variables —
+ * components should never hardcode a hex value.
+ */
+
+:root {
+  --color-primary: #166534;
+  --color-primary-hover: #114f29;
+  --color-accent: #d9791a;
+  --color-accent-hover: #b35f12;
+
+  --color-success: #166534;
+  --color-warning: #ca8a04;
+  --color-danger: #dc2626;
+  --color-info: #0284c7;
+
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94a3b8;
+  --color-text-inverted: #f8fafc;
+}
+
+.dark {
+  --color-primary: #3f9e68;
+  --color-primary-hover: #68bb88;
+  --color-accent: #f0ad53;
+  --color-accent-hover: #f6c989;
+
+  --color-success: #3f9e68;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #38bdf8;
+
+  --color-background: #0a0f1a;
+  --color-surface: #111827;
+  --color-surface-hover: #1a2333;
+  --color-border: #26324a;
+  --color-border-strong: #35435f;
+
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
+  --color-text-inverted: #0f172a;
+}
