@@ -7,9 +7,20 @@
     <testsuites>
         <testsuite name="Unit">
             <directory>tests/Unit</directory>
+            <directory>app/Modules/UserManagement/Tests/Unit</directory>
+            <directory>app/Modules/FileManagement/Tests/Unit</directory>
+            <directory>app/Modules/Notification/Tests/Unit</directory>
+            <directory>app/Modules/ApprovalWorkflow/Tests/Unit</directory>
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <directory>app/Modules/AuditLog/Tests/Feature</directory>
+            <directory>app/Modules/UserManagement/Tests/Feature</directory>
+            <directory>app/Modules/Auth/Tests/Feature</directory>
+            <directory>app/Modules/SystemSetting/Tests/Feature</directory>
+            <directory>app/Modules/FileManagement/Tests/Feature</directory>
+            <directory>app/Modules/Notification/Tests/Feature</directory>
+            <directory>app/Modules/ApprovalWorkflow/Tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

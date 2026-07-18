@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -v)",
+      "Bash(php -m)",
+      "Bash(echo \"exit:$?\")",
+      "Bash(composer show *)",
+      "Bash(xargs grep -ln 'replaceEnvVariables\\\\|configurePhpUnit\\\\|defaultServices\\\\|function services\\\\|$services')",
+      "Bash(php artisan *)",
+      "Bash(php -r \"echo 'sanctum not yet installed, expected';\")",
+      "Bash(composer require *)",
+      "Bash(composer dump-autoload *)"
+    ]
+  }
+}

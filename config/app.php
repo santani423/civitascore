@@ -123,4 +123,19 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Super Admin Seed Credentials
+    |--------------------------------------------------------------------------
+    |
+    | Consumed only by database/seeders/DatabaseSeeder.php — never a real
+    | person's email. Override per environment via .env.
+    |
+    */
+
+    'super_admin' => [
+        'email' => env('SUPER_ADMIN_EMAIL', 'superadmin@civitasone.local'),
+        'password' => env('SUPER_ADMIN_PASSWORD', 'ChangeMe123!'),
+    ],
+
 ];

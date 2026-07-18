@@ -10,4 +10,14 @@ parameters:
         - database/
         - routes/
 
+    # Matches the pre-existing convention: top-level tests/ was never in
+    # `paths` either. Module tests live under app/Modules/*/Tests, which the
+    # broad app/ path above would otherwise sweep in — Pest's `$this` inside
+    # test()/it() closures is bound to Tests\TestCase at runtime, which
+    # static analysis can't see, so excluding is scope alignment, not
+    # suppression of a real bug (the tests themselves are verified by
+    # actually running them via `php artisan test`).
+    excludePaths:
+        - app/Modules/*/Tests/*
+
     level: 7

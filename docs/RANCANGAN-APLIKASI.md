@@ -77,6 +77,18 @@
 18. [Tahapan Pengembangan](#18-tahapan-pengembangan)
 19. [Prioritas Minimum Viable Product](#19-prioritas-minimum-viable-product)
 20. [Kriteria Keberhasilan Sistem](#20-kriteria-keberhasilan-sistem)
+21. [Modul Tambahan (Hasil Review)](#21-modul-tambahan-hasil-review)
+    - [21.1 Modul Akreditasi (BAN-PT/LAM)](#211-modul-akreditasi-ban-ptlam)
+    - [21.2 Modul Pelaporan PDDikti/Feeder](#212-modul-pelaporan-pddiktifeeder)
+    - [21.3 Modul Kepatuhan Data Pribadi (UU PDP)](#213-modul-kepatuhan-data-pribadi-uu-pdp)
+    - [21.4 Modul Keuangan Institusi](#214-modul-keuangan-institusi)
+    - [21.5 Modul Kerjasama dan MoU](#215-modul-kerjasama-dan-mou)
+    - [21.6 Modul Career Center Mahasiswa Aktif](#216-modul-career-center-mahasiswa-aktif)
+    - [21.7 Modul E-Learning Lanjutan](#217-modul-e-learning-lanjutan)
+    - [21.8 Modul Urusan Internasional](#218-modul-urusan-internasional)
+    - [21.9 Modul Fasilitas Pendukung](#219-modul-fasilitas-pendukung)
+    - [21.10 Modul Survei dan Kuesioner Umum](#2110-modul-survei-dan-kuesioner-umum)
+    - [21.11 Modul API dan Developer Portal](#2111-modul-api-dan-developer-portal)
 
 ---
 
@@ -1536,6 +1548,43 @@ Berikut kelompok tabel utama yang direkomendasikan.
 * discussions
 * comments
 
+### Akreditasi dan Kepatuhan
+
+* accreditation_cycles
+* accreditation_criteria
+* accreditation_evidences
+* accreditation_documents
+* pddikti_sync_logs
+* pddikti_field_mappings
+* consent_records
+* data_subject_requests
+* data_retention_policies
+
+### Keuangan Institusi
+
+* annual_budgets
+* budget_items
+* procurements
+* general_ledger_entries
+* institution_financial_reports
+
+### Kerjasama dan Karier
+
+* partnerships
+* partnership_documents
+* job_postings
+* job_applications
+* career_profiles
+
+### Fasilitas dan Survei (Opsional)
+
+* dormitory_rooms
+* dormitory_occupants
+* health_clinic_visits
+* survey_forms
+* survey_questions
+* survey_responses
+
 ### Pendukung
 
 * approval_workflows
@@ -1545,6 +1594,9 @@ Berikut kelompok tabel utama yang direkomendasikan.
 * file_uploads
 * system_settings
 * activity_logs
+* api_keys
+* api_webhooks
+* api_request_logs
 
 ---
 
@@ -2015,3 +2067,198 @@ Sistem dianggap berhasil apabila:
 * Sistem tetap stabil ketika digunakan secara bersamaan.
 * Data dapat diintegrasikan dengan sistem eksternal.
 * Seluruh laporan utama dapat diekspor ke Excel dan PDF.
+
+---
+
+## 21. Modul Tambahan (Hasil Review)
+
+Bagian ini adalah hasil review atas rancangan awal (Bagian 1–20). Setiap modul diberi label prioritas:
+
+* **Kritis** — kebutuhan yang biasanya bersifat wajib (regulasi atau operasional inti) untuk universitas di Indonesia, sebaiknya masuk roadmap lebih awal daripada modul lanjutan di Bagian 18.
+* **Penting** — akan terasa kurang begitu sistem dipakai secara nyata dalam skala penuh, tapi tidak menghalangi rilis awal.
+* **Opsional** — tergantung skala, jenis kampus, dan fasilitas yang benar-benar dimiliki institusi.
+
+### 21.1 Modul Akreditasi (BAN-PT/LAM)
+
+**Prioritas: Kritis**
+
+Fitur:
+
+* Data instrumen akreditasi (9 kriteria BAN-PT / LAM)
+* Pemetaan bukti dukung per kriteria
+* Penyusunan Laporan Evaluasi Diri (LED)
+* Penyusunan Laporan Kinerja Program Studi (LKPS)
+* Repository dokumen akreditasi
+* Siklus reakreditasi dan pengingat jatuh tempo
+* Status akreditasi per program studi dan institusi
+* Riwayat hasil akreditasi
+* Tim penyusun borang per program studi
+* Ekspor borang ke format resmi BAN-PT/LAM
+* Dashboard kesiapan akreditasi
+
+Modul ini menarik data dari hampir semua modul lain (dosen, mahasiswa, kurikulum, penelitian, pengabdian) sebagai bukti dukung, sehingga sebaiknya dibangun setelah data-data itu tersedia.
+
+### 21.2 Modul Pelaporan PDDikti/Feeder
+
+**Prioritas: Kritis**
+
+Fitur:
+
+* Mapping field data lokal ke skema PDDikti/Feeder
+* Sinkronisasi data mahasiswa, dosen, mata kuliah, dan nilai per semester
+* Validasi data sebelum pengiriman
+* Log pengiriman dan status sinkronisasi
+* Deteksi dan penanganan data gagal sync
+* Riwayat pelaporan per semester
+* Rekonsiliasi data lokal dengan data PDDikti
+* Notifikasi kegagalan sinkronisasi
+* Penjadwalan sinkronisasi otomatis
+
+Pada Bagian 11, PDDikti/Feeder hanya disebut sebagai satu poin integrasi eksternal. Mengingat kompleksitas mapping dan wajibnya pelaporan setiap semester, modul ini layak berdiri sendiri, bukan sekadar checklist integrasi.
+
+### 21.3 Modul Kepatuhan Data Pribadi (UU PDP)
+
+**Prioritas: Kritis**
+
+Fitur:
+
+* Pencatatan persetujuan (consent) pengumpulan data pribadi
+* Klasifikasi data pribadi umum dan spesifik
+* Permintaan akses data oleh subjek data
+* Permintaan koreksi data pribadi
+* Permintaan penghapusan data pribadi (dengan batasan kewajiban arsip akademik)
+* Kebijakan retensi data per jenis data
+* Pencatatan tujuan pengolahan data
+* Log akses data sensitif
+* Pencatatan dan pelaporan insiden kebocoran data
+* Dokumen kebijakan privasi yang dapat diperbarui dan dipublikasikan
+
+Bagian 10 (Keamanan Sistem) sudah mencakup sisi teknis (enkripsi, audit log, RBAC), tapi belum mencakup kewajiban legal terkait consent dan hak subjek data sesuai UU Pelindungan Data Pribadi.
+
+### 21.4 Modul Keuangan Institusi
+
+**Prioritas: Penting**
+
+Fitur:
+
+* Rencana Kerja dan Anggaran Tahunan (RKAT)
+* Anggaran per unit dan program studi
+* Pengadaan barang dan jasa (procurement)
+* Buku besar (general ledger)
+* Laporan keuangan institusi
+* Laporan ke yayasan atau kementerian
+* Integrasi dengan Modul 4.23 Keuangan Mahasiswa
+* Integrasi dengan Modul 4.27 Sarana dan Prasarana
+* Approval anggaran berjenjang
+
+Modul ini berbeda dari Modul 4.23 Keuangan Mahasiswa, yang hanya mengurus tagihan dan pembayaran mahasiswa, bukan keuangan institusi secara keseluruhan.
+
+### 21.5 Modul Kerjasama dan MoU
+
+**Prioritas: Penting**
+
+Fitur:
+
+* Data mitra (industri, perguruan tinggi lain, pemerintah)
+* Jenis kerjasama
+* Dokumen MoU dan MoA
+* Masa berlaku dan pengingat perpanjangan
+* Program yang terkait (magang, MBKM, penelitian bersama)
+* Riwayat kerjasama
+* Approval kerjasama baru
+* Evaluasi kerjasama
+
+### 21.6 Modul Career Center Mahasiswa Aktif
+
+**Prioritas: Penting**
+
+Fitur:
+
+* Profil karier dan CV mahasiswa
+* Lowongan magang dan kerja untuk mahasiswa aktif
+* Matching berdasarkan program studi dan keahlian
+* Pendaftaran ke lowongan
+* Jadwal kunjungan industri dan job fair
+* Pelatihan kesiapan kerja
+* Riwayat pendaftaran lowongan
+* Integrasi dengan Modul 4.21 Magang, PKL, dan KKN dan Modul 4.35 Alumni
+
+Modul 4.35 Alumni sudah punya "lowongan kerja", tapi itu untuk lulusan. Mahasiswa aktif punya siklus kebutuhan karier yang berbeda (magang, kesiapan kerja) dan sebaiknya tidak dicampur dengan data alumni.
+
+### 21.7 Modul E-Learning Lanjutan
+
+**Prioritas: Opsional**
+
+Fitur:
+
+* Progres belajar per Capaian Pembelajaran Mata Kuliah (CPMK)
+* Bank soal terhubung ke CPMK dan taksonomi kognitif
+* Kuis interaktif dan gamifikasi
+* Sertifikat penyelesaian modul
+* Rekomendasi materi berdasarkan progres
+* Forum diskusi terstruktur per topik
+* Laporan pencapaian CPMK per mahasiswa dan per kelas
+
+Modul 4.11 Perkuliahan sudah mencakup materi, video, dan diskusi dasar. Fitur di atas adalah pendalaman untuk kampus yang ingin LMS setara Moodle/Google Classroom.
+
+### 21.8 Modul Urusan Internasional
+
+**Prioritas: Opsional**
+
+Fitur:
+
+* Data mahasiswa asing
+* Data dosen asing
+* Dokumen visa dan izin tinggal (KITAS)
+* Program mobilitas mahasiswa masuk dan keluar (inbound/outbound)
+* Kemitraan universitas internasional
+* Dukungan multi-bahasa untuk dokumen dan pengumuman
+* Layanan pendampingan mahasiswa asing
+
+Relevan hanya untuk universitas yang benar-benar punya program internasional atau mahasiswa/dosen asing.
+
+### 21.9 Modul Fasilitas Pendukung
+
+**Prioritas: Opsional**
+
+Fitur:
+
+* Manajemen asrama atau rumah susun mahasiswa
+* Klinik kesehatan kampus
+* Asuransi kesehatan mahasiswa
+* Transportasi atau shuttle kampus
+* Penjadwalan penggunaan fasilitas pendukung
+* Integrasi dengan Modul 4.27 Sarana dan Prasarana
+
+Relevan hanya jika kampus benar-benar memiliki fasilitas tersebut.
+
+### 21.10 Modul Survei dan Kuesioner Umum
+
+**Prioritas: Opsional**
+
+Fitur:
+
+* Pembuatan survei atau kuesioner generik
+* Bank pertanyaan
+* Target responden berdasarkan role, angkatan, atau unit
+* Survei anonim atau teridentifikasi
+* Rekap dan visualisasi hasil
+* Ekspor hasil survei
+* Dapat digunakan lintas kebutuhan (kepuasan layanan, evaluasi fasilitas, evaluasi kegiatan)
+
+Modul 4.33 Evaluasi Dosen sebaiknya dibangun di atas mesin survei generik ini agar tidak ada duplikasi logika kuesioner.
+
+### 21.11 Modul API dan Developer Portal
+
+**Prioritas: Opsional**
+
+Fitur:
+
+* Manajemen API key
+* Manajemen webhook
+* Rate limiting per klien
+* Dokumentasi API
+* Log pemanggilan API
+* Sandbox untuk pengujian integrasi
+
+Dibutuhkan terutama untuk mendukung aplikasi mobile dan integrasi pihak ketiga yang disebut pada Bagian 11.

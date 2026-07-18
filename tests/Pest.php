@@ -1,6 +1,11 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
+use Modules\UserManagement\Enums\PermissionAction;
+use Modules\UserManagement\Models\Permission;
+use Modules\UserManagement\Models\Role;
 use Tests\TestCase;
 
 /*
@@ -16,7 +21,7 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
-    ->in('Feature');
+    ->in('Feature', 'Unit', '../app/Modules/*/Tests/Feature', '../app/Modules/*/Tests/Unit');
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +40,28 @@ expect()->extend('toBeOne', function () {
 
 /*
 |--------------------------------------------------------------------------
+| API Response Envelope Assertions
+|--------------------------------------------------------------------------
+|
+| Every controller in this app returns the same {success, message, data,
+| meta} / {success, message, errors} JSON envelope (App\Support\Http\
+| ApiResponse) — these helpers assert that shape consistently across every
+| Feature test instead of re-checking raw JSON keys in each one.
+|
+*/
+
+TestResponse::macro('assertApiSuccess', function (int $status = 200) {
+    /** @var TestResponse $this */
+    return $this->assertStatus($status)->assertJson(['success' => true]);
+});
+
+TestResponse::macro('assertApiError', function (int $status) {
+    /** @var TestResponse $this */
+    return $this->assertStatus($status)->assertJson(['success' => false]);
+});
+
+/*
+|--------------------------------------------------------------------------
 | Functions
 |--------------------------------------------------------------------------
 |
@@ -47,4 +74,38 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Create and authenticate a user holding exactly the given permission
+ * slugs (e.g. "roles.read"), via a throwaway role — used across Feature
+ * tests to assert RBAC enforcement without repeating the role/permission
+ * wiring in every test file.
+ *
+ * @param  array<int, string>  $permissionSlugs
+ */
+function actingAsUserWithPermissions(array $permissionSlugs = []): User
+{
+    $user = User::factory()->create();
+
+    if ($permissionSlugs !== []) {
+        $role = Role::factory()->create();
+
+        $permissions = collect($permissionSlugs)->map(function (string $slug): Permission {
+            [$resource, $action] = explode('.', $slug, 2);
+
+            return Permission::factory()->create([
+                'slug' => $slug,
+                'resource' => $resource,
+                'action' => PermissionAction::from($action),
+            ]);
+        });
+
+        $role->permissions()->sync($permissions->pluck('id')->all());
+        $user->roles()->attach($role->id, ['assigned_at' => now()]);
+    }
+
+    test()->actingAs($user);
+
+    return $user;
 }
