@@ -24,6 +24,7 @@
             <directory>app/Modules/Tenancy/Tests/Feature</directory>
             <directory>app/Modules/Dashboard/Tests/Feature</directory>
             <directory>app/Modules/Academic/Tests/Feature</directory>
+            <directory>app/Modules/Finance/Tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

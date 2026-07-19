@@ -18,22 +18,37 @@ export interface StudentGrowthPoint {
 }
 
 export interface StatusCount {
+  /** Label tampilan Indonesia (mis. "Aktif"). */
   status: string
+  /** Slug enum mentah (mis. "active") — dipakai membangun link filter saat slice diklik. */
+  value: string
+  total: number
+}
+
+export interface ApprovalStatusCount {
+  status: string
+  /** Satu atau beberapa slug status dipisah koma (mis. "submitted,in_progress") — langsung dipakai sebagai filter[status]. */
+  values: string
   total: number
 }
 
 export interface ProgramCount {
+  /** id StudyProgram — target filter saat bar diklik. */
+  id: string
   program: string
   total: number
 }
 
 export interface StaffByUnitPoint {
   unit: string
+  /** Null kalau baris ini murni unit_kerja pegawai (bukan fakultas) — klik seri dosen tidak bisa link ke faculty_id. */
+  faculty_id: string | null
   lecturers: number
   employees: number
 }
 
 export interface PaymentTrendPoint {
+  /** Format YYYY-MM. */
   month: string
   /** Sum of payments for that month, in Rupiah — backend sends decimal sums as strings. */
   total: string
@@ -41,6 +56,8 @@ export interface PaymentTrendPoint {
 
 export interface InvoiceStatusSlice {
   status: string
+  /** Slug enum mentah (unpaid/partial/paid). */
+  value: string
   total: number
   /** Sum of invoice amounts for that status, in Rupiah — backend sends decimal sums as strings. */
   amount: string
@@ -67,7 +84,7 @@ export interface DashboardCharts {
   payment_trend?: PaymentTrendPoint[]
   invoice_status?: InvoiceStatusSlice[]
   active_classes_by_program?: ProgramCount[]
-  approval_status?: StatusCount[]
+  approval_status?: ApprovalStatusCount[]
 }
 
 export interface DashboardAcademicTermOption {

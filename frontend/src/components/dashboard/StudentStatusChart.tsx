@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { StatusCount } from '@/types/dashboard'
 import { formatNumber } from '@/utils/formatters'
 import { ChartTooltip } from '@/components/dashboard/ChartTooltip'
+import { datumOf } from '@/components/dashboard/chartClick'
 
 const SLICE_COLORS = [
   'var(--color-primary)',
@@ -15,9 +16,10 @@ const SLICE_COLORS = [
 
 export interface StudentStatusChartProps {
   data: StatusCount[]
+  onSliceClick?: (slice: StatusCount) => void
 }
 
-export function StudentStatusChart({ data }: StudentStatusChartProps) {
+export function StudentStatusChart({ data, onSliceClick }: StudentStatusChartProps) {
   // Cell is deprecated in Recharts v3 — per-slice color now comes from a
   // `fill` field directly on each datum, which Legend/Tooltip also read.
   const chartData = data.map((entry, index) => ({ ...entry, fill: SLICE_COLORS[index % SLICE_COLORS.length] }))
@@ -44,6 +46,11 @@ export function StudentStatusChart({ data }: StudentStatusChartProps) {
                 paddingAngle={2}
                 strokeWidth={0}
                 isAnimationActive={false}
+                cursor={onSliceClick ? 'pointer' : undefined}
+                onClick={(entry) => {
+                  const slice = datumOf<StatusCount>(entry)
+                  if (slice && onSliceClick) onSliceClick(slice)
+                }}
               />
             </PieChart>
           </ResponsiveContainer>

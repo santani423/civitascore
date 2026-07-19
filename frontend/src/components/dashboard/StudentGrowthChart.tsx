@@ -4,20 +4,30 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { StudentGrowthPoint } from '@/types/dashboard'
 import { formatNumber } from '@/utils/formatters'
 import { ChartTooltip } from '@/components/dashboard/ChartTooltip'
+import { activeDatumOf } from '@/components/dashboard/chartClick'
 
 export interface StudentGrowthChartProps {
   data: StudentGrowthPoint[]
+  onPointClick?: (point: StudentGrowthPoint) => void
 }
 
-export function StudentGrowthChart({ data }: StudentGrowthChartProps) {
+export function StudentGrowthChart({ data, onPointClick }: StudentGrowthChartProps) {
   return (
-    <Card title="Jumlah Mahasiswa per Tahun" description="Tren pertumbuhan berdasarkan tahun angkatan">
+    <Card title="Jumlah Mahasiswa per Tahun" description="Tren pertumbuhan berdasarkan tahun angkatan — klik titik untuk melihat daftarnya">
       <div className="h-64">
         {data.length === 0 ? (
           <EmptyState title="Belum ada data mahasiswa" description="Data akan muncul setelah mahasiswa terdaftar." />
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+            <AreaChart
+              data={data}
+              margin={{ top: 4, right: 8, left: 0, bottom: 0 }}
+              onClick={(state) => {
+                const point = activeDatumOf<StudentGrowthPoint>(state)
+                if (point && onPointClick) onPointClick(point)
+              }}
+              className={onPointClick ? 'cursor-pointer' : undefined}
+            >
               <defs>
                 <linearGradient id="studentGrowthFill" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.25} />

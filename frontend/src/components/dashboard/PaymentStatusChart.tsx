@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { InvoiceStatusSlice } from '@/types/dashboard'
 import { formatCurrencyIDR } from '@/utils/formatters'
 import { ChartTooltip } from '@/components/dashboard/ChartTooltip'
+import { datumOf } from '@/components/dashboard/chartClick'
 
 const STATUS_COLORS: Record<string, string> = {
   Lunas: 'var(--color-primary)',
@@ -13,9 +14,10 @@ const STATUS_COLORS: Record<string, string> = {
 
 export interface PaymentStatusChartProps {
   data: InvoiceStatusSlice[]
+  onSliceClick?: (slice: InvoiceStatusSlice) => void
 }
 
-export function PaymentStatusChart({ data }: PaymentStatusChartProps) {
+export function PaymentStatusChart({ data, onSliceClick }: PaymentStatusChartProps) {
   // Slice size represents total Rupiah per status, not invoice count — see
   // DashboardPage docs for why (the "unpaid_invoices" summary card already
   // covers the count; this chart is the one place currency formatting is
@@ -49,6 +51,11 @@ export function PaymentStatusChart({ data }: PaymentStatusChartProps) {
                 paddingAngle={2}
                 strokeWidth={0}
                 isAnimationActive={false}
+                cursor={onSliceClick ? 'pointer' : undefined}
+                onClick={(entry) => {
+                  const slice = datumOf<InvoiceStatusSlice>(entry)
+                  if (slice && onSliceClick) onSliceClick(slice)
+                }}
               />
             </PieChart>
           </ResponsiveContainer>

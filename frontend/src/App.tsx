@@ -13,6 +13,18 @@ import { UniversitiesPage } from '@/pages/platform/UniversitiesPage'
 import { SupportSessionsPage } from '@/pages/platform/SupportSessionsPage'
 import { PlaceholderPage } from '@/pages/placeholders/PlaceholderPage'
 import { StudentsPage } from '@/pages/academic/StudentsPage'
+import { StudentDetailPage } from '@/pages/academic/StudentDetailPage'
+import { LecturersPage } from '@/pages/academic/LecturersPage'
+import { LecturerDetailPage } from '@/pages/academic/LecturerDetailPage'
+import { EmployeesPage } from '@/pages/academic/EmployeesPage'
+import { EmployeeDetailPage } from '@/pages/academic/EmployeeDetailPage'
+import { StudyProgramsPage } from '@/pages/academic/StudyProgramsPage'
+import { StudyProgramDetailPage } from '@/pages/academic/StudyProgramDetailPage'
+import { ClassSectionsPage } from '@/pages/academic/ClassSectionsPage'
+import { ClassSectionDetailPage } from '@/pages/academic/ClassSectionDetailPage'
+import { InvoicesPage } from '@/pages/finance/InvoicesPage'
+import { InvoiceDetailPage } from '@/pages/finance/InvoiceDetailPage'
+import { PaymentsPage } from '@/pages/finance/PaymentsPage'
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin'
 import { useTenantStore } from '@/stores/tenantStore'
 import { RolesPage } from '@/pages/settings/RolesPage'
@@ -31,13 +43,9 @@ import { ROUTES } from '@/constants/routes'
 const PLACEHOLDER_ROUTES: Array<{ path: string; title: string }> = [
   { path: ROUTES.akademik.kurikulum, title: 'Kurikulum' },
   { path: ROUTES.akademik.mataKuliah, title: 'Mata Kuliah' },
-  { path: ROUTES.akademik.kelasJadwal, title: 'Kelas dan Jadwal' },
   { path: ROUTES.akademik.krs, title: 'KRS' },
   { path: ROUTES.akademik.absensi, title: 'Absensi' },
   { path: ROUTES.akademik.penilaian, title: 'Penilaian' },
-  { path: ROUTES.dosen, title: 'Dosen' },
-  { path: ROUTES.pegawai, title: 'Pegawai' },
-  { path: ROUTES.keuangan.tagihan, title: 'Tagihan' },
   { path: ROUTES.keuangan.beasiswa, title: 'Beasiswa' },
   { path: ROUTES.skripsi, title: 'Skripsi' },
   { path: ROUTES.magangMbkm, title: 'Magang dan MBKM' },
@@ -83,6 +91,18 @@ function App() {
             <Route path={ROUTES.platform.security} element={<SupportSessionsPage />} />
 
             <Route path={ROUTES.mahasiswa} element={<StudentsPage />} />
+            <Route path={ROUTES.mahasiswaDetail} element={<StudentDetailPage />} />
+            <Route path={ROUTES.dosen} element={<LecturersPage />} />
+            <Route path={ROUTES.dosenDetail} element={<LecturerDetailPage />} />
+            <Route path={ROUTES.pegawai} element={<EmployeesPage />} />
+            <Route path={ROUTES.pegawaiDetail} element={<EmployeeDetailPage />} />
+            <Route path={ROUTES.akademik.programStudi} element={<StudyProgramsPage />} />
+            <Route path={ROUTES.akademik.programStudiDetail} element={<StudyProgramDetailPage />} />
+            <Route path={ROUTES.akademik.kelasJadwal} element={<ClassSectionsPage />} />
+            <Route path={ROUTES.akademik.kelasJadwalDetail} element={<ClassSectionDetailPage />} />
+            <Route path={ROUTES.keuangan.tagihan} element={<InvoicesPage />} />
+            <Route path={ROUTES.keuangan.tagihanDetail} element={<InvoiceDetailPage />} />
+            <Route path={ROUTES.keuangan.pembayaran} element={<PaymentsPage />} />
 
             <Route path={ROUTES.pengaturan.roles} element={<RolesPage />} />
             <Route path={ROUTES.pengaturan.permissions} element={<PermissionsPage />} />

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Users, GraduationCap, Briefcase, Building2, UserCheck, BookOpen, Wallet, ClipboardList, type LucideIcon } from 'lucide-react'
 import { StatCard } from '@/components/ui/StatCard'
 import { SkeletonCard } from '@/components/ui/Skeleton'
@@ -25,10 +26,12 @@ const CARD_DEFINITIONS: CardDefinition[] = [
 export interface SummaryCardsGridProps {
   summary: DashboardSummary
   isLoading: boolean
+  /** Tujuan klik per kartu (sudah termasuk query filter) — kartu tanpa entri dirender statis seperti sebelumnya. */
+  links?: Partial<Record<keyof DashboardSummary, string>>
 }
 
 /** A key missing from `summary` means the user isn't permitted to see it (see DashboardController) — that card is skipped entirely, not shown as zero. */
-export function SummaryCardsGrid({ summary, isLoading }: SummaryCardsGridProps) {
+export function SummaryCardsGrid({ summary, isLoading, links }: SummaryCardsGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -45,9 +48,18 @@ export function SummaryCardsGrid({ summary, isLoading }: SummaryCardsGridProps) 
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {visibleCards.map((card) => (
-        <StatCard key={card.key} label={card.label} value={formatNumber(summary[card.key] ?? 0)} icon={card.icon} />
-      ))}
+      {visibleCards.map((card) => {
+        const stat = <StatCard label={card.label} value={formatNumber(summary[card.key] ?? 0)} icon={card.icon} />
+        const link = links?.[card.key]
+
+        return link ? (
+          <Link key={card.key} to={link} className="block rounded-xl focus:outline-none focus:ring-2 focus:ring-primary">
+            {stat}
+          </Link>
+        ) : (
+          <div key={card.key}>{stat}</div>
+        )
+      })}
     </div>
   )
 }

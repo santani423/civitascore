@@ -1,10 +1,12 @@
 import { useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
 import { useFetch } from '@/hooks/useFetch'
 import { approvalRequestService } from '@/services/approvalService'
 import type { ApprovalRequest, ApprovalRequestStatus } from '@/types/approval'
+import { ROUTES } from '@/constants/routes'
 import { formatRelativeTime, humanizeSlug } from '@/utils/formatters'
 
 const STATUS_LABEL: Record<ApprovalRequestStatus, string> = {
@@ -25,14 +27,14 @@ const columns: DataTableColumn<ApprovalRequest>[] = [
   {
     header: 'Pengajuan',
     cell: (row) => (
-      <div>
-        <p className="font-medium text-ink-primary">
+      <Link to={`${ROUTES.persetujuan}/${row.id}`} className="block">
+        <p className="font-medium text-primary hover:underline">
           {humanizeSlug(row.requestable_type.split('\\').pop() ?? row.requestable_type)}
         </p>
         <Badge variant={STATUS_VARIANT[row.status]} className="mt-1">
           {STATUS_LABEL[row.status]}
         </Badge>
-      </div>
+      </Link>
     ),
   },
   {

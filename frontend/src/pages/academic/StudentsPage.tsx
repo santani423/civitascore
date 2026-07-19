@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
@@ -7,10 +8,12 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Alert } from '@/components/ui/Alert'
+import { ListPagination } from '@/components/ui/ListPagination'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { studentService } from '@/services/academicService'
 import type { Student, StudentStatus } from '@/types/academic'
 import { ROUTES } from '@/constants/routes'
+import { pickFilterParams } from '@/utils/listInitial'
 import { formatDateRange, humanizeSlug } from '@/utils/formatters'
 
 const STATUS_LABEL: Record<StudentStatus, string> = {
@@ -30,24 +33,34 @@ const STATUS_VARIANT: Record<StudentStatus, BadgeVariant> = {
 }
 
 export function StudentsPage() {
-  const [searchInput, setSearchInput] = useState('')
-  const [statusInput, setStatusInput] = useState('')
+  const [searchParams] = useSearchParams()
+  // Filter awal dari link kartu/chart dashboard (mis. ?status=active) —
+  // dibaca sekali saat mount, lihat utils/listInitial.ts.
+  const [initialFilter] = useState(() => pickFilterParams(searchParams, ['status', 'study_program_id', 'admission_year']))
 
-  const list = usePaginatedList<Student>({ fetcher: studentService.index })
+  const [searchInput, setSearchInput] = useState('')
+  const [statusInput, setStatusInput] = useState(initialFilter.status ?? '')
+
+  const list = usePaginatedList<Student>({ fetcher: studentService.index, initialFilter })
 
   const applyFilters = () => {
     list.setSearch(searchInput)
-    list.setFilter(statusInput ? { status: statusInput } : {})
+    // Filter dimensi dari URL (prodi/angkatan) sengaja dipertahankan saat
+    // user cuma mengubah status — cocok dengan judul halaman yang dia buka.
+    const next = { ...list.filter }
+    delete next.status
+    if (statusInput) next.status = statusInput
+    list.setFilter(next)
   }
 
   const columns: DataTableColumn<Student>[] = [
     {
       header: 'Mahasiswa',
       cell: (row) => (
-        <div>
-          <p className="font-medium text-ink-primary">{row.name}</p>
+        <Link to={`${ROUTES.mahasiswa}/${row.id}`} className="block">
+          <p className="font-medium text-primary hover:underline">{row.name}</p>
           <p className="text-xs text-ink-tertiary">{row.nim}</p>
-        </div>
+        </Link>
       ),
     },
     { header: 'Program Studi', cell: (row) => row.study_program_name ?? '-' },
@@ -104,26 +117,7 @@ export function StudentsPage() {
           />
         )}
 
-        {list.meta && list.meta.last_page > 1 && (
-          <div className="flex items-center justify-between border-t border-border p-3 text-sm text-ink-secondary">
-            <span>
-              Halaman {list.meta.current_page} dari {list.meta.last_page} ({list.meta.total} mahasiswa)
-            </span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={list.page <= 1} onClick={() => list.setPage(list.page - 1)}>
-                Sebelumnya
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={list.page >= list.meta.last_page}
-                onClick={() => list.setPage(list.page + 1)}
-              >
-                Berikutnya
-              </Button>
-            </div>
-          </div>
-        )}
+        <ListPagination meta={list.meta} page={list.page} onPageChange={list.setPage} itemLabel="mahasiswa" />
       </Card>
     </div>
   )

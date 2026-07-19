@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
@@ -9,6 +10,7 @@ import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { approvalRequestService } from '@/services/approvalService'
 import type { ApprovalRequest, ApprovalRequestStatus } from '@/types/approval'
 import { ROUTES } from '@/constants/routes'
+import { pickFilterParams } from '@/utils/listInitial'
 import { formatRelativeTime, humanizeSlug } from '@/utils/formatters'
 
 const STATUS_LABEL: Record<ApprovalRequestStatus, string> = {
@@ -30,7 +32,12 @@ function requestableTypeLabel(requestableType: string): string {
 }
 
 export function ApprovalRequestsPage() {
-  const list = usePaginatedList<ApprovalRequest>({ fetcher: approvalRequestService.index })
+  const [searchParams] = useSearchParams()
+  // Filter awal dari kartu "Menunggu Persetujuan" / chart status di
+  // dashboard (mis. ?status=submitted,in_progress).
+  const [initialFilter] = useState(() => pickFilterParams(searchParams, ['status']))
+
+  const list = usePaginatedList<ApprovalRequest>({ fetcher: approvalRequestService.index, initialFilter })
 
   const columns: DataTableColumn<ApprovalRequest>[] = [
     { header: 'Jenis Pengajuan', cell: (row) => requestableTypeLabel(row.requestable_type) },

@@ -4,12 +4,14 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { ProgramCount } from '@/types/dashboard'
 import { formatNumber } from '@/utils/formatters'
 import { ChartTooltip } from '@/components/dashboard/ChartTooltip'
+import { datumOf } from '@/components/dashboard/chartClick'
 
 export interface ActiveClassesByProgramChartProps {
   data: ProgramCount[]
+  onBarClick?: (point: ProgramCount) => void
 }
 
-export function ActiveClassesByProgramChart({ data }: ActiveClassesByProgramChartProps) {
+export function ActiveClassesByProgramChart({ data, onBarClick }: ActiveClassesByProgramChartProps) {
   return (
     <Card title="Kelas Aktif per Program Studi" description="Jumlah kelas aktif pada tahun akademik dan semester berjalan">
       <div className="h-64">
@@ -37,7 +39,18 @@ export function ActiveClassesByProgramChart({ data }: ActiveClassesByProgramChar
                 width={40}
               />
               <Tooltip content={<ChartTooltip valueFormatter={formatNumber} />} cursor={{ fill: 'var(--color-surface-hover)' }} />
-              <Bar dataKey="total" name="Kelas Aktif" fill="var(--color-accent)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+              <Bar
+                dataKey="total"
+                name="Kelas Aktif"
+                fill="var(--color-accent)"
+                radius={[6, 6, 0, 0]}
+                isAnimationActive={false}
+                cursor={onBarClick ? 'pointer' : undefined}
+                onClick={(entry) => {
+                  const point = datumOf<ProgramCount>(entry)
+                  if (point && onBarClick) onBarClick(point)
+                }}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

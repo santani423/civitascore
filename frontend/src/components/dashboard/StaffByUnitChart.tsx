@@ -4,12 +4,15 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { StaffByUnitPoint } from '@/types/dashboard'
 import { formatNumber } from '@/utils/formatters'
 import { ChartTooltip } from '@/components/dashboard/ChartTooltip'
+import { datumOf } from '@/components/dashboard/chartClick'
 
 export interface StaffByUnitChartProps {
   data: StaffByUnitPoint[]
+  onLecturerBarClick?: (point: StaffByUnitPoint) => void
+  onEmployeeBarClick?: (point: StaffByUnitPoint) => void
 }
 
-export function StaffByUnitChart({ data }: StaffByUnitChartProps) {
+export function StaffByUnitChart({ data, onLecturerBarClick, onEmployeeBarClick }: StaffByUnitChartProps) {
   return (
     <Card title="Dosen dan Pegawai per Unit Kerja" description="Sebaran dosen (per fakultas) dan pegawai (per unit)">
       <div className="h-64">
@@ -38,8 +41,30 @@ export function StaffByUnitChart({ data }: StaffByUnitChartProps) {
               />
               <Tooltip content={<ChartTooltip valueFormatter={formatNumber} />} cursor={{ fill: 'var(--color-surface-hover)' }} />
               <Legend formatter={(value: string) => <span className="text-xs text-ink-secondary">{value}</span>} />
-              <Bar dataKey="lecturers" name="Dosen" fill="var(--color-primary)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-              <Bar dataKey="employees" name="Pegawai" fill="var(--color-accent)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+              <Bar
+                dataKey="lecturers"
+                name="Dosen"
+                fill="var(--color-primary)"
+                radius={[6, 6, 0, 0]}
+                isAnimationActive={false}
+                cursor={onLecturerBarClick ? 'pointer' : undefined}
+                onClick={(entry) => {
+                  const point = datumOf<StaffByUnitPoint>(entry)
+                  if (point && onLecturerBarClick) onLecturerBarClick(point)
+                }}
+              />
+              <Bar
+                dataKey="employees"
+                name="Pegawai"
+                fill="var(--color-accent)"
+                radius={[6, 6, 0, 0]}
+                isAnimationActive={false}
+                cursor={onEmployeeBarClick ? 'pointer' : undefined}
+                onClick={(entry) => {
+                  const point = datumOf<StaffByUnitPoint>(entry)
+                  if (point && onEmployeeBarClick) onEmployeeBarClick(point)
+                }}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

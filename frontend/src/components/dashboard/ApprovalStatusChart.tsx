@@ -1,9 +1,10 @@
 import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { Card } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
-import type { StatusCount } from '@/types/dashboard'
+import type { ApprovalStatusCount } from '@/types/dashboard'
 import { formatNumber } from '@/utils/formatters'
 import { ChartTooltip } from '@/components/dashboard/ChartTooltip'
+import { datumOf } from '@/components/dashboard/chartClick'
 
 const STATUS_COLORS: Record<string, string> = {
   Disetujui: 'var(--color-primary)',
@@ -12,10 +13,11 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export interface ApprovalStatusChartProps {
-  data: StatusCount[]
+  data: ApprovalStatusCount[]
+  onSliceClick?: (slice: ApprovalStatusCount) => void
 }
 
-export function ApprovalStatusChart({ data }: ApprovalStatusChartProps) {
+export function ApprovalStatusChart({ data, onSliceClick }: ApprovalStatusChartProps) {
   const chartData = data.map((entry) => ({ ...entry, fill: STATUS_COLORS[entry.status] ?? 'var(--color-accent)' }))
   const hasData = chartData.some((entry) => entry.total > 0)
 
@@ -42,6 +44,11 @@ export function ApprovalStatusChart({ data }: ApprovalStatusChartProps) {
                 paddingAngle={2}
                 strokeWidth={0}
                 isAnimationActive={false}
+                cursor={onSliceClick ? 'pointer' : undefined}
+                onClick={(entry) => {
+                  const slice = datumOf<ApprovalStatusCount>(entry)
+                  if (slice && onSliceClick) onSliceClick(slice)
+                }}
               />
             </PieChart>
           </ResponsiveContainer>

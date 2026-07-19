@@ -188,7 +188,7 @@ class DashboardStatsService
                 // ->value gets back the plain string the $labels map is keyed by.
                 $status = $row->status instanceof StudentStatus ? $row->status->value : $row->status;
 
-                return ['status' => $labels[$status] ?? $status, 'total' => (int) $row->total];
+                return ['status' => $labels[$status] ?? $status, 'value' => $status, 'total' => (int) $row->total];
             })
             ->all();
     }
@@ -238,11 +238,17 @@ class DashboardStatsService
             ->groupBy('unit_kerja')
             ->pluck('total', 'unit');
 
+        $facultyIdByName = $facultyNames->flip();
         $units = $lecturersByUnit->keys()->merge($employeesByUnit->keys())->unique()->sort()->values();
 
         return $units
             ->map(fn ($unit) => [
                 'unit' => $unit,
+                // Null when this row came only from employees' unit_kerja
+                // (a free-text field, not a real Faculty) — the frontend
+                // uses this to decide whether clicking the "dosen" bar can
+                // link to a specific faculty_id filter at all.
+                'faculty_id' => $facultyIdByName[$unit] ?? null,
                 'lecturers' => (int) ($lecturersByUnit[$unit] ?? 0),
                 'employees' => (int) ($employeesByUnit[$unit] ?? 0),
             ])
@@ -304,6 +310,7 @@ class DashboardStatsService
 
                 return [
                     'status' => $labels[$status] ?? $status,
+                    'value' => $status,
                     'total' => (int) $row->total,
                     'amount' => (string) $row->amount_total,
                 ];
@@ -335,7 +342,7 @@ class DashboardStatsService
     private function namedCounts(\Illuminate\Support\Collection $countsById, \Illuminate\Support\Collection $namesById, string $labelKey): array
     {
         return $countsById
-            ->map(fn ($total, $id) => [$labelKey => $namesById[$id] ?? $id, 'total' => (int) $total])
+            ->map(fn ($total, $id) => ['id' => $id, $labelKey => $namesById[$id] ?? $id, 'total' => (int) $total])
             ->values()
             ->sortByDesc('total')
             ->values()
@@ -359,9 +366,9 @@ class DashboardStatsService
             + (int) ($buckets[ApprovalRequestStatus::InProgress->value] ?? 0);
 
         return [
-            ['status' => 'Disetujui', 'total' => (int) ($buckets[ApprovalRequestStatus::Approved->value] ?? 0)],
-            ['status' => 'Ditolak', 'total' => (int) ($buckets[ApprovalRequestStatus::Rejected->value] ?? 0)],
-            ['status' => 'Menunggu', 'total' => $menunggu],
+            ['status' => 'Disetujui', 'values' => ApprovalRequestStatus::Approved->value, 'total' => (int) ($buckets[ApprovalRequestStatus::Approved->value] ?? 0)],
+            ['status' => 'Ditolak', 'values' => ApprovalRequestStatus::Rejected->value, 'total' => (int) ($buckets[ApprovalRequestStatus::Rejected->value] ?? 0)],
+            ['status' => 'Menunggu', 'values' => ApprovalRequestStatus::Submitted->value.','.ApprovalRequestStatus::InProgress->value, 'total' => $menunggu],
         ];
     }
 }

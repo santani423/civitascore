@@ -6,12 +6,15 @@ export interface UsePaginatedListOptions<T> {
   /** Referensi stabil (mis. `roleService.index`) — jangan wrap dengan arrow function baru tiap render, itu akan memicu fetch berulang. */
   fetcher: (params: ListParams) => Promise<PaginatedResult<T>>
   perPage?: number
+  /** Filter awal — dipakai sekali saat mount, mis. dibaca dari `useSearchParams()` saat halaman dibuka lewat link kartu/chart dashboard. */
+  initialFilter?: Record<string, string>
+  initialSearch?: string
 }
 
-export function usePaginatedList<T>({ fetcher, perPage = 20 }: UsePaginatedListOptions<T>) {
+export function usePaginatedList<T>({ fetcher, perPage = 20, initialFilter, initialSearch }: UsePaginatedListOptions<T>) {
   const [page, setPage] = useState(1)
-  const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState<Record<string, string>>({})
+  const [search, setSearch] = useState(initialSearch ?? '')
+  const [filter, setFilter] = useState<Record<string, string>>(initialFilter ?? {})
   const [sort, setSort] = useState<string | undefined>(undefined)
   const [data, setData] = useState<T[]>([])
   const [meta, setMeta] = useState<ApiPaginationMeta | null>(null)

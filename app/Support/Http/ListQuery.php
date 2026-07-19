@@ -41,8 +41,19 @@ final class ListQuery
         }
 
         foreach ((array) $request->query('filter', []) as $column => $value) {
-            if (in_array($column, $filterable, true) && $value !== null && $value !== '') {
-                $query->where($column, $value);
+            if (! in_array($column, $filterable, true) || $value === null || $value === '') {
+                continue;
+            }
+
+            // `?filter[column]=a,b` -> whereIn — lets a single link express a
+            // combined condition (e.g. invoice status "unpaid,partial") that
+            // matches a dashboard card's count without a bespoke endpoint.
+            $values = explode(',', (string) $value);
+
+            if (count($values) > 1) {
+                $query->whereIn($column, $values);
+            } else {
+                $query->where($column, $values[0]);
             }
         }
 

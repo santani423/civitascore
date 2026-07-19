@@ -4,14 +4,16 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { ProgramCount } from '@/types/dashboard'
 import { formatNumber } from '@/utils/formatters'
 import { ChartTooltip } from '@/components/dashboard/ChartTooltip'
+import { datumOf } from '@/components/dashboard/chartClick'
 
 export interface FacultyDistributionChartProps {
   data: ProgramCount[]
+  onBarClick?: (point: ProgramCount) => void
 }
 
-export function FacultyDistributionChart({ data }: FacultyDistributionChartProps) {
+export function FacultyDistributionChart({ data, onBarClick }: FacultyDistributionChartProps) {
   return (
-    <Card title="Mahasiswa per Program Studi" description="Distribusi mahasiswa berdasarkan program studi">
+    <Card title="Mahasiswa per Program Studi" description="Distribusi mahasiswa berdasarkan program studi — klik batang untuk melihat daftarnya">
       <div className="h-64">
         {data.length === 0 ? (
           <EmptyState title="Belum ada data mahasiswa" description="Data akan muncul setelah mahasiswa terdaftar." />
@@ -37,7 +39,18 @@ export function FacultyDistributionChart({ data }: FacultyDistributionChartProps
                 width={48}
               />
               <Tooltip content={<ChartTooltip valueFormatter={formatNumber} />} cursor={{ fill: 'var(--color-surface-hover)' }} />
-              <Bar dataKey="total" name="Mahasiswa" fill="var(--color-accent)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+              <Bar
+                dataKey="total"
+                name="Mahasiswa"
+                fill="var(--color-accent)"
+                radius={[6, 6, 0, 0]}
+                isAnimationActive={false}
+                cursor={onBarClick ? 'pointer' : undefined}
+                onClick={(entry) => {
+                  const point = datumOf<ProgramCount>(entry)
+                  if (point && onBarClick) onBarClick(point)
+                }}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}

@@ -1,6 +1,6 @@
 import { apiClient } from '@/services/api'
 import type { ApiSuccessResponse, ListParams, PaginatedResult } from '@/types/api'
-import type { Student } from '@/types/academic'
+import type { ClassSection, Employee, Lecturer, Student, StudyProgram } from '@/types/academic'
 import { toQueryParams } from '@/utils/listParams'
 
 export const studentService = {
@@ -13,6 +13,62 @@ export const studentService = {
 
   async show(id: string): Promise<Student> {
     const response = await apiClient.get<ApiSuccessResponse<Student>>(`/students/${id}`)
+    return response.data.data
+  },
+}
+
+export const lecturerService = {
+  async index(params: ListParams = {}): Promise<PaginatedResult<Lecturer>> {
+    const response = await apiClient.get<ApiSuccessResponse<Lecturer[]>>('/lecturers', {
+      params: toQueryParams(params),
+    })
+    return { data: response.data.data, meta: response.data.meta! }
+  },
+
+  async show(id: string): Promise<Lecturer> {
+    const response = await apiClient.get<ApiSuccessResponse<Lecturer>>(`/lecturers/${id}`)
+    return response.data.data
+  },
+}
+
+export const employeeService = {
+  async index(params: ListParams = {}): Promise<PaginatedResult<Employee>> {
+    const response = await apiClient.get<ApiSuccessResponse<Employee[]>>('/employees', {
+      params: toQueryParams(params),
+    })
+    return { data: response.data.data, meta: response.data.meta! }
+  },
+
+  async show(id: string): Promise<Employee> {
+    const response = await apiClient.get<ApiSuccessResponse<Employee>>(`/employees/${id}`)
+    return response.data.data
+  },
+}
+
+export const studyProgramService = {
+  async index(params: ListParams = {}): Promise<PaginatedResult<StudyProgram>> {
+    const response = await apiClient.get<ApiSuccessResponse<StudyProgram[]>>('/study-programs', {
+      params: toQueryParams(params),
+    })
+    return { data: response.data.data, meta: response.data.meta! }
+  },
+
+  async show(id: string): Promise<StudyProgram> {
+    const response = await apiClient.get<ApiSuccessResponse<StudyProgram>>(`/study-programs/${id}`)
+    return response.data.data
+  },
+}
+
+export const classSectionService = {
+  async index(params: ListParams = {}): Promise<PaginatedResult<ClassSection>> {
+    const response = await apiClient.get<ApiSuccessResponse<ClassSection[]>>('/class-sections', {
+      params: toQueryParams(params),
+    })
+    return { data: response.data.data, meta: response.data.meta! }
+  },
+
+  async show(id: string): Promise<ClassSection> {
+    const response = await apiClient.get<ApiSuccessResponse<ClassSection>>(`/class-sections/${id}`)
     return response.data.data
   },
 }

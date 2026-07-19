@@ -20,7 +20,7 @@ class StudentController extends Controller
             query: Student::query()->with('studyProgram')->latest('enrolled_at'),
             request: $request,
             searchable: ['name', 'nim'],
-            filterable: ['study_program_id', 'status'],
+            filterable: ['study_program_id', 'status', 'admission_year'],
             sortable: ['name', 'admission_year', 'enrolled_at'],
         );
 
