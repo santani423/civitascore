@@ -21,13 +21,20 @@ import { ROUTES } from '@/constants/routes'
 
 const DASHBOARD_ITEM: NavItem = { label: 'Dashboard', path: ROUTES.dashboard, icon: LayoutDashboard }
 
+/**
+ * `permission` di tiap child mengikuti persis gate baca yang backend pakai
+ * (route middleware `permission:...` / Policy `viewAny`) — lihat
+ * app/Modules/*\/Routes/api.php dan Policies terkait. "Keamanan" sengaja
+ * tanpa `permission`: /sessions dan /devices cuma butuh login, tidak ada
+ * permission slug (self-service, bukan admin panel).
+ */
 const PERSETUJUAN_ITEM: NavItem = {
   label: 'Persetujuan',
   path: ROUTES.persetujuan,
   icon: CheckSquare,
   children: [
-    { label: 'Pengajuan', path: ROUTES.persetujuan },
-    { label: 'Alur Persetujuan', path: ROUTES.persetujuanWorkflow },
+    { label: 'Pengajuan', path: ROUTES.persetujuan, permission: 'approval_requests.read' },
+    { label: 'Alur Persetujuan', path: ROUTES.persetujuanWorkflow, permission: 'approval_workflows.read' },
   ],
 }
 
@@ -36,13 +43,13 @@ const PENGATURAN_ITEM: NavItem = {
   path: ROUTES.pengaturan.systemSettings,
   icon: Settings,
   children: [
-    { label: 'Role', path: ROUTES.pengaturan.roles },
-    { label: 'Permission', path: ROUTES.pengaturan.permissions },
-    { label: 'Role Pengguna', path: ROUTES.pengaturan.userRoles },
-    { label: 'Pengaturan Sistem', path: ROUTES.pengaturan.systemSettings },
-    { label: 'Feature Flag', path: ROUTES.pengaturan.featureFlags },
-    { label: 'Notifikasi', path: ROUTES.pengaturan.notifications },
-    { label: 'Audit Log', path: ROUTES.pengaturan.auditLog },
+    { label: 'Role', path: ROUTES.pengaturan.roles, permission: 'roles.read' },
+    { label: 'Permission', path: ROUTES.pengaturan.permissions, permission: 'permissions.read' },
+    { label: 'Role Pengguna', path: ROUTES.pengaturan.userRoles, permission: 'user_roles.read' },
+    { label: 'Pengaturan Sistem', path: ROUTES.pengaturan.systemSettings, permission: 'system_settings.read' },
+    { label: 'Feature Flag', path: ROUTES.pengaturan.featureFlags, permission: 'feature_flags.read' },
+    { label: 'Notifikasi', path: ROUTES.pengaturan.notifications, permission: 'notification_templates.read' },
+    { label: 'Audit Log', path: ROUTES.pengaturan.auditLog, permission: 'audit_logs.read' },
     { label: 'Keamanan', path: ROUTES.pengaturan.security },
   ],
 }
@@ -98,8 +105,8 @@ export const NAV_ITEMS: NavItem[] = [DASHBOARD_ITEM, ...TENANT_BUSINESS_NAV_ITEM
  */
 export const PLATFORM_NAV_ITEMS: NavItem[] = [
   DASHBOARD_ITEM,
-  { label: 'Manajemen Universitas', path: ROUTES.platform.universities, icon: Building2 },
-  { label: 'Keamanan Platform', path: ROUTES.platform.security, icon: ShieldAlert },
+  { label: 'Manajemen Universitas', path: ROUTES.platform.universities, icon: Building2, permission: 'platform_universities.read' },
+  { label: 'Keamanan Platform', path: ROUTES.platform.security, icon: ShieldAlert, permission: 'support_sessions.read' },
   PERSETUJUAN_ITEM,
   PENGATURAN_ITEM,
 ]

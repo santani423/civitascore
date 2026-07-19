@@ -5,9 +5,41 @@ import { NAV_ITEMS, PLATFORM_NAV_ITEMS, TENANT_BUSINESS_NAV_ITEMS } from '@/cons
 import { APP_NAME } from '@/constants/app'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin'
+import { useAuthStore, selectPermissions } from '@/stores/authStore'
 import { useTenantStore } from '@/stores/tenantStore'
+import type { NavItem } from '@/types/navigation'
 import { cn } from '@/utils/cn'
 import logoAtmaJaya from '@/assets/images/logo-atmajaya.gif'
+
+function hasNavPermission(permissions: string[], required?: string | string[]): boolean {
+  if (!required) return true
+  const requiredList = Array.isArray(required) ? required : [required]
+  return requiredList.some((permission) => permissions.includes(permission))
+}
+
+/**
+ * Menyembunyikan item yang backend pasti akan tolak (403) — parent dengan
+ * children disaring lewat children-nya (permission di level parent
+ * diabaikan, lihat types/navigation.ts); parent yang seluruh child-nya
+ * tersaring habis ikut disembunyikan.
+ */
+function filterNavItems(items: NavItem[], permissions: string[]): NavItem[] {
+  return items.reduce<NavItem[]>((visible, item) => {
+    if (item.children?.length) {
+      const children = item.children.filter((child) => hasNavPermission(permissions, child.permission))
+      if (children.length > 0) {
+        visible.push({ ...item, children })
+      }
+      return visible
+    }
+
+    if (hasNavPermission(permissions, item.permission)) {
+      visible.push(item)
+    }
+
+    return visible
+  }, [])
+}
 
 export interface SidebarProps {
   collapsed: boolean
@@ -24,15 +56,21 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
   const { pathname } = useLocation()
   const isSuperAdmin = useIsSuperAdmin()
   const tenantSelected = useTenantStore((state) => state.selectedUniversity !== null)
+  const permissions = useAuthStore(selectPermissions)
 
   // Super Admin: menu platform inti selalu tampil; menu bisnis tenant
   // (Akademik, Mahasiswa, dst.) cuma disisipkan setelah Tenant Switcher
-  // aktif — lihat docs/RANCANGAN-SUPER-ADMIN.md §1-2.
-  const navItems = isSuperAdmin
-    ? tenantSelected
-      ? [...PLATFORM_NAV_ITEMS.slice(0, 3), ...TENANT_BUSINESS_NAV_ITEMS, ...PLATFORM_NAV_ITEMS.slice(3)]
-      : PLATFORM_NAV_ITEMS
-    : NAV_ITEMS
+  // aktif — lihat docs/RANCANGAN-SUPER-ADMIN.md §1-2. Lalu disaring lagi
+  // per permission supaya menu yang pasti ditolak backend (403) tidak
+  // ditampilkan sama sekali.
+  const navItems = filterNavItems(
+    isSuperAdmin
+      ? tenantSelected
+        ? [...PLATFORM_NAV_ITEMS.slice(0, 3), ...TENANT_BUSINESS_NAV_ITEMS, ...PLATFORM_NAV_ITEMS.slice(3)]
+        : PLATFORM_NAV_ITEMS
+      : NAV_ITEMS,
+    permissions,
+  )
   const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set([navItems[1]?.label ?? '']))
 
   const toggleSubmenu = (label: string) => {
