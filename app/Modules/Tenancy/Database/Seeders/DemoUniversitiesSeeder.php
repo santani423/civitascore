@@ -96,6 +96,7 @@ class DemoUniversitiesSeeder extends Seeder
             ],
             'feature_flags' => ['file_upload.virus_scan_enabled' => true, 'approval_workflow.delegation_enabled' => true],
             'demo_accounts' => self::demoAccounts('undigital.test', 'UND'),
+            'academic_scale' => ['faculties' => 6, 'study_programs' => 18, 'students' => 900, 'lecturers' => 70, 'employees' => 40, 'classes' => 120],
         ]))->run();
 
         (new UniversitySeeder([
@@ -112,6 +113,7 @@ class DemoUniversitiesSeeder extends Seeder
             'modules' => ['academic', 'finance', 'library', 'research', 'mbkm', 'document'],
             'feature_flags' => ['file_upload.virus_scan_enabled' => true, 'approval_workflow.delegation_enabled' => false],
             'demo_accounts' => self::demoAccounts('itmandala.test', 'ITM'),
+            'academic_scale' => ['faculties' => 3, 'study_programs' => 8, 'students' => 350, 'lecturers' => 30, 'employees' => 18, 'classes' => 50],
         ]))->run();
 
         (new UniversitySeeder([
@@ -133,6 +135,7 @@ class DemoUniversitiesSeeder extends Seeder
                 ['rector' => 'ketua'],
                 ['rector' => 'Ketua'],
             ),
+            'academic_scale' => ['faculties' => 2, 'study_programs' => 3, 'students' => 60, 'lecturers' => 10, 'employees' => 6, 'classes' => 10],
         ]))->run();
     }
 }

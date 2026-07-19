@@ -12,7 +12,9 @@ import { PlatformDashboardPage } from '@/pages/platform/PlatformDashboardPage'
 import { UniversitiesPage } from '@/pages/platform/UniversitiesPage'
 import { SupportSessionsPage } from '@/pages/platform/SupportSessionsPage'
 import { PlaceholderPage } from '@/pages/placeholders/PlaceholderPage'
+import { StudentsPage } from '@/pages/academic/StudentsPage'
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin'
+import { useTenantStore } from '@/stores/tenantStore'
 import { RolesPage } from '@/pages/settings/RolesPage'
 import { PermissionsPage } from '@/pages/settings/PermissionsPage'
 import { UserRolesPage } from '@/pages/settings/UserRolesPage'
@@ -33,7 +35,6 @@ const PLACEHOLDER_ROUTES: Array<{ path: string; title: string }> = [
   { path: ROUTES.akademik.krs, title: 'KRS' },
   { path: ROUTES.akademik.absensi, title: 'Absensi' },
   { path: ROUTES.akademik.penilaian, title: 'Penilaian' },
-  { path: ROUTES.mahasiswa, title: 'Mahasiswa' },
   { path: ROUTES.dosen, title: 'Dosen' },
   { path: ROUTES.pegawai, title: 'Pegawai' },
   { path: ROUTES.keuangan.tagihan, title: 'Tagihan' },
@@ -46,11 +47,18 @@ const PLACEHOLDER_ROUTES: Array<{ path: string; title: string }> = [
   { path: ROUTES.laporan, title: 'Laporan' },
 ]
 
-/** Super Admin lihat Dashboard Platform (statistik lintas-universitas), pengguna tenant lihat Dashboard operasional biasa — lihat docs/RANCANGAN-SUPER-ADMIN.md §1-2. */
+/**
+ * Super Admin tanpa universitas dipilih lihat Dashboard Platform (statistik
+ * lintas-universitas); begitu memilih universitas lewat Tenant Switcher
+ * (sama seperti Sidebar menyisipkan menu bisnis tenant), atau untuk
+ * pengguna tenant biasa, tampilkan Dashboard operasional dengan data
+ * universitas yang aktif — lihat docs/RANCANGAN-SUPER-ADMIN.md §1-2.
+ */
 function DashboardRoute() {
   const isSuperAdmin = useIsSuperAdmin()
+  const tenantSelected = useTenantStore((state) => state.selectedUniversity !== null)
 
-  return isSuperAdmin ? <PlatformDashboardPage /> : <DashboardPage />
+  return isSuperAdmin && !tenantSelected ? <PlatformDashboardPage /> : <DashboardPage />
 }
 
 function App() {
@@ -73,6 +81,8 @@ function App() {
 
             <Route path={ROUTES.platform.universities} element={<UniversitiesPage />} />
             <Route path={ROUTES.platform.security} element={<SupportSessionsPage />} />
+
+            <Route path={ROUTES.mahasiswa} element={<StudentsPage />} />
 
             <Route path={ROUTES.pengaturan.roles} element={<RolesPage />} />
             <Route path={ROUTES.pengaturan.permissions} element={<PermissionsPage />} />

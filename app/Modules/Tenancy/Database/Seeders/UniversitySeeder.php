@@ -5,6 +5,7 @@ namespace Modules\Tenancy\Database\Seeders;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
+use Modules\Academic\Database\Seeders\AcademicSeeder;
 use Modules\ApprovalWorkflow\Enums\ApprovalApproverType;
 use Modules\ApprovalWorkflow\Enums\ApprovalHistoryEvent;
 use Modules\ApprovalWorkflow\Enums\ApprovalRejectAction;
@@ -19,6 +20,7 @@ use Modules\AuditLog\Enums\AuditAction;
 use Modules\AuditLog\Models\AuditLog;
 use Modules\FileManagement\Enums\FileUploadStatus;
 use Modules\FileManagement\Models\FileUpload;
+use Modules\Finance\Database\Seeders\FinanceSeeder;
 use Modules\Notification\Enums\NotificationChannel;
 use Modules\Notification\Models\NotificationTemplate;
 use Modules\SystemSetting\Enums\SettingValueType;
@@ -69,6 +71,7 @@ use Modules\UserManagement\Models\UserRole;
  *     plan_code: string, subscription_status: SubscriptionStatus,
  *     modules: array<int, string>, feature_flags: array<string, bool>,
  *     demo_accounts: array<int, array{email: string, name: string, role: string, membership: \Modules\Tenancy\Enums\MembershipType}>,
+ *     academic_scale: array{faculties: int, study_programs: int, students: int, lecturers: int, employees: int, classes: int},
  * } $config
  */
 class UniversitySeeder extends Seeder
@@ -90,6 +93,9 @@ class UniversitySeeder extends Seeder
         $this->seedNotificationTemplates($university);
         $this->seedFileUploads($university, $admins[0] ?? null);
         $this->seedAuditLogEntries($university, $admins[0] ?? null);
+
+        $academic = (new AcademicSeeder())->run($university, $this->config['academic_scale']);
+        (new FinanceSeeder())->run($university, $academic['students']);
 
         app(TenantContext::class)->setUniversityId(null);
     }

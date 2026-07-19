@@ -12,30 +12,99 @@ export interface SummaryCardData {
   icon: LucideIcon
 }
 
-export interface YearlyStudentCount {
-  year: string
-  students: number
+export interface StudentGrowthPoint {
+  year: number
+  total: number
 }
 
-export interface FacultyDistribution {
-  faculty: string
-  students: number
-}
-
-export interface PaymentStatusSlice {
+export interface StatusCount {
   status: string
-  value: number
+  total: number
 }
 
-export interface AttendanceTrendPoint {
+export interface ProgramCount {
+  program: string
+  total: number
+}
+
+export interface StaffByUnitPoint {
+  unit: string
+  lecturers: number
+  employees: number
+}
+
+export interface PaymentTrendPoint {
   month: string
-  present: number
-  absent: number
+  /** Sum of payments for that month, in Rupiah — backend sends decimal sums as strings. */
+  total: string
 }
 
-export interface StudentStatusSlice {
+export interface InvoiceStatusSlice {
   status: string
-  value: number
+  total: number
+  /** Sum of invoice amounts for that status, in Rupiah — backend sends decimal sums as strings. */
+  amount: string
+}
+
+/** GET /dashboard summary — every field is optional because the backend omits keys the current user isn't permitted to see (see DashboardController::SUMMARY_PERMISSIONS). */
+export interface DashboardSummary {
+  total_students?: number
+  total_lecturers?: number
+  total_employees?: number
+  total_study_programs?: number
+  active_students?: number
+  active_classes?: number
+  unpaid_invoices?: number
+  pending_approvals?: number
+}
+
+/** Same "omitted if unauthorized" rule as DashboardSummary — see DashboardController::CHART_PERMISSIONS. */
+export interface DashboardCharts {
+  student_growth?: StudentGrowthPoint[]
+  student_status?: StatusCount[]
+  students_by_program?: ProgramCount[]
+  staff_by_unit?: StaffByUnitPoint[]
+  payment_trend?: PaymentTrendPoint[]
+  invoice_status?: InvoiceStatusSlice[]
+  active_classes_by_program?: ProgramCount[]
+  approval_status?: StatusCount[]
+}
+
+export interface DashboardAcademicTermOption {
+  id: string
+  label: string
+  is_current: boolean
+}
+
+export interface DashboardFacultyOption {
+  id: string
+  name: string
+}
+
+export interface DashboardStudyProgramOption {
+  id: string
+  name: string
+  faculty_id: string
+}
+
+export interface DashboardFilterOptions {
+  academic_terms: DashboardAcademicTermOption[]
+  faculties: DashboardFacultyOption[]
+  study_programs: DashboardStudyProgramOption[]
+}
+
+export interface DashboardResponse {
+  summary: DashboardSummary
+  charts: DashboardCharts
+  filters: DashboardFilterOptions
+}
+
+export interface DashboardQueryFilters {
+  academic_term_id?: string
+  faculty_id?: string
+  study_program_id?: string
+  date_from?: string
+  date_to?: string
 }
 
 export type ActivityType =

@@ -74,7 +74,7 @@ export const TENANT_BUSINESS_NAV_ITEMS: NavItem[] = [
       { label: 'Penilaian', path: ROUTES.akademik.penilaian },
     ],
   },
-  { label: 'Mahasiswa', path: ROUTES.mahasiswa, icon: Users },
+  { label: 'Mahasiswa', path: ROUTES.mahasiswa, icon: Users, permission: 'students.read' },
   { label: 'Dosen', path: ROUTES.dosen, icon: UserRound },
   { label: 'Pegawai', path: ROUTES.pegawai, icon: Briefcase },
   {

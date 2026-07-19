@@ -53,6 +53,7 @@ class OrganizationalRoleSeeder extends Seeder
             'feature_flags.read', 'feature_flags.update',
             'approval_workflows.create', 'approval_workflows.read', 'approval_workflows.delete',
             'users.read',
+            'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
         ],
         'university_administrator' => [
             'tenant_profile.read', 'tenant_profile.update',
@@ -60,21 +61,29 @@ class OrganizationalRoleSeeder extends Seeder
             'audit_logs.read',
             'approval_workflows.read',
             'users.read',
+            'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
         ],
-        'rector' => ['audit_logs.read', 'approval_requests.read', 'users.read'],
-        'vice_rector' => ['approval_requests.read', 'users.read'],
-        'dean' => ['approval_requests.read', 'users.read'],
-        'head_of_study_program' => ['approval_requests.read', 'users.read'],
+        'rector' => [
+            'audit_logs.read', 'approval_requests.read', 'users.read',
+            'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
+        ],
+        'vice_rector' => ['approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read'],
+        'dean' => ['approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read'],
+        'head_of_study_program' => ['approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read'],
         'academic_administrator' => [
             'approval_requests.read',
             'notification_templates.create', 'notification_templates.read', 'notification_templates.update',
             'file_uploads.read',
             'users.read',
+            'students.read', 'study_programs.read', 'classes.read',
         ],
-        'finance_administrator' => ['approval_requests.read', 'file_uploads.read'],
-        'hr_administrator' => ['user_roles.read', 'users.read'],
+        'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read'],
+        'hr_administrator' => ['user_roles.read', 'users.read', 'employees.read', 'lecturers.read'],
         'library_administrator' => ['file_uploads.read', 'file_uploads.delete'],
-        'auditor' => ['audit_logs.read', 'approval_requests.read'],
+        'auditor' => [
+            'audit_logs.read', 'approval_requests.read',
+            'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
+        ],
         // lecturer, academic_advisor, student, employee: sengaja tanpa
         // permission admin — belum ada modul akademik/kepegawaian yang jadi
         // domain izin mereka.

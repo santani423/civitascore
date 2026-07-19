@@ -44,6 +44,12 @@ class RolePermissionSeeder extends Seeder
         'support_sessions' => [PermissionAction::Create, PermissionAction::Read],
         'platform_master_data' => [PermissionAction::Update],
         'platform_maintenance' => [PermissionAction::Update],
+        'students' => [PermissionAction::Read],
+        'lecturers' => [PermissionAction::Read],
+        'employees' => [PermissionAction::Read],
+        'study_programs' => [PermissionAction::Read],
+        'classes' => [PermissionAction::Read],
+        'invoices' => [PermissionAction::Read],
     ];
 
     public function run(): void

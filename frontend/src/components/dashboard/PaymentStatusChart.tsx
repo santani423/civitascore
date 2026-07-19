@@ -1,39 +1,58 @@
 import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import { Card } from '@/components/ui/Card'
-import { PAYMENT_STATUS } from '@/data/mock/dashboard'
-import { formatNumber } from '@/utils/formatters'
+import { EmptyState } from '@/components/ui/EmptyState'
+import type { InvoiceStatusSlice } from '@/types/dashboard'
+import { formatCurrencyIDR } from '@/utils/formatters'
 import { ChartTooltip } from '@/components/dashboard/ChartTooltip'
 
-const SLICE_COLORS = ['var(--color-primary)', 'var(--color-accent)', 'var(--color-warning)', 'var(--color-danger)']
+const STATUS_COLORS: Record<string, string> = {
+  Lunas: 'var(--color-primary)',
+  'Dibayar Sebagian': 'var(--color-warning)',
+  'Belum Dibayar': 'var(--color-danger)',
+}
 
-// Cell is deprecated in Recharts v3 — per-slice color now comes from a
-// `fill` field directly on each datum, which Legend/Tooltip also read.
-const data = PAYMENT_STATUS.map((entry, index) => ({ ...entry, fill: SLICE_COLORS[index % SLICE_COLORS.length] }))
+export interface PaymentStatusChartProps {
+  data: InvoiceStatusSlice[]
+}
 
-export function PaymentStatusChart() {
+export function PaymentStatusChart({ data }: PaymentStatusChartProps) {
+  // Slice size represents total Rupiah per status, not invoice count — see
+  // DashboardPage docs for why (the "unpaid_invoices" summary card already
+  // covers the count; this chart is the one place currency formatting is
+  // meaningful, per the dashboard requirements).
+  const chartData = data.map((entry) => ({
+    ...entry,
+    amountValue: Number(entry.amount),
+    fill: STATUS_COLORS[entry.status] ?? 'var(--color-accent)',
+  }))
+
   return (
-    <Card title="Status Pembayaran" description="Distribusi tagihan mahasiswa semester ini">
+    <Card title="Status Pembayaran" description="Total tagihan (Rupiah) berdasarkan status pembayaran">
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Tooltip content={<ChartTooltip valueFormatter={formatNumber} />} />
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              formatter={(value: string) => <span className="text-xs text-ink-secondary">{value}</span>}
-            />
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="status"
-              innerRadius={55}
-              outerRadius={80}
-              paddingAngle={2}
-              strokeWidth={0}
-              isAnimationActive={false}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+        {data.length === 0 ? (
+          <EmptyState title="Belum ada data tagihan" description="Data akan muncul setelah tagihan diterbitkan." />
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Tooltip content={<ChartTooltip valueFormatter={formatCurrencyIDR} />} />
+              <Legend
+                verticalAlign="bottom"
+                height={36}
+                formatter={(value: string) => <span className="text-xs text-ink-secondary">{value}</span>}
+              />
+              <Pie
+                data={chartData}
+                dataKey="amountValue"
+                nameKey="status"
+                innerRadius={55}
+                outerRadius={80}
+                paddingAngle={2}
+                strokeWidth={0}
+                isAnimationActive={false}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </Card>
   )

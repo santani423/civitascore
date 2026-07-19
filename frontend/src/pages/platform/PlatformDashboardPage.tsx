@@ -1,10 +1,12 @@
 import { useCallback } from 'react'
-import { Building2, Users, UserCheck, CheckCircle2 } from 'lucide-react'
+import { Building2, Users, UserCheck, CheckCircle2, GraduationCap, Briefcase, BookOpen, Wallet, ClipboardList } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { StatCard } from '@/components/ui/StatCard'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Alert } from '@/components/ui/Alert'
+import { SkeletonCard } from '@/components/ui/Skeleton'
+import { UniversityComparisonTable } from '@/components/dashboard/UniversityComparisonTable'
 import { useFetch } from '@/hooks/useFetch'
 import { useAuthStore } from '@/stores/authStore'
 import { platformStatisticsService } from '@/services/tenancyService'
@@ -31,6 +33,25 @@ export function PlatformDashboardPage() {
         <StatCard label="Total Membership" value={isLoading ? '...' : formatNumber(data?.memberships_total ?? 0)} icon={UserCheck} />
       </div>
 
+      <p className="text-sm font-semibold text-ink-primary">Ringkasan Seluruh Universitas</p>
+
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {['students', 'lecturers', 'employees', 'programs', 'invoices', 'approvals'].map((key) => (
+            <SkeletonCard key={key} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Total Mahasiswa" value={formatNumber(data?.students_total ?? 0)} icon={GraduationCap} />
+          <StatCard label="Total Dosen" value={formatNumber(data?.lecturers_total ?? 0)} icon={Users} />
+          <StatCard label="Total Pegawai" value={formatNumber(data?.employees_total ?? 0)} icon={Briefcase} />
+          <StatCard label="Program Studi" value={formatNumber(data?.study_programs_total ?? 0)} icon={BookOpen} />
+          <StatCard label="Tagihan Belum Dibayar" value={formatNumber(data?.unpaid_invoices_total ?? 0)} icon={Wallet} />
+          <StatCard label="Menunggu Persetujuan" value={formatNumber(data?.pending_approvals_total ?? 0)} icon={ClipboardList} />
+        </div>
+      )}
+
       <Card title="Universitas per Status">
         {!data && !isLoading && <p className="text-sm text-ink-tertiary">Belum ada data.</p>}
         <div className="flex flex-wrap gap-2">
@@ -42,6 +63,8 @@ export function PlatformDashboardPage() {
             ))}
         </div>
       </Card>
+
+      <UniversityComparisonTable data={data?.by_university ?? []} isLoading={isLoading} />
     </div>
   )
 }

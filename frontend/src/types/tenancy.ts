@@ -33,12 +33,29 @@ export interface University {
   created_at: string | null
 }
 
+export interface UniversityComparisonRow {
+  id: string
+  name: string
+  students: number
+  lecturers: number
+  employees: number
+  unpaid_invoices: number
+  pending_approvals: number
+}
+
 export interface PlatformStatistics {
   universities_total: number
   universities_active: number
   universities_by_status: Record<string, number>
   users_total: number
   memberships_total: number
+  students_total: number
+  lecturers_total: number
+  employees_total: number
+  study_programs_total: number
+  unpaid_invoices_total: number
+  pending_approvals_total: number
+  by_university: UniversityComparisonRow[]
 }
 
 export interface SupportSession {
