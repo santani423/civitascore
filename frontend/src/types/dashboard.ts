@@ -65,17 +65,6 @@ export interface AgendaItem {
   endDate: string
 }
 
-export type ApprovalCategory = 'krs' | 'leave' | 'grade_change' | 'letter' | 'scholarship'
-
-export interface PendingApprovalItem {
-  id: string
-  category: ApprovalCategory
-  title: string
-  requester: string
-  submittedAt: string
-  waitingSteps: number
-}
-
 export type NotificationType = 'info' | 'success' | 'warning' | 'danger'
 
 export interface NotificationItem {

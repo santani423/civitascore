@@ -3,9 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use Modules\UserManagement\Controllers\PermissionController;
 use Modules\UserManagement\Controllers\RoleController;
+use Modules\UserManagement\Controllers\UserController;
 use Modules\UserManagement\Controllers\UserRoleController;
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('users', [UserController::class, 'index'])->middleware('permission:users.read');
+
+
     Route::get('roles', [RoleController::class, 'index'])->middleware('permission:roles.read');
     Route::post('roles', [RoleController::class, 'store'])->middleware('permission:roles.create');
     Route::get('roles/{role}', [RoleController::class, 'show'])->middleware('permission:roles.read');

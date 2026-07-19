@@ -1,59 +1,87 @@
-import type { AuthSession, AuthUser, LoginCredentials } from '@/types/auth'
-import type { NormalizedApiError } from '@/services/api'
+import { apiClient } from '@/services/api'
+import type { ApiSuccessResponse } from '@/types/api'
+import type {
+  AuthSession,
+  AuthUser,
+  LoginCredentials,
+  UserDevice,
+  UserSession,
+} from '@/types/auth'
+import { humanizeSlug } from '@/utils/formatters'
 
-/**
- * Fase ini: login/me/logout disimulasikan secara lokal (belum ada modul
- * bisnis di backend yang butuh sesi nyata). Setiap fungsi di bawah sudah
- * berbentuk seperti pemanggilan API asli (async, melempar NormalizedApiError
- * yang sama dengan interceptor di api.ts) — pada integrasi nyata nanti,
- * hanya isi fungsi yang diganti dengan apiClient.post/get, signature dan
- * pemanggil (authStore, LoginPage) tidak perlu berubah.
- *
- * Endpoint asli yang akan dipakai:
- *   POST /api/v1/auth/login
- *   GET  /api/v1/auth/me
- *   POST /api/v1/auth/logout
- */
-
-const DEMO_ACCOUNT = { email: 'admin@demo.test', password: 'password' }
-
-const MOCK_USER: AuthUser = {
-  id: 'usr-demo-1',
-  name: 'Admin Demo',
-  email: DEMO_ACCOUNT.email,
-  role: 'Super Admin',
-  avatarUrl: null,
+interface MeResponse {
+  user: { id: string; name: string; email: string }
+  roles: string[]
+  permissions: string[]
 }
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-function unauthorized(message: string): NormalizedApiError {
-  return { status: 401, message }
+function buildAuthUser(user: MeResponse['user'], roles: string[], permissions: string[]): AuthUser {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: roles[0] ? humanizeSlug(roles[0]) : 'Pengguna',
+    roles,
+    permissions,
+    avatarUrl: null,
+  }
 }
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthSession> {
-    // return apiClient.post<ApiSuccessResponse<AuthSession>>('/auth/login', credentials).then((r) => r.data.data)
-    await delay(600)
+    const loginResponse = await apiClient.post<ApiSuccessResponse<{ token: string; user: MeResponse['user'] }>>(
+      '/login',
+      { email: credentials.email, password: credentials.password },
+    )
+    const { token } = loginResponse.data.data
 
-    if (credentials.email !== DEMO_ACCOUNT.email || credentials.password !== DEMO_ACCOUNT.password) {
-      throw unauthorized('Email atau kata sandi salah.')
-    }
+    const meResponse = await apiClient.get<ApiSuccessResponse<MeResponse>>('/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const { user, roles, permissions } = meResponse.data.data
 
-    return { token: `demo-token-${Date.now()}`, user: MOCK_USER }
+    return { token, user: buildAuthUser(user, roles, permissions) }
   },
 
   async getCurrentUser(): Promise<AuthUser> {
-    // return apiClient.get<ApiSuccessResponse<AuthUser>>('/auth/me').then((r) => r.data.data)
-    await delay(200)
+    const response = await apiClient.get<ApiSuccessResponse<MeResponse>>('/me')
+    const { user, roles, permissions } = response.data.data
 
-    return MOCK_USER
+    return buildAuthUser(user, roles, permissions)
   },
 
   async logout(): Promise<void> {
-    // return apiClient.post('/auth/logout').then(() => undefined)
-    await delay(200)
+    await apiClient.post('/logout')
+  },
+
+  async logoutAllDevices(): Promise<void> {
+    await apiClient.post('/logout-all')
+  },
+
+  async forgotPassword(email: string): Promise<void> {
+    await apiClient.post('/forgot-password', { email })
+  },
+
+  async resetPassword(payload: {
+    token: string
+    email: string
+    password: string
+    password_confirmation: string
+  }): Promise<void> {
+    await apiClient.post('/reset-password', payload)
+  },
+
+  async getSessions(): Promise<UserSession[]> {
+    const response = await apiClient.get<ApiSuccessResponse<UserSession[]>>('/sessions')
+    return response.data.data
+  },
+
+  async revokeSession(sessionId: string): Promise<void> {
+    await apiClient.delete(`/sessions/${sessionId}`)
+  },
+
+  async getDevices(): Promise<UserDevice[]> {
+    const response = await apiClient.get<ApiSuccessResponse<UserDevice[]>>('/devices')
+    return response.data.data
   },
 }

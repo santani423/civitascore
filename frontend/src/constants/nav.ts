@@ -12,6 +12,7 @@ import {
   Megaphone,
   BarChart3,
   Settings,
+  CheckSquare,
 } from 'lucide-react'
 import type { NavItem } from '@/types/navigation'
 import { ROUTES } from '@/constants/routes'
@@ -49,7 +50,30 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Alumni', path: ROUTES.alumni, icon: UserCheck },
   { label: 'Pengumuman', path: ROUTES.pengumuman, icon: Megaphone },
   { label: 'Laporan', path: ROUTES.laporan, icon: BarChart3 },
-  { label: 'Pengaturan', path: ROUTES.pengaturan, icon: Settings },
+  {
+    label: 'Persetujuan',
+    path: ROUTES.persetujuan,
+    icon: CheckSquare,
+    children: [
+      { label: 'Pengajuan', path: ROUTES.persetujuan },
+      { label: 'Alur Persetujuan', path: ROUTES.persetujuanWorkflow },
+    ],
+  },
+  {
+    label: 'Pengaturan',
+    path: ROUTES.pengaturan.systemSettings,
+    icon: Settings,
+    children: [
+      { label: 'Role', path: ROUTES.pengaturan.roles },
+      { label: 'Permission', path: ROUTES.pengaturan.permissions },
+      { label: 'Role Pengguna', path: ROUTES.pengaturan.userRoles },
+      { label: 'Pengaturan Sistem', path: ROUTES.pengaturan.systemSettings },
+      { label: 'Feature Flag', path: ROUTES.pengaturan.featureFlags },
+      { label: 'Notifikasi', path: ROUTES.pengaturan.notifications },
+      { label: 'Audit Log', path: ROUTES.pengaturan.auditLog },
+      { label: 'Keamanan', path: ROUTES.pengaturan.security },
+    ],
+  },
 ]
 
 /** Resolves the current route's label for the header/breadcrumb — checks children first (more specific). */

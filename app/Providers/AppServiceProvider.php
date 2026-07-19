@@ -6,6 +6,7 @@ use App\Support\Database\EnsureDatabaseExists;
 use App\Support\Scoping\InstitutionContextResolver;
 use App\Support\Scoping\NullInstitutionContextResolver;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,13 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        ResetPassword::createUrlUsing(fn (mixed $notifiable, string $token): string => sprintf(
+            '%s/reset-password?token=%s&email=%s',
+            rtrim(config('app.frontend_url'), '/'),
+            $token,
+            urlencode($notifiable->getEmailForPasswordReset()),
+        ));
 
         Event::listen(NewDeviceDetected::class, RecordNewDeviceLogin::class);
         Event::subscribe(LogNotificationDispatch::class);

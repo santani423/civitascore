@@ -1,6 +1,11 @@
 export const ROUTES = {
   login: '/login',
+  forgotPassword: '/forgot-password',
+  resetPassword: '/reset-password',
   dashboard: '/dashboard',
+  persetujuan: '/persetujuan',
+  persetujuanDetail: '/persetujuan/:id',
+  persetujuanWorkflow: '/persetujuan/alur',
   akademik: {
     kurikulum: '/akademik/kurikulum',
     mataKuliah: '/akademik/mata-kuliah',
@@ -22,5 +27,14 @@ export const ROUTES = {
   alumni: '/alumni',
   pengumuman: '/pengumuman',
   laporan: '/laporan',
-  pengaturan: '/pengaturan',
+  pengaturan: {
+    roles: '/pengaturan/roles',
+    permissions: '/pengaturan/permissions',
+    userRoles: '/pengaturan/user-roles',
+    systemSettings: '/pengaturan/system-settings',
+    featureFlags: '/pengaturan/feature-flags',
+    notifications: '/pengaturan/notifikasi',
+    auditLog: '/pengaturan/audit-log',
+    security: '/pengaturan/keamanan',
+  },
 } as const

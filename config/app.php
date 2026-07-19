@@ -134,8 +134,21 @@ return [
     */
 
     'super_admin' => [
-        'email' => env('SUPER_ADMIN_EMAIL', 'superadmin@civitasone.local'),
-        'password' => env('SUPER_ADMIN_PASSWORD', 'ChangeMe123!'),
+        'email' => env('SUPER_ADMIN_EMAIL', 'admin@gemail.com'),
+        'password' => env('SUPER_ADMIN_PASSWORD', '123456'),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | Base URL of the SPA (frontend/). Used to build links that must open in
+    | the frontend rather than a Laravel route — e.g. the password reset
+    | email (see AppServiceProvider::boot(), ResetPassword::createUrlUsing).
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5173'),
 
 ];

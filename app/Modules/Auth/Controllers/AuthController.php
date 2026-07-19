@@ -12,12 +12,14 @@ use Modules\Auth\Actions\LogoutUserAction;
 use Modules\Auth\Requests\ForgotPasswordRequest;
 use Modules\Auth\Requests\LoginRequest;
 use Modules\Auth\Requests\ResetPasswordRequest;
+use Modules\UserManagement\Support\PermissionRegistry;
 
 class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthenticateUserAction $authenticate,
         private readonly LogoutUserAction $logout,
+        private readonly PermissionRegistry $permissions,
     ) {}
 
     public function login(LoginRequest $request): JsonResponse
@@ -41,7 +43,14 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return ApiResponse::success($request->user());
+        $user = $request->user();
+        $context = $this->permissions->contextForUser($user);
+
+        return ApiResponse::success([
+            'user' => $user,
+            'roles' => $context['roles'],
+            'permissions' => $context['permissions'],
+        ]);
     }
 
     public function logout(Request $request): JsonResponse

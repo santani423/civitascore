@@ -98,10 +98,10 @@ export function Header({ pageTitle, onMenuClick }: HeaderProps) {
           </span>
         }
       >
-        <DropdownItem onClick={() => navigate(ROUTES.pengaturan)}>
+        <DropdownItem onClick={() => navigate(ROUTES.pengaturan.security)}>
           <UserRound className="size-4" /> Profil Saya
         </DropdownItem>
-        <DropdownItem onClick={() => navigate(ROUTES.pengaturan)}>
+        <DropdownItem onClick={() => navigate(ROUTES.pengaturan.systemSettings)}>
           <Settings className="size-4" /> Pengaturan
         </DropdownItem>
         <div className="my-1 border-t border-border" />

@@ -23,3 +23,17 @@ export interface ApiErrorResponse {
 }
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
+
+/** Query params yang dipahami ListQuery di backend (lihat app/Support/Http/ListQuery.php). */
+export interface ListParams {
+  page?: number
+  per_page?: number
+  search?: string
+  filter?: Record<string, string>
+  sort?: string
+}
+
+export interface PaginatedResult<T> {
+  data: T[]
+  meta: ApiPaginationMeta
+}

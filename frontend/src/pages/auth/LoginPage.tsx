@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useLocation, useNavigate, type Location } from 'react-router-dom'
-import { Mail, Info } from 'lucide-react'
+import { Link, useLocation, useNavigate, type Location } from 'react-router-dom'
+import { Mail } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 import { Checkbox } from '@/components/ui/Checkbox'
@@ -63,10 +63,6 @@ export function LoginPage() {
         <p className="mt-1.5 text-sm text-ink-secondary">{APP_DESCRIPTION}</p>
       </div>
 
-      <Alert variant="info" className="mb-5">
-        Akun demo: <span className="font-medium">admin@demo.test</span> / <span className="font-medium">password</span>
-      </Alert>
-
       {formError && (
         <Alert variant="danger" className="mb-5" onDismiss={() => setFormError(null)}>
           {formError}
@@ -92,20 +88,15 @@ export function LoginPage() {
 
         <div className="flex items-center justify-between">
           <Checkbox label="Ingat saya" {...register('remember')} />
-          <a href="#/forgot-password" className="text-sm font-medium text-primary hover:underline">
+          <Link to={ROUTES.forgotPassword} className="text-sm font-medium text-primary hover:underline">
             Lupa kata sandi?
-          </a>
+          </Link>
         </div>
 
         <Button type="submit" size="lg" isLoading={isSubmitting} className="mt-1 w-full">
           Masuk
         </Button>
       </form>
-
-      <p className="mt-6 flex items-start gap-1.5 text-xs text-ink-tertiary">
-        <Info className="mt-0.5 size-3.5 shrink-0" />
-        Autentikasi pada tahap ini masih disimulasikan secara lokal, belum terhubung ke backend.
-      </p>
 
       <div className="mt-8 flex items-center justify-between border-t border-border pt-4 text-xs text-ink-tertiary">
         <span>Versi {APP_VERSION}</span>

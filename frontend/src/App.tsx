@@ -5,8 +5,21 @@ import { PublicOnlyRoute } from '@/routes/PublicOnlyRoute'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { PlaceholderPage } from '@/pages/placeholders/PlaceholderPage'
+import { RolesPage } from '@/pages/settings/RolesPage'
+import { PermissionsPage } from '@/pages/settings/PermissionsPage'
+import { UserRolesPage } from '@/pages/settings/UserRolesPage'
+import { SystemSettingsPage } from '@/pages/settings/SystemSettingsPage'
+import { FeatureFlagsPage } from '@/pages/settings/FeatureFlagsPage'
+import { NotificationsPage } from '@/pages/settings/NotificationsPage'
+import { AuditLogPage } from '@/pages/settings/AuditLogPage'
+import { SecuritySessionsPage } from '@/pages/settings/SecuritySessionsPage'
+import { ApprovalRequestsPage } from '@/pages/approvals/ApprovalRequestsPage'
+import { ApprovalRequestDetailPage } from '@/pages/approvals/ApprovalRequestDetailPage'
+import { ApprovalWorkflowsPage } from '@/pages/approvals/ApprovalWorkflowsPage'
 import { ROUTES } from '@/constants/routes'
 
 const PLACEHOLDER_ROUTES: Array<{ path: string; title: string }> = [
@@ -27,7 +40,6 @@ const PLACEHOLDER_ROUTES: Array<{ path: string; title: string }> = [
   { path: ROUTES.alumni, title: 'Alumni' },
   { path: ROUTES.pengumuman, title: 'Pengumuman' },
   { path: ROUTES.laporan, title: 'Laporan' },
-  { path: ROUTES.pengaturan, title: 'Pengaturan' },
 ]
 
 function App() {
@@ -39,12 +51,28 @@ function App() {
         <Route element={<PublicOnlyRoute />}>
           <Route element={<AuthLayout />}>
             <Route path={ROUTES.login} element={<LoginPage />} />
+            <Route path={ROUTES.forgotPassword} element={<ForgotPasswordPage />} />
+            <Route path={ROUTES.resetPassword} element={<ResetPasswordPage />} />
           </Route>
         </Route>
 
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
             <Route path={ROUTES.dashboard} element={<DashboardPage />} />
+
+            <Route path={ROUTES.pengaturan.roles} element={<RolesPage />} />
+            <Route path={ROUTES.pengaturan.permissions} element={<PermissionsPage />} />
+            <Route path={ROUTES.pengaturan.userRoles} element={<UserRolesPage />} />
+            <Route path={ROUTES.pengaturan.systemSettings} element={<SystemSettingsPage />} />
+            <Route path={ROUTES.pengaturan.featureFlags} element={<FeatureFlagsPage />} />
+            <Route path={ROUTES.pengaturan.notifications} element={<NotificationsPage />} />
+            <Route path={ROUTES.pengaturan.auditLog} element={<AuditLogPage />} />
+            <Route path={ROUTES.pengaturan.security} element={<SecuritySessionsPage />} />
+
+            <Route path={ROUTES.persetujuanWorkflow} element={<ApprovalWorkflowsPage />} />
+            <Route path={ROUTES.persetujuanDetail} element={<ApprovalRequestDetailPage />} />
+            <Route path={ROUTES.persetujuan} element={<ApprovalRequestsPage />} />
+
             {PLACEHOLDER_ROUTES.map((route) => (
               <Route key={route.path} path={route.path} element={<PlaceholderPage title={route.title} />} />
             ))}

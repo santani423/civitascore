@@ -25,3 +25,5 @@ export const useAuthStore = create<AuthState>()(
 )
 
 export const selectIsAuthenticated = (state: AuthState): boolean => state.session !== null
+
+export const selectPermissions = (state: AuthState): string[] => state.session?.user.permissions ?? []
