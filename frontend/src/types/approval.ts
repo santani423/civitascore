@@ -53,5 +53,7 @@ export interface ApprovalRequest {
   completed_at: string | null
   notes: string | null
   histories: ApprovalHistoryEntry[]
+  /** True only for the specific user viewing this request AND if they're the assigned approver of the current step — see ApprovalRequestResource::toArray(). */
+  can_act: boolean
   created_at: string | null
 }

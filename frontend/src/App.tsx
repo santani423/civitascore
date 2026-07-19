@@ -1,7 +1,10 @@
+import type { ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { useThemeSync } from '@/hooks/useThemeSync'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { PublicOnlyRoute } from '@/routes/PublicOnlyRoute'
+import { RequirePermission } from '@/routes/RequirePermission'
+import { getRoutePermission } from '@/routes/routePermissions'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -40,19 +43,59 @@ import { ApprovalRequestDetailPage } from '@/pages/approvals/ApprovalRequestDeta
 import { ApprovalWorkflowsPage } from '@/pages/approvals/ApprovalWorkflowsPage'
 import { ROUTES } from '@/constants/routes'
 
-const PLACEHOLDER_ROUTES: Array<{ path: string; title: string }> = [
-  { path: ROUTES.akademik.kurikulum, title: 'Kurikulum' },
-  { path: ROUTES.akademik.mataKuliah, title: 'Mata Kuliah' },
-  { path: ROUTES.akademik.krs, title: 'KRS' },
-  { path: ROUTES.akademik.absensi, title: 'Absensi' },
-  { path: ROUTES.akademik.penilaian, title: 'Penilaian' },
-  { path: ROUTES.keuangan.beasiswa, title: 'Beasiswa' },
-  { path: ROUTES.skripsi, title: 'Skripsi' },
-  { path: ROUTES.magangMbkm, title: 'Magang dan MBKM' },
-  { path: ROUTES.perpustakaan, title: 'Perpustakaan' },
-  { path: ROUTES.alumni, title: 'Alumni' },
-  { path: ROUTES.pengumuman, title: 'Pengumuman' },
-  { path: ROUTES.laporan, title: 'Laporan' },
+/**
+ * Satu tabel tunggal path -> halaman, dipakai sebagai daftar Route DAN
+ * sebagai artefak audit siapa-boleh-akses-apa (lihat routes/routePermissions.ts
+ * untuk permission tiap path — diturunkan dari constants/nav.ts, bukan
+ * diduplikasi di sini). `/persetujuan(/:id)` dan rute tanpa permission
+ * (Dashboard, Keamanan/self-service, placeholder tanpa data nyata) memang
+ * sengaja tidak muncul di routePermissions — terbuka untuk semua yang login.
+ */
+const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
+  { path: ROUTES.dashboard, element: <DashboardRoute /> },
+
+  { path: ROUTES.platform.universities, element: <UniversitiesPage /> },
+  { path: ROUTES.platform.security, element: <SupportSessionsPage /> },
+
+  { path: ROUTES.mahasiswa, element: <StudentsPage /> },
+  { path: ROUTES.mahasiswaDetail, element: <StudentDetailPage /> },
+  { path: ROUTES.dosen, element: <LecturersPage /> },
+  { path: ROUTES.dosenDetail, element: <LecturerDetailPage /> },
+  { path: ROUTES.pegawai, element: <EmployeesPage /> },
+  { path: ROUTES.pegawaiDetail, element: <EmployeeDetailPage /> },
+  { path: ROUTES.akademik.programStudi, element: <StudyProgramsPage /> },
+  { path: ROUTES.akademik.programStudiDetail, element: <StudyProgramDetailPage /> },
+  { path: ROUTES.akademik.kelasJadwal, element: <ClassSectionsPage /> },
+  { path: ROUTES.akademik.kelasJadwalDetail, element: <ClassSectionDetailPage /> },
+  { path: ROUTES.keuangan.tagihan, element: <InvoicesPage /> },
+  { path: ROUTES.keuangan.tagihanDetail, element: <InvoiceDetailPage /> },
+  { path: ROUTES.keuangan.pembayaran, element: <PaymentsPage /> },
+
+  { path: ROUTES.pengaturan.roles, element: <RolesPage /> },
+  { path: ROUTES.pengaturan.permissions, element: <PermissionsPage /> },
+  { path: ROUTES.pengaturan.userRoles, element: <UserRolesPage /> },
+  { path: ROUTES.pengaturan.systemSettings, element: <SystemSettingsPage /> },
+  { path: ROUTES.pengaturan.featureFlags, element: <FeatureFlagsPage /> },
+  { path: ROUTES.pengaturan.notifications, element: <NotificationsPage /> },
+  { path: ROUTES.pengaturan.auditLog, element: <AuditLogPage /> },
+  { path: ROUTES.pengaturan.security, element: <SecuritySessionsPage /> },
+
+  { path: ROUTES.persetujuanWorkflow, element: <ApprovalWorkflowsPage /> },
+  { path: ROUTES.persetujuanDetail, element: <ApprovalRequestDetailPage /> },
+  { path: ROUTES.persetujuan, element: <ApprovalRequestsPage /> },
+
+  { path: ROUTES.akademik.kurikulum, element: <PlaceholderPage title="Kurikulum" /> },
+  { path: ROUTES.akademik.mataKuliah, element: <PlaceholderPage title="Mata Kuliah" /> },
+  { path: ROUTES.akademik.krs, element: <PlaceholderPage title="KRS" /> },
+  { path: ROUTES.akademik.absensi, element: <PlaceholderPage title="Absensi" /> },
+  { path: ROUTES.akademik.penilaian, element: <PlaceholderPage title="Penilaian" /> },
+  { path: ROUTES.keuangan.beasiswa, element: <PlaceholderPage title="Beasiswa" /> },
+  { path: ROUTES.skripsi, element: <PlaceholderPage title="Skripsi" /> },
+  { path: ROUTES.magangMbkm, element: <PlaceholderPage title="Magang dan MBKM" /> },
+  { path: ROUTES.perpustakaan, element: <PlaceholderPage title="Perpustakaan" /> },
+  { path: ROUTES.alumni, element: <PlaceholderPage title="Alumni" /> },
+  { path: ROUTES.pengumuman, element: <PlaceholderPage title="Pengumuman" /> },
+  { path: ROUTES.laporan, element: <PlaceholderPage title="Laporan" /> },
 ]
 
 /**
@@ -85,40 +128,12 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
-            <Route path={ROUTES.dashboard} element={<DashboardRoute />} />
-
-            <Route path={ROUTES.platform.universities} element={<UniversitiesPage />} />
-            <Route path={ROUTES.platform.security} element={<SupportSessionsPage />} />
-
-            <Route path={ROUTES.mahasiswa} element={<StudentsPage />} />
-            <Route path={ROUTES.mahasiswaDetail} element={<StudentDetailPage />} />
-            <Route path={ROUTES.dosen} element={<LecturersPage />} />
-            <Route path={ROUTES.dosenDetail} element={<LecturerDetailPage />} />
-            <Route path={ROUTES.pegawai} element={<EmployeesPage />} />
-            <Route path={ROUTES.pegawaiDetail} element={<EmployeeDetailPage />} />
-            <Route path={ROUTES.akademik.programStudi} element={<StudyProgramsPage />} />
-            <Route path={ROUTES.akademik.programStudiDetail} element={<StudyProgramDetailPage />} />
-            <Route path={ROUTES.akademik.kelasJadwal} element={<ClassSectionsPage />} />
-            <Route path={ROUTES.akademik.kelasJadwalDetail} element={<ClassSectionDetailPage />} />
-            <Route path={ROUTES.keuangan.tagihan} element={<InvoicesPage />} />
-            <Route path={ROUTES.keuangan.tagihanDetail} element={<InvoiceDetailPage />} />
-            <Route path={ROUTES.keuangan.pembayaran} element={<PaymentsPage />} />
-
-            <Route path={ROUTES.pengaturan.roles} element={<RolesPage />} />
-            <Route path={ROUTES.pengaturan.permissions} element={<PermissionsPage />} />
-            <Route path={ROUTES.pengaturan.userRoles} element={<UserRolesPage />} />
-            <Route path={ROUTES.pengaturan.systemSettings} element={<SystemSettingsPage />} />
-            <Route path={ROUTES.pengaturan.featureFlags} element={<FeatureFlagsPage />} />
-            <Route path={ROUTES.pengaturan.notifications} element={<NotificationsPage />} />
-            <Route path={ROUTES.pengaturan.auditLog} element={<AuditLogPage />} />
-            <Route path={ROUTES.pengaturan.security} element={<SecuritySessionsPage />} />
-
-            <Route path={ROUTES.persetujuanWorkflow} element={<ApprovalWorkflowsPage />} />
-            <Route path={ROUTES.persetujuanDetail} element={<ApprovalRequestDetailPage />} />
-            <Route path={ROUTES.persetujuan} element={<ApprovalRequestsPage />} />
-
-            {PLACEHOLDER_ROUTES.map((route) => (
-              <Route key={route.path} path={route.path} element={<PlaceholderPage title={route.title} />} />
+            {APP_ROUTES.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={<RequirePermission permission={getRoutePermission(route.path)}>{route.element}</RequirePermission>}
+              />
             ))}
           </Route>
         </Route>

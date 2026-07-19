@@ -36,6 +36,8 @@ class ApprovalRequestController extends Controller
     {
         $this->authorize('view', $approvalRequest);
 
-        return ApiResponse::success(new ApprovalRequestResource($approvalRequest->load('histories')));
+        return ApiResponse::success(new ApprovalRequestResource(
+            $approvalRequest->load(['histories', 'currentStep.workflowStep.approverRole']),
+        ));
     }
 }

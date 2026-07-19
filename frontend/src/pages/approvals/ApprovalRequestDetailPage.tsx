@@ -58,7 +58,7 @@ export function ApprovalRequestDetailPage() {
     setActiveModal(null)
   }
 
-  const canAct = request && ['submitted', 'in_progress'].includes(request.status) && request.current_step_id
+  const canAct = request && request.can_act && ['submitted', 'in_progress'].includes(request.status)
 
   return (
     <div className="flex flex-col gap-5">

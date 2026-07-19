@@ -29,6 +29,15 @@ class ApprovalRequestResource extends JsonResource
             'completed_at' => $this->completed_at?->toIso8601String(),
             'notes' => $this->notes,
             'histories' => ApprovalHistoryResource::collection($this->whenLoaded('histories')),
+            // Reuses ApprovalRequestStepPolicy::act() directly rather than
+            // re-implementing the User-type/Role-type approver logic in the
+            // frontend — see ApprovalRequestDetailPage.tsx. relationLoaded()
+            // (not whenLoaded()) so this never triggers a lazy per-row query
+            // on index(); false there is correct, the field isn't used on
+            // that page.
+            'can_act' => $this->relationLoaded('currentStep') && $this->currentStep
+                ? ($request->user()?->can('act', $this->currentStep) ?? false)
+                : false,
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
