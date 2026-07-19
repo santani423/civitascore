@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Middleware\EnsurePermission;
+use App\Http\Middleware\EnsureUniversityAccessMiddleware;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ResolveUniversityMiddleware;
 use App\Support\Http\ApiResponse;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -29,6 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'permission' => EnsurePermission::class,
+            'tenant.resolve' => ResolveUniversityMiddleware::class,
+            'tenant.access' => EnsureUniversityAccessMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

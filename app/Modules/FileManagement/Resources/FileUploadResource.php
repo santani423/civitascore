@@ -18,6 +18,7 @@ class FileUploadResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'university_id' => $this->university_id,
             'original_name' => $this->original_name,
             'mime_type' => $this->mime_type,
             'extension' => $this->extension,

@@ -62,7 +62,7 @@ test('BelongsToInstitutionScope restricts queries based on the bound resolver co
     expect($results->first()->name)->toBe('A');
 });
 
-test('with the default NullInstitutionContextResolver, nothing is restricted', function () {
+test('with no tenant resolved (default TenantContext), nothing is restricted', function () {
     $model = new class extends Model implements ScopesToInstitution
     {
         protected $table = 'scoping_demo_items';

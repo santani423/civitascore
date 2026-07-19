@@ -3,6 +3,8 @@
 namespace Modules\AuditLog\Models;
 
 use App\Models\User;
+use App\Support\Scoping\ScopesToInstitution;
+use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Modules\AuditLog\Database\Factories\AuditLogFactory;
 use Modules\AuditLog\Enums\AuditAction;
+use Modules\Tenancy\Models\University;
 
 /**
  * @property string $id
@@ -45,14 +48,15 @@ use Modules\AuditLog\Enums\AuditAction;
  *
  * @mixin \Eloquent
  */
-class AuditLog extends Model
+class AuditLog extends Model implements ScopesToInstitution
 {
     /** @use HasFactory<AuditLogFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, TenantScoped;
 
     const UPDATED_AT = null;
 
     protected $fillable = [
+        'university_id',
         'user_id',
         'auditable_type',
         'auditable_id',
@@ -80,6 +84,14 @@ class AuditLog extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<University, $this>
+     */
+    public function university(): BelongsTo
+    {
+        return $this->belongsTo(University::class);
     }
 
     /**

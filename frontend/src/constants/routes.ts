@@ -37,4 +37,8 @@ export const ROUTES = {
     auditLog: '/pengaturan/audit-log',
     security: '/pengaturan/keamanan',
   },
+  platform: {
+    universities: '/platform/universitas',
+    security: '/platform/keamanan',
+  },
 } as const

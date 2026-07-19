@@ -18,6 +18,7 @@ class RoleResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'university_id' => $this->university_id,
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,

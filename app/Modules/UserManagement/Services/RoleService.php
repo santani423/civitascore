@@ -3,6 +3,7 @@
 namespace Modules\UserManagement\Services;
 
 use App\Support\Http\Exceptions\ConflictException;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -10,23 +11,26 @@ use Modules\UserManagement\Models\Role;
 
 class RoleService
 {
+    public function __construct(private readonly TenantContext $tenant) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
     public function create(array $data): Role
     {
-        $data['slug'] ??= $this->uniqueSlug($data['name']);
+        $data['university_id'] ??= $this->tenant->universityId();
+        $data['slug'] ??= $this->uniqueSlug($data['name'], $data['university_id']);
 
         return DB::transaction(fn (): Role => Role::create($data));
     }
 
-    private function uniqueSlug(string $name): string
+    private function uniqueSlug(string $name, ?string $universityId): string
     {
         $base = Str::slug($name, '_');
         $slug = $base;
         $suffix = 1;
 
-        while (Role::query()->where('slug', $slug)->exists()) {
+        while (Role::query()->where('slug', $slug)->where('university_id', $universityId)->exists()) {
             $slug = $base.'_'.++$suffix;
         }
 

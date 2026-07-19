@@ -130,18 +130,15 @@ Sistem ini bertujuan untuk:
 
 ### 3.1 Super Admin
 
-Memiliki akses penuh terhadap sistem.
+Mengelola **platform**, bukan operasional harian satu universitas — sejak sistem menjadi multi-tenant (lihat [MULTI-TENANT-ARCHITECTURE.md](./MULTI-TENANT-ARCHITECTURE.md)), Super Admin tidak lagi otomatis melihat data bisnis satu universitas manapun (mahasiswa, akademik, dosen, pegawai, keuangan, skripsi, magang/MBKM, perpustakaan, alumni) — wajib pilih universitas dulu lewat Tenant Switcher.
 
-Fitur:
+Rancangan fitur lengkap (manajemen aplikasi, hak akses, biaya bulanan per universitas, keamanan, dan hak general lainnya) ada di dokumen terpisah: **[RANCANGAN-SUPER-ADMIN.md](./RANCANGAN-SUPER-ADMIN.md)**. Ringkasan singkat:
 
-* Mengatur universitas dan kampus
-* Mengelola seluruh pengguna
-* Mengatur role dan permission
-* Mengatur tahun akademik
-* Mengatur konfigurasi aplikasi
-* Melihat audit log
-* Mengatur integrasi sistem
-* Melakukan backup dan pemulihan data
+* Manajemen universitas, domain, modul & fitur per tenant
+* Manajemen role & permission (global template maupun agregat lintas-tenant)
+* Langganan & biaya bulanan per universitas
+* Keamanan platform (audit log lintas-tenant, sesi, kebijakan keamanan, Support Session berjejak)
+* Pengaturan global, master data, mode maintenance, laporan agregat
 
 ### 3.2 Rektor dan Wakil Rektor
 

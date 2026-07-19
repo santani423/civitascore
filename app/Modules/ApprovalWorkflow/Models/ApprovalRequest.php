@@ -3,6 +3,8 @@
 namespace Modules\ApprovalWorkflow\Models;
 
 use App\Models\User;
+use App\Support\Scoping\ScopesToInstitution;
+use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\ApprovalWorkflow\Database\Factories\ApprovalRequestFactory;
 use Modules\ApprovalWorkflow\Enums\ApprovalRequestStatus;
+use Modules\Tenancy\Models\University;
 
 /**
  * @property string $id
@@ -61,13 +64,13 @@ use Modules\ApprovalWorkflow\Enums\ApprovalRequestStatus;
  *
  * @mixin \Eloquent
  */
-class ApprovalRequest extends Model
+class ApprovalRequest extends Model implements ScopesToInstitution
 {
     /** @use HasFactory<ApprovalRequestFactory> */
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, HasUlids, SoftDeletes, TenantScoped;
 
     protected $fillable = [
-        'approval_workflow_id', 'requestable_type', 'requestable_id', 'requested_by',
+        'university_id', 'approval_workflow_id', 'requestable_type', 'requestable_id', 'requested_by',
         'current_step_id', 'status', 'submitted_at', 'completed_at', 'notes',
     ];
 
@@ -78,6 +81,14 @@ class ApprovalRequest extends Model
             'submitted_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * @return BelongsTo<University, $this>
+     */
+    public function university(): BelongsTo
+    {
+        return $this->belongsTo(University::class);
     }
 
     /**

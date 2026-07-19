@@ -18,6 +18,7 @@ class NotificationTemplateResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'university_id' => $this->university_id,
             'event_key' => $this->event_key,
             'name' => $this->name,
             'channel' => $this->channel->value,

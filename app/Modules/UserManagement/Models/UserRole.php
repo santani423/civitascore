@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Facades\Cache;
+use Modules\Tenancy\Models\University;
 
 /**
  * @property string $id
@@ -56,7 +57,7 @@ class UserRole extends Pivot
     // restricted to (e.g. later a specific Faculty), null = global grant.
     // No target table exists yet in Phase 1, so this stays a loose
     // reference (no FK) until an Institution-style module defines one.
-    protected $fillable = ['user_id', 'role_id', 'scope_type', 'scope_id', 'assigned_by', 'assigned_at', 'expires_at'];
+    protected $fillable = ['user_id', 'role_id', 'university_id', 'scope_type', 'scope_id', 'assigned_by', 'assigned_at', 'expires_at'];
 
     protected function casts(): array
     {
@@ -102,6 +103,14 @@ class UserRole extends Pivot
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    /**
+     * @return BelongsTo<University, $this>
+     */
+    public function university(): BelongsTo
+    {
+        return $this->belongsTo(University::class);
     }
 
     protected static function booted(): void

@@ -8,7 +8,11 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
+import { PlatformDashboardPage } from '@/pages/platform/PlatformDashboardPage'
+import { UniversitiesPage } from '@/pages/platform/UniversitiesPage'
+import { SupportSessionsPage } from '@/pages/platform/SupportSessionsPage'
 import { PlaceholderPage } from '@/pages/placeholders/PlaceholderPage'
+import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin'
 import { RolesPage } from '@/pages/settings/RolesPage'
 import { PermissionsPage } from '@/pages/settings/PermissionsPage'
 import { UserRolesPage } from '@/pages/settings/UserRolesPage'
@@ -42,6 +46,13 @@ const PLACEHOLDER_ROUTES: Array<{ path: string; title: string }> = [
   { path: ROUTES.laporan, title: 'Laporan' },
 ]
 
+/** Super Admin lihat Dashboard Platform (statistik lintas-universitas), pengguna tenant lihat Dashboard operasional biasa — lihat docs/RANCANGAN-SUPER-ADMIN.md §1-2. */
+function DashboardRoute() {
+  const isSuperAdmin = useIsSuperAdmin()
+
+  return isSuperAdmin ? <PlatformDashboardPage /> : <DashboardPage />
+}
+
 function App() {
   useThemeSync()
 
@@ -58,7 +69,10 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<DashboardLayout />}>
-            <Route path={ROUTES.dashboard} element={<DashboardPage />} />
+            <Route path={ROUTES.dashboard} element={<DashboardRoute />} />
+
+            <Route path={ROUTES.platform.universities} element={<UniversitiesPage />} />
+            <Route path={ROUTES.platform.security} element={<SupportSessionsPage />} />
 
             <Route path={ROUTES.pengaturan.roles} element={<RolesPage />} />
             <Route path={ROUTES.pengaturan.permissions} element={<PermissionsPage />} />

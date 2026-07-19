@@ -21,6 +21,7 @@
             <directory>app/Modules/FileManagement/Tests/Feature</directory>
             <directory>app/Modules/Notification/Tests/Feature</directory>
             <directory>app/Modules/ApprovalWorkflow/Tests/Feature</directory>
+            <directory>app/Modules/Tenancy/Tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

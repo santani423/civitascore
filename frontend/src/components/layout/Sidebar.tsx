@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown, ChevronLeft } from 'lucide-react'
-import { NAV_ITEMS } from '@/constants/nav'
+import { NAV_ITEMS, PLATFORM_NAV_ITEMS, TENANT_BUSINESS_NAV_ITEMS } from '@/constants/nav'
 import { APP_NAME } from '@/constants/app'
 import { Tooltip } from '@/components/ui/Tooltip'
+import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin'
+import { useTenantStore } from '@/stores/tenantStore'
 import { cn } from '@/utils/cn'
 import logoAtmaJaya from '@/assets/images/logo-atmajaya.gif'
 
@@ -20,7 +22,18 @@ function isChildActive(pathname: string, children?: { path: string }[]): boolean
 
 export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
   const { pathname } = useLocation()
-  const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set([NAV_ITEMS[1]?.label ?? '']))
+  const isSuperAdmin = useIsSuperAdmin()
+  const tenantSelected = useTenantStore((state) => state.selectedUniversity !== null)
+
+  // Super Admin: menu platform inti selalu tampil; menu bisnis tenant
+  // (Akademik, Mahasiswa, dst.) cuma disisipkan setelah Tenant Switcher
+  // aktif — lihat docs/RANCANGAN-SUPER-ADMIN.md §1-2.
+  const navItems = isSuperAdmin
+    ? tenantSelected
+      ? [...PLATFORM_NAV_ITEMS.slice(0, 3), ...TENANT_BUSINESS_NAV_ITEMS, ...PLATFORM_NAV_ITEMS.slice(3)]
+      : PLATFORM_NAV_ITEMS
+    : NAV_ITEMS
+  const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set([navItems[1]?.label ?? '']))
 
   const toggleSubmenu = (label: string) => {
     setOpenSubmenus((current) => {
@@ -62,7 +75,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
 
         <nav className="flex-1 overflow-y-auto px-2.5 py-3">
           <ul className="flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const Icon = item.icon
               const hasChildren = Boolean(item.children?.length)
               const active = pathname === item.path || (!hasChildren && pathname.startsWith(item.path))

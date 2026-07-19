@@ -2,12 +2,16 @@
 
 namespace Modules\Notification\Models;
 
+use App\Support\Scoping\ScopesToInstitution;
+use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Notification\Database\Factories\NotificationTemplateFactory;
 use Modules\Notification\Enums\NotificationChannel;
+use Modules\Tenancy\Models\University;
 
 /**
  * @property string $id
@@ -36,12 +40,12 @@ use Modules\Notification\Enums\NotificationChannel;
  *
  * @mixin \Eloquent
  */
-class NotificationTemplate extends Model
+class NotificationTemplate extends Model implements ScopesToInstitution
 {
     /** @use HasFactory<NotificationTemplateFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, TenantScoped;
 
-    protected $fillable = ['event_key', 'name', 'channel', 'subject', 'body_template', 'is_active'];
+    protected $fillable = ['university_id', 'event_key', 'name', 'channel', 'subject', 'body_template', 'is_active'];
 
     protected function casts(): array
     {
@@ -49,6 +53,14 @@ class NotificationTemplate extends Model
             'channel' => NotificationChannel::class,
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * @return BelongsTo<University, $this>
+     */
+    public function university(): BelongsTo
+    {
+        return $this->belongsTo(University::class);
     }
 
     protected static function newFactory(): NotificationTemplateFactory

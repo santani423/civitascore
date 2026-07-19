@@ -8,6 +8,9 @@ use Illuminate\Database\Seeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
 use Modules\SystemSetting\Database\Seeders\SystemSettingSeeder;
+use Modules\Tenancy\Database\Seeders\DemoUniversitiesSeeder;
+use Modules\Tenancy\Database\Seeders\TenancySeeder;
+use Modules\UserManagement\Database\Seeders\OrganizationalRoleSeeder;
 use Modules\UserManagement\Database\Seeders\RolePermissionSeeder;
 use Modules\UserManagement\Models\Role;
 
@@ -23,9 +26,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolePermissionSeeder::class,
+            OrganizationalRoleSeeder::class,
             SystemSettingSeeder::class,
             FeatureFlagSeeder::class,
             NotificationChannelSeeder::class,
+            TenancySeeder::class,
         ]);
 
         $superAdmin = User::query()->updateOrCreate(
@@ -43,5 +48,21 @@ class DatabaseSeeder extends Seeder
         if (! $superAdmin->roles()->where('role_id', $superAdminRole->id)->exists()) {
             $superAdmin->roles()->attach($superAdminRole->id, ['assigned_at' => now()]);
         }
+
+        // Baseline authenticated-but-privilege-less account (role `staff`,
+        // no university membership) — proves RBAC denies admin endpoints
+        // correctly even for a logged-in user with zero grants.
+        $staff = User::query()->updateOrCreate(
+            ['email' => 'staff@civitasone.test'],
+            ['name' => 'Staff Demo', 'password' => 'password', 'email_verified_at' => now(), 'is_active' => true],
+        );
+
+        $staffRole = Role::query()->where('slug', 'staff')->first();
+
+        if ($staffRole && ! $staff->roles()->where('role_id', $staffRole->id)->exists()) {
+            $staff->roles()->attach($staffRole->id, ['assigned_at' => now()]);
+        }
+
+        $this->call(DemoUniversitiesSeeder::class);
     }
 }

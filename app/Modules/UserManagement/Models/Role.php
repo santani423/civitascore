@@ -7,8 +7,10 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Modules\AuditLog\Support\Auditable;
+use Modules\Tenancy\Models\University;
 use Modules\UserManagement\Database\Factories\RoleFactory;
 
 /**
@@ -42,13 +44,21 @@ class Role extends Model
     /** @use HasFactory<RoleFactory> */
     use Auditable, HasFactory, HasUlids;
 
-    protected $fillable = ['name', 'slug', 'description', 'is_system'];
+    protected $fillable = ['university_id', 'name', 'slug', 'description', 'is_system'];
 
     protected function casts(): array
     {
         return [
             'is_system' => 'boolean',
         ];
+    }
+
+    /**
+     * @return BelongsTo<University, $this>
+     */
+    public function university(): BelongsTo
+    {
+        return $this->belongsTo(University::class);
     }
 
     /**

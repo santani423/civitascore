@@ -3,6 +3,8 @@
 namespace Modules\FileManagement\Models;
 
 use App\Models\User;
+use App\Support\Scoping\ScopesToInstitution;
+use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\FileManagement\Database\Factories\FileUploadFactory;
 use Modules\FileManagement\Enums\FileUploadStatus;
+use Modules\Tenancy\Models\University;
 
 /**
  * @property string $id
@@ -59,13 +62,13 @@ use Modules\FileManagement\Enums\FileUploadStatus;
  *
  * @mixin \Eloquent
  */
-class FileUpload extends Model
+class FileUpload extends Model implements ScopesToInstitution
 {
     /** @use HasFactory<FileUploadFactory> */
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, HasUlids, SoftDeletes, TenantScoped;
 
     protected $fillable = [
-        'uploaded_by', 'fileable_type', 'fileable_id', 'disk', 'path',
+        'university_id', 'uploaded_by', 'fileable_type', 'fileable_id', 'disk', 'path',
         'original_name', 'mime_type', 'extension', 'size_bytes',
         'checksum', 'status', 'is_public',
     ];
@@ -77,6 +80,14 @@ class FileUpload extends Model
             'is_public' => 'boolean',
             'size_bytes' => 'integer',
         ];
+    }
+
+    /**
+     * @return BelongsTo<University, $this>
+     */
+    public function university(): BelongsTo
+    {
+        return $this->belongsTo(University::class);
     }
 
     /**

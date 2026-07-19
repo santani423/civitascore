@@ -1,5 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/authStore'
+import { useTenantStore } from '@/stores/tenantStore'
 
 /**
  * Centralized API client. Nothing in the app should call axios/fetch
@@ -20,6 +21,15 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   if (token) {
     config.headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  // Cuma terisi lewat Tenant Switcher (Super Admin, lihat stores/tenantStore.ts)
+  // — pengguna tenant biasa tidak pernah mengisi ini, backend tetap
+  // auto-resolve dari membership default mereka.
+  const selectedUniversityId = useTenantStore.getState().selectedUniversity?.id
+
+  if (selectedUniversityId) {
+    config.headers.set('X-University-ID', selectedUniversityId)
   }
 
   return config

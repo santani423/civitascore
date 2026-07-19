@@ -2,14 +2,18 @@
 
 namespace Modules\ApprovalWorkflow\Models;
 
+use App\Support\Scoping\ScopesToInstitution;
+use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\ApprovalWorkflow\Database\Factories\ApprovalWorkflowFactory;
+use Modules\Tenancy\Models\University;
 
 /**
  * @property string $id
@@ -43,12 +47,12 @@ use Modules\ApprovalWorkflow\Database\Factories\ApprovalWorkflowFactory;
  *
  * @mixin \Eloquent
  */
-class ApprovalWorkflow extends Model
+class ApprovalWorkflow extends Model implements ScopesToInstitution
 {
     /** @use HasFactory<ApprovalWorkflowFactory> */
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, HasUlids, SoftDeletes, TenantScoped;
 
-    protected $fillable = ['name', 'workflowable_type', 'conditions', 'is_active', 'description'];
+    protected $fillable = ['university_id', 'name', 'workflowable_type', 'conditions', 'is_active', 'description'];
 
     protected function casts(): array
     {
@@ -56,6 +60,14 @@ class ApprovalWorkflow extends Model
             'conditions' => 'array',
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * @return BelongsTo<University, $this>
+     */
+    public function university(): BelongsTo
+    {
+        return $this->belongsTo(University::class);
     }
 
     /**

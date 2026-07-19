@@ -4,7 +4,8 @@ namespace App\Providers;
 
 use App\Support\Database\EnsureDatabaseExists;
 use App\Support\Scoping\InstitutionContextResolver;
-use App\Support\Scoping\NullInstitutionContextResolver;
+use App\Support\Scoping\UniversityInstitutionContextResolver;
+use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Console\Events\CommandStarting;
@@ -27,7 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(InstitutionContextResolver::class, NullInstitutionContextResolver::class);
+        $this->app->singleton(TenantContext::class);
+        $this->app->bind(InstitutionContextResolver::class, UniversityInstitutionContextResolver::class);
         $this->app->bind(VirusScanner::class, NullVirusScanner::class);
     }
 

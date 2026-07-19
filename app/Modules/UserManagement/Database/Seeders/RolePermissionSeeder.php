@@ -3,6 +3,7 @@
 namespace Modules\UserManagement\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Cache;
 use Modules\UserManagement\Enums\PermissionAction;
 use Modules\UserManagement\Enums\PermissionScope;
 use Modules\UserManagement\Models\Permission;
@@ -33,6 +34,16 @@ class RolePermissionSeeder extends Seeder
         'notification_channels' => [PermissionAction::Read, PermissionAction::Update],
         'approval_workflows' => [PermissionAction::Create, PermissionAction::Read, PermissionAction::Delete],
         'approval_requests' => [PermissionAction::Read],
+        'users' => [PermissionAction::Read],
+        'platform_universities' => [PermissionAction::Create, PermissionAction::Read, PermissionAction::Update],
+        'platform_statistics' => [PermissionAction::Read],
+        'tenant_profile' => [PermissionAction::Read, PermissionAction::Update],
+        'platform_modules' => [PermissionAction::Update],
+        'platform_billing' => [PermissionAction::Read, PermissionAction::Update],
+        'platform_security' => [PermissionAction::Read, PermissionAction::Update],
+        'support_sessions' => [PermissionAction::Create, PermissionAction::Read],
+        'platform_master_data' => [PermissionAction::Update],
+        'platform_maintenance' => [PermissionAction::Update],
     ];
 
     public function run(): void
@@ -55,15 +66,21 @@ class RolePermissionSeeder extends Seeder
         }
 
         $superAdmin = Role::query()->updateOrCreate(
-            ['slug' => 'super_admin'],
+            ['slug' => 'super_admin', 'university_id' => null],
             ['name' => 'Super Admin', 'description' => 'Akses penuh ke seluruh sistem.', 'is_system' => true],
         );
 
         $superAdmin->permissions()->sync($permissions->pluck('id')->all());
 
         Role::query()->updateOrCreate(
-            ['slug' => 'staff'],
+            ['slug' => 'staff', 'university_id' => null],
             ['name' => 'Staff', 'description' => 'Baseline minimal untuk pengguna terautentikasi tanpa privilese khusus.', 'is_system' => true],
         );
+
+        // sync() writes pivot rows via the query builder directly (and this
+        // seeder also runs under DatabaseSeeder's WithoutModelEvents), so
+        // RolePermission's create/delete model events never fire here —
+        // flush explicitly, same workaround as RoleService::syncPermissions().
+        Cache::tags(['permissions'])->flush();
     }
 }

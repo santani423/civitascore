@@ -5,6 +5,7 @@ namespace Modules\UserManagement\Controllers;
 use App\Http\Controllers\Controller;
 use App\Support\Http\ApiResponse;
 use App\Support\Http\ListQuery;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\UserManagement\Models\Role;
@@ -16,14 +17,26 @@ use Modules\UserManagement\Services\RoleService;
 
 class RoleController extends Controller
 {
-    public function __construct(private readonly RoleService $roles) {}
+    public function __construct(private readonly RoleService $roles, private readonly TenantContext $tenant) {}
 
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Role::class);
 
+        // Roles are hybrid: university_id = null is a global template
+        // (visible/usable from every tenant, e.g. super_admin/staff),
+        // filled means custom to that specific university. In a resolved
+        // tenant context, list global templates + that tenant's own custom
+        // roles; in platform context (no tenant resolved), list everything.
+        $query = Role::query();
+
+        if ($this->tenant->hasUniversity()) {
+            $universityId = $this->tenant->universityId();
+            $query->where(fn ($q) => $q->whereNull('university_id')->orWhere('university_id', $universityId));
+        }
+
         $paginator = ListQuery::paginate(
-            query: Role::query(),
+            query: $query,
             request: $request,
             searchable: ['name', 'slug'],
             filterable: ['is_system'],
