@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown, ChevronLeft } from 'lucide-react'
-import { NAV_ITEMS, PLATFORM_NAV_ITEMS, TENANT_BUSINESS_NAV_ITEMS } from '@/constants/nav'
+import { NAV_ITEMS, PLATFORM_NAV_ITEMS, PORTAL_NAV_ITEMS, TENANT_BUSINESS_NAV_ITEMS } from '@/constants/nav'
 import { APP_NAME } from '@/constants/app'
 import { Tooltip } from '@/components/ui/Tooltip'
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin'
+import { useIsStudent } from '@/hooks/useIsStudent'
 import { useAuthStore, selectPermissions } from '@/stores/authStore'
 import { useTenantStore } from '@/stores/tenantStore'
 import type { NavItem } from '@/types/navigation'
@@ -55,6 +56,7 @@ function isChildActive(pathname: string, children?: { path: string }[]): boolean
 export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
   const { pathname } = useLocation()
   const isSuperAdmin = useIsSuperAdmin()
+  const isStudent = useIsStudent()
   const tenantSelected = useTenantStore((state) => state.selectedUniversity !== null)
   const permissions = useAuthStore(selectPermissions)
 
@@ -62,15 +64,18 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
   // (Akademik, Mahasiswa, dst.) cuma disisipkan setelah Tenant Switcher
   // aktif — lihat docs/RANCANGAN-SUPER-ADMIN.md §1-2. Lalu disaring lagi
   // per permission supaya menu yang pasti ditolak backend (403) tidak
-  // ditampilkan sama sekali.
-  const navItems = filterNavItems(
-    isSuperAdmin
-      ? tenantSelected
-        ? [...PLATFORM_NAV_ITEMS.slice(0, 3), ...TENANT_BUSINESS_NAV_ITEMS, ...PLATFORM_NAV_ITEMS.slice(3)]
-        : PLATFORM_NAV_ITEMS
-      : NAV_ITEMS,
-    permissions,
-  )
+  // ditampilkan sama sekali. Mahasiswa dapat menu Portal tersendiri, tanpa
+  // filter permission (bukan resource admin, lihat PORTAL_NAV_ITEMS).
+  const navItems = isSuperAdmin
+    ? filterNavItems(
+        tenantSelected
+          ? [...PLATFORM_NAV_ITEMS.slice(0, 3), ...TENANT_BUSINESS_NAV_ITEMS, ...PLATFORM_NAV_ITEMS.slice(3)]
+          : PLATFORM_NAV_ITEMS,
+        permissions,
+      )
+    : isStudent
+      ? PORTAL_NAV_ITEMS
+      : filterNavItems(NAV_ITEMS, permissions)
   const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set([navItems[1]?.label ?? '']))
 
   const toggleSubmenu = (label: string) => {

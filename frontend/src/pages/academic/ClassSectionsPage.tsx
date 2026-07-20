@@ -29,14 +29,16 @@ export function ClassSectionsPage() {
       header: 'Kelas',
       cell: (row) => (
         <Link to={`${ROUTES.akademik.kelasJadwal}/${row.id}`} className="block">
-          <p className="font-medium text-primary hover:underline">{row.course_name}</p>
-          <p className="text-xs text-ink-tertiary">{row.class_code}</p>
+          <p className="font-medium text-primary hover:underline">{row.course_name ?? '-'}</p>
+          <p className="text-xs text-ink-tertiary">
+            {row.course_code ?? '-'} · {row.class_code}
+          </p>
         </Link>
       ),
     },
     { header: 'Program Studi', cell: (row) => row.study_program_name ?? '-' },
     { header: 'Periode', cell: (row) => row.academic_term_label ?? '-' },
-    { header: 'Kapasitas', cell: (row) => formatNumber(row.capacity) },
+    { header: 'Terisi/Kapasitas', cell: (row) => `${formatNumber(row.enrolled_count ?? 0)}/${formatNumber(row.capacity)}` },
     {
       header: 'Status',
       cell: (row) => <Badge variant={row.is_active ? 'success' : 'neutral'}>{row.is_active ? 'Aktif' : 'Nonaktif'}</Badge>,

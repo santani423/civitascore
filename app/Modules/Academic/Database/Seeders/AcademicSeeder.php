@@ -8,9 +8,14 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Academic\Enums\AcademicSemester;
+use Modules\Academic\Enums\AttendanceStatus;
+use Modules\Academic\Enums\KrsItemStatus;
+use Modules\Academic\Enums\LetterGrade;
 use Modules\Academic\Enums\StudentStatus;
 use Modules\Academic\Models\AcademicTerm;
 use Modules\Academic\Models\ClassSection;
+use Modules\Academic\Models\Course;
+use Modules\Academic\Models\Curriculum;
 use Modules\Academic\Models\Employee;
 use Modules\Academic\Models\Faculty;
 use Modules\Academic\Models\Lecturer;
@@ -80,9 +85,32 @@ class AcademicSeeder extends Seeder
         'dropped_out' => 1,
     ];
 
+    /** Courses generated per study program (plan calls for "~15-20/prodi"). */
+    private const COURSES_PER_STUDY_PROGRAM_MIN = 15;
+
+    private const COURSES_PER_STUDY_PROGRAM_MAX = 20;
+
+    /** How many of a student's own-program classes they're enrolled in (KRS). */
+    private const KRS_CLASSES_PER_STUDENT_MIN = 4;
+
+    private const KRS_CLASSES_PER_STUDENT_MAX = 6;
+
+    /** Share of KRS entries (out of 100) that get a grade / a seeded attendance history. */
+    private const GRADE_SEED_CHANCE = 40;
+
+    private const ATTENDANCE_SEED_CHANCE = 30;
+
+    private const ATTENDANCE_MEETINGS = 6;
+
+    /** @var array<string, int> letter-grade => weight out of 100, biased toward passing grades. */
+    private const LETTER_GRADE_WEIGHTS = ['A' => 15, 'AB' => 20, 'B' => 25, 'BC' => 15, 'C' => 15, 'D' => 5, 'E' => 5];
+
+    /** @var array<string, int> attendance-status => weight out of 100 */
+    private const ATTENDANCE_STATUS_WEIGHTS = ['present' => 75, 'permitted' => 10, 'sick' => 8, 'absent' => 7];
+
     /**
      * @param  array{faculties: int, study_programs: int, students: int, lecturers: int, employees: int, classes: int}  $scale
-     * @return array{students: Collection<int, Student>, current_term: AcademicTerm}
+     * @return array{students: \Illuminate\Database\Eloquent\Collection<int, Student>, current_term: AcademicTerm}
      */
     public function run(University $university, array $scale): array
     {
@@ -99,14 +127,19 @@ class AcademicSeeder extends Seeder
 
         $faculties = $this->seedFaculties($university, $scale['faculties']);
         $studyPrograms = $this->seedStudyPrograms($university, $faculties, $scale['study_programs']);
+        $curriculumsByProgram = $this->seedCurriculums($university, $studyPrograms);
+        $coursesByProgram = $this->seedCourses($university, $studyPrograms, $curriculumsByProgram);
 
         $this->seedStudents($university, $studyPrograms, $scale['students']);
         $this->seedLecturers($university, $faculties, $scale['lecturers']);
         $this->seedEmployees($university, $scale['employees']);
-        $this->seedClassSections($university, $studyPrograms, $currentTerm, $scale['classes']);
+
+        $students = Student::query()->get();
+        $classSectionsByProgram = $this->seedClassSections($university, $studyPrograms, $coursesByProgram, $currentTerm, $scale['classes']);
+        $this->seedKrsGradesAttendance($university, $students, $classSectionsByProgram, $currentTerm);
 
         return [
-            'students' => Student::query()->get(),
+            'students' => $students,
             'current_term' => $currentTerm,
         ];
     }
@@ -249,20 +282,91 @@ class AcademicSeeder extends Seeder
 
     /**
      * @param  Collection<int, StudyProgram>  $studyPrograms
+     * @return Collection<string, Curriculum>
      */
-    private function seedClassSections(University $university, Collection $studyPrograms, AcademicTerm $currentTerm, int $count): void
+    private function seedCurriculums(University $university, Collection $studyPrograms): Collection
     {
-        $programIds = $studyPrograms->pluck('id')->all();
+        return $studyPrograms->mapWithKeys(fn (StudyProgram $studyProgram) => [
+            $studyProgram->id => Curriculum::query()->updateOrCreate(
+                ['university_id' => $university->id, 'study_program_id' => $studyProgram->id, 'name' => "Kurikulum {$studyProgram->code}"],
+                ['academic_year' => '2026/2027', 'is_active' => true],
+            ),
+        ]);
+    }
+
+    /**
+     * @param  Collection<int, StudyProgram>  $studyPrograms
+     * @param  Collection<string, Curriculum>  $curriculumsByProgram
+     * @return Collection<string, \Illuminate\Database\Eloquent\Collection<int, Course>>  courses grouped by study_program_id
+     */
+    private function seedCourses(University $university, Collection $studyPrograms, Collection $curriculumsByProgram): Collection
+    {
+        $now = now();
+        $rows = [];
+        $globalIndex = 0;
+
+        foreach ($studyPrograms as $studyProgram) {
+            $curriculum = $curriculumsByProgram[$studyProgram->id];
+            $prefix = Str::upper(Str::substr(Str::slug($studyProgram->name, ''), 0, 3));
+            $courseCount = fake()->numberBetween(self::COURSES_PER_STUDY_PROGRAM_MIN, self::COURSES_PER_STUDY_PROGRAM_MAX);
+
+            for ($j = 1; $j <= $courseCount; $j++) {
+                $globalIndex++;
+
+                $rows[] = [
+                    'id' => (string) Str::ulid(),
+                    'university_id' => $university->id,
+                    'study_program_id' => $studyProgram->id,
+                    'curriculum_id' => $curriculum->id,
+                    'code' => $prefix.str_pad((string) $globalIndex, 4, '0', STR_PAD_LEFT),
+                    'name' => Str::title(fake()->words(3, true)),
+                    'credits' => fake()->numberBetween(2, 4),
+                    'semester_level' => min(8, (int) ceil($j / ($courseCount / 8))),
+                    'is_active' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+        }
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('courses')->insert($chunk);
+        }
+
+        return Course::query()->get()->groupBy('study_program_id');
+    }
+
+    /**
+     * @param  Collection<int, StudyProgram>  $studyPrograms
+     * @param  Collection<string, \Illuminate\Database\Eloquent\Collection<int, Course>>  $coursesByProgram
+     * @return Collection<string, \Illuminate\Database\Eloquent\Collection<int, ClassSection>>  class sections grouped by study_program_id
+     */
+    private function seedClassSections(University $university, Collection $studyPrograms, Collection $coursesByProgram, AcademicTerm $currentTerm, int $count): Collection
+    {
+        $programList = $studyPrograms->values();
         $now = now();
         $rows = [];
 
         for ($i = 1; $i <= $count; $i++) {
+            // Round-robin (not random) study program assignment so every
+            // program is guaranteed at least one class section — KRS
+            // seeding below needs each active student's own program to have
+            // classes to enroll them in.
+            $studyProgram = $programList[($i - 1) % $programList->count()];
+            $programCourses = $coursesByProgram->get($studyProgram->id, collect());
+
+            if ($programCourses->isEmpty()) {
+                continue;
+            }
+
+            $course = $programCourses->random();
+
             $rows[] = [
                 'id' => (string) Str::ulid(),
                 'university_id' => $university->id,
-                'study_program_id' => $programIds[array_rand($programIds)],
+                'study_program_id' => $studyProgram->id,
                 'academic_term_id' => $currentTerm->id,
-                'course_name' => fake()->words(3, true),
+                'course_id' => $course->id,
                 'class_code' => 'K'.str_pad((string) $i, 4, '0', STR_PAD_LEFT),
                 'capacity' => fake()->numberBetween(25, 50),
                 'is_active' => true,
@@ -271,7 +375,101 @@ class AcademicSeeder extends Seeder
             ];
         }
 
-        DB::table('class_sections')->insert($rows);
+        foreach (array_chunk($rows, 500) as $chunk) {
+            DB::table('class_sections')->insert($chunk);
+        }
+
+        return ClassSection::query()->get()->groupBy('study_program_id');
+    }
+
+    /**
+     * Enrolls every active student in 4-6 class sections from their own
+     * study program (KRS), then seeds a grade for ~40% of KRS entries and a
+     * 6-meeting attendance history for ~30% — both intentionally partial so
+     * "belum dinilai" / empty-attendance states are exercised too, not just
+     * the happy path.
+     *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, Student>  $students
+     * @param  Collection<string, \Illuminate\Database\Eloquent\Collection<int, ClassSection>>  $classSectionsByProgram
+     */
+    private function seedKrsGradesAttendance(
+        University $university,
+        \Illuminate\Database\Eloquent\Collection $students,
+        Collection $classSectionsByProgram,
+        AcademicTerm $currentTerm,
+    ): void {
+        $now = now();
+        $krsRows = [];
+        $gradeRows = [];
+        $attendanceRows = [];
+
+        $activeStudents = $students->filter(fn (Student $student) => $student->status === StudentStatus::Active);
+
+        foreach ($activeStudents as $student) {
+            $programClasses = $classSectionsByProgram->get($student->study_program_id, collect());
+
+            if ($programClasses->isEmpty()) {
+                continue;
+            }
+
+            $classCount = min($programClasses->count(), random_int(self::KRS_CLASSES_PER_STUDENT_MIN, self::KRS_CLASSES_PER_STUDENT_MAX));
+
+            foreach ($programClasses->shuffle()->take($classCount) as $classSection) {
+                $krsItemId = (string) Str::ulid();
+
+                $krsRows[] = [
+                    'id' => $krsItemId,
+                    'university_id' => $university->id,
+                    'student_id' => $student->id,
+                    'class_section_id' => $classSection->id,
+                    'academic_term_id' => $currentTerm->id,
+                    'status' => KrsItemStatus::Enrolled->value,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+
+                if (random_int(1, 100) <= self::GRADE_SEED_CHANCE) {
+                    $gradeRows[] = [
+                        'id' => (string) Str::ulid(),
+                        'university_id' => $university->id,
+                        'krs_item_id' => $krsItemId,
+                        'letter_grade' => LetterGrade::from($this->weightedPick(self::LETTER_GRADE_WEIGHTS))->value,
+                        'score' => fake()->randomFloat(2, 40, 100),
+                        'submitted_at' => $now,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                }
+
+                if (random_int(1, 100) <= self::ATTENDANCE_SEED_CHANCE) {
+                    foreach (range(1, self::ATTENDANCE_MEETINGS) as $meetingNumber) {
+                        $attendanceRows[] = [
+                            'id' => (string) Str::ulid(),
+                            'university_id' => $university->id,
+                            'krs_item_id' => $krsItemId,
+                            'meeting_number' => $meetingNumber,
+                            'meeting_date' => now()->subWeeks(self::ATTENDANCE_MEETINGS - $meetingNumber)->toDateString(),
+                            'status' => AttendanceStatus::from($this->weightedPick(self::ATTENDANCE_STATUS_WEIGHTS))->value,
+                            'notes' => null,
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
+                    }
+                }
+            }
+        }
+
+        foreach (array_chunk($krsRows, 500) as $chunk) {
+            DB::table('krs_items')->insert($chunk);
+        }
+
+        foreach (array_chunk($gradeRows, 500) as $chunk) {
+            DB::table('grades')->insert($chunk);
+        }
+
+        foreach (array_chunk($attendanceRows, 500) as $chunk) {
+            DB::table('attendances')->insert($chunk);
+        }
     }
 
     /**

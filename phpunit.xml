@@ -25,6 +25,13 @@
             <directory>app/Modules/Dashboard/Tests/Feature</directory>
             <directory>app/Modules/Academic/Tests/Feature</directory>
             <directory>app/Modules/Finance/Tests/Feature</directory>
+            <directory>app/Modules/Scholarship/Tests/Feature</directory>
+            <directory>app/Modules/Thesis/Tests/Feature</directory>
+            <directory>app/Modules/Internship/Tests/Feature</directory>
+            <directory>app/Modules/Library/Tests/Feature</directory>
+            <directory>app/Modules/Alumni/Tests/Feature</directory>
+            <directory>app/Modules/Announcement/Tests/Feature</directory>
+            <directory>app/Modules/Report/Tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

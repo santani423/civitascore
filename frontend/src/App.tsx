@@ -14,7 +14,6 @@ import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { PlatformDashboardPage } from '@/pages/platform/PlatformDashboardPage'
 import { UniversitiesPage } from '@/pages/platform/UniversitiesPage'
 import { SupportSessionsPage } from '@/pages/platform/SupportSessionsPage'
-import { PlaceholderPage } from '@/pages/placeholders/PlaceholderPage'
 import { StudentsPage } from '@/pages/academic/StudentsPage'
 import { StudentDetailPage } from '@/pages/academic/StudentDetailPage'
 import { LecturersPage } from '@/pages/academic/LecturersPage'
@@ -25,10 +24,50 @@ import { StudyProgramsPage } from '@/pages/academic/StudyProgramsPage'
 import { StudyProgramDetailPage } from '@/pages/academic/StudyProgramDetailPage'
 import { ClassSectionsPage } from '@/pages/academic/ClassSectionsPage'
 import { ClassSectionDetailPage } from '@/pages/academic/ClassSectionDetailPage'
+import { CurriculumsPage } from '@/pages/academic/CurriculumsPage'
+import { CurriculumDetailPage } from '@/pages/academic/CurriculumDetailPage'
+import { CoursesPage } from '@/pages/academic/CoursesPage'
+import { CourseDetailPage } from '@/pages/academic/CourseDetailPage'
+import { KrsPage } from '@/pages/academic/KrsPage'
+import { GradesPage } from '@/pages/academic/GradesPage'
+import { AttendancePage } from '@/pages/academic/AttendancePage'
 import { InvoicesPage } from '@/pages/finance/InvoicesPage'
 import { InvoiceDetailPage } from '@/pages/finance/InvoiceDetailPage'
 import { PaymentsPage } from '@/pages/finance/PaymentsPage'
+import { ScholarshipsPage } from '@/pages/scholarship/ScholarshipsPage'
+import { ScholarshipDetailPage } from '@/pages/scholarship/ScholarshipDetailPage'
+import { ThesesPage } from '@/pages/thesis/ThesesPage'
+import { ThesisDetailPage } from '@/pages/thesis/ThesisDetailPage'
+import { InternshipsPage } from '@/pages/internship/InternshipsPage'
+import { InternshipDetailPage } from '@/pages/internship/InternshipDetailPage'
+import { BooksPage } from '@/pages/library/BooksPage'
+import { BookDetailPage } from '@/pages/library/BookDetailPage'
+import { AlumniPage } from '@/pages/alumni/AlumniPage'
+import { AlumniDetailPage } from '@/pages/alumni/AlumniDetailPage'
+import { AnnouncementsPage } from '@/pages/announcement/AnnouncementsPage'
+import { AnnouncementDetailPage } from '@/pages/announcement/AnnouncementDetailPage'
+import { ReportsPage } from '@/pages/report/ReportsPage'
+import { PortalDashboardPage } from '@/pages/portal/PortalDashboardPage'
+import { PortalProfilePage } from '@/pages/portal/PortalProfilePage'
+import { PortalKrsPage } from '@/pages/portal/PortalKrsPage'
+import { PortalSchedulePage } from '@/pages/portal/PortalSchedulePage'
+import { PortalKhsPage } from '@/pages/portal/PortalKhsPage'
+import { PortalTranscriptPage } from '@/pages/portal/PortalTranscriptPage'
+import { PortalGradesPage } from '@/pages/portal/PortalGradesPage'
+import { PortalAttendancePage } from '@/pages/portal/PortalAttendancePage'
+import { PortalAssignmentsPage } from '@/pages/portal/PortalAssignmentsPage'
+import { PortalQuizzesPage } from '@/pages/portal/PortalQuizzesPage'
+import { PortalLeaveRequestPage } from '@/pages/portal/PortalLeaveRequestPage'
+import { PortalLetterRequestPage } from '@/pages/portal/PortalLetterRequestPage'
+import { PortalScholarshipPage } from '@/pages/portal/PortalScholarshipPage'
+import { PortalInvoicesPage } from '@/pages/portal/PortalInvoicesPage'
+import { PortalAcademicAdvisingPage } from '@/pages/portal/PortalAcademicAdvisingPage'
+import { PortalThesisAdvisingPage } from '@/pages/portal/PortalThesisAdvisingPage'
+import { PortalAnnouncementsPage } from '@/pages/portal/PortalAnnouncementsPage'
+import { PortalLecturerEvaluationPage } from '@/pages/portal/PortalLecturerEvaluationPage'
+import { PortalGraduationPage } from '@/pages/portal/PortalGraduationPage'
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin'
+import { useIsStudent } from '@/hooks/useIsStudent'
 import { useTenantStore } from '@/stores/tenantStore'
 import { RolesPage } from '@/pages/settings/RolesPage'
 import { PermissionsPage } from '@/pages/settings/PermissionsPage'
@@ -67,6 +106,13 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.akademik.programStudiDetail, element: <StudyProgramDetailPage /> },
   { path: ROUTES.akademik.kelasJadwal, element: <ClassSectionsPage /> },
   { path: ROUTES.akademik.kelasJadwalDetail, element: <ClassSectionDetailPage /> },
+  { path: ROUTES.akademik.kurikulum, element: <CurriculumsPage /> },
+  { path: ROUTES.akademik.kurikulumDetail, element: <CurriculumDetailPage /> },
+  { path: ROUTES.akademik.mataKuliah, element: <CoursesPage /> },
+  { path: ROUTES.akademik.mataKuliahDetail, element: <CourseDetailPage /> },
+  { path: ROUTES.akademik.krs, element: <KrsPage /> },
+  { path: ROUTES.akademik.absensi, element: <AttendancePage /> },
+  { path: ROUTES.akademik.penilaian, element: <GradesPage /> },
   { path: ROUTES.keuangan.tagihan, element: <InvoicesPage /> },
   { path: ROUTES.keuangan.tagihanDetail, element: <InvoiceDetailPage /> },
   { path: ROUTES.keuangan.pembayaran, element: <PaymentsPage /> },
@@ -84,18 +130,38 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.persetujuanDetail, element: <ApprovalRequestDetailPage /> },
   { path: ROUTES.persetujuan, element: <ApprovalRequestsPage /> },
 
-  { path: ROUTES.akademik.kurikulum, element: <PlaceholderPage title="Kurikulum" /> },
-  { path: ROUTES.akademik.mataKuliah, element: <PlaceholderPage title="Mata Kuliah" /> },
-  { path: ROUTES.akademik.krs, element: <PlaceholderPage title="KRS" /> },
-  { path: ROUTES.akademik.absensi, element: <PlaceholderPage title="Absensi" /> },
-  { path: ROUTES.akademik.penilaian, element: <PlaceholderPage title="Penilaian" /> },
-  { path: ROUTES.keuangan.beasiswa, element: <PlaceholderPage title="Beasiswa" /> },
-  { path: ROUTES.skripsi, element: <PlaceholderPage title="Skripsi" /> },
-  { path: ROUTES.magangMbkm, element: <PlaceholderPage title="Magang dan MBKM" /> },
-  { path: ROUTES.perpustakaan, element: <PlaceholderPage title="Perpustakaan" /> },
-  { path: ROUTES.alumni, element: <PlaceholderPage title="Alumni" /> },
-  { path: ROUTES.pengumuman, element: <PlaceholderPage title="Pengumuman" /> },
-  { path: ROUTES.laporan, element: <PlaceholderPage title="Laporan" /> },
+  { path: ROUTES.keuangan.beasiswa, element: <ScholarshipsPage /> },
+  { path: ROUTES.keuangan.beasiswaDetail, element: <ScholarshipDetailPage /> },
+  { path: ROUTES.skripsi, element: <ThesesPage /> },
+  { path: ROUTES.skripsiDetail, element: <ThesisDetailPage /> },
+  { path: ROUTES.magangMbkm, element: <InternshipsPage /> },
+  { path: ROUTES.magangMbkmDetail, element: <InternshipDetailPage /> },
+  { path: ROUTES.perpustakaan, element: <BooksPage /> },
+  { path: ROUTES.perpustakaanDetail, element: <BookDetailPage /> },
+  { path: ROUTES.alumni, element: <AlumniPage /> },
+  { path: ROUTES.alumniDetail, element: <AlumniDetailPage /> },
+  { path: ROUTES.pengumuman, element: <AnnouncementsPage /> },
+  { path: ROUTES.pengumumanDetail, element: <AnnouncementDetailPage /> },
+  { path: ROUTES.laporan, element: <ReportsPage /> },
+
+  { path: ROUTES.portal.profil, element: <PortalProfilePage /> },
+  { path: ROUTES.portal.krs, element: <PortalKrsPage /> },
+  { path: ROUTES.portal.jadwal, element: <PortalSchedulePage /> },
+  { path: ROUTES.portal.khs, element: <PortalKhsPage /> },
+  { path: ROUTES.portal.transkrip, element: <PortalTranscriptPage /> },
+  { path: ROUTES.portal.nilai, element: <PortalGradesPage /> },
+  { path: ROUTES.portal.absensi, element: <PortalAttendancePage /> },
+  { path: ROUTES.portal.tugas, element: <PortalAssignmentsPage /> },
+  { path: ROUTES.portal.kuis, element: <PortalQuizzesPage /> },
+  { path: ROUTES.portal.cuti, element: <PortalLeaveRequestPage /> },
+  { path: ROUTES.portal.surat, element: <PortalLetterRequestPage /> },
+  { path: ROUTES.portal.beasiswa, element: <PortalScholarshipPage /> },
+  { path: ROUTES.portal.tagihan, element: <PortalInvoicesPage /> },
+  { path: ROUTES.portal.bimbinganAkademik, element: <PortalAcademicAdvisingPage /> },
+  { path: ROUTES.portal.bimbinganSkripsi, element: <PortalThesisAdvisingPage /> },
+  { path: ROUTES.portal.pengumuman, element: <PortalAnnouncementsPage /> },
+  { path: ROUTES.portal.evaluasiDosen, element: <PortalLecturerEvaluationPage /> },
+  { path: ROUTES.portal.wisuda, element: <PortalGraduationPage /> },
 ]
 
 /**
@@ -107,9 +173,12 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
  */
 function DashboardRoute() {
   const isSuperAdmin = useIsSuperAdmin()
+  const isStudent = useIsStudent()
   const tenantSelected = useTenantStore((state) => state.selectedUniversity !== null)
 
-  return isSuperAdmin && !tenantSelected ? <PlatformDashboardPage /> : <DashboardPage />
+  if (isSuperAdmin && !tenantSelected) return <PlatformDashboardPage />
+  if (isStudent) return <PortalDashboardPage />
+  return <DashboardPage />
 }
 
 function App() {

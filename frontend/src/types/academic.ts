@@ -54,9 +54,91 @@ export interface ClassSection {
   study_program_name: string | null
   academic_term_id: string
   academic_term_label: string | null
-  course_name: string
+  course_id: string
+  course_name: string | null
+  course_code: string | null
+  credits: number | null
   class_code: string
   capacity: number
+  enrolled_count: number | null
   is_active: boolean
+  created_at: string
+}
+
+export interface Curriculum {
+  id: string
+  study_program_id: string
+  study_program_name: string | null
+  name: string
+  academic_year: string
+  is_active: boolean
+  courses_count: number | null
+  courses?: Course[]
+  created_at: string
+}
+
+export interface Course {
+  id: string
+  study_program_id: string
+  study_program_name: string | null
+  curriculum_id: string
+  curriculum_name: string | null
+  code: string
+  name: string
+  credits: number
+  semester_level: number
+  is_active: boolean
+  created_at: string
+}
+
+export type KrsItemStatus = 'enrolled' | 'dropped'
+
+export interface KrsItem {
+  id: string
+  student_id: string
+  student_name: string | null
+  student_nim: string | null
+  class_section_id: string
+  course_name: string | null
+  course_code: string | null
+  class_code: string | null
+  academic_term_id: string
+  academic_term_label: string | null
+  status: KrsItemStatus
+  letter_grade: string | null
+  created_at: string
+}
+
+export type LetterGrade = 'A' | 'AB' | 'B' | 'BC' | 'C' | 'D' | 'E'
+
+export interface Grade {
+  id: string
+  krs_item_id: string
+  student_id: string | null
+  student_name: string | null
+  student_nim: string | null
+  course_name: string | null
+  course_code: string | null
+  academic_term_label: string | null
+  letter_grade: LetterGrade | null
+  score: string | null
+  submitted_at: string | null
+  created_at: string
+}
+
+export type AttendanceStatus = 'present' | 'permitted' | 'sick' | 'absent'
+
+export interface Attendance {
+  id: string
+  krs_item_id: string
+  student_id: string | null
+  student_name: string | null
+  student_nim: string | null
+  course_name: string | null
+  course_code: string | null
+  meeting_number: number
+  meeting_date: string
+  status: AttendanceStatus
+  notes: string | null
   created_at: string
 }

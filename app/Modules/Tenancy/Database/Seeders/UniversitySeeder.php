@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
 use Modules\Academic\Database\Seeders\AcademicSeeder;
+use Modules\Alumni\Database\Seeders\AlumniSeeder;
+use Modules\Announcement\Database\Seeders\AnnouncementSeeder;
 use Modules\ApprovalWorkflow\Enums\ApprovalApproverType;
 use Modules\ApprovalWorkflow\Enums\ApprovalHistoryEvent;
 use Modules\ApprovalWorkflow\Enums\ApprovalRejectAction;
@@ -21,8 +23,11 @@ use Modules\AuditLog\Models\AuditLog;
 use Modules\FileManagement\Enums\FileUploadStatus;
 use Modules\FileManagement\Models\FileUpload;
 use Modules\Finance\Database\Seeders\FinanceSeeder;
+use Modules\Internship\Database\Seeders\InternshipSeeder;
+use Modules\Library\Database\Seeders\LibrarySeeder;
 use Modules\Notification\Enums\NotificationChannel;
 use Modules\Notification\Models\NotificationTemplate;
+use Modules\Scholarship\Database\Seeders\ScholarshipSeeder;
 use Modules\SystemSetting\Enums\SettingValueType;
 use Modules\Tenancy\Enums\MembershipStatus;
 use Modules\Tenancy\Enums\SubscriptionStatus;
@@ -37,6 +42,7 @@ use Modules\Tenancy\Models\UniversitySetting;
 use Modules\Tenancy\Models\UniversitySubscription;
 use Modules\Tenancy\Models\UniversitySubscriptionHistory;
 use Modules\Tenancy\Models\UserUniversity;
+use Modules\Thesis\Database\Seeders\ThesisSeeder;
 use Modules\UserManagement\Models\Role;
 use Modules\UserManagement\Models\UserRole;
 
@@ -96,6 +102,12 @@ class UniversitySeeder extends Seeder
 
         $academic = (new AcademicSeeder())->run($university, $this->config['academic_scale']);
         (new FinanceSeeder())->run($university, $academic['students']);
+        (new ScholarshipSeeder())->run($university, $academic['students']);
+        (new ThesisSeeder())->run($university, $academic['students']);
+        (new InternshipSeeder())->run($university, $academic['students']);
+        (new LibrarySeeder())->run($university, $academic['students']);
+        (new AlumniSeeder())->run($university, $academic['students']);
+        (new AnnouncementSeeder())->run($university, $admins[0] ?? null);
 
         app(TenantContext::class)->setUniversityId(null);
     }

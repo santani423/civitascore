@@ -40,7 +40,15 @@ const DETAIL_ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   [ROUTES.pegawaiDetail]: 'employees.read',
   [ROUTES.akademik.programStudiDetail]: 'study_programs.read',
   [ROUTES.akademik.kelasJadwalDetail]: 'classes.read',
+  [ROUTES.akademik.kurikulumDetail]: 'curriculums.read',
+  [ROUTES.akademik.mataKuliahDetail]: 'courses.read',
   [ROUTES.keuangan.tagihanDetail]: 'invoices.read',
+  [ROUTES.keuangan.beasiswaDetail]: 'scholarships.read',
+  [ROUTES.skripsiDetail]: 'theses.read',
+  [ROUTES.magangMbkmDetail]: 'internships.read',
+  [ROUTES.perpustakaanDetail]: 'books.read',
+  [ROUTES.alumniDetail]: 'alumni.read',
+  [ROUTES.pengumumanDetail]: 'announcements.read',
 }
 
 for (const [path, permission] of Object.entries(DETAIL_ROUTE_PERMISSIONS)) {

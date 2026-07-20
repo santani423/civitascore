@@ -17,11 +17,11 @@ class ClassSectionController extends Controller
         $this->authorize('viewAny', ClassSection::class);
 
         $paginator = ListQuery::paginate(
-            query: ClassSection::query()->with(['studyProgram', 'academicTerm'])->orderBy('course_name'),
+            query: ClassSection::query()->with(['studyProgram', 'academicTerm', 'course'])->withCount('krsItems')->orderBy('class_code'),
             request: $request,
-            searchable: ['course_name', 'class_code'],
-            filterable: ['study_program_id', 'academic_term_id', 'is_active'],
-            sortable: ['course_name'],
+            searchable: ['class_code'],
+            filterable: ['study_program_id', 'academic_term_id', 'course_id', 'is_active'],
+            sortable: ['class_code'],
         );
 
         return ApiResponse::paginated(ClassSectionResource::collection($paginator));
@@ -31,6 +31,8 @@ class ClassSectionController extends Controller
     {
         $this->authorize('view', $classSection);
 
-        return ApiResponse::success(new ClassSectionResource($classSection->load(['studyProgram', 'academicTerm'])));
+        return ApiResponse::success(new ClassSectionResource(
+            $classSection->load(['studyProgram', 'academicTerm', 'course'])->loadCount('krsItems'),
+        ));
     }
 }

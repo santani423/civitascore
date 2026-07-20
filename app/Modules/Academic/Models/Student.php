@@ -74,6 +74,14 @@ class Student extends Model implements ScopesToInstitution
         return $this->hasMany(Invoice::class);
     }
 
+    /**
+     * @return HasMany<KrsItem, $this>
+     */
+    public function krsItems(): HasMany
+    {
+        return $this->hasMany(KrsItem::class);
+    }
+
     protected static function newFactory(): StudentFactory
     {
         return StudentFactory::new();

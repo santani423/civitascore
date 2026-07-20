@@ -37,7 +37,10 @@ export function ClassSectionDetailPage() {
       {error && <Alert variant="danger">{error}</Alert>}
 
       {classSection && (
-        <Card title={classSection.course_name} description={classSection.class_code}>
+        <Card
+          title={classSection.course_name ?? classSection.class_code}
+          description={`${classSection.course_code ?? '-'} · ${classSection.class_code}`}
+        >
           <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <p className="text-ink-tertiary">Status</p>
@@ -54,8 +57,16 @@ export function ClassSectionDetailPage() {
               <p className="font-medium text-ink-primary">{classSection.academic_term_label ?? '-'}</p>
             </div>
             <div>
+              <p className="text-ink-tertiary">SKS</p>
+              <p className="font-medium text-ink-primary">{classSection.credits ?? '-'}</p>
+            </div>
+            <div>
               <p className="text-ink-tertiary">Kapasitas</p>
               <p className="font-medium text-ink-primary">{formatNumber(classSection.capacity)}</p>
+            </div>
+            <div>
+              <p className="text-ink-tertiary">Mahasiswa Terdaftar</p>
+              <p className="font-medium text-ink-primary">{formatNumber(classSection.enrolled_count ?? 0)}</p>
             </div>
           </div>
         </Card>

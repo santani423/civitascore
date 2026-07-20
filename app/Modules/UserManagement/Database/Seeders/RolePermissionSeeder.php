@@ -50,6 +50,18 @@ class RolePermissionSeeder extends Seeder
         'study_programs' => [PermissionAction::Read],
         'classes' => [PermissionAction::Read],
         'invoices' => [PermissionAction::Read],
+        'curriculums' => [PermissionAction::Read],
+        'courses' => [PermissionAction::Read],
+        'krs' => [PermissionAction::Read],
+        'grades' => [PermissionAction::Read],
+        'attendance' => [PermissionAction::Read],
+        'scholarships' => [PermissionAction::Read],
+        'theses' => [PermissionAction::Read],
+        'internships' => [PermissionAction::Read],
+        'books' => [PermissionAction::Read],
+        'alumni' => [PermissionAction::Read],
+        'announcements' => [PermissionAction::Read],
+        'reports' => [PermissionAction::Read],
     ];
 
     public function run(): void
