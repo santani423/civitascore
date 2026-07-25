@@ -52,6 +52,16 @@ Setiap universitas punya **satu akun untuk setiap role organisasi** yang ada di 
 
 Contoh: dosen di Institut Teknologi Mandala login dengan `dosen@itmandala.test` / `password`; bagian keuangan STIKes login dengan `keuangan@stikessejahtera.test` / `password`.
 
+#### Email lengkap: Admin, Dosen, Mahasiswa per universitas
+
+Kombinasi role yang paling sering dipakai untuk demo — email penuh, siap pakai (password semua `password`):
+
+| Universitas | Admin | Dosen | Mahasiswa |
+|---|---|---|---|
+| Universitas Nusantara Digital | `admin@undigital.test` | `dosen@undigital.test` | `mahasiswa@undigital.test` |
+| Institut Teknologi Mandala | `admin@itmandala.test` | `dosen@itmandala.test` | `mahasiswa@itmandala.test` |
+| STIKes Sejahtera | `admin@stikessejahtera.test` | `dosen@stikessejahtera.test` | `mahasiswa@stikessejahtera.test` |
+
 Login tidak perlu header khusus — universitas aktif otomatis resolve dari membership default akun tersebut. Untuk pilih tenant manual (mis. akun dengan membership di >1 universitas), kirim header `X-University-ID: <id-universitas>`. Detail lengkap di [docs/MULTI-TENANT-ARCHITECTURE.md](docs/MULTI-TENANT-ARCHITECTURE.md) §10.
 
 > Role tanpa permission admin di atas (dosen, dosen PA, mahasiswa, pegawai) memang sengaja kosong — belum ada modul akademik/kepegawaian yang jadi domain izin mereka. Akun-akun itu tetap berguna untuk membuktikan RBAC menolak akses admin dengan benar. Lihat [docs/FRONTEND-IMPLEMENTASI.md](docs/FRONTEND-IMPLEMENTASI.md) bagian Fase 3 untuk rencana modul-modul tersebut.
