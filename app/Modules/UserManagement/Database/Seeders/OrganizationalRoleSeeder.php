@@ -129,6 +129,21 @@ class OrganizationalRoleSeeder extends Seeder
         // sync() writes pivot rows directly and this seeder runs under
         // DatabaseSeeder's WithoutModelEvents, so RolePermission's model
         // events never fire — flush explicitly (same as RolePermissionSeeder).
-        Cache::tags(['permissions'])->flush();
+        $this->flushPermissionCache();
+    }
+
+    /**
+     * Membersihkan cache permission hanya ketika cache store
+     * yang digunakan mendukung cache tags (file/database tidak mendukung).
+     */
+    private function flushPermissionCache(): void
+    {
+        $cache = Cache::store();
+
+        if (! $cache->supportsTags()) {
+            return;
+        }
+
+        $cache->tags(['permissions'])->flush();
     }
 }
