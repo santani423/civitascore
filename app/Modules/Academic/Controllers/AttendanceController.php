@@ -8,11 +8,29 @@ use App\Support\Http\ListQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Academic\Models\Attendance;
+use Modules\Academic\Models\ClassSection;
+use Modules\Academic\Requests\RecordAttendanceBatchRequest;
 use Modules\Academic\Resources\AttendanceResource;
+use Modules\Academic\Services\AcademicRecordService;
 
 /** No `show`/detail route — an attendance entry's detail is fully represented by its row. */
 class AttendanceController extends Controller
 {
+    public function __construct(private readonly AcademicRecordService $records) {}
+
+    public function batchStore(RecordAttendanceBatchRequest $request, ClassSection $classSection): JsonResponse
+    {
+        $this->authorize('record', Attendance::class);
+
+        $attendances = $this->records->recordAttendanceBatch($classSection, $request->validated());
+
+        return ApiResponse::success(
+            AttendanceResource::collection($attendances),
+            'Kehadiran berhasil direkam.',
+            status: 201,
+        );
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Attendance::class);

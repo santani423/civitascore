@@ -15,6 +15,7 @@ use Modules\Academic\Controllers\StudyProgramController;
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('students', [StudentController::class, 'index'])->middleware('permission:students.read');
     Route::get('students/{student}', [StudentController::class, 'show'])->middleware('permission:students.read');
+    Route::get('students/{student}/transcript', [StudentController::class, 'transcript'])->middleware('permission:students.read');
 
     Route::get('lecturers', [LecturerController::class, 'index'])->middleware('permission:lecturers.read');
     Route::get('lecturers/{lecturer}', [LecturerController::class, 'show'])->middleware('permission:lecturers.read');
@@ -35,8 +36,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('courses/{course}', [CourseController::class, 'show'])->middleware('permission:courses.read');
 
     Route::get('krs-items', [KrsItemController::class, 'index'])->middleware('permission:krs.read');
+    Route::post('krs-items', [KrsItemController::class, 'store'])->middleware('permission:krs.create');
+    Route::patch('krs-items/{krsItem}/drop', [KrsItemController::class, 'drop'])->middleware('permission:krs.update');
 
     Route::get('grades', [GradeController::class, 'index'])->middleware('permission:grades.read');
+    Route::put('krs-items/{krsItem}/grade', [GradeController::class, 'upsert'])->middleware('permission:grades.create,grades.update');
 
     Route::get('attendances', [AttendanceController::class, 'index'])->middleware('permission:attendance.read');
+    Route::post('class-sections/{classSection}/attendances', [AttendanceController::class, 'batchStore'])->middleware('permission:attendance.create,attendance.update');
 });

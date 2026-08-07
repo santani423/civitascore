@@ -135,12 +135,18 @@ class RolePermissionSeeder extends Seeder
         ],
         'krs' => [
             PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
         ],
         'grades' => [
             PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
         ],
         'attendance' => [
             PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
         ],
         'scholarships' => [
             PermissionAction::Read,

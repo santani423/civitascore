@@ -9,9 +9,19 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Academic\Models\Student;
 use Modules\Academic\Resources\StudentResource;
+use Modules\Academic\Services\AcademicRecordService;
 
 class StudentController extends Controller
 {
+    public function __construct(private readonly AcademicRecordService $records) {}
+
+    public function transcript(Student $student): JsonResponse
+    {
+        $this->authorize('viewTranscript', $student);
+
+        return ApiResponse::success($this->records->transcript($student));
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Student::class);

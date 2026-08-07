@@ -8,11 +8,28 @@ use App\Support\Http\ListQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Academic\Models\Grade;
+use Modules\Academic\Models\KrsItem;
+use Modules\Academic\Requests\UpsertGradeRequest;
 use Modules\Academic\Resources\GradeResource;
+use Modules\Academic\Services\AcademicRecordService;
 
 /** No `show`/detail route — a grade's detail is fully represented by its row. */
 class GradeController extends Controller
 {
+    public function __construct(private readonly AcademicRecordService $records) {}
+
+    public function upsert(UpsertGradeRequest $request, KrsItem $krsItem): JsonResponse
+    {
+        $this->authorize('manage', Grade::class);
+
+        $grade = $this->records->recordGrade($krsItem, $request->validated());
+
+        return ApiResponse::success(
+            new GradeResource($grade->load(['krsItem.student', 'krsItem.classSection.course', 'krsItem.academicTerm'])),
+            'Nilai berhasil disimpan.',
+        );
+    }
+
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Grade::class);

@@ -142,3 +142,38 @@ export interface Attendance {
   notes: string | null
   created_at: string
 }
+
+export interface EnrollKrsPayload {
+  student_id: string
+  class_section_id: string
+}
+
+export interface UpsertGradePayload {
+  score: number
+  letter_grade?: LetterGrade | null
+}
+
+export interface AttendanceEntryPayload {
+  krs_item_id: string
+  status: AttendanceStatus
+  notes?: string | null
+}
+
+export interface RecordAttendanceBatchPayload {
+  meeting_number: number
+  meeting_date: string
+  entries: AttendanceEntryPayload[]
+}
+
+export interface TranscriptTerm {
+  academic_term_id: string
+  label: string
+  sks: number
+  ip: number
+}
+
+export interface Transcript {
+  terms: TranscriptTerm[]
+  ipk: number
+  total_sks: number
+}

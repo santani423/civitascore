@@ -1,16 +1,17 @@
 import { useCallback } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Wallet } from 'lucide-react'
+import { GraduationCap, Layers, Wallet } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { StatCard } from '@/components/ui/StatCard'
 import { useFetch } from '@/hooks/useFetch'
 import { usePermission } from '@/hooks/usePermission'
 import { attendanceService, gradeService, krsItemService, studentService } from '@/services/academicService'
-import type { Attendance, AttendanceStatus, Grade, KrsItem, LetterGrade, StudentStatus } from '@/types/academic'
+import type { Attendance, AttendanceStatus, Grade, KrsItem, LetterGrade, StudentStatus, TranscriptTerm } from '@/types/academic'
 import { internshipService } from '@/services/internshipService'
 import type { Internship, InternshipProgramType, InternshipStatus } from '@/types/internship'
 import { scholarshipApplicationService } from '@/services/scholarshipService'
@@ -29,6 +30,12 @@ const LETTER_GRADE_VARIANT: Record<LetterGrade, BadgeVariant> = {
   D: 'danger',
   E: 'danger',
 }
+
+const TRANSCRIPT_COLUMNS: DataTableColumn<TranscriptTerm>[] = [
+  { header: 'Periode', cell: (row) => row.label },
+  { header: 'SKS', cell: (row) => row.sks },
+  { header: 'IP', cell: (row) => row.ip.toFixed(2) },
+]
 
 const KRS_COLUMNS: DataTableColumn<KrsItem>[] = [
   { header: 'Mata Kuliah', cell: (row) => row.course_name ?? '-' },
@@ -187,6 +194,12 @@ export function StudentDetailPage() {
   const getStudent = useCallback(() => studentService.show(id ?? ''), [id])
   const { data: student, isLoading, error } = useFetch(getStudent)
 
+  const getTranscript = useCallback(async () => {
+    if (!canSeeKrs) return null
+    return studentService.transcript(id ?? '')
+  }, [id, canSeeKrs])
+  const { data: transcript } = useFetch(getTranscript)
+
   const getKrsItems = useCallback(async () => {
     if (!canSeeKrs) return []
     const result = await krsItemService.index({ filter: { student_id: id ?? '' }, per_page: 5, sort: '-created_at' })
@@ -273,6 +286,21 @@ export function StudentDetailPage() {
               </div>
             )}
           </Card>
+
+          {canSeeKrs && transcript && (
+            <Card title="Transkrip" description="IP per periode dan IPK kumulatif berdasarkan nilai yang sudah terbit." noPadding>
+              <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+                <StatCard label="IPK" value={transcript.ipk.toFixed(2)} icon={GraduationCap} />
+                <StatCard label="Total SKS Lulus" value={String(transcript.total_sks)} icon={Layers} />
+              </div>
+              <DataTable
+                columns={TRANSCRIPT_COLUMNS}
+                data={transcript.terms}
+                rowKey={(row) => row.academic_term_id}
+                emptyMessage="Belum ada nilai yang terbit."
+              />
+            </Card>
+          )}
 
           {canSeeKrs && (
             <Card

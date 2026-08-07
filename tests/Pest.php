@@ -3,9 +3,15 @@
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Modules\Tenancy\Enums\MembershipStatus;
+use Modules\Tenancy\Enums\MembershipType;
+use Modules\Tenancy\Models\University;
+use Modules\Tenancy\Models\UserUniversity;
 use Modules\UserManagement\Enums\PermissionAction;
+use Modules\UserManagement\Enums\PermissionScope;
 use Modules\UserManagement\Models\Permission;
 use Modules\UserManagement\Models\Role;
+use Modules\UserManagement\Models\UserRole;
 use Tests\TestCase;
 
 /*
@@ -103,6 +109,55 @@ function actingAsUserWithPermissions(array $permissionSlugs = []): User
 
         $role->permissions()->sync($permissions->pluck('id')->all());
         $user->roles()->attach($role->id, ['assigned_at' => now()]);
+    }
+
+    test()->actingAs($user);
+
+    return $user;
+}
+
+/**
+ * Same as actingAsUserWithPermissions(), but for TenantScoped modules
+ * (Academic, Finance, ...): also creates an active membership in the given
+ * university via a throwaway tenant role, so the resulting user passes
+ * ResolveUniversityMiddleware/EnsureUniversityAccessMiddleware once the
+ * caller sends the `X-University-ID` header.
+ *
+ * @param  array<int, string>  $permissionSlugs
+ */
+function actingAsUserWithUniversityPermissions(University $university, array $permissionSlugs = []): User
+{
+    $user = User::factory()->create();
+
+    UserUniversity::query()->create([
+        'user_id' => $user->id,
+        'university_id' => $university->id,
+        'membership_type' => MembershipType::Admin,
+        'status' => MembershipStatus::Active,
+        'joined_at' => now(),
+        'is_default' => true,
+    ]);
+
+    if ($permissionSlugs !== []) {
+        $role = Role::factory()->create(['university_id' => $university->id]);
+
+        $permissionIds = collect($permissionSlugs)->map(function (string $slug): string {
+            [$resource, $action] = explode('.', $slug, 2);
+
+            return Permission::query()->firstOrCreate(
+                ['slug' => $slug],
+                ['name' => $slug, 'resource' => $resource, 'action' => PermissionAction::from($action), 'scope' => PermissionScope::Data],
+            )->id;
+        });
+
+        $role->permissions()->sync($permissionIds);
+
+        UserRole::query()->create([
+            'user_id' => $user->id,
+            'role_id' => $role->id,
+            'university_id' => $university->id,
+            'assigned_at' => now(),
+        ]);
     }
 
     test()->actingAs($user);

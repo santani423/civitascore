@@ -12,14 +12,16 @@ use Modules\UserManagement\Models\Role;
  * roles every tenant needs — assigned to users per-university via
  * user_roles.university_id, not duplicated per tenant.
  *
- * Business-domain permissions (grading, billing, ...) don't exist yet (no
- * academic modules built), so each role only gets the subset of the
- * existing admin-panel permission catalog that actually matches its real
- * responsibility today — e.g. `auditor` gets audit_logs.read, but `lecturer`
- * and `student` intentionally get none, since the panel has nothing in
- * their domain yet. That's a correct reflection of current access, not a
- * placeholder: their demo accounts exist to prove RBAC denies admin
- * endpoints to non-admin roles, not to grant them premature access.
+ * Each role only gets the subset of the existing permission catalog that
+ * actually matches its real responsibility today — e.g. `auditor` gets
+ * audit_logs.read. `lecturer` now gets grading/attendance write access since
+ * those are real, working endpoints (AcademicRecordService). `student` and
+ * `employee` intentionally still get none — self-service (a student
+ * enrolling/viewing only *their own* data) needs a Student/Lecturer→User
+ * identity link that doesn't exist yet; granting blanket krs.create today
+ * would let any authenticated "student" enroll *any* student into *any*
+ * class. Their demo accounts remain useful to prove RBAC denies admin
+ * endpoints to non-admin roles.
  */
 class OrganizationalRoleSeeder extends Seeder
 {
@@ -94,8 +96,12 @@ class OrganizationalRoleSeeder extends Seeder
             'file_uploads.read',
             'users.read',
             'students.read', 'study_programs.read', 'classes.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'krs.create', 'krs.update', 'grades.read', 'attendance.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
+        ],
+        'lecturer' => [
+            'students.read', 'study_programs.read', 'classes.read', 'courses.read',
+            'krs.read', 'grades.read', 'grades.create', 'grades.update', 'attendance.read', 'attendance.create', 'attendance.update',
         ],
         'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read'],
         'hr_administrator' => ['user_roles.read', 'users.read', 'employees.read', 'lecturers.read'],
@@ -106,9 +112,10 @@ class OrganizationalRoleSeeder extends Seeder
             'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
-        // lecturer, academic_advisor, student, employee: sengaja tanpa
-        // permission admin — belum ada modul akademik/kepegawaian yang jadi
-        // domain izin mereka.
+        // academic_advisor, student, employee: sengaja tanpa permission admin
+        // — dosen PA/mahasiswa butuh identity link (lihat komentar kelas di
+        // atas) sebelum bisa dapat akses aman ke data mereka sendiri;
+        // employee belum punya modul kepegawaian sama sekali.
     ];
 
     public function run(): void

@@ -5,12 +5,16 @@ import type {
   ClassSection,
   Course,
   Curriculum,
+  EnrollKrsPayload,
   Employee,
   Grade,
   KrsItem,
   Lecturer,
+  RecordAttendanceBatchPayload,
   Student,
   StudyProgram,
+  Transcript,
+  UpsertGradePayload,
 } from '@/types/academic'
 import { toQueryParams } from '@/utils/listParams'
 
@@ -24,6 +28,11 @@ export const studentService = {
 
   async show(id: string): Promise<Student> {
     const response = await apiClient.get<ApiSuccessResponse<Student>>(`/students/${id}`)
+    return response.data.data
+  },
+
+  async transcript(id: string): Promise<Transcript> {
+    const response = await apiClient.get<ApiSuccessResponse<Transcript>>(`/students/${id}/transcript`)
     return response.data.data
   },
 }
@@ -119,6 +128,16 @@ export const krsItemService = {
     })
     return { data: response.data.data, meta: response.data.meta! }
   },
+
+  async enroll(payload: EnrollKrsPayload): Promise<KrsItem> {
+    const response = await apiClient.post<ApiSuccessResponse<KrsItem>>('/krs-items', payload)
+    return response.data.data
+  },
+
+  async drop(id: string): Promise<KrsItem> {
+    const response = await apiClient.patch<ApiSuccessResponse<KrsItem>>(`/krs-items/${id}/drop`)
+    return response.data.data
+  },
 }
 
 export const gradeService = {
@@ -128,6 +147,11 @@ export const gradeService = {
     })
     return { data: response.data.data, meta: response.data.meta! }
   },
+
+  async upsert(krsItemId: string, payload: UpsertGradePayload): Promise<Grade> {
+    const response = await apiClient.put<ApiSuccessResponse<Grade>>(`/krs-items/${krsItemId}/grade`, payload)
+    return response.data.data
+  },
 }
 
 export const attendanceService = {
@@ -136,5 +160,13 @@ export const attendanceService = {
       params: toQueryParams(params),
     })
     return { data: response.data.data, meta: response.data.meta! }
+  },
+
+  async recordBatch(classSectionId: string, payload: RecordAttendanceBatchPayload): Promise<Attendance[]> {
+    const response = await apiClient.post<ApiSuccessResponse<Attendance[]>>(
+      `/class-sections/${classSectionId}/attendances`,
+      payload,
+    )
+    return response.data.data
   },
 }
