@@ -1,6 +1,6 @@
 # CivitasOne
 
-Sistem Manajemen Akademik Universitas — **multi-tenant** (banyak universitas dalam satu instalasi), backend Laravel (API) + frontend React (SPA). Lihat [docs/RANCANGAN-APLIKASI.md](docs/RANCANGAN-APLIKASI.md) untuk cakupan bisnis lengkap, [docs/MULTI-TENANT-ARCHITECTURE.md](docs/MULTI-TENANT-ARCHITECTURE.md) untuk arsitektur tenant isolation, dan [docs/FRONTEND-IMPLEMENTASI.md](docs/FRONTEND-IMPLEMENTASI.md) untuk status implementasi frontend.
+Sistem Manajemen Akademik Universitas — **multi-tenant** (banyak universitas dalam satu instalasi), backend Laravel (API) + frontend React (SPA). Lihat [docs/RANCANGAN-APLIKASI.md](docs/RANCANGAN-APLIKASI.md) untuk cakupan bisnis lengkap, [docs/MULTI-TENANT-ARCHITECTURE.md](docs/MULTI-TENANT-ARCHITECTURE.md) untuk arsitektur tenant isolation, [docs/FRONTEND-IMPLEMENTASI.md](docs/FRONTEND-IMPLEMENTASI.md) untuk status implementasi frontend, dan [docs/BLACK-BOX-TESTING.md](docs/BLACK-BOX-TESTING.md) untuk daftar skenario uji per modul.
 
 ## Akun Sample (Login)
 
@@ -38,8 +38,8 @@ Setiap universitas punya **satu akun untuk setiap role organisasi** yang ada di 
 | `wakilrektor` | Wakil Rektor | Wakil Rektor UND | `approval_requests.read`, `users.read` |
 | `dekan` | Dekan | Dekan UND | `approval_requests.read`, `users.read` |
 | `kaprodi` | Ketua Program Studi | Ketua Program Studi UND | `approval_requests.read`, `users.read` |
-| `akademik` | Bagian Akademik | Bagian Akademik UND | `approval_requests.read`, `notification_templates.create/read/update`, `file_uploads.read`, `users.read` |
-| `dosen` | Dosen | Dosen UND | Tidak ada permission admin — akan pakai modul Akademik begitu dibangun |
+| `akademik` | Bagian Akademik | Bagian Akademik UND | `approval_requests.read`, `notification_templates.create/read/update`, `file_uploads.read`, `users.read`, `krs.create/update` — bisa mendaftarkan/membatalkan KRS mahasiswa |
+| `dosen` | Dosen | Dosen UND | `students.read`, `study_programs.read`, `classes.read`, `courses.read`, `krs.read`, `grades.read/create/update`, `attendance.read/create/update` — bisa input nilai dan rekam kehadiran kelas |
 | `dosenpa` | Dosen Pembimbing Akademik | Dosen Pembimbing Akademik UND | Tidak ada permission admin |
 | `mahasiswa` | Mahasiswa | Mahasiswa UND | Tidak ada permission admin |
 | `pegawai` | Pegawai | Pegawai UND | Tidak ada permission admin |
@@ -64,7 +64,7 @@ Kombinasi role yang paling sering dipakai untuk demo — email penuh, siap pakai
 
 Login tidak perlu header khusus — universitas aktif otomatis resolve dari membership default akun tersebut. Untuk pilih tenant manual (mis. akun dengan membership di >1 universitas), kirim header `X-University-ID: <id-universitas>`. Detail lengkap di [docs/MULTI-TENANT-ARCHITECTURE.md](docs/MULTI-TENANT-ARCHITECTURE.md) §10.
 
-> Role tanpa permission admin di atas (dosen, dosen PA, mahasiswa, pegawai) memang sengaja kosong — belum ada modul akademik/kepegawaian yang jadi domain izin mereka. Akun-akun itu tetap berguna untuk membuktikan RBAC menolak akses admin dengan benar. Lihat [docs/FRONTEND-IMPLEMENTASI.md](docs/FRONTEND-IMPLEMENTASI.md) bagian Fase 3 untuk rencana modul-modul tersebut.
+> Role tanpa permission admin di atas (dosen PA, mahasiswa, pegawai) memang sengaja kosong — self-service (mis. mahasiswa mengisi KRS-nya sendiri) butuh identity link `Student`/`Lecturer` → `User` yang belum ada, jadi belum aman diberi permission (lihat [docs/FRONTEND-IMPLEMENTASI.md](docs/FRONTEND-IMPLEMENTASI.md) §5). Akun-akun itu tetap berguna untuk membuktikan RBAC menolak akses admin dengan benar. Untuk peta lengkap fitur mana yang bisa diuji end-to-end vs mana yang belum, lihat [docs/BLACK-BOX-TESTING.md](docs/BLACK-BOX-TESTING.md).
 
 ### Mengganti kredensial Super Admin
 
