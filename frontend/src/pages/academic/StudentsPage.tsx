@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
@@ -10,11 +10,20 @@ import { Select } from '@/components/ui/Select'
 import { Alert } from '@/components/ui/Alert'
 import { ListPagination } from '@/components/ui/ListPagination'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
-import { studentService } from '@/services/academicService'
+import { useFetch } from '@/hooks/useFetch'
+import { classSectionService, studentService, studyProgramService } from '@/services/academicService'
 import type { Student, StudentStatus } from '@/types/academic'
 import { ROUTES } from '@/constants/routes'
 import { pickFilterParams } from '@/utils/listInitial'
 import { formatDateRange, humanizeSlug } from '@/utils/formatters'
+
+// Angkatan tidak punya endpoint list tersendiri (kolom integer polos di
+// `students`) — cukup rentang tahun berjalan turun beberapa tahun, tidak
+// perlu agregasi dari backend.
+const ADMISSION_YEAR_OPTIONS = Array.from({ length: 7 }, (_, index) => {
+  const year = new Date().getFullYear() - index
+  return { value: String(year), label: String(year) }
+})
 
 const STATUS_LABEL: Record<StudentStatus, string> = {
   active: 'Aktif',
@@ -36,20 +45,34 @@ export function StudentsPage() {
   const [searchParams] = useSearchParams()
   // Filter awal dari link kartu/chart dashboard (mis. ?status=active) —
   // dibaca sekali saat mount, lihat utils/listInitial.ts.
-  const [initialFilter] = useState(() => pickFilterParams(searchParams, ['status', 'study_program_id', 'admission_year']))
+  const [initialFilter] = useState(() =>
+    pickFilterParams(searchParams, ['status', 'study_program_id', 'admission_year', 'class_section_id']),
+  )
 
   const [searchInput, setSearchInput] = useState('')
   const [statusInput, setStatusInput] = useState(initialFilter.status ?? '')
+  const [programInput, setProgramInput] = useState(initialFilter.study_program_id ?? '')
+  const [admissionYearInput, setAdmissionYearInput] = useState(initialFilter.admission_year ?? '')
+  const [classSectionInput, setClassSectionInput] = useState(initialFilter.class_section_id ?? '')
 
   const list = usePaginatedList<Student>({ fetcher: studentService.index, initialFilter })
 
+  const getStudyPrograms = useCallback(async () => (await studyProgramService.index({ per_page: 100 })).data, [])
+  const { data: studyPrograms } = useFetch(getStudyPrograms)
+
+  const getClassSections = useCallback(
+    async () => (await classSectionService.index({ per_page: 100, filter: { is_active: '1' } })).data,
+    [],
+  )
+  const { data: classSections } = useFetch(getClassSections)
+
   const applyFilters = () => {
     list.setSearch(searchInput)
-    // Filter dimensi dari URL (prodi/angkatan) sengaja dipertahankan saat
-    // user cuma mengubah status — cocok dengan judul halaman yang dia buka.
-    const next = { ...list.filter }
-    delete next.status
+    const next: Record<string, string> = {}
     if (statusInput) next.status = statusInput
+    if (programInput) next.study_program_id = programInput
+    if (admissionYearInput) next.admission_year = admissionYearInput
+    if (classSectionInput) next.class_section_id = classSectionInput
     list.setFilter(next)
   }
 
@@ -98,6 +121,30 @@ export function StudentsPage() {
             onChange={(event) => setStatusInput(event.target.value)}
             options={Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }))}
             placeholder="Semua status"
+          />
+          <Select
+            label="Program Studi"
+            value={programInput}
+            onChange={(event) => setProgramInput(event.target.value)}
+            options={(studyPrograms ?? []).map((program) => ({ value: program.id, label: program.name }))}
+            placeholder="Semua program studi"
+          />
+          <Select
+            label="Angkatan"
+            value={admissionYearInput}
+            onChange={(event) => setAdmissionYearInput(event.target.value)}
+            options={ADMISSION_YEAR_OPTIONS}
+            placeholder="Semua angkatan"
+          />
+          <Select
+            label="Kelas"
+            value={classSectionInput}
+            onChange={(event) => setClassSectionInput(event.target.value)}
+            options={(classSections ?? []).map((section) => ({
+              value: section.id,
+              label: `${section.course_name ?? '-'} (${section.class_code})`,
+            }))}
+            placeholder="Semua kelas"
           />
           <Button variant="outline" onClick={applyFilters}>
             Terapkan Filter

@@ -2,7 +2,9 @@
 
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
+use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Models\Faculty;
+use Modules\Academic\Models\KrsItem;
 use Modules\Academic\Models\Student;
 use Modules\Academic\Models\StudyProgram;
 use Modules\Tenancy\Enums\MembershipStatus;
@@ -86,4 +88,36 @@ test('a permitted user can list, search, and paginate students', function () {
     expect($response->json('data'))->toHaveCount(1);
     expect($response->json('data.0.name'))->toBe('Budi Santoso');
     expect($response->json('data.0.study_program_name'))->toBe($program->name);
+});
+
+test('the student list can be filtered by class section', function () {
+    $university = University::factory()->create();
+    app(TenantContext::class)->setUniversityId($university->id);
+
+    $faculty = Faculty::factory()->create(['university_id' => $university->id]);
+    $program = StudyProgram::factory()->create(['university_id' => $university->id, 'faculty_id' => $faculty->id]);
+    $classSection = ClassSection::factory()->create(['university_id' => $university->id, 'study_program_id' => $program->id]);
+
+    $enrolled = Student::factory()->create(['university_id' => $university->id, 'study_program_id' => $program->id, 'name' => 'Enrolled Student']);
+    $notEnrolled = Student::factory()->create(['university_id' => $university->id, 'study_program_id' => $program->id, 'name' => 'Unenrolled Student']);
+
+    KrsItem::factory()->create([
+        'university_id' => $university->id,
+        'student_id' => $enrolled->id,
+        'class_section_id' => $classSection->id,
+        'academic_term_id' => $classSection->academic_term_id,
+    ]);
+
+    app(TenantContext::class)->setUniversityId(null);
+
+    $user = User::factory()->create();
+    grantStudentPermission($user, $university, ['students.read']);
+
+    $response = $this->actingAs($user)
+        ->withHeader('X-University-ID', $university->id)
+        ->getJson("/api/v1/students?filter[class_section_id]={$classSection->id}");
+
+    $response->assertApiSuccess();
+    expect($response->json('data'))->toHaveCount(1);
+    expect($response->json('data.0.name'))->toBe('Enrolled Student');
 });
