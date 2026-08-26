@@ -8,6 +8,10 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/security_sessions_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/exam/presentation/screens/exam_form_screen.dart';
+import '../../features/exam/presentation/screens/exam_list_screen.dart';
+import '../../features/exam/presentation/screens/question_bank_screen.dart';
+import '../permission/permission_gate.dart';
 import '../widgets/app_shell.dart';
 import 'route_guard.dart';
 import 'route_paths.dart';
@@ -52,6 +56,34 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: RoutePaths.pengaturanKeamanan,
             builder: (_, _) => const SecuritySessionsScreen(),
+          ),
+          GoRoute(
+            path: RoutePaths.akademikUjian,
+            builder: (_, _) => const PermissionGate(
+              permission: 'exams.read',
+              child: ExamListScreen(),
+            ),
+          ),
+          GoRoute(
+            path: RoutePaths.akademikUjianBaru,
+            builder: (_, _) => const PermissionGate(
+              permission: 'exams.create,exams.update',
+              child: ExamFormScreen(),
+            ),
+          ),
+          GoRoute(
+            path: RoutePaths.akademikUjianEdit,
+            builder: (_, state) => PermissionGate(
+              permission: 'exams.create,exams.update',
+              child: ExamFormScreen(examId: state.pathParameters['id']),
+            ),
+          ),
+          GoRoute(
+            path: RoutePaths.akademikUjianSoal,
+            builder: (_, state) => PermissionGate(
+              permission: 'exams.create,exams.update',
+              child: QuestionBankScreen(examId: state.pathParameters['id']!),
+            ),
           ),
         ],
       ),

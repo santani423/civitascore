@@ -31,6 +31,9 @@ import { CourseDetailPage } from '@/pages/academic/CourseDetailPage'
 import { KrsPage } from '@/pages/academic/KrsPage'
 import { GradesPage } from '@/pages/academic/GradesPage'
 import { AttendancePage } from '@/pages/academic/AttendancePage'
+import { ExamsPage } from '@/pages/academic/ExamsPage'
+import { ExamDetailPage } from '@/pages/academic/ExamDetailPage'
+import { QuestionBankPage } from '@/pages/academic/QuestionBankPage'
 import { InvoicesPage } from '@/pages/finance/InvoicesPage'
 import { InvoiceDetailPage } from '@/pages/finance/InvoiceDetailPage'
 import { PaymentsPage } from '@/pages/finance/PaymentsPage'
@@ -113,6 +116,9 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.akademik.krs, element: <KrsPage /> },
   { path: ROUTES.akademik.absensi, element: <AttendancePage /> },
   { path: ROUTES.akademik.penilaian, element: <GradesPage /> },
+  { path: ROUTES.akademik.ujian, element: <ExamsPage /> },
+  { path: ROUTES.akademik.ujianDetail, element: <ExamDetailPage /> },
+  { path: ROUTES.akademik.bankSoal, element: <QuestionBankPage /> },
   { path: ROUTES.keuangan.tagihan, element: <InvoicesPage /> },
   { path: ROUTES.keuangan.tagihanDetail, element: <InvoiceDetailPage /> },
   { path: ROUTES.keuangan.pembayaran, element: <PaymentsPage /> },

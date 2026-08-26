@@ -165,6 +165,95 @@ export interface RecordAttendanceBatchPayload {
   entries: AttendanceEntryPayload[]
 }
 
+export type QuestionSelectionMode = 'all' | 'random' | 'manual'
+
+export interface Exam {
+  id: string
+  class_section_id: string
+  class_code: string | null
+  course_name: string | null
+  title: string
+  duration_minutes: number
+  question_pool_size: number
+  questions_per_participant: number
+  question_selection_mode: QuestionSelectionMode
+  randomize_questions: boolean
+  randomize_options: boolean
+  allow_back_navigation: boolean
+  show_result_after_submission: boolean
+  max_attempts: number
+  is_published: boolean
+  published_at: string | null
+  created_at: string
+}
+
+export interface ExamOption {
+  id: string
+  option_text: string
+  is_correct: boolean
+  order_index: number
+}
+
+export interface ExamQuestion {
+  id: string
+  exam_id: string
+  question_bank_item_id: string | null
+  question_text: string
+  points: string
+  order_index: number
+  is_selected: boolean
+  options: ExamOption[]
+}
+
+export interface StoreExamPayload {
+  class_section_id: string
+  title: string
+  duration_minutes: number
+  questions_per_participant: number
+  question_selection_mode: QuestionSelectionMode
+  randomize_questions?: boolean
+  randomize_options?: boolean
+  allow_back_navigation?: boolean
+  show_result_after_submission?: boolean
+  max_attempts?: number
+}
+
+export type UpdateExamPayload = Partial<Omit<StoreExamPayload, 'class_section_id'>>
+
+export interface ExamQuestionOptionPayload {
+  option_text: string
+  is_correct: boolean
+}
+
+export interface StoreExamQuestionPayload {
+  question_text: string
+  points?: number
+  is_selected?: boolean
+  options: ExamQuestionOptionPayload[]
+}
+
+export type UpdateExamQuestionPayload = Partial<StoreExamQuestionPayload>
+
+export interface QuestionBankItem {
+  id: string
+  course_id: string | null
+  course_name: string | null
+  question_text: string
+  points: string
+  options: ExamOption[]
+  usage_count: number | null
+  created_at: string
+}
+
+export interface StoreQuestionBankItemPayload {
+  course_id?: string | null
+  question_text: string
+  points?: number
+  options: ExamQuestionOptionPayload[]
+}
+
+export type UpdateQuestionBankItemPayload = Partial<StoreQuestionBankItemPayload>
+
 export interface TranscriptTerm {
   academic_term_id: string
   label: string

@@ -78,6 +78,8 @@ export const TENANT_BUSINESS_NAV_ITEMS: NavItem[] = [
       { label: 'KRS', path: ROUTES.akademik.krs, permission: 'krs.read' },
       { label: 'Absensi', path: ROUTES.akademik.absensi, permission: 'attendance.read' },
       { label: 'Penilaian', path: ROUTES.akademik.penilaian, permission: 'grades.read' },
+      { label: 'Ujian', path: ROUTES.akademik.ujian, permission: 'exams.read' },
+      { label: 'Bank Soal', path: ROUTES.akademik.bankSoal, permission: 'question_bank.read' },
     ],
   },
   { label: 'Mahasiswa', path: ROUTES.mahasiswa, icon: Users, permission: 'students.read' },

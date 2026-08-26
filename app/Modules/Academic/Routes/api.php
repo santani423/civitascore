@@ -6,9 +6,13 @@ use Modules\Academic\Controllers\ClassSectionController;
 use Modules\Academic\Controllers\CourseController;
 use Modules\Academic\Controllers\CurriculumController;
 use Modules\Academic\Controllers\EmployeeController;
+use Modules\Academic\Controllers\ExamAttemptController;
+use Modules\Academic\Controllers\ExamController;
+use Modules\Academic\Controllers\ExamQuestionController;
 use Modules\Academic\Controllers\GradeController;
 use Modules\Academic\Controllers\KrsItemController;
 use Modules\Academic\Controllers\LecturerController;
+use Modules\Academic\Controllers\QuestionBankController;
 use Modules\Academic\Controllers\StudentController;
 use Modules\Academic\Controllers\StudyProgramController;
 
@@ -44,4 +48,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('attendances', [AttendanceController::class, 'index'])->middleware('permission:attendance.read');
     Route::post('class-sections/{classSection}/attendances', [AttendanceController::class, 'batchStore'])->middleware('permission:attendance.create,attendance.update');
+
+    Route::get('exams', [ExamController::class, 'index'])->middleware('permission:exams.read');
+    Route::post('exams', [ExamController::class, 'store'])->middleware('permission:exams.create');
+    Route::get('exams/{exam}', [ExamController::class, 'show'])->middleware('permission:exams.read');
+    Route::put('exams/{exam}', [ExamController::class, 'update'])->middleware('permission:exams.update');
+    Route::delete('exams/{exam}', [ExamController::class, 'destroy'])->middleware('permission:exams.delete');
+    Route::patch('exams/{exam}/publish', [ExamController::class, 'publish'])->middleware('permission:exams.publish');
+
+    Route::get('exams/{exam}/questions', [ExamQuestionController::class, 'index'])->middleware('permission:exams.read');
+    Route::post('exams/{exam}/questions', [ExamQuestionController::class, 'store'])->middleware('permission:exams.create,exams.update');
+    Route::put('exam-questions/{examQuestion}', [ExamQuestionController::class, 'update'])->middleware('permission:exams.update');
+    Route::delete('exam-questions/{examQuestion}', [ExamQuestionController::class, 'destroy'])->middleware('permission:exams.update,exams.delete');
+    Route::post('exams/{exam}/questions/apply-bank', [ExamQuestionController::class, 'applyBank'])->middleware('permission:exams.create,exams.update');
+
+    Route::get('question-bank', [QuestionBankController::class, 'index'])->middleware('permission:question_bank.read');
+    Route::post('question-bank', [QuestionBankController::class, 'store'])->middleware('permission:question_bank.create');
+    Route::get('question-bank/{questionBankItem}', [QuestionBankController::class, 'show'])->middleware('permission:question_bank.read');
+    Route::put('question-bank/{questionBankItem}', [QuestionBankController::class, 'update'])->middleware('permission:question_bank.update');
+    Route::delete('question-bank/{questionBankItem}', [QuestionBankController::class, 'destroy'])->middleware('permission:question_bank.delete');
+
+    Route::post('krs-items/{krsItem}/exams/{exam}/attempt', [ExamAttemptController::class, 'start'])->middleware('permission:exam_attempts.create');
+    Route::put('exam-attempts/{examAttempt}/answer', [ExamAttemptController::class, 'answer'])->middleware('permission:exam_attempts.update');
+    Route::patch('exam-attempts/{examAttempt}/submit', [ExamAttemptController::class, 'submit'])->middleware('permission:exam_attempts.update');
 });

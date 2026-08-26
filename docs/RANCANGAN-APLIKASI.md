@@ -851,6 +851,15 @@ Fitur:
 * Rekap kehadiran ujian
 * Penanganan ujian susulan
 
+**Status implementasi:** konfigurasi ujian pilihan ganda lanjutan (question
+pool, jumlah soal per peserta, pemilihan soal acak/manual/semua, pengacakan
+urutan soal & opsi jawaban, stabilitas percobaan per peserta) sudah
+diimplementasikan di backend (`app/Modules/Academic`, model `Exam`/
+`ExamQuestion`/`ExamQuestionOption`/`ExamAttempt`) dan sisi konfigurasi
+dosen/admin di Flutter (`mobile/lib/features/exam`). Layar pengerjaan ujian
+sungguhan untuk mahasiswa belum dibangun. Detail lengkap: lihat
+[EXAM_RANDOMIZATION.md](EXAM_RANDOMIZATION.md) dan [EXAM_MODULE.md](EXAM_MODULE.md).
+
 ### 4.19 Modul Bimbingan Akademik
 
 Fitur:

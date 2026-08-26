@@ -27,6 +27,10 @@ abstract final class RoutePaths {
   static const akademikKrs = '/akademik/krs';
   static const akademikAbsensi = '/akademik/absensi';
   static const akademikPenilaian = '/akademik/penilaian';
+  static const akademikUjian = '/akademik/ujian';
+  static const akademikUjianBaru = '/akademik/ujian/baru';
+  static const akademikUjianEdit = '/akademik/ujian/:id/edit';
+  static const akademikUjianSoal = '/akademik/ujian/:id/soal';
 
   static const mahasiswa = '/mahasiswa';
   static const mahasiswaDetail = '/mahasiswa/:id';

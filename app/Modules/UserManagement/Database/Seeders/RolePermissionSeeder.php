@@ -148,6 +148,24 @@ class RolePermissionSeeder extends Seeder
             PermissionAction::Create,
             PermissionAction::Update,
         ],
+        'exams' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+            PermissionAction::Delete,
+            PermissionAction::Publish,
+        ],
+        'exam_attempts' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+        ],
+        'question_bank' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+            PermissionAction::Delete,
+        ],
         'scholarships' => [
             PermissionAction::Read,
         ],

@@ -20,11 +20,18 @@ Dio buildDio(Ref ref) {
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await ref
-            .read(secureStorageProvider)
-            .read(key: StorageKeys.authToken);
+        final storage = ref.read(secureStorageProvider);
+        final token = await storage.read(key: StorageKeys.authToken);
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
+        }
+        // Endpoint modul TenantScoped (Academic, dst.) butuh header ini
+        // untuk resolusi tenant di backend — lihat StorageKeys.selectedUniversityId.
+        final universityId = await storage.read(
+          key: StorageKeys.selectedUniversityId,
+        );
+        if (universityId != null) {
+          options.headers['X-University-ID'] = universityId;
         }
         handler.next(options);
       },

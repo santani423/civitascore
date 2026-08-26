@@ -56,7 +56,7 @@ class OrganizationalRoleSeeder extends Seeder
             'approval_workflows.create', 'approval_workflows.read', 'approval_workflows.delete',
             'users.read',
             'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
         'university_administrator' => [
@@ -66,28 +66,28 @@ class OrganizationalRoleSeeder extends Seeder
             'approval_workflows.read',
             'users.read',
             'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
         'rector' => [
             'audit_logs.read', 'approval_requests.read', 'users.read',
             'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
         'vice_rector' => [
             'approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
         'dean' => [
             'approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
         'head_of_study_program' => [
             'approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
         'academic_administrator' => [
@@ -96,12 +96,14 @@ class OrganizationalRoleSeeder extends Seeder
             'file_uploads.read',
             'users.read',
             'students.read', 'study_programs.read', 'classes.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'krs.create', 'krs.update', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'krs.create', 'krs.update', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
         'lecturer' => [
             'students.read', 'study_programs.read', 'classes.read', 'courses.read',
             'krs.read', 'grades.read', 'grades.create', 'grades.update', 'attendance.read', 'attendance.create', 'attendance.update',
+            'exams.read', 'exams.create', 'exams.update', 'exams.delete', 'exams.publish', 'exam_attempts.read', 'exam_attempts.create', 'exam_attempts.update',
+            'question_bank.read', 'question_bank.create', 'question_bank.update', 'question_bank.delete',
         ],
         'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read'],
         'hr_administrator' => ['user_roles.read', 'users.read', 'employees.read', 'lecturers.read'],
@@ -109,7 +111,7 @@ class OrganizationalRoleSeeder extends Seeder
         'auditor' => [
             'audit_logs.read', 'approval_requests.read',
             'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read',
+            'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
         // academic_advisor, student, employee: sengaja tanpa permission admin
