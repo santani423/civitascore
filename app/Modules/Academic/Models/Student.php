@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\User;
 use Modules\Academic\Database\Factories\StudentFactory;
 use Modules\Academic\Enums\StudentStatus;
 use Modules\Finance\Models\Invoice;
@@ -17,6 +18,7 @@ use Modules\Tenancy\Models\University;
 
 /**
  * @property string $id
+ * @property string|null $user_id
  * @property string $university_id
  * @property string $study_program_id
  * @property string $nim
@@ -29,6 +31,7 @@ use Modules\Tenancy\Models\University;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read StudyProgram $studyProgram
+ * @property-read User|null $user
  */
 class Student extends Model implements ScopesToInstitution
 {
@@ -36,7 +39,7 @@ class Student extends Model implements ScopesToInstitution
     use HasFactory, HasUlids, TenantScoped;
 
     protected $fillable = [
-        'university_id', 'study_program_id', 'nim', 'name', 'email',
+        'university_id', 'study_program_id', 'user_id', 'nim', 'name', 'email',
         'admission_year', 'status', 'enrolled_at', 'graduated_at',
     ];
 
@@ -56,6 +59,14 @@ class Student extends Model implements ScopesToInstitution
     public function university(): BelongsTo
     {
         return $this->belongsTo(University::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**
