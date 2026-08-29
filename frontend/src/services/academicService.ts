@@ -1,6 +1,7 @@
 import { apiClient } from '@/services/api'
 import type { ApiSuccessResponse, ListParams, PaginatedResult } from '@/types/api'
 import type {
+  AnswerExamAttemptPayload,
   Attendance,
   ClassSection,
   Course,
@@ -18,6 +19,8 @@ import type {
   StoreExamPayload,
   StoreExamQuestionPayload,
   StoreQuestionBankItemPayload,
+  StudentExam,
+  StudentExamAttempt,
   StudyProgram,
   Transcript,
   UpdateExamPayload,
@@ -249,6 +252,52 @@ export const questionBankService = {
 
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/question-bank/${id}`)
+  },
+}
+
+/**
+ * Portal Mahasiswa — self-service mengerjakan ujian sendiri. Terpisah dari
+ * `examService`/`examQuestionService` di atas (dipakai dosen/admin
+ * mengelola ujian): endpoint di sini tidak pernah menerima/menampilkan
+ * `is_correct` atau kunci jawaban, dan backend selalu meresolusi
+ * kepemilikan dari user login sendiri (lihat StudentExamController).
+ */
+export const studentExamService = {
+  async index(): Promise<StudentExam[]> {
+    const response = await apiClient.get<ApiSuccessResponse<StudentExam[]>>('/student/exams')
+    return response.data.data
+  },
+
+  async show(examId: string): Promise<StudentExam> {
+    const response = await apiClient.get<ApiSuccessResponse<StudentExam>>(`/student/exams/${examId}`)
+    return response.data.data
+  },
+
+  /** Memulai (atau melanjutkan — idempotent & refresh-safe) percobaan ujian yang sedang berlangsung. */
+  async start(examId: string): Promise<StudentExamAttempt> {
+    const response = await apiClient.post<ApiSuccessResponse<StudentExamAttempt>>(`/student/exams/${examId}/start`)
+    return response.data.data
+  },
+
+  async showAttempt(attemptId: string): Promise<StudentExamAttempt> {
+    const response = await apiClient.get<ApiSuccessResponse<StudentExamAttempt>>(`/student/exam-attempts/${attemptId}`)
+    return response.data.data
+  },
+
+  /** Autosave satu jawaban — dipanggil setiap kali peserta memilih/mengubah opsi. */
+  async answer(attemptId: string, payload: AnswerExamAttemptPayload): Promise<StudentExamAttempt> {
+    const response = await apiClient.put<ApiSuccessResponse<StudentExamAttempt>>(
+      `/student/exam-attempts/${attemptId}/answer`,
+      payload,
+    )
+    return response.data.data
+  },
+
+  async submit(attemptId: string): Promise<StudentExamAttempt> {
+    const response = await apiClient.patch<ApiSuccessResponse<StudentExamAttempt>>(
+      `/student/exam-attempts/${attemptId}/submit`,
+    )
+    return response.data.data
   },
 }
 

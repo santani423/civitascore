@@ -174,6 +174,9 @@ export interface Exam {
   course_name: string | null
   title: string
   duration_minutes: number
+  starts_at: string | null
+  ends_at: string | null
+  creator_name: string | null
   question_pool_size: number
   questions_per_participant: number
   question_selection_mode: QuestionSelectionMode
@@ -209,6 +212,8 @@ export interface StoreExamPayload {
   class_section_id: string
   title: string
   duration_minutes: number
+  starts_at?: string | null
+  ends_at?: string | null
   questions_per_participant: number
   question_selection_mode: QuestionSelectionMode
   randomize_questions?: boolean
@@ -265,4 +270,65 @@ export interface Transcript {
   terms: TranscriptTerm[]
   ipk: number
   total_sks: number
+}
+
+/**
+ * Status ujian dari sudut pandang satu peserta (dihitung backend, lihat
+ * ExamService::computeStudentStatus) — berbeda dari `Exam.is_published`
+ * (admin), yang cuma menyatakan ujian sudah bisa diakses peserta yang
+ * berhak, bukan status pengerjaan individual mahasiswa ybs.
+ */
+export type StudentExamStatus = 'upcoming' | 'available' | 'in_progress' | 'completed' | 'expired'
+
+/** Tampilan ujian dari Portal Mahasiswa — aman untuk peserta (tidak pernah menyertakan soal/opsi/kunci jawaban). */
+export interface StudentExam {
+  id: string
+  title: string
+  course_name: string | null
+  lecturer_name: string | null
+  duration_minutes: number
+  starts_at: string | null
+  ends_at: string | null
+  questions_per_participant: number
+  allow_back_navigation: boolean
+  max_attempts: number
+  attempts_used: number
+  status: StudentExamStatus
+  result_visible: boolean
+  score: string | null
+  latest_attempt_id: string | null
+}
+
+export type ExamAttemptStatus = 'in_progress' | 'submitted'
+
+export interface StudentExamAttemptOption {
+  id: string
+  option_text: string
+}
+
+export interface StudentExamAttemptQuestion {
+  id: string
+  question_text: string
+  points: string | null
+  options: StudentExamAttemptOption[]
+  selected_option_id: string | null
+}
+
+/** Percobaan ujian milik sendiri — urutan soal & opsi sudah stabil sesuai penugasan backend, `is_correct` TIDAK PERNAH disertakan. */
+export interface StudentExamAttempt {
+  id: string
+  exam_id: string
+  krs_item_id: string
+  attempt_number: number
+  status: ExamAttemptStatus
+  started_at: string
+  submitted_at: string | null
+  score: string | null
+  questions: StudentExamAttemptQuestion[]
+  result_visible: boolean
+}
+
+export interface AnswerExamAttemptPayload {
+  exam_question_id: string
+  exam_question_option_id: string | null
 }

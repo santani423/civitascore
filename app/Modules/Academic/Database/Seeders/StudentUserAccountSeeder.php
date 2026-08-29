@@ -25,9 +25,10 @@ use Modules\UserManagement\Models\UserRole;
  * by email — this only ever grants the `student` role/membership on top,
  * it never changes an existing account's password or active flag.
  *
- * Not part of the DatabaseSeeder chain (fresh installs get user_id set at
- * student-creation time going forward); run explicitly to repair existing
- * data: `php artisan db:seed --class="Modules\\Academic\\Database\\Seeders\\StudentUserAccountSeeder"`.
+ * Runs as part of the main DatabaseSeeder chain (after
+ * DemoUniversitiesSeeder), so a fresh `migrate:fresh --seed` always leaves
+ * every student linked. Can also be run standalone to repair existing data:
+ * `php artisan db:seed --class="Modules\\Academic\\Database\\Seeders\\StudentUserAccountSeeder"`.
  */
 class StudentUserAccountSeeder extends Seeder
 {

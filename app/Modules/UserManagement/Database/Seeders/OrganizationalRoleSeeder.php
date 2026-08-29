@@ -15,13 +15,18 @@ use Modules\UserManagement\Models\Role;
  * Each role only gets the subset of the existing permission catalog that
  * actually matches its real responsibility today — e.g. `auditor` gets
  * audit_logs.read. `lecturer` now gets grading/attendance write access since
- * those are real, working endpoints (AcademicRecordService). `student` and
- * `employee` intentionally still get none — self-service (a student
- * enrolling/viewing only *their own* data) needs a Student/Lecturer→User
- * identity link that doesn't exist yet; granting blanket krs.create today
- * would let any authenticated "student" enroll *any* student into *any*
- * class. Their demo accounts remain useful to prove RBAC denies admin
- * endpoints to non-admin roles.
+ * those are real, working endpoints (AcademicRecordService). `student` now
+ * has the Student→User identity link (`students.user_id`,
+ * `StudentUserAccountSeeder`) and gets `exam_participation.*` — a resource
+ * deliberately separate from `exam_attempts.*` (dosen/pengawas recording on
+ * behalf of *any* KrsItem) so granting it can never let a student touch
+ * another student's attempt; ownership is still re-checked at the object
+ * level by `ExamParticipationPolicy`/`StudentExamController`. Other
+ * self-service (KRS enrollment, grades, attendance) still isn't wired up
+ * this way — granting blanket krs.create today would let any authenticated
+ * "student" enroll *any* student into *any* class — so `student` and
+ * `employee` otherwise still get none. Their demo accounts remain useful to
+ * prove RBAC denies admin endpoints to non-admin roles.
  */
 class OrganizationalRoleSeeder extends Seeder
 {
@@ -114,10 +119,11 @@ class OrganizationalRoleSeeder extends Seeder
             'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
-        // academic_advisor, student, employee: sengaja tanpa permission admin
-        // — dosen PA/mahasiswa butuh identity link (lihat komentar kelas di
-        // atas) sebelum bisa dapat akses aman ke data mereka sendiri;
-        // employee belum punya modul kepegawaian sama sekali.
+        'student' => ['exam_participation.read', 'exam_participation.create', 'exam_participation.update'],
+        // academic_advisor, employee: sengaja tanpa permission admin — dosen
+        // PA butuh identity link (lihat komentar kelas di atas) sebelum bisa
+        // dapat akses aman ke data mereka sendiri; employee belum punya
+        // modul kepegawaian sama sekali.
     ];
 
     public function run(): void

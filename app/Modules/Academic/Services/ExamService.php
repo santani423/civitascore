@@ -3,8 +3,11 @@
 namespace Modules\Academic\Services;
 
 use App\Support\Http\Exceptions\ConflictException;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\Academic\Enums\ExamAttemptStatus;
+use Modules\Academic\Enums\KrsItemStatus;
 use Modules\Academic\Enums\QuestionSelectionMode;
 use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Models\Exam;
@@ -12,6 +15,7 @@ use Modules\Academic\Models\ExamAttempt;
 use Modules\Academic\Models\ExamAttemptAnswer;
 use Modules\Academic\Models\ExamQuestion;
 use Modules\Academic\Models\KrsItem;
+use Modules\Academic\Models\Student;
 
 /**
  * Aturan bisnis modul Ujian (RANCANGAN-APLIKASI.md §4.18, spec konfigurasi
@@ -33,6 +37,8 @@ class ExamService
         // could leak cross-tenant existence (same reasoning as
         // StoreKrsItemRequest).
         ClassSection::query()->findOrFail((string) $data['class_section_id']);
+
+        $data['created_by'] ??= Auth::id();
 
         return Exam::query()->create($data);
     }
@@ -173,6 +179,29 @@ class ExamService
     }
 
     /**
+     * Nomor percobaan yang harus dipakai kalau peserta memanggil "mulai
+     * ujian" sekarang — melanjutkan percobaan in_progress yang sudah ada
+     * (resume idempotent, refresh-safe) kalau ada, atau nomor berikutnya
+     * kalau percobaan terakhir sudah Submitted (percobaan baru/retry).
+     * Wajib dipakai alih-alih menghitung `count() + 1` secara naif, yang
+     * akan salah membuat percobaan baru setiap kali peserta me-refresh
+     * ujian yang sedang dikerjakan.
+     */
+    public function nextAttemptNumber(Exam $exam, KrsItem $krsItem): int
+    {
+        $latest = $krsItem->examAttempts()
+            ->where('exam_id', $exam->id)
+            ->orderByDesc('attempt_number')
+            ->first();
+
+        return match (true) {
+            $latest === null => 1,
+            $latest->status === ExamAttemptStatus::InProgress => $latest->attempt_number,
+            default => $latest->attempt_number + 1,
+        };
+    }
+
+    /**
      * Menugaskan (atau mengembalikan penugasan yang sudah ada — stabil
      * lintas refresh, spec §14) set soal + urutan soal + urutan opsi jawaban
      * untuk satu percobaan peserta (KrsItem), sesuai konfigurasi ujian.
@@ -268,6 +297,48 @@ class ExamService
             throw new ConflictException('Ujian ini sudah dikumpulkan sebelumnya.');
         }
 
+        return $this->finalizeAttempt($attempt, now());
+    }
+
+    /**
+     * Batas waktu efektif satu percobaan — mana yang lebih dulu antara
+     * habisnya durasi pengerjaan (`started_at + duration_minutes`) dan
+     * jadwal berakhir ujian (`exam.ends_at`), kalau dosen mengonfigurasinya.
+     */
+    public function attemptDeadline(ExamAttempt $attempt): CarbonInterface
+    {
+        $durationDeadline = $attempt->started_at->addMinutes($attempt->exam->duration_minutes);
+        $examEndsAt = $attempt->exam->ends_at;
+
+        return $examEndsAt !== null && $examEndsAt->lessThan($durationDeadline)
+            ? $examEndsAt
+            : $durationDeadline;
+    }
+
+    /**
+     * Menutup & menskor percobaan yang statusnya masih in_progress tapi
+     * sudah melewati batas waktunya — dipanggil lazy di setiap akses
+     * self-service (answer/submit/show) sehingga backend tetap
+     * satu-satunya sumber kebenaran waktu tanpa perlu scheduled job
+     * terpisah. Idempotent terhadap percobaan yang sudah Submitted.
+     */
+    public function finalizeIfExpired(ExamAttempt $attempt): ExamAttempt
+    {
+        if ($attempt->status === ExamAttemptStatus::Submitted) {
+            return $attempt;
+        }
+
+        $deadline = $this->attemptDeadline($attempt);
+
+        if (now()->lessThanOrEqualTo($deadline)) {
+            return $attempt;
+        }
+
+        return $this->finalizeAttempt($attempt, $deadline);
+    }
+
+    private function finalizeAttempt(ExamAttempt $attempt, CarbonInterface $submittedAt): ExamAttempt
+    {
         $questions = ExamQuestion::query()
             ->whereIn('id', $attempt->question_order)
             ->with('options')
@@ -305,10 +376,65 @@ class ExamService
 
         $attempt->update([
             'status' => ExamAttemptStatus::Submitted,
-            'submitted_at' => now(),
+            'submitted_at' => $submittedAt,
             'score' => $score,
         ]);
 
         return $attempt;
+    }
+
+    /**
+     * KrsItem milik `$student` yang berhak atas `$exam` — mahasiswa berhak
+     * kalau ia terdaftar aktif (`Enrolled`) di class_section ujian ini.
+     * Satu-satunya jalur resolusi KrsItem untuk endpoint self-service —
+     * tidak pernah dipercayakan ke input klien (lihat StudentExamController).
+     */
+    public function resolveEligibleKrsItem(Exam $exam, Student $student): KrsItem
+    {
+        $krsItem = KrsItem::query()
+            ->where('student_id', $student->id)
+            ->where('class_section_id', $exam->class_section_id)
+            ->where('status', KrsItemStatus::Enrolled)
+            ->first();
+
+        if ($krsItem === null) {
+            throw new ConflictException('Anda tidak terdaftar pada kelas untuk ujian ini.');
+        }
+
+        return $krsItem;
+    }
+
+    /**
+     * Status ujian dari sudut pandang satu peserta (spec §2) — dibedakan
+     * dari `exams.is_published`, yang hanya menyatakan ujian sudah bisa
+     * diakses peserta yang berhak, bukan status pengerjaan individual.
+     *
+     * @return 'upcoming'|'available'|'in_progress'|'completed'|'expired'
+     */
+    public function computeStudentStatus(Exam $exam, ?ExamAttempt $latestAttempt): string
+    {
+        if ($latestAttempt !== null) {
+            if ($latestAttempt->status === ExamAttemptStatus::InProgress) {
+                return 'in_progress';
+            }
+
+            $attemptsUsed = $latestAttempt->attempt_number;
+            $canRetake = $attemptsUsed < $exam->max_attempts
+                && ($exam->ends_at === null || now()->lessThanOrEqualTo($exam->ends_at));
+
+            if (! $canRetake) {
+                return 'completed';
+            }
+        }
+
+        if ($exam->starts_at !== null && now()->lessThan($exam->starts_at)) {
+            return 'upcoming';
+        }
+
+        if ($exam->ends_at !== null && now()->greaterThan($exam->ends_at)) {
+            return $latestAttempt !== null ? 'completed' : 'expired';
+        }
+
+        return 'available';
     }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -21,6 +21,7 @@ import { classSectionService, examService } from '@/services/academicService'
 import type { NormalizedApiError } from '@/services/api'
 import { applyServerErrors } from '@/utils/applyServerErrors'
 import { QUESTION_SELECTION_MODE_LABEL } from '@/utils/examValidation'
+import { fromDatetimeLocalValue } from '@/utils/formatters'
 import type { ClassSection, Exam } from '@/types/academic'
 import { ROUTES } from '@/constants/routes'
 
@@ -103,18 +104,26 @@ export function ExamsPage() {
   )
 }
 
-const examSchema = z.object({
-  class_section_id: z.string().min(1, 'Kelas wajib dipilih.'),
-  title: z.string().min(1, 'Judul wajib diisi.'),
-  duration_minutes: z.number({ message: 'Durasi wajib diisi.' }).min(1, 'Durasi minimal 1 menit.'),
-  questions_per_participant: z
-    .number({ message: 'Jumlah soal wajib diisi.' })
-    .min(1, 'Jumlah soal harus lebih dari 0.'),
-  question_selection_mode: z.enum(['all', 'random', 'manual']),
-  max_attempts: z.number().min(1, 'Batas percobaan minimal 1.'),
-  randomize_questions: z.boolean(),
-  randomize_options: z.boolean(),
-})
+const examSchema = z
+  .object({
+    course_id: z.string().min(1, 'Mata kuliah wajib dipilih.'),
+    class_section_id: z.string().min(1, 'Kelas wajib dipilih.'),
+    title: z.string().min(1, 'Judul wajib diisi.'),
+    duration_minutes: z.number({ message: 'Durasi wajib diisi.' }).min(1, 'Durasi minimal 1 menit.'),
+    starts_at: z.string().optional(),
+    ends_at: z.string().optional(),
+    questions_per_participant: z
+      .number({ message: 'Jumlah soal wajib diisi.' })
+      .min(1, 'Jumlah soal harus lebih dari 0.'),
+    question_selection_mode: z.enum(['all', 'random', 'manual']),
+    max_attempts: z.number().min(1, 'Batas percobaan minimal 1.'),
+    randomize_questions: z.boolean(),
+    randomize_options: z.boolean(),
+  })
+  .refine((data) => !data.starts_at || !data.ends_at || new Date(data.ends_at) > new Date(data.starts_at), {
+    message: 'Waktu selesai harus setelah waktu mulai.',
+    path: ['ends_at'],
+  })
 
 type ExamFormValues = z.infer<typeof examSchema>
 
@@ -126,22 +135,43 @@ function ExamFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: (ex
 
   useEffect(() => {
     classSectionService
-      .index({ per_page: 100 })
+      .index({ per_page: 200 })
       .then((result) => setClassSections(result.data))
       .catch((error: NormalizedApiError) => setLoadError(error.message))
   }, [])
 
+  // Daftar mata kuliah diturunkan dari kelas yang benar-benar ditawarkan
+  // (bukan dari seluruh katalog courseService) — supaya dosen tidak bisa
+  // memilih mata kuliah yang kelasnya kosong (dead-end di dropdown Kelas).
+  const courses = useMemo(() => {
+    if (classSections === null) return null
+
+    const seen = new Map<string, { id: string; name: string; code: string }>()
+    for (const cs of classSections) {
+      if (!seen.has(cs.course_id)) {
+        seen.set(cs.course_id, { id: cs.course_id, name: cs.course_name ?? '-', code: cs.course_code ?? '-' })
+      }
+    }
+
+    return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [classSections])
+
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     setError,
     formState: { errors, isSubmitting },
   } = useForm<ExamFormValues>({
     resolver: zodResolver(examSchema),
     defaultValues: {
+      course_id: '',
       class_section_id: '',
       title: '',
       duration_minutes: 90,
+      starts_at: '',
+      ends_at: '',
       questions_per_participant: 1,
       question_selection_mode: 'all',
       max_attempts: 1,
@@ -150,11 +180,28 @@ function ExamFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: (ex
     },
   })
 
+  const selectedCourseId = watch('course_id')
+  const filteredClassSections = useMemo(
+    () => (classSections ?? []).filter((cs) => cs.course_id === selectedCourseId),
+    [classSections, selectedCourseId],
+  )
+
   const onSubmit = async (values: ExamFormValues) => {
     setFormError(null)
 
     try {
-      const exam = await examService.create(values)
+      const exam = await examService.create({
+        class_section_id: values.class_section_id,
+        title: values.title,
+        duration_minutes: values.duration_minutes,
+        starts_at: fromDatetimeLocalValue(values.starts_at),
+        ends_at: fromDatetimeLocalValue(values.ends_at),
+        questions_per_participant: values.questions_per_participant,
+        question_selection_mode: values.question_selection_mode,
+        max_attempts: values.max_attempts,
+        randomize_questions: values.randomize_questions,
+        randomize_options: values.randomize_options,
+      })
       onSaved(exam)
     } catch (error) {
       setFormError(applyServerErrors(error as NormalizedApiError, setError))
@@ -170,18 +217,25 @@ function ExamFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: (ex
         </Alert>
       )}
 
-      {classSections === null ? (
-        <p className="text-sm text-ink-secondary">Memuat daftar kelas...</p>
+      {courses === null || classSections === null ? (
+        <p className="text-sm text-ink-secondary">Memuat data mata kuliah &amp; kelas...</p>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
           <Select
+            label="Mata Kuliah"
+            placeholder="Pilih mata kuliah"
+            error={errors.course_id?.message}
+            options={courses.map((course) => ({ value: course.id, label: `${course.name} (${course.code})` }))}
+            {...register('course_id', {
+              onChange: () => setValue('class_section_id', ''),
+            })}
+          />
+          <Select
             label="Kelas"
-            placeholder="Pilih kelas"
+            placeholder={selectedCourseId ? 'Pilih kelas' : 'Pilih mata kuliah terlebih dahulu'}
+            disabled={!selectedCourseId}
             error={errors.class_section_id?.message}
-            options={classSections.map((cs) => ({
-              value: cs.id,
-              label: `${cs.course_name ?? '-'} — ${cs.class_code}`,
-            }))}
+            options={filteredClassSections.map((cs) => ({ value: cs.id, label: cs.class_code }))}
             {...register('class_section_id')}
           />
           <Input label="Judul Ujian" error={errors.title?.message} {...register('title')} />
@@ -199,6 +253,22 @@ function ExamFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: (ex
               label="Batas Percobaan"
               error={errors.max_attempts?.message}
               {...register('max_attempts', { valueAsNumber: true })}
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              type="datetime-local"
+              label="Waktu Mulai"
+              hint="Kosongkan jika tidak ingin membatasi jadwal mulai."
+              error={errors.starts_at?.message}
+              {...register('starts_at')}
+            />
+            <Input
+              type="datetime-local"
+              label="Waktu Selesai"
+              hint="Kosongkan jika tidak ingin membatasi jadwal berakhir."
+              error={errors.ends_at?.message}
+              {...register('ends_at')}
             />
           </div>
           <Input

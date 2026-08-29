@@ -21,6 +21,7 @@ import { examQuestionService, examService, questionBankService } from '@/service
 import type { NormalizedApiError } from '@/services/api'
 import { applyServerErrors } from '@/utils/applyServerErrors'
 import { examDistributionSummary, examValidationErrors, QUESTION_SELECTION_MODE_LABEL } from '@/utils/examValidation'
+import { fromDatetimeLocalValue, toDatetimeLocalValue } from '@/utils/formatters'
 import type { Exam, ExamQuestion, QuestionBankItem } from '@/types/academic'
 import { ROUTES } from '@/constants/routes'
 
@@ -180,6 +181,18 @@ export function ExamDetailPage() {
                   {exam.is_published ? 'Dipublikasikan' : 'Draft'}
                 </Badge>
               </div>
+              <div>
+                <p className="text-ink-tertiary">Waktu Mulai</p>
+                <p className="font-medium text-ink-primary">
+                  {exam.starts_at ? new Date(exam.starts_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Tidak dijadwalkan'}
+                </p>
+              </div>
+              <div>
+                <p className="text-ink-tertiary">Waktu Selesai</p>
+                <p className="font-medium text-ink-primary">
+                  {exam.ends_at ? new Date(exam.ends_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : 'Tidak dijadwalkan'}
+                </p>
+              </div>
             </div>
 
             <Alert variant="info" className="mt-4">
@@ -290,17 +303,24 @@ export function ExamDetailPage() {
   )
 }
 
-const examEditSchema = z.object({
-  title: z.string().min(1, 'Judul wajib diisi.'),
-  duration_minutes: z.number({ message: 'Durasi wajib diisi.' }).min(1, 'Durasi minimal 1 menit.'),
-  questions_per_participant: z
-    .number({ message: 'Jumlah soal wajib diisi.' })
-    .min(1, 'Jumlah soal harus lebih dari 0.'),
-  question_selection_mode: z.enum(['all', 'random', 'manual']),
-  max_attempts: z.number().min(1, 'Batas percobaan minimal 1.'),
-  randomize_questions: z.boolean(),
-  randomize_options: z.boolean(),
-})
+const examEditSchema = z
+  .object({
+    title: z.string().min(1, 'Judul wajib diisi.'),
+    duration_minutes: z.number({ message: 'Durasi wajib diisi.' }).min(1, 'Durasi minimal 1 menit.'),
+    starts_at: z.string().optional(),
+    ends_at: z.string().optional(),
+    questions_per_participant: z
+      .number({ message: 'Jumlah soal wajib diisi.' })
+      .min(1, 'Jumlah soal harus lebih dari 0.'),
+    question_selection_mode: z.enum(['all', 'random', 'manual']),
+    max_attempts: z.number().min(1, 'Batas percobaan minimal 1.'),
+    randomize_questions: z.boolean(),
+    randomize_options: z.boolean(),
+  })
+  .refine((data) => !data.starts_at || !data.ends_at || new Date(data.ends_at) > new Date(data.starts_at), {
+    message: 'Waktu selesai harus setelah waktu mulai.',
+    path: ['ends_at'],
+  })
 
 type ExamEditValues = z.infer<typeof examEditSchema>
 
@@ -317,6 +337,8 @@ function ExamEditModal({ exam, onClose, onSaved }: { exam: Exam; onClose: () => 
     defaultValues: {
       title: exam.title,
       duration_minutes: exam.duration_minutes,
+      starts_at: toDatetimeLocalValue(exam.starts_at),
+      ends_at: toDatetimeLocalValue(exam.ends_at),
       questions_per_participant: exam.questions_per_participant,
       question_selection_mode: exam.question_selection_mode,
       max_attempts: exam.max_attempts,
@@ -329,7 +351,11 @@ function ExamEditModal({ exam, onClose, onSaved }: { exam: Exam; onClose: () => 
     setFormError(null)
 
     try {
-      const updated = await examService.update(exam.id, values)
+      const updated = await examService.update(exam.id, {
+        ...values,
+        starts_at: fromDatetimeLocalValue(values.starts_at),
+        ends_at: fromDatetimeLocalValue(values.ends_at),
+      })
       onSaved(updated)
     } catch (error) {
       setFormError(applyServerErrors(error as NormalizedApiError, setError))
@@ -360,6 +386,22 @@ function ExamEditModal({ exam, onClose, onSaved }: { exam: Exam; onClose: () => 
             label="Batas Percobaan"
             error={errors.max_attempts?.message}
             {...register('max_attempts', { valueAsNumber: true })}
+          />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Input
+            type="datetime-local"
+            label="Waktu Mulai"
+            hint="Kosongkan jika tidak ingin membatasi jadwal mulai."
+            error={errors.starts_at?.message}
+            {...register('starts_at')}
+          />
+          <Input
+            type="datetime-local"
+            label="Waktu Selesai"
+            hint="Kosongkan jika tidak ingin membatasi jadwal berakhir."
+            error={errors.ends_at?.message}
+            {...register('ends_at')}
           />
         </div>
         <Input

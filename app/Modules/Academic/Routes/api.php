@@ -14,6 +14,7 @@ use Modules\Academic\Controllers\KrsItemController;
 use Modules\Academic\Controllers\LecturerController;
 use Modules\Academic\Controllers\QuestionBankController;
 use Modules\Academic\Controllers\StudentController;
+use Modules\Academic\Controllers\StudentExamController;
 use Modules\Academic\Controllers\StudyProgramController;
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -71,4 +72,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('krs-items/{krsItem}/exams/{exam}/attempt', [ExamAttemptController::class, 'start'])->middleware('permission:exam_attempts.create');
     Route::put('exam-attempts/{examAttempt}/answer', [ExamAttemptController::class, 'answer'])->middleware('permission:exam_attempts.update');
     Route::patch('exam-attempts/{examAttempt}/submit', [ExamAttemptController::class, 'submit'])->middleware('permission:exam_attempts.update');
+
+    // Portal Mahasiswa — self-service mengerjakan ujian sendiri (terpisah
+    // dari exam-attempts di atas, lihat komentar ExamParticipationPolicy).
+    Route::get('student/exams', [StudentExamController::class, 'index'])->middleware('permission:exam_participation.read');
+    Route::get('student/exams/{exam}', [StudentExamController::class, 'show'])->middleware('permission:exam_participation.read');
+    Route::post('student/exams/{exam}/start', [StudentExamController::class, 'start'])->middleware('permission:exam_participation.create');
+    Route::get('student/exam-attempts/{examAttempt}', [StudentExamController::class, 'showAttempt'])->middleware('permission:exam_participation.read');
+    Route::put('student/exam-attempts/{examAttempt}/answer', [StudentExamController::class, 'answer'])->middleware('permission:exam_participation.update');
+    Route::patch('student/exam-attempts/{examAttempt}/submit', [StudentExamController::class, 'submit'])->middleware('permission:exam_participation.update');
 });

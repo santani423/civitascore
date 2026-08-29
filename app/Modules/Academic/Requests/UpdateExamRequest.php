@@ -21,6 +21,8 @@ class UpdateExamRequest extends FormRequest
         return [
             'title' => ['sometimes', 'string', 'max:255'],
             'duration_minutes' => ['sometimes', 'integer', 'min:1'],
+            'starts_at' => ['sometimes', 'nullable', 'date'],
+            'ends_at' => ['sometimes', 'nullable', 'date', 'after:starts_at'],
             'questions_per_participant' => ['sometimes', 'integer', 'min:1'],
             'question_selection_mode' => ['sometimes', Rule::enum(QuestionSelectionMode::class)],
             'randomize_questions' => ['sometimes', 'boolean'],

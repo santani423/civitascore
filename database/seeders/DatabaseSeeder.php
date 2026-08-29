@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Academic\Database\Seeders\StudentUserAccountSeeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
 use Modules\SystemSetting\Database\Seeders\SystemSettingSeeder;
@@ -64,5 +65,11 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(DemoUniversitiesSeeder::class);
+
+        // Backfills students.user_id so every mahasiswa gets a login
+        // account (email = students.email, password = NIM) instead of
+        // being left unlinked — must run after DemoUniversitiesSeeder,
+        // which is what actually creates the Student rows.
+        $this->call(StudentUserAccountSeeder::class);
     }
 }

@@ -89,6 +89,14 @@ class KrsItem extends Model implements ScopesToInstitution
         return $this->hasMany(Attendance::class);
     }
 
+    /**
+     * @return HasMany<ExamAttempt, $this>
+     */
+    public function examAttempts(): HasMany
+    {
+        return $this->hasMany(ExamAttempt::class);
+    }
+
     protected static function newFactory(): KrsItemFactory
     {
         return KrsItemFactory::new();

@@ -70,6 +70,8 @@ export const ROUTES = {
     absensi: '/portal/absensi',
     tugas: '/portal/tugas',
     kuis: '/portal/kuis',
+    ujian: '/portal/ujian',
+    ujianKerjakan: '/portal/ujian/:id/kerjakan',
     cuti: '/portal/cuti',
     surat: '/portal/surat',
     beasiswa: '/portal/beasiswa',

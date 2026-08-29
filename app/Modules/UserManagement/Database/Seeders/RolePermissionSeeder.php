@@ -160,6 +160,17 @@ class RolePermissionSeeder extends Seeder
             PermissionAction::Create,
             PermissionAction::Update,
         ],
+        // Resource terpisah dari exam_attempts (yang dipakai dosen/pengawas
+        // merekam atas nama KrsItem manapun) — exam_participation khusus
+        // self-service mahasiswa mengerjakan ujiannya sendiri, diberikan
+        // hanya ke role student (lihat OrganizationalRoleSeeder) dan tetap
+        // dibatasi kepemilikan KrsItem di object-level lewat
+        // ExamParticipationPolicy, bukan cuma permission slug ini.
+        'exam_participation' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+        ],
         'question_bank' => [
             PermissionAction::Read,
             PermissionAction::Create,

@@ -33,6 +33,23 @@ export function formatDateRange(startIso: string, endIso: string): string {
   return `${formatter.format(new Date(startIso))} - ${formatter.format(new Date(endIso))}`
 }
 
+/** ISO datetime (UTC, dari backend) -> value yang diterima <input type="datetime-local"> (local time, tanpa detik/offset). */
+export function toDatetimeLocalValue(iso: string | null | undefined): string {
+  if (!iso) return ''
+
+  const date = new Date(iso)
+  const pad = (value: number) => value.toString().padStart(2, '0')
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+/** Kebalikan toDatetimeLocalValue() — value <input type="datetime-local"> (local time) -> ISO string untuk dikirim ke API. */
+export function fromDatetimeLocalValue(value: string | null | undefined): string | null {
+  if (!value) return null
+
+  return new Date(value).toISOString()
+}
+
 /** "super_admin" / "grade_change" -> "Super Admin" / "Grade Change" — dipakai untuk menampilkan slug/enum backend sebagai label. */
 export function humanizeSlug(slug: string): string {
   return slug

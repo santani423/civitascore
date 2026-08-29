@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Academic\Database\Factories\ExamFactory;
 use Modules\Academic\Enums\QuestionSelectionMode;
 use Modules\Tenancy\Models\University;
+use App\Models\User;
 
 /**
  * @property string $id
@@ -21,6 +22,9 @@ use Modules\Tenancy\Models\University;
  * @property string $class_section_id
  * @property string $title
  * @property int $duration_minutes
+ * @property CarbonImmutable|null $starts_at
+ * @property CarbonImmutable|null $ends_at
+ * @property string|null $created_by
  * @property int $questions_per_participant
  * @property QuestionSelectionMode $question_selection_mode
  * @property bool $randomize_questions
@@ -33,6 +37,7 @@ use Modules\Tenancy\Models\University;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read ClassSection $classSection
+ * @property-read User|null $creator
  * @property-read Collection<int, ExamQuestion> $questions
  * @property-read Collection<int, ExamAttempt> $attempts
  */
@@ -43,6 +48,7 @@ class Exam extends Model implements ScopesToInstitution
 
     protected $fillable = [
         'university_id', 'class_section_id', 'title', 'duration_minutes',
+        'starts_at', 'ends_at', 'created_by',
         'questions_per_participant', 'question_selection_mode',
         'randomize_questions', 'randomize_options', 'allow_back_navigation',
         'show_result_after_submission', 'max_attempts', 'is_published', 'published_at',
@@ -52,6 +58,8 @@ class Exam extends Model implements ScopesToInstitution
     {
         return [
             'duration_minutes' => 'integer',
+            'starts_at' => 'datetime',
+            'ends_at' => 'datetime',
             'questions_per_participant' => 'integer',
             'question_selection_mode' => QuestionSelectionMode::class,
             'randomize_questions' => 'boolean',
@@ -70,6 +78,14 @@ class Exam extends Model implements ScopesToInstitution
     public function university(): BelongsTo
     {
         return $this->belongsTo(University::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     /**

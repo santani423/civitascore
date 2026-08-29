@@ -153,6 +153,7 @@ export const PORTAL_NAV_ITEMS: NavItem[] = [
     children: [
       { label: 'Tugas', path: ROUTES.portal.tugas },
       { label: 'Kuis', path: ROUTES.portal.kuis },
+      { label: 'Ujian', path: ROUTES.portal.ujian, permission: 'exam_participation.read' },
     ],
   },
   {

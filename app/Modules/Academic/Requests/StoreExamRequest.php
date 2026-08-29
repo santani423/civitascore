@@ -22,6 +22,8 @@ class StoreExamRequest extends FormRequest
             'class_section_id' => ['required', 'string'],
             'title' => ['required', 'string', 'max:255'],
             'duration_minutes' => ['required', 'integer', 'min:1'],
+            'starts_at' => ['nullable', 'date'],
+            'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'questions_per_participant' => ['required', 'integer', 'min:1'],
             'question_selection_mode' => ['required', Rule::enum(QuestionSelectionMode::class)],
             'randomize_questions' => ['boolean'],

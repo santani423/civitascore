@@ -43,6 +43,7 @@ const DETAIL_ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   [ROUTES.akademik.kurikulumDetail]: 'curriculums.read',
   [ROUTES.akademik.mataKuliahDetail]: 'courses.read',
   [ROUTES.akademik.ujianDetail]: 'exams.read',
+  [ROUTES.portal.ujianKerjakan]: 'exam_participation.read',
   [ROUTES.keuangan.tagihanDetail]: 'invoices.read',
   [ROUTES.keuangan.beasiswaDetail]: 'scholarships.read',
   [ROUTES.skripsiDetail]: 'theses.read',

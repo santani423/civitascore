@@ -60,6 +60,8 @@ import { PortalGradesPage } from '@/pages/portal/PortalGradesPage'
 import { PortalAttendancePage } from '@/pages/portal/PortalAttendancePage'
 import { PortalAssignmentsPage } from '@/pages/portal/PortalAssignmentsPage'
 import { PortalQuizzesPage } from '@/pages/portal/PortalQuizzesPage'
+import { PortalExamsPage } from '@/pages/portal/PortalExamsPage'
+import { PortalExamTakingPage } from '@/pages/portal/PortalExamTakingPage'
 import { PortalLeaveRequestPage } from '@/pages/portal/PortalLeaveRequestPage'
 import { PortalLetterRequestPage } from '@/pages/portal/PortalLetterRequestPage'
 import { PortalScholarshipPage } from '@/pages/portal/PortalScholarshipPage'
@@ -159,6 +161,7 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.portal.absensi, element: <PortalAttendancePage /> },
   { path: ROUTES.portal.tugas, element: <PortalAssignmentsPage /> },
   { path: ROUTES.portal.kuis, element: <PortalQuizzesPage /> },
+  { path: ROUTES.portal.ujian, element: <PortalExamsPage /> },
   { path: ROUTES.portal.cuti, element: <PortalLeaveRequestPage /> },
   { path: ROUTES.portal.surat, element: <PortalLetterRequestPage /> },
   { path: ROUTES.portal.beasiswa, element: <PortalScholarshipPage /> },
@@ -202,6 +205,18 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          {/* Di luar DashboardLayout dengan sengaja — halaman pengerjaan ujian
+              tampil satu layar penuh tanpa sidebar/header, lihat komentar di
+              PortalExamTakingPage. */}
+          <Route
+            path={ROUTES.portal.ujianKerjakan}
+            element={
+              <RequirePermission permission={getRoutePermission(ROUTES.portal.ujianKerjakan)}>
+                <PortalExamTakingPage />
+              </RequirePermission>
+            }
+          />
+
           <Route element={<DashboardLayout />}>
             {APP_ROUTES.map((route) => (
               <Route
