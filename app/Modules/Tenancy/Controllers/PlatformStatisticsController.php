@@ -28,7 +28,7 @@ class PlatformStatisticsController extends Controller
     {
         abort_unless($request->user()->hasPermissionTo('platform_statistics.read'), 403, 'Anda tidak memiliki izin untuk mengakses resource ini.');
 
-        $stats = Cache::tags(['dashboard_stats'])->remember('platform:statistics', self::CACHE_TTL_SECONDS, fn () => $this->build());
+        $stats = Cache::remember('platform:statistics', self::CACHE_TTL_SECONDS, fn () => $this->build());
 
         return ApiResponse::success($stats);
     }

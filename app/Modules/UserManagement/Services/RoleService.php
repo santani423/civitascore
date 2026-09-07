@@ -4,10 +4,10 @@ namespace Modules\UserManagement\Services;
 
 use App\Support\Http\Exceptions\ConflictException;
 use App\Support\Tenancy\TenantContext;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\UserManagement\Models\Role;
+use Modules\UserManagement\Support\PermissionRegistry;
 
 class RoleService
 {
@@ -72,7 +72,7 @@ class RoleService
         // sync() writes pivot rows via the query builder directly, so it
         // never fires RolePermission's create/delete model events — flush
         // explicitly rather than relying on those hooks for this path.
-        Cache::tags(['permissions'])->flush();
+        PermissionRegistry::flushAll();
 
         return $role->load('permissions');
     }

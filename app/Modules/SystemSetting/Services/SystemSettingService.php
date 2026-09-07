@@ -15,7 +15,7 @@ class SystemSettingService
 
     public function get(string $key, mixed $default = null): mixed
     {
-        return Cache::tags(['system_settings'])->remember(
+        return Cache::remember(
             self::CACHE_PREFIX.$key,
             self::CACHE_TTL_SECONDS,
             function () use ($key, $default): mixed {
@@ -32,7 +32,7 @@ class SystemSettingService
             $setting->update(['value' => $value, 'updated_by' => $updatedBy->id]);
         });
 
-        Cache::tags(['system_settings'])->forget(self::CACHE_PREFIX.$setting->key);
+        Cache::forget(self::CACHE_PREFIX.$setting->key);
 
         return $setting;
     }

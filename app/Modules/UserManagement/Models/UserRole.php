@@ -7,8 +7,8 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
-use Illuminate\Support\Facades\Cache;
 use Modules\Tenancy\Models\University;
+use Modules\UserManagement\Support\PermissionRegistry;
 
 /**
  * @property string $id
@@ -115,7 +115,7 @@ class UserRole extends Pivot
 
     protected static function booted(): void
     {
-        static::created(fn (): mixed => Cache::tags(['permissions'])->flush());
-        static::deleted(fn (): mixed => Cache::tags(['permissions'])->flush());
+        static::created(fn (): mixed => PermissionRegistry::flushAll());
+        static::deleted(fn (): mixed => PermissionRegistry::flushAll());
     }
 }

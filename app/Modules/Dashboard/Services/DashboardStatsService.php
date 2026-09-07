@@ -46,7 +46,7 @@ class DashboardStatsService
     {
         $cacheKey = 'dashboard:stats:'.($this->tenant->universityId() ?? 'platform').':'.md5(json_encode($filters));
 
-        return Cache::tags(['dashboard_stats'])->remember(
+        return Cache::remember(
             $cacheKey,
             self::CACHE_TTL_SECONDS,
             fn (): array => $this->buildStats($filters),

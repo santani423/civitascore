@@ -2,14 +2,13 @@
 
 namespace Modules\UserManagement\Database\Seeders;
 
-use Illuminate\Cache\Repository as CacheRepository;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Modules\UserManagement\Enums\PermissionAction;
 use Modules\UserManagement\Enums\PermissionScope;
 use Modules\UserManagement\Models\Permission;
 use Modules\UserManagement\Models\Role;
+use Modules\UserManagement\Support\PermissionRegistry;
 
 /**
  * Seeds permissions yang digunakan oleh middleware dan policy Phase 1.
@@ -232,7 +231,7 @@ class RolePermissionSeeder extends Seeder
             ],
         );
 
-        $this->flushPermissionCache();
+        PermissionRegistry::flushAll();
     }
 
     /**
@@ -268,24 +267,5 @@ class RolePermissionSeeder extends Seeder
         }
 
         return $permissions;
-    }
-
-    /**
-     * Membersihkan cache permission hanya ketika cache store
-     * yang digunakan mendukung cache tags.
-     *
-     * Driver seperti file dan database tidak mendukung tags,
-     * sehingga pemanggilan Cache::tags() harus dilewati.
-     */
-    private function flushPermissionCache(): void
-    {
-        /** @var CacheRepository $cache */
-        $cache = Cache::store();
-
-        if (! $cache->supportsTags()) {
-            return;
-        }
-
-        $cache->tags(['permissions'])->flush();
     }
 }

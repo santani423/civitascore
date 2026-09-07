@@ -26,9 +26,26 @@ class PermissionRegistry
 {
     private const CACHE_TTL_SECONDS = 3600;
 
+    private const CACHE_VERSION_KEY = 'permissions:cache_version';
+
     private const SUPER_ADMIN_SLUG = 'super_admin';
 
     public function __construct(private readonly TenantContext $tenant) {}
+
+    /**
+     * Invalidates every cached user/tenant permission context at once.
+     * Cache::tags() would normally do this, but shared hosting runs on the
+     * `file` cache driver, which doesn't support tags — bumping this version
+     * number instead makes every previously cached key (they all embed it)
+     * unreachable, which is the same effect without needing a taggable
+     * store. Called whenever a role's permissions or a user's role grants
+     * change (see RolePermission/UserRole model events and
+     * RoleService::syncPermissions()).
+     */
+    public static function flushAll(): void
+    {
+        Cache::increment(self::CACHE_VERSION_KEY);
+    }
 
     /**
      * @return array{roles: array<int, string>, permissions: array<int, string>, roleGrants: array<int, array{role: string, scope_type: string|null, scope_id: string|null}>}
@@ -37,7 +54,7 @@ class PermissionRegistry
     {
         $universityId = $this->tenant->universityId();
 
-        return Cache::tags(['permissions'])->remember(
+        return Cache::remember(
             $this->cacheKey($user, $universityId),
             self::CACHE_TTL_SECONDS,
             function () use ($user, $universityId): array {
@@ -159,11 +176,13 @@ class PermissionRegistry
 
     public function forgetCacheForUser(User $user): void
     {
-        Cache::tags(['permissions'])->forget($this->cacheKey($user, $this->tenant->universityId()));
+        Cache::forget($this->cacheKey($user, $this->tenant->universityId()));
     }
 
     private function cacheKey(User $user, ?string $universityId): string
     {
-        return "permissions:user:{$user->id}:tenant:".($universityId ?? 'platform');
+        $version = (int) Cache::get(self::CACHE_VERSION_KEY, 1);
+
+        return "permissions:v{$version}:user:{$user->id}:tenant:".($universityId ?? 'platform');
     }
 }

@@ -14,7 +14,7 @@ class FeatureFlagService
 
     public function isEnabled(string $key): bool
     {
-        return (bool) Cache::tags(['feature_flags'])->remember(
+        return (bool) Cache::remember(
             self::CACHE_PREFIX.$key,
             self::CACHE_TTL_SECONDS,
             fn (): bool => (bool) FeatureFlag::query()->where('key', $key)->value('is_enabled'),
@@ -25,7 +25,7 @@ class FeatureFlagService
     {
         $flag->update(['is_enabled' => $enabled, 'updated_by' => $updatedBy->id]);
 
-        Cache::tags(['feature_flags'])->forget(self::CACHE_PREFIX.$flag->key);
+        Cache::forget(self::CACHE_PREFIX.$flag->key);
 
         return $flag;
     }
