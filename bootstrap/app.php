@@ -14,6 +14,7 @@ use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -60,7 +61,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 $e instanceof AccessDeniedHttpException => ApiResponse::error($e->getMessage() ?: 'Anda tidak memiliki izin untuk mengakses resource ini.', status: 403),
                 $e instanceof NotFoundHttpException => ApiResponse::error('Data tidak ditemukan.', status: 404),
                 $e instanceof ThrottleRequestsException => ApiResponse::error('Terlalu banyak permintaan. Coba lagi nanti.', status: 429),
-                default => null,
+                // Catch-all so any unhandled exception on api/* still comes back as
+                // the app's standard { success, message, data, errors } JSON envelope
+                // instead of Laravel's bare default error body — without this, an
+                // unexpected failure (e.g. misconfigured env on a fresh deploy) looks
+                // to the frontend like the request silently failed.
+                default => ApiResponse::error(
+                    config('app.debug') ? $e->getMessage() : 'Terjadi kesalahan pada server. Silakan coba lagi nanti.',
+                    status: $e instanceof HttpExceptionInterface ? $e->getStatusCode() : 500,
+                ),
             };
         });
     })->create();
