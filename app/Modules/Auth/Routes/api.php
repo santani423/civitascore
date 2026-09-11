@@ -5,7 +5,7 @@ use Modules\Auth\Controllers\AuthController;
 use Modules\Auth\Controllers\DeviceController;
 use Modules\Auth\Controllers\SessionController;
 
-Route::get('login', [AuthController::class, 'login']);
+Route::post('login', [AuthController::class, 'login']);
 Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('reset-password', [AuthController::class, 'resetPassword']);
 
