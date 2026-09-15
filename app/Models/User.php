@@ -34,7 +34,10 @@ use Modules\UserManagement\Support\HasPermissions;
  * @property Carbon|null $email_verified_at
  * @property string $password
  * @property bool $is_active
+ * @property bool $must_change_password
+ * @property Carbon|null $password_changed_at
  * @property string|null $remember_token
+ * @property-read string|null $nim
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -72,12 +75,21 @@ use Modules\UserManagement\Support\HasPermissions;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['name', 'email', 'password', 'is_active'])]
+#[Fillable(['name', 'email', 'password', 'is_active', 'must_change_password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use Auditable, HasApiTokens, HasFactory, HasPermissions, HasUlids, Notifiable, SoftDeletes;
+
+    /**
+     * Not a real column — proxies to the linked Student's nim (if any) so
+     * API consumers can read it straight off the authenticated user. Null
+     * for every non-student role.
+     *
+     * @var list<string>
+     */
+    protected $appends = ['nim'];
 
     /**
      * Get the attributes that should be cast.
@@ -90,7 +102,14 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'must_change_password' => 'boolean',
+            'password_changed_at' => 'datetime',
         ];
+    }
+
+    public function getNimAttribute(): ?string
+    {
+        return $this->student?->nim;
     }
 
     /**

@@ -10,6 +10,7 @@ import { DashboardLayout } from '@/layouts/DashboardLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
+import { ChangePasswordPage } from '@/pages/auth/ChangePasswordPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { PlatformDashboardPage } from '@/pages/platform/PlatformDashboardPage'
 import { UniversitiesPage } from '@/pages/platform/UniversitiesPage'
@@ -205,6 +206,13 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoute />}>
+          {/* Di luar DashboardLayout dengan sengaja — dipakai sebelum akun
+              dianggap "siap" masuk ke dashboard (password default) sehingga
+              tidak menampilkan sidebar/menu yang belum relevan. */}
+          <Route element={<AuthLayout />}>
+            <Route path={ROUTES.changePassword} element={<ChangePasswordPage />} />
+          </Route>
+
           {/* Di luar DashboardLayout dengan sengaja — halaman pengerjaan ujian
               tampil satu layar penuh tanpa sidebar/header, lihat komentar di
               PortalExamTakingPage. */}

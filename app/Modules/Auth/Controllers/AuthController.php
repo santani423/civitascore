@@ -8,7 +8,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Modules\Auth\Actions\AuthenticateUserAction;
+use Modules\Auth\Actions\ChangePasswordAction;
 use Modules\Auth\Actions\LogoutUserAction;
+use Modules\Auth\Requests\ChangePasswordRequest;
 use Modules\Auth\Requests\ForgotPasswordRequest;
 use Modules\Auth\Requests\LoginRequest;
 use Modules\Auth\Requests\ResetPasswordRequest;
@@ -19,6 +21,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly AuthenticateUserAction $authenticate,
         private readonly LogoutUserAction $logout,
+        private readonly ChangePasswordAction $changePassword,
         private readonly PermissionRegistry $permissions,
     ) {}
 
@@ -29,14 +32,20 @@ class AuthController extends Controller
             $request->validated('password'),
             $request,
             $request->validated('device_identifier'),
+            $request->validated('nim'),
+            $request->validated('university_code'),
         );
+
+        $user = $result['user'];
 
         return ApiResponse::success([
             'token' => $result['token'],
             'user' => [
-                'id' => $result['user']->id,
-                'name' => $result['user']->name,
-                'email' => $result['user']->email,
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'nim' => $user->nim,
+                'must_change_password' => $user->must_change_password,
             ],
         ], 'Login berhasil.');
     }
@@ -68,6 +77,17 @@ class AuthController extends Controller
         $this->logout->executeAllDevices($request->user());
 
         return ApiResponse::success(message: 'Berhasil keluar dari seluruh perangkat.');
+    }
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        $this->changePassword->execute(
+            $request->user(),
+            $request->validated('current_password'),
+            $request->validated('password'),
+        );
+
+        return ApiResponse::success(message: 'Password berhasil diperbarui.');
     }
 
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse

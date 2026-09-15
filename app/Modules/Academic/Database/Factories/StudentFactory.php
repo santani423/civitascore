@@ -23,6 +23,7 @@ class StudentFactory extends Factory
             'nim' => fake()->unique()->numerify('##########'),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'tanggal_lahir' => fake()->dateTimeBetween('-25 years', '-17 years')->format('Y-m-d'),
             'admission_year' => $admissionYear,
             'status' => StudentStatus::Active,
             'enrolled_at' => "{$admissionYear}-08-01",

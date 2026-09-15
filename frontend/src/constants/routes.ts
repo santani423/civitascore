@@ -2,6 +2,7 @@ export const ROUTES = {
   login: '/login',
   forgotPassword: '/forgot-password',
   resetPassword: '/reset-password',
+  changePassword: '/ubah-password',
   dashboard: '/dashboard',
   persetujuan: '/persetujuan',
   persetujuanDetail: '/persetujuan/:id',

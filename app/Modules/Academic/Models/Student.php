@@ -2,6 +2,7 @@
 
 namespace Modules\Academic\Models;
 
+use App\Models\User;
 use App\Support\Scoping\ScopesToInstitution;
 use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\User;
 use Modules\Academic\Database\Factories\StudentFactory;
 use Modules\Academic\Enums\StudentStatus;
 use Modules\Finance\Models\Invoice;
@@ -24,6 +24,7 @@ use Modules\Tenancy\Models\University;
  * @property string $nim
  * @property string $name
  * @property string|null $email
+ * @property CarbonImmutable|null $tanggal_lahir
  * @property int $admission_year
  * @property StudentStatus $status
  * @property CarbonImmutable $enrolled_at
@@ -39,7 +40,7 @@ class Student extends Model implements ScopesToInstitution
     use HasFactory, HasUlids, TenantScoped;
 
     protected $fillable = [
-        'university_id', 'study_program_id', 'user_id', 'nim', 'name', 'email',
+        'university_id', 'study_program_id', 'user_id', 'nim', 'name', 'email', 'tanggal_lahir',
         'admission_year', 'status', 'enrolled_at', 'graduated_at',
     ];
 
@@ -47,6 +48,7 @@ class Student extends Model implements ScopesToInstitution
     {
         return [
             'status' => StudentStatus::class,
+            'tanggal_lahir' => 'date',
             'admission_year' => 'integer',
             'enrolled_at' => 'date',
             'graduated_at' => 'date',

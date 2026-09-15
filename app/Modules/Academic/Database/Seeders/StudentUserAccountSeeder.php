@@ -4,6 +4,7 @@ namespace Modules\Academic\Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Modules\Academic\Enums\StudentStatus;
 use Modules\Academic\Models\Student;
@@ -54,7 +55,13 @@ class StudentUserAccountSeeder extends Seeder
             ['email' => $email],
             [
                 'name' => $student->name,
-                'password' => $student->nim,
+                // Default password is the student's birth date as DDMMYYYY
+                // (hashed) — falls back to the NIM only when the birth date
+                // hasn't been recorded yet, since it can't be derived.
+                'password' => $student->tanggal_lahir
+                    ? Hash::make($student->tanggal_lahir->format('dmY'))
+                    : Hash::make($student->nim),
+                'must_change_password' => true,
                 'email_verified_at' => now(),
                 'is_active' => ! in_array($student->status, [StudentStatus::Inactive, StudentStatus::DroppedOut], true),
             ],

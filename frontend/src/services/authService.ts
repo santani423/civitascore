@@ -10,7 +10,7 @@ import type {
 import { humanizeSlug } from '@/utils/formatters'
 
 interface MeResponse {
-  user: { id: string; name: string; email: string }
+  user: { id: string; name: string; email: string; nim: string | null; must_change_password: boolean }
   roles: string[]
   permissions: string[]
 }
@@ -20,6 +20,8 @@ function buildAuthUser(user: MeResponse['user'], roles: string[], permissions: s
     id: user.id,
     name: user.name,
     email: user.email,
+    nim: user.nim,
+    mustChangePassword: user.must_change_password,
     role: roles[0] ? humanizeSlug(roles[0]) : 'Pengguna',
     roles,
     permissions,
@@ -31,7 +33,7 @@ export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthSession> {
     const loginResponse = await apiClient.post<ApiSuccessResponse<{ token: string; user: MeResponse['user'] }>>(
       '/login',
-      { email: credentials.email, password: credentials.password },
+      { email: credentials.email, nim: credentials.nim, password: credentials.password },
     )
     const { token } = loginResponse.data.data
 
@@ -69,6 +71,14 @@ export const authService = {
     password_confirmation: string
   }): Promise<void> {
     await apiClient.post('/reset-password', payload)
+  },
+
+  async changePassword(payload: {
+    current_password: string
+    password: string
+    password_confirmation: string
+  }): Promise<void> {
+    await apiClient.post('/change-password', payload)
   },
 
   async getSessions(): Promise<UserSession[]> {

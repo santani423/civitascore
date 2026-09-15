@@ -2,6 +2,10 @@ export interface AuthUser {
   id: string
   name: string
   email: string
+  /** NIM mahasiswa (dari Student yang terhubung ke akun ini), null untuk role lain. */
+  nim: string | null
+  /** true saat akun masih memakai password default (mis. NIM+tanggal lahir) dan wajib diganti. */
+  mustChangePassword: boolean
   /** Label tampilan tunggal, diturunkan dari roles[0] (lihat authService.login). */
   role: string
   roles: string[]
@@ -9,8 +13,10 @@ export interface AuthUser {
   avatarUrl?: string | null
 }
 
+/** Salah satu dari `email` atau `nim` wajib diisi (lihat LoginPage untuk switch-nya). */
 export interface LoginCredentials {
-  email: string
+  email?: string
+  nim?: string
   password: string
   remember: boolean
 }
