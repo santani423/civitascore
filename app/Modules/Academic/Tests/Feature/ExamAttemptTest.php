@@ -253,3 +253,53 @@ test('starting an attempt for an unpublished exam is rejected', function () {
         ->postJson("/api/v1/krs-items/{$krsItem->id}/exams/{$exam->id}/attempt")
         ->assertApiError(409);
 });
+
+test('listing exam participants reports not_started, in_progress, and completed status per participant', function () {
+    $university = University::factory()->create();
+    $fixture = makeAttemptClassSectionFixture($university);
+
+    $exam = Exam::factory()->create([
+        'university_id' => $university->id,
+        'class_section_id' => $fixture['classSection']->id,
+        'questions_per_participant' => 1,
+        'question_selection_mode' => QuestionSelectionMode::All,
+        'is_published' => true,
+        'published_at' => now(),
+    ]);
+    $q = addAttemptQuestionFixture($exam, 0);
+
+    $notStarted = enrollStudentFixture($university, $fixture['classSection'], $fixture['program']->id);
+    $inProgress = enrollStudentFixture($university, $fixture['classSection'], $fixture['program']->id);
+    $completed = enrollStudentFixture($university, $fixture['classSection'], $fixture['program']->id);
+
+    actingAsUserWithUniversityPermissions($university, ['exam_attempts.create', 'exam_attempts.update', 'exam_attempts.read']);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->postJson("/api/v1/krs-items/{$inProgress->id}/exams/{$exam->id}/attempt")
+        ->assertApiSuccess();
+
+    $completedStart = $this->withHeader('X-University-ID', $university->id)
+        ->postJson("/api/v1/krs-items/{$completed->id}/exams/{$exam->id}/attempt")
+        ->assertApiSuccess();
+    $completedAttemptId = $completedStart->json('data.id');
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->putJson("/api/v1/exam-attempts/{$completedAttemptId}/answer", [
+            'exam_question_id' => $q['question']->id,
+            'exam_question_option_id' => $q['correctOptionId'],
+        ])
+        ->assertApiSuccess();
+    $this->withHeader('X-University-ID', $university->id)
+        ->patchJson("/api/v1/exam-attempts/{$completedAttemptId}/submit")
+        ->assertApiSuccess();
+
+    $response = $this->withHeader('X-University-ID', $university->id)
+        ->getJson("/api/v1/exams/{$exam->id}/participants")
+        ->assertApiSuccess();
+
+    $statusByKrsItemId = collect($response->json('data'))->pluck('status', 'krs_item_id');
+
+    expect($statusByKrsItemId->get($notStarted->id))->toBe('not_started');
+    expect($statusByKrsItemId->get($inProgress->id))->toBe('in_progress');
+    expect($statusByKrsItemId->get($completed->id))->toBe('completed');
+});

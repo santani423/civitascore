@@ -38,11 +38,11 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
         role="dialog"
         aria-modal="true"
         className={cn(
-          'relative z-10 w-full max-w-lg animate-slide-in rounded-xl border border-border bg-surface p-6 shadow-popover',
+          'relative z-10 flex max-h-[85vh] w-full max-w-lg animate-slide-in flex-col rounded-xl border border-border bg-surface shadow-popover',
           className,
         )}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3 p-6 pb-4">
           {title && <h2 className="text-base font-semibold text-ink-primary">{title}</h2>}
           <button
             type="button"
@@ -54,7 +54,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
           </button>
         </div>
 
-        {children}
+        <div className="overflow-y-auto px-6 pb-6">{children}</div>
       </div>
     </div>,
     document.body,

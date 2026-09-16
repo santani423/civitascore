@@ -91,15 +91,14 @@ export function ExamsPage() {
         <ListPagination meta={list.meta} page={list.page} onPageChange={list.setPage} itemLabel="ujian" />
       </Card>
 
-      {showForm && (
-        <ExamFormModal
-          onClose={() => setShowForm(false)}
-          onSaved={() => {
-            setShowForm(false)
-            list.refetch()
-          }}
-        />
-      )}
+      <ExamFormModal
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        onSaved={() => {
+          setShowForm(false)
+          list.refetch()
+        }}
+      />
     </div>
   )
 }
@@ -127,18 +126,40 @@ const examSchema = z
 
 type ExamFormValues = z.infer<typeof examSchema>
 
-/** Dipakai untuk membuat ujian baru — sisi klien pemilihan kelas hanya untuk saat pembuatan (backend tidak mengizinkan class_section_id diubah setelahnya). */
-function ExamFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: (exam: Exam) => void }) {
+/**
+ * Dipakai untuk membuat ujian baru — sisi klien pemilihan kelas hanya untuk saat pembuatan (backend tidak mengizinkan class_section_id diubah setelahnya).
+ * Komponen ini tetap ter-mount selama halaman terbuka (lihat pemanggilnya) supaya isian form tidak hilang saat modal ditutup tanpa disimpan lalu dibuka lagi.
+ */
+function ExamFormModal({
+  open,
+  onClose,
+  onSaved,
+}: {
+  open: boolean
+  onClose: () => void
+  onSaved: (exam: Exam) => void
+}) {
   const [classSections, setClassSections] = useState<ClassSection[] | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!open || classSections !== null) return
+
+    let cancelled = false
     classSectionService
       .index({ per_page: 200 })
-      .then((result) => setClassSections(result.data))
-      .catch((error: NormalizedApiError) => setLoadError(error.message))
-  }, [])
+      .then((result) => {
+        if (!cancelled) setClassSections(result.data)
+      })
+      .catch((error: NormalizedApiError) => {
+        if (!cancelled) setLoadError(error.message)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [open, classSections])
 
   // Daftar mata kuliah diturunkan dari kelas yang benar-benar ditawarkan
   // (bukan dari seluruh katalog courseService) — supaya dosen tidak bisa
@@ -162,6 +183,7 @@ function ExamFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: (ex
     watch,
     setValue,
     setError,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<ExamFormValues>({
     resolver: zodResolver(examSchema),
@@ -202,6 +224,7 @@ function ExamFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: (ex
         randomize_questions: values.randomize_questions,
         randomize_options: values.randomize_options,
       })
+      reset()
       onSaved(exam)
     } catch (error) {
       setFormError(applyServerErrors(error as NormalizedApiError, setError))
@@ -209,7 +232,7 @@ function ExamFormModal({ onClose, onSaved }: { onClose: () => void; onSaved: (ex
   }
 
   return (
-    <Modal open onClose={onClose} title="Buat Ujian" className="max-w-xl">
+    <Modal open={open} onClose={onClose} title="Buat Ujian" className="max-w-xl">
       {loadError && <Alert variant="danger">{loadError}</Alert>}
       {formError && (
         <Alert variant="danger" className="mb-4" onDismiss={() => setFormError(null)}>

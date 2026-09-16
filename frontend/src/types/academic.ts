@@ -225,6 +225,19 @@ export interface StoreExamPayload {
 
 export type UpdateExamPayload = Partial<Omit<StoreExamPayload, 'class_section_id'>>
 
+export type ExamParticipantStatus = 'not_started' | 'in_progress' | 'completed'
+
+export interface ExamParticipant {
+  krs_item_id: string
+  student_id: string
+  student_name: string | null
+  student_nim: string | null
+  attempts_used: number
+  status: ExamParticipantStatus
+  score: string | null
+  submitted_at: string | null
+}
+
 export interface ExamQuestionOptionPayload {
   option_text: string
   is_correct: boolean

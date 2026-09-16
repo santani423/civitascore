@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Library, Plus, Trash2 } from 'lucide-react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
@@ -15,15 +15,30 @@ import { Select } from '@/components/ui/Select'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { Modal } from '@/components/ui/Modal'
 import { Alert } from '@/components/ui/Alert'
+import { ListPagination } from '@/components/ui/ListPagination'
 import { useFetch } from '@/hooks/useFetch'
+import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { usePermission } from '@/hooks/usePermission'
-import { examQuestionService, examService, questionBankService } from '@/services/academicService'
+import { examParticipantService, examQuestionService, examService, questionBankService } from '@/services/academicService'
 import type { NormalizedApiError } from '@/services/api'
 import { applyServerErrors } from '@/utils/applyServerErrors'
 import { examDistributionSummary, examValidationErrors, QUESTION_SELECTION_MODE_LABEL } from '@/utils/examValidation'
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from '@/utils/formatters'
-import type { Exam, ExamQuestion, QuestionBankItem } from '@/types/academic'
+import type { Exam, ExamParticipant, ExamParticipantStatus, ExamQuestion, QuestionBankItem } from '@/types/academic'
+import type { ListParams } from '@/types/api'
 import { ROUTES } from '@/constants/routes'
+
+const PARTICIPANT_STATUS_LABEL: Record<ExamParticipantStatus, string> = {
+  not_started: 'Belum Mengerjakan',
+  in_progress: 'Sedang Mengerjakan',
+  completed: 'Sudah Mengerjakan',
+}
+
+const PARTICIPANT_STATUS_BADGE: Record<ExamParticipantStatus, 'neutral' | 'warning' | 'success'> = {
+  not_started: 'neutral',
+  in_progress: 'warning',
+  completed: 'success',
+}
 
 export function ExamDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -41,6 +56,9 @@ export function ExamDetailPage() {
     error: questionsError,
     refetch: refetchQuestions,
   } = useFetch(getQuestions)
+
+  const fetchParticipants = useCallback((params: ListParams) => examParticipantService.index(id ?? '', params), [id])
+  const participants = usePaginatedList<ExamParticipant>({ fetcher: fetchParticipants })
 
   const [showExamForm, setShowExamForm] = useState(false)
   const [questionModalTarget, setQuestionModalTarget] = useState<ExamQuestion | 'new' | null>(null)
@@ -137,10 +155,30 @@ export function ExamDetailPage() {
       : []),
   ]
 
+  const participantColumns: DataTableColumn<ExamParticipant>[] = [
+    { header: 'NIM', cell: (row) => row.student_nim ?? '-' },
+    { header: 'Nama Mahasiswa', cell: (row) => row.student_name ?? '-' },
+    {
+      header: 'Status',
+      cell: (row) => (
+        <Badge variant={PARTICIPANT_STATUS_BADGE[row.status]}>{PARTICIPANT_STATUS_LABEL[row.status]}</Badge>
+      ),
+    },
+    {
+      header: 'Aksi',
+      cell: (row) => (
+        <Link to={`${ROUTES.mahasiswa}/${row.student_id}`} className="text-sm font-medium text-primary hover:underline">
+          Detail Mahasiswa
+        </Link>
+      ),
+    },
+  ]
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
         title={exam?.title ?? 'Detail Ujian'}
+        description={exam ? `${exam.course_name ?? '-'} · Kelas ${exam.class_code ?? '-'}` : undefined}
         breadcrumb={[
           { label: 'Dashboard', path: ROUTES.dashboard },
           { label: 'Ujian', path: ROUTES.akademik.ujian },
@@ -163,6 +201,14 @@ export function ExamDetailPage() {
         <>
           <Card title="Distribusi Soal" description="Ringkasan konfigurasi dan validasi sebelum publikasi.">
             <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+              <div>
+                <p className="text-ink-tertiary">Mata Kuliah</p>
+                <p className="font-medium text-ink-primary">{exam.course_name ?? '-'}</p>
+              </div>
+              <div>
+                <p className="text-ink-tertiary">Kelas</p>
+                <p className="font-medium text-ink-primary">{exam.class_code ?? '-'}</p>
+              </div>
               <div>
                 <p className="text-ink-tertiary">Question Pool</p>
                 <p className="font-medium text-ink-primary">{exam.question_pool_size}</p>
@@ -260,6 +306,32 @@ export function ExamDetailPage() {
                 emptyMessage={questionsLoading ? 'Memuat...' : 'Belum ada soal.'}
               />
             )}
+          </Card>
+
+          <Card
+            title="Mahasiswa yang Dapat Mengikuti Ujian"
+            description="Mahasiswa yang terdaftar (KRS aktif) di kelas ini, beserta status pengerjaan ujian."
+            noPadding
+          >
+            {participants.error ? (
+              <Alert variant="danger" className="m-4">
+                {participants.error}
+              </Alert>
+            ) : (
+              <DataTable
+                columns={participantColumns}
+                data={participants.data}
+                rowKey={(row) => row.krs_item_id}
+                emptyMessage={participants.isLoading ? 'Memuat...' : 'Belum ada mahasiswa yang terdaftar di kelas ini.'}
+              />
+            )}
+
+            <ListPagination
+              meta={participants.meta}
+              page={participants.page}
+              onPageChange={participants.setPage}
+              itemLabel="mahasiswa"
+            />
           </Card>
         </>
       )}

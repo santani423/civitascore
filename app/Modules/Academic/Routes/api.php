@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('question-bank/{questionBankItem}', [QuestionBankController::class, 'update'])->middleware('permission:question_bank.update');
     Route::delete('question-bank/{questionBankItem}', [QuestionBankController::class, 'destroy'])->middleware('permission:question_bank.delete');
 
+    Route::get('exams/{exam}/participants', [ExamAttemptController::class, 'index'])->middleware('permission:exam_attempts.read');
     Route::post('krs-items/{krsItem}/exams/{exam}/attempt', [ExamAttemptController::class, 'start'])->middleware('permission:exam_attempts.create');
     Route::put('exam-attempts/{examAttempt}/answer', [ExamAttemptController::class, 'answer'])->middleware('permission:exam_attempts.update');
     Route::patch('exam-attempts/{examAttempt}/submit', [ExamAttemptController::class, 'submit'])->middleware('permission:exam_attempts.update');

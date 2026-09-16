@@ -9,6 +9,7 @@ import type {
   EnrollKrsPayload,
   Employee,
   Exam,
+  ExamParticipant,
   ExamQuestion,
   Grade,
   KrsItem,
@@ -196,6 +197,15 @@ export const examService = {
   async publish(id: string): Promise<Exam> {
     const response = await apiClient.patch<ApiSuccessResponse<Exam>>(`/exams/${id}/publish`)
     return response.data.data
+  },
+}
+
+export const examParticipantService = {
+  async index(examId: string, params: ListParams = {}): Promise<PaginatedResult<ExamParticipant>> {
+    const response = await apiClient.get<ApiSuccessResponse<ExamParticipant[]>>(`/exams/${examId}/participants`, {
+      params: toQueryParams(params),
+    })
+    return { data: response.data.data, meta: response.data.meta! }
   },
 }
 
