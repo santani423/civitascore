@@ -1,5 +1,6 @@
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Download } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
@@ -9,6 +10,7 @@ import { Alert } from '@/components/ui/Alert'
 import { SkeletonRow } from '@/components/ui/Skeleton'
 import { useFetch } from '@/hooks/useFetch'
 import { studentExamService } from '@/services/academicService'
+import type { NormalizedApiError } from '@/services/api'
 import type { StudentExam, StudentExamStatus } from '@/types/academic'
 import { ROUTES } from '@/constants/routes'
 
@@ -41,9 +43,26 @@ function formatSchedule(startsAt: string | null, endsAt: string | null): string 
 
 export function PortalExamsPage() {
   const navigate = useNavigate()
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
 
   const fetchExams = useCallback(() => studentExamService.index(), [])
   const { data: exams, isLoading, error } = useFetch(fetchExams)
+
+  const handleDownload = async (row: StudentExam) => {
+    if (!row.latest_attempt_id) return
+    setDownloadingId(row.latest_attempt_id)
+    setDownloadError(null)
+
+    try {
+      const filename = `hasil-ujian-${row.title.replace(/\s+/g, '-').toLowerCase()}.pdf`
+      await studentExamService.downloadResultPdf(row.latest_attempt_id, filename)
+    } catch (err) {
+      setDownloadError((err as NormalizedApiError).message ?? 'Gagal mengunduh PDF hasil ujian.')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   const columns: DataTableColumn<StudentExam>[] = [
     {
@@ -86,13 +105,26 @@ export function PortalExamsPage() {
 
         if (row.status === 'completed' && row.latest_attempt_id) {
           return (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(ROUTES.portal.ujianHasil.replace(':attemptId', row.latest_attempt_id as string))}
-            >
-              Lihat Hasil
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(ROUTES.portal.ujianHasil.replace(':attemptId', row.latest_attempt_id as string))}
+              >
+                Lihat Hasil
+              </Button>
+              {row.result_visible && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  leftIcon={<Download className="size-3.5" />}
+                  isLoading={downloadingId === row.latest_attempt_id}
+                  onClick={() => handleDownload(row)}
+                >
+                  Download
+                </Button>
+              )}
+            </div>
           )
         }
 
@@ -108,6 +140,12 @@ export function PortalExamsPage() {
         description="Ujian yang dipublikasikan dosen untuk mata kuliah yang Anda ambil."
         breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Perkuliahan' }, { label: 'Ujian' }]}
       />
+
+      {downloadError && (
+        <Alert variant="danger" onDismiss={() => setDownloadError(null)}>
+          {downloadError}
+        </Alert>
+      )}
 
       <Card noPadding>
         {isLoading ? (

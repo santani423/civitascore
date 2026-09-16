@@ -72,6 +72,18 @@
         </tr>
     </table>
 
+    @if ((float) $result['summary']['penalty_score'] > 0)
+        <table class="summary">
+            <tr>
+                <td><span class="value">{{ $result['summary']['raw_score'] }}</span><span class="caption">Raw Score</span></td>
+                <td><span class="value">-{{ $result['summary']['penalty_score'] }}</span><span class="caption">Penalti ({{ $result['summary']['violation_count'] }}x Pelanggaran)</span></td>
+                <td><span class="value">{{ $result['summary']['score'] }}</span><span class="caption">Final Score</span></td>
+                <td><span class="value">{{ $result['summary']['grade'] ?? '-' }}</span><span class="caption">Grade</span></td>
+                <td><span class="value">{{ $result['summary']['weighted_score'] ?? '-' }}</span><span class="caption">Weighted Score</span></td>
+            </tr>
+        </table>
+    @endif
+
     <h2>Koreksi Jawaban</h2>
 
     @foreach ($result['questions'] as $question)

@@ -1,15 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, CheckCircle2, Clock, Download, Loader2, XCircle } from 'lucide-react'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
+import { useParams } from 'react-router-dom'
+import { CheckCircle2, Clock, Download, Loader2, XCircle } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
-import { studentExamService } from '@/services/academicService'
+import { examPublicService } from '@/services/examPublicService'
 import type { NormalizedApiError } from '@/services/api'
 import type { StudentExamResult } from '@/types/academic'
-import { ROUTES } from '@/constants/routes'
 import { cn } from '@/utils/cn'
 
 function formatDateTime(iso: string | null): string {
@@ -27,9 +26,14 @@ function formatDuration(seconds: number | null): string {
   return hours > 0 ? `${pad(hours)}:${pad(minutes)}:${pad(secs)}` : `${pad(minutes)}:${pad(secs)}`
 }
 
-export function PortalExamResultPage() {
-  const { attemptId } = useParams<{ attemptId: string }>()
-  const navigate = useNavigate()
+/**
+ * Halaman hasil ujian akses publik (/exam/{access_token}/result/{session_token})
+ * — standalone, tanpa dashboard mahasiswa (spec §9-11). Layout diadaptasi
+ * dari PortalExamResultPage (mahasiswa login), hanya sumber data & tidak
+ * ada tombol kembali ke dashboard yang berbeda.
+ */
+export function ExamPublicResultPage() {
+  const { sessionToken } = useParams<{ accessToken: string; sessionToken: string }>()
 
   const [result, setResult] = useState<StudentExamResult | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -39,14 +43,14 @@ export function PortalExamResultPage() {
   const [downloadError, setDownloadError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!attemptId) return
+    if (!sessionToken) return
     let cancelled = false
     setIsLoading(true)
     setError(null)
     setNotAvailableMessage(null)
 
-    studentExamService
-      .result(attemptId)
+    examPublicService
+      .getResult(sessionToken)
       .then((data) => {
         if (!cancelled) setResult(data)
       })
@@ -55,8 +59,6 @@ export function PortalExamResultPage() {
 
         if (err.status === 409) {
           setNotAvailableMessage(err.message)
-        } else if (err.status === 403) {
-          setError('Anda tidak berhak melihat hasil ujian ini.')
         } else {
           setError(err.message ?? 'Gagal memuat hasil ujian.')
         }
@@ -68,82 +70,61 @@ export function PortalExamResultPage() {
     return () => {
       cancelled = true
     }
-  }, [attemptId])
+  }, [sessionToken])
 
   const handleDownload = useCallback(async () => {
-    if (!attemptId || !result) return
+    if (!sessionToken || !result) return
 
     setIsDownloading(true)
     setDownloadError(null)
 
     try {
       const filename = `hasil-ujian-${result.exam.title.replace(/\s+/g, '-').toLowerCase()}.pdf`
-      await studentExamService.downloadResultPdf(attemptId, filename)
+      await examPublicService.downloadResultPdf(sessionToken, filename)
     } catch (err) {
       setDownloadError((err as NormalizedApiError).message ?? 'Gagal mengunduh PDF hasil ujian. Silakan coba lagi.')
     } finally {
       setIsDownloading(false)
     }
-  }, [attemptId, result])
+  }, [sessionToken, result])
 
-  const backButton = (
-    <Button variant="outline" leftIcon={<ArrowLeft className="size-4" />} onClick={() => navigate(ROUTES.portal.ujian)}>
-      Kembali ke Daftar Ujian
-    </Button>
+  const pageShell = (children: ReactNode) => (
+    <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6 sm:px-6">{children}</div>
   )
 
   if (isLoading) {
-    return (
+    return pageShell(
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="size-6 animate-spin text-ink-tertiary" />
-      </div>
+      </div>,
     )
   }
 
   if (error) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Alert variant="danger">{error}</Alert>
-        {backButton}
-      </div>
-    )
+    return pageShell(<Alert variant="danger">{error}</Alert>)
   }
 
   if (notAvailableMessage) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Card>
-          <div className="flex flex-col items-center gap-3 py-10 text-center">
-            <Clock className="size-10 text-ink-tertiary" />
-            <p className="text-lg font-semibold text-ink-primary">Hasil Belum Tersedia</p>
-            <p className="max-w-md text-sm text-ink-tertiary">{notAvailableMessage}</p>
-            {backButton}
-          </div>
-        </Card>
-      </div>
+    return pageShell(
+      <Card>
+        <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <Clock className="size-10 text-ink-tertiary" />
+          <p className="text-lg font-semibold text-ink-primary">Hasil Belum Tersedia</p>
+          <p className="max-w-md text-sm text-ink-tertiary">{notAvailableMessage}</p>
+        </div>
+      </Card>,
     )
   }
 
   if (!result) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Alert variant="warning">Data hasil ujian tidak ditemukan.</Alert>
-        {backButton}
-      </div>
-    )
+    return pageShell(<Alert variant="warning">Data hasil ujian tidak ditemukan.</Alert>)
   }
 
-  return (
-    <div className="flex flex-col gap-5">
+  return pageShell(
+    <>
       <PageHeader
         title="Hasil Ujian"
         description={`${result.exam.title} — ${result.exam.course_name ?? '-'}`}
-        breadcrumb={[
-          { label: 'Dashboard', path: ROUTES.dashboard },
-          { label: 'Perkuliahan' },
-          { label: 'Ujian', path: ROUTES.portal.ujian },
-          { label: 'Hasil Ujian' },
-        ]}
         actions={
           <Button variant="primary" leftIcon={<Download className="size-4" />} isLoading={isDownloading} onClick={handleDownload}>
             Download Hasil Ujian
@@ -308,8 +289,6 @@ export function PortalExamResultPage() {
           </Card>
         ))}
       </div>
-
-      {backButton}
-    </div>
+    </>,
   )
 }

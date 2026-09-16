@@ -34,12 +34,16 @@ use App\Models\User;
  * @property int $max_attempts
  * @property bool $is_published
  * @property CarbonImmutable|null $published_at
+ * @property string|null $access_token
+ * @property CarbonImmutable|null $access_token_generated_at
+ * @property string|null $weight_percentage
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read ClassSection $classSection
  * @property-read User|null $creator
  * @property-read Collection<int, ExamQuestion> $questions
  * @property-read Collection<int, ExamAttempt> $attempts
+ * @property-read Collection<int, ExamGradeRange> $gradeRanges
  */
 class Exam extends Model implements ScopesToInstitution
 {
@@ -52,6 +56,7 @@ class Exam extends Model implements ScopesToInstitution
         'questions_per_participant', 'question_selection_mode',
         'randomize_questions', 'randomize_options', 'allow_back_navigation',
         'show_result_after_submission', 'max_attempts', 'is_published', 'published_at',
+        'access_token', 'access_token_generated_at', 'weight_percentage',
     ];
 
     protected function casts(): array
@@ -69,6 +74,8 @@ class Exam extends Model implements ScopesToInstitution
             'max_attempts' => 'integer',
             'is_published' => 'boolean',
             'published_at' => 'datetime',
+            'access_token_generated_at' => 'datetime',
+            'weight_percentage' => 'decimal:2',
         ];
     }
 
@@ -110,6 +117,14 @@ class Exam extends Model implements ScopesToInstitution
     public function attempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class);
+    }
+
+    /**
+     * @return HasMany<ExamGradeRange, $this>
+     */
+    public function gradeRanges(): HasMany
+    {
+        return $this->hasMany(ExamGradeRange::class);
     }
 
     protected static function newFactory(): ExamFactory

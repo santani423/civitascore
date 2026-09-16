@@ -38,6 +38,12 @@ class ExamParticipantResource extends JsonResource
             'attempts_used' => $this->examAttempts->count(),
             'status' => $status,
             'score' => $latestAttempt?->score,
+            'raw_score' => $latestAttempt?->raw_score,
+            'penalty_score' => $latestAttempt?->penalty_score,
+            'grade' => $latestAttempt?->grade,
+            'weighted_score' => $latestAttempt?->weighted_score,
+            'violation_count' => $latestAttempt?->violations_count ?? 0,
+            'latest_attempt_id' => $latestAttempt?->id,
             'submitted_at' => $latestAttempt?->submitted_at?->toIso8601String(),
         ];
     }

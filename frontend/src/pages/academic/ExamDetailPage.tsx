@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Library, Plus, Trash2 } from 'lucide-react'
+import { BarChart3, Copy, Download, FileText, Library, Plus, QrCode, RefreshCw, ShieldAlert, Trash2 } from 'lucide-react'
+import { QRCodeCanvas } from 'qrcode.react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
@@ -19,12 +20,29 @@ import { ListPagination } from '@/components/ui/ListPagination'
 import { useFetch } from '@/hooks/useFetch'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { usePermission } from '@/hooks/usePermission'
-import { examParticipantService, examQuestionService, examService, questionBankService } from '@/services/academicService'
+import { useExamViolationAlerts } from '@/hooks/useExamViolationAlerts'
+import {
+  examAttemptViolationService,
+  examParticipantService,
+  examQuestionService,
+  examService,
+  questionBankService,
+} from '@/services/academicService'
 import type { NormalizedApiError } from '@/services/api'
 import { applyServerErrors } from '@/utils/applyServerErrors'
+import { copyToClipboard } from '@/utils/clipboard'
 import { examDistributionSummary, examValidationErrors, QUESTION_SELECTION_MODE_LABEL } from '@/utils/examValidation'
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from '@/utils/formatters'
-import type { Exam, ExamParticipant, ExamParticipantStatus, ExamQuestion, QuestionBankItem } from '@/types/academic'
+import type {
+  Exam,
+  ExamAttemptViolationTimeline,
+  ExamGradeRange,
+  ExamParticipant,
+  ExamParticipantStatus,
+  ExamQuestion,
+  QuestionBankItem,
+  UpsertExamGradeRangePayload,
+} from '@/types/academic'
 import type { ListParams } from '@/types/api'
 import { ROUTES } from '@/constants/routes'
 
@@ -66,6 +84,18 @@ export function ExamDetailPage() {
   const [publishError, setPublishError] = useState<string | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
 
+  const [accessLinkError, setAccessLinkError] = useState<string | null>(null)
+  const [isGeneratingAccessLink, setIsGeneratingAccessLink] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const qrCanvasRef = useRef<HTMLCanvasElement>(null)
+
+  const [isDownloadingExam, setIsDownloadingExam] = useState(false)
+  const [downloadExamError, setDownloadExamError] = useState<string | null>(null)
+  const [violationTimelineAttemptId, setViolationTimelineAttemptId] = useState<string | null>(null)
+  const [showGradeRangeModal, setShowGradeRangeModal] = useState(false)
+
+  const { alerts: violationAlerts, dismiss: dismissViolationAlert } = useExamViolationAlerts(exam?.id, Boolean(exam?.is_published))
+
   const manuallySelectedCount = (questions ?? []).filter((q) => q.is_selected).length
   const validationErrors = exam
     ? examValidationErrors({
@@ -88,6 +118,62 @@ export function ExamDetailPage() {
       setPublishError((error as NormalizedApiError).message)
     } finally {
       setIsPublishing(false)
+    }
+  }
+
+  const accessUrl = exam?.access_token
+    ? `${window.location.origin}${ROUTES.examPublic.access.replace(':accessToken', exam.access_token)}`
+    : null
+
+  const handleGenerateAccessLink = async () => {
+    if (!exam) return
+    setAccessLinkError(null)
+    setIsGeneratingAccessLink(true)
+
+    try {
+      const updated = await examService.generateAccessLink(exam.id)
+      setExam(updated)
+    } catch (error) {
+      setAccessLinkError((error as NormalizedApiError).message)
+    } finally {
+      setIsGeneratingAccessLink(false)
+    }
+  }
+
+  const handleCopyAccessLink = async () => {
+    if (!accessUrl) return
+    const copied = await copyToClipboard(accessUrl)
+    if (copied) {
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2000)
+    }
+  }
+
+  const handleDownloadQrCode = () => {
+    const canvas = qrCanvasRef.current
+    if (!canvas || !exam) return
+
+    const anchor = document.createElement('a')
+    anchor.href = canvas.toDataURL('image/png')
+    anchor.download = `qr-ujian-${exam.title.replace(/\s+/g, '-').toLowerCase()}.png`
+    anchor.click()
+  }
+
+  const handleDownloadExam = async () => {
+    if (!exam) return
+    setDownloadExamError(null)
+    setIsDownloadingExam(true)
+
+    try {
+      const filename = `naskah-ujian-${exam.title.replace(/\s+/g, '-').toLowerCase()}.pdf`
+      // `canManage` cuma menentukan apakah kunci jawaban DIMINTA — backend
+      // tetap yang menentukan apakah benar-benar disertakan (exams.update),
+      // lihat ExamController::downloadPdf().
+      await examService.downloadExamPdf(exam.id, canManage, filename)
+    } catch (error) {
+      setDownloadExamError((error as NormalizedApiError).message ?? 'Gagal mengunduh naskah ujian.')
+    } finally {
+      setIsDownloadingExam(false)
     }
   }
 
@@ -158,6 +244,28 @@ export function ExamDetailPage() {
   const participantColumns: DataTableColumn<ExamParticipant>[] = [
     { header: 'NIM', cell: (row) => row.student_nim ?? '-' },
     { header: 'Nama Mahasiswa', cell: (row) => row.student_name ?? '-' },
+    { header: 'Raw Score', cell: (row) => row.raw_score ?? '-' },
+    {
+      header: 'Penalty',
+      cell: (row) => (row.penalty_score && row.penalty_score !== '0.00' ? `-${row.penalty_score}` : '-'),
+    },
+    { header: 'Final Score', cell: (row) => row.score ?? '-' },
+    { header: 'Grade', cell: (row) => row.grade ?? '-' },
+    {
+      header: 'Pelanggaran',
+      cell: (row) =>
+        row.violation_count > 0 && row.latest_attempt_id ? (
+          <button
+            type="button"
+            onClick={() => setViolationTimelineAttemptId(row.latest_attempt_id)}
+            className="flex items-center gap-1 text-sm font-medium text-danger hover:underline"
+          >
+            <ShieldAlert className="size-3.5" /> {row.violation_count}
+          </button>
+        ) : (
+          '-'
+        ),
+    },
     {
       header: 'Status',
       cell: (row) => (
@@ -185,14 +293,54 @@ export function ExamDetailPage() {
           { label: 'Detail' },
         ]}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => navigate(ROUTES.akademik.ujian)}>
               Kembali
             </Button>
+            {exam && (
+              <Button
+                variant="outline"
+                leftIcon={<BarChart3 className="size-4" />}
+                onClick={() => navigate(ROUTES.akademik.ujianRekap.replace(':id', exam.id))}
+              >
+                Rekap Nilai
+              </Button>
+            )}
+            {exam && (
+              <Button
+                variant="outline"
+                leftIcon={<FileText className="size-4" />}
+                isLoading={isDownloadingExam}
+                onClick={handleDownloadExam}
+              >
+                Download Naskah
+              </Button>
+            )}
             {canManage && exam && !exam.is_published && <Button onClick={() => setShowExamForm(true)}>Ubah Ujian</Button>}
           </div>
         }
       />
+
+      {downloadExamError && (
+        <Alert variant="danger" onDismiss={() => setDownloadExamError(null)}>
+          {downloadExamError}
+        </Alert>
+      )}
+
+      {violationAlerts.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {violationAlerts.map((violation) => (
+            <Alert key={violation.id} variant="warning" onDismiss={() => dismissViolationAlert(violation.id)}>
+              <span className="font-semibold">⚠ Pelanggaran Ujian</span>
+              {' — '}
+              {violation.student_name ?? 'Mahasiswa'} ({violation.student_nim ?? '-'}): {violation.violation_label}
+              {' · Pelanggaran #'}
+              {violation.sequence_number} · Penalti -{violation.penalty_points} ·{' '}
+              {new Date(violation.occurred_at).toLocaleTimeString('id-ID')}
+            </Alert>
+          ))}
+        </div>
+      )}
 
       {examLoading && <p className="text-sm text-ink-tertiary">Memuat...</p>}
       {examError && <Alert variant="danger">{examError}</Alert>}
@@ -270,6 +418,84 @@ export function ExamDetailPage() {
               </div>
             )}
           </Card>
+
+          {canManage && (
+            <Card title="Akses Ujian" description="Link dan QR Code yang dipakai mahasiswa untuk mengakses ujian ini tanpa login.">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-ink-tertiary">Status:</span>
+                  <Badge variant={exam.access_token ? 'success' : 'neutral'}>
+                    {exam.access_token ? 'Aktif' : 'Belum diaktifkan'}
+                  </Badge>
+                </div>
+
+                {accessLinkError && (
+                  <Alert variant="danger" onDismiss={() => setAccessLinkError(null)}>
+                    {accessLinkError}
+                  </Alert>
+                )}
+
+                {exam.access_token && accessUrl ? (
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div className="flex flex-1 flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <Input readOnly value={accessUrl} className="font-mono text-xs" />
+                        <Button variant="outline" size="sm" leftIcon={<Copy className="size-3.5" />} onClick={handleCopyAccessLink}>
+                          {linkCopied ? 'Tersalin!' : 'Copy Link'}
+                        </Button>
+                      </div>
+                      <div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          leftIcon={<RefreshCw className="size-3.5" />}
+                          isLoading={isGeneratingAccessLink}
+                          onClick={handleGenerateAccessLink}
+                        >
+                          Regenerate Link
+                        </Button>
+                        <p className="mt-1 text-xs text-ink-tertiary">
+                          Link lama akan langsung tidak berlaku. Mahasiswa yang sedang mengerjakan ujian tidak terpengaruh.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-2 rounded-lg border border-border-strong p-3">
+                      <QRCodeCanvas ref={qrCanvasRef} value={accessUrl} size={144} />
+                      <Button variant="ghost" size="sm" leftIcon={<Download className="size-3.5" />} onClick={handleDownloadQrCode}>
+                        Download QR Code
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button leftIcon={<QrCode className="size-4" />} isLoading={isGeneratingAccessLink} onClick={handleGenerateAccessLink}>
+                    Generate Link
+                  </Button>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {canManage && (
+            <Card
+              title="Rentang Nilai"
+              description="Konfigurasi rentang nilai huruf untuk ujian ini (spec §8). Kalau belum dikonfigurasi, sistem memakai ambang batas standar."
+              actions={
+                <Button size="sm" variant="outline" onClick={() => setShowGradeRangeModal(true)}>
+                  Atur Rentang Nilai
+                </Button>
+              }
+            >
+              <div className="flex items-center gap-4 text-sm">
+                <div>
+                  <p className="text-ink-tertiary">Bobot Ujian</p>
+                  <p className="font-medium text-ink-primary">
+                    {exam.weight_percentage !== null ? `${exam.weight_percentage}%` : 'Tidak dipakai dalam nilai berbobot'}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
 
           <Card
             title="Soal Ujian"
@@ -371,6 +597,12 @@ export function ExamDetailPage() {
           }}
         />
       )}
+
+      {violationTimelineAttemptId && (
+        <ViolationTimelineModal attemptId={violationTimelineAttemptId} onClose={() => setViolationTimelineAttemptId(null)} />
+      )}
+
+      {showGradeRangeModal && exam && <GradeRangeModal examId={exam.id} onClose={() => setShowGradeRangeModal(false)} />}
     </div>
   )
 }
@@ -388,6 +620,7 @@ const examEditSchema = z
     max_attempts: z.number().min(1, 'Batas percobaan minimal 1.'),
     randomize_questions: z.boolean(),
     randomize_options: z.boolean(),
+    weight_percentage: z.number().min(0, 'Bobot minimal 0%.').max(100, 'Bobot maksimal 100%.').nullable(),
   })
   .refine((data) => !data.starts_at || !data.ends_at || new Date(data.ends_at) > new Date(data.starts_at), {
     message: 'Waktu selesai harus setelah waktu mulai.',
@@ -416,6 +649,7 @@ function ExamEditModal({ exam, onClose, onSaved }: { exam: Exam; onClose: () => 
       max_attempts: exam.max_attempts,
       randomize_questions: exam.randomize_questions,
       randomize_options: exam.randomize_options,
+      weight_percentage: exam.weight_percentage !== null ? Number(exam.weight_percentage) : null,
     },
   })
 
@@ -460,6 +694,16 @@ function ExamEditModal({ exam, onClose, onSaved }: { exam: Exam; onClose: () => 
             {...register('max_attempts', { valueAsNumber: true })}
           />
         </div>
+        <Input
+          type="number"
+          min={0}
+          max={100}
+          step="0.01"
+          label="Bobot Ujian (%)"
+          hint="Kontribusi ujian ini terhadap nilai berbobot. Kosongkan kalau tidak dipakai (spec §9)."
+          error={errors.weight_percentage?.message}
+          {...register('weight_percentage', { setValueAs: (value) => (value === '' ? null : Number(value)) })}
+        />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Input
             type="datetime-local"
@@ -765,6 +1009,206 @@ function QuestionBankPickerModal({
           </Button>
         </div>
       </div>
+    </Modal>
+  )
+}
+
+/** Linimasa pelanggaran + ringkasan skor satu percobaan, dilihat dosen (spec §5). */
+function ViolationTimelineModal({ attemptId, onClose }: { attemptId: string; onClose: () => void }) {
+  const [timeline, setTimeline] = useState<ExamAttemptViolationTimeline | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    examAttemptViolationService
+      .show(attemptId)
+      .then((data) => {
+        if (!cancelled) setTimeline(data)
+      })
+      .catch((error: NormalizedApiError) => {
+        if (!cancelled) setLoadError(error.message)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [attemptId])
+
+  return (
+    <Modal open onClose={onClose} title="Linimasa Pelanggaran" className="max-w-lg">
+      {loadError && <Alert variant="danger">{loadError}</Alert>}
+
+      {!timeline && !loadError && <p className="text-sm text-ink-tertiary">Memuat...</p>}
+
+      {timeline && (
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3 rounded-lg border border-border-strong p-3 text-sm sm:grid-cols-3">
+            <div>
+              <p className="text-ink-tertiary">Mahasiswa</p>
+              <p className="font-medium text-ink-primary">
+                {timeline.student.name} ({timeline.student.nim})
+              </p>
+            </div>
+            <div>
+              <p className="text-ink-tertiary">Raw Score</p>
+              <p className="font-medium text-ink-primary">{timeline.raw_score ?? '-'}</p>
+            </div>
+            <div>
+              <p className="text-ink-tertiary">Total Penalti</p>
+              <p className="font-medium text-danger">-{timeline.penalty_score}</p>
+            </div>
+            <div>
+              <p className="text-ink-tertiary">Final Score</p>
+              <p className="font-medium text-ink-primary">{timeline.score ?? '-'}</p>
+            </div>
+            <div>
+              <p className="text-ink-tertiary">Grade</p>
+              <p className="font-medium text-ink-primary">{timeline.grade ?? '-'}</p>
+            </div>
+            <div>
+              <p className="text-ink-tertiary">Weighted Score</p>
+              <p className="font-medium text-ink-primary">{timeline.weighted_score ?? '-'}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {timeline.violations.map((violation) => (
+              <div key={violation.id} className="rounded-lg border border-danger/30 bg-danger/5 p-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-ink-primary">Pelanggaran #{violation.sequence_number}</p>
+                  <span className="text-xs font-medium text-danger">-{violation.penalty_points} poin</span>
+                </div>
+                <p className="text-sm text-ink-secondary">{violation.violation_label}</p>
+                <p className="text-xs text-ink-tertiary">
+                  {new Date(violation.occurred_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'medium' })}
+                </p>
+              </div>
+            ))}
+
+            {timeline.violations.length === 0 && (
+              <p className="text-sm text-ink-tertiary">Tidak ada pelanggaran tercatat untuk percobaan ini.</p>
+            )}
+          </div>
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+const LETTER_GRADES = ['A', 'AB', 'B', 'BC', 'C', 'D', 'E']
+
+/** Konfigurasi rentang nilai huruf per ujian (spec §8) — replace-all saat disimpan. */
+function GradeRangeModal({ examId, onClose }: { examId: string; onClose: () => void }) {
+  const [ranges, setRanges] = useState<UpsertExamGradeRangePayload[] | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    examService
+      .getGradeRanges(examId)
+      .then((data) => {
+        if (cancelled) return
+        setRanges(
+          data.length > 0
+            ? data.map((r: ExamGradeRange) => ({ grade: r.grade, min_score: Number(r.min_score), max_score: Number(r.max_score) }))
+            : [{ grade: 'A', min_score: 85, max_score: 100 }],
+        )
+      })
+      .catch((error: NormalizedApiError) => {
+        if (!cancelled) setLoadError(error.message)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [examId])
+
+  const updateRange = (index: number, patch: Partial<UpsertExamGradeRangePayload>) => {
+    setRanges((current) => current?.map((r, i) => (i === index ? { ...r, ...patch } : r)) ?? current)
+  }
+
+  const removeRange = (index: number) => {
+    setRanges((current) => current?.filter((_, i) => i !== index) ?? current)
+  }
+
+  const addRange = () => {
+    setRanges((current) => [...(current ?? []), { grade: 'E', min_score: 0, max_score: 0 }])
+  }
+
+  const handleSave = async () => {
+    if (!ranges) return
+    setSaveError(null)
+    setIsSaving(true)
+
+    try {
+      await examService.updateGradeRanges(examId, ranges)
+      onClose()
+    } catch (error) {
+      setSaveError((error as NormalizedApiError).message ?? 'Gagal menyimpan rentang nilai.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <Modal open onClose={onClose} title="Rentang Nilai" className="max-w-lg">
+      {loadError && <Alert variant="danger">{loadError}</Alert>}
+      {saveError && (
+        <Alert variant="danger" className="mb-3" onDismiss={() => setSaveError(null)}>
+          {saveError}
+        </Alert>
+      )}
+
+      {ranges && (
+        <div className="flex flex-col gap-3">
+          {ranges.map((range, index) => (
+            <div key={index} className="flex items-end gap-2">
+              <Select
+                label="Grade"
+                value={range.grade}
+                onChange={(event) => updateRange(index, { grade: event.target.value })}
+                options={LETTER_GRADES.map((g) => ({ value: g, label: g }))}
+              />
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                label="Min"
+                value={range.min_score}
+                onChange={(event) => updateRange(index, { min_score: Number(event.target.value) })}
+              />
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                label="Max"
+                value={range.max_score}
+                onChange={(event) => updateRange(index, { max_score: Number(event.target.value) })}
+              />
+              <Button type="button" variant="ghost" size="sm" onClick={() => removeRange(index)}>
+                <Trash2 className="size-4 text-danger" />
+              </Button>
+            </div>
+          ))}
+
+          <Button type="button" variant="outline" size="sm" leftIcon={<Plus className="size-4" />} className="self-start" onClick={addRange}>
+            Tambah Rentang
+          </Button>
+
+          <div className="mt-2 flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Batal
+            </Button>
+            <Button type="button" isLoading={isSaving} onClick={handleSave}>
+              Simpan
+            </Button>
+          </div>
+        </div>
+      )}
     </Modal>
   )
 }

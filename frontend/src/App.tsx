@@ -7,6 +7,7 @@ import { RequirePermission } from '@/routes/RequirePermission'
 import { getRoutePermission } from '@/routes/routePermissions'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { DashboardLayout } from '@/layouts/DashboardLayout'
+import { PublicExamLayout } from '@/layouts/PublicExamLayout'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
@@ -34,6 +35,7 @@ import { GradesPage } from '@/pages/academic/GradesPage'
 import { AttendancePage } from '@/pages/academic/AttendancePage'
 import { ExamsPage } from '@/pages/academic/ExamsPage'
 import { ExamDetailPage } from '@/pages/academic/ExamDetailPage'
+import { ExamRecapPage } from '@/pages/academic/ExamRecapPage'
 import { QuestionBankPage } from '@/pages/academic/QuestionBankPage'
 import { InvoicesPage } from '@/pages/finance/InvoicesPage'
 import { InvoiceDetailPage } from '@/pages/finance/InvoiceDetailPage'
@@ -73,6 +75,9 @@ import { PortalThesisAdvisingPage } from '@/pages/portal/PortalThesisAdvisingPag
 import { PortalAnnouncementsPage } from '@/pages/portal/PortalAnnouncementsPage'
 import { PortalLecturerEvaluationPage } from '@/pages/portal/PortalLecturerEvaluationPage'
 import { PortalGraduationPage } from '@/pages/portal/PortalGraduationPage'
+import { ExamAccessPage } from '@/pages/exam-public/ExamAccessPage'
+import { ExamPublicAttemptPage } from '@/pages/exam-public/ExamPublicAttemptPage'
+import { ExamPublicResultPage } from '@/pages/exam-public/ExamPublicResultPage'
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin'
 import { useIsStudent } from '@/hooks/useIsStudent'
 import { useTenantStore } from '@/stores/tenantStore'
@@ -122,6 +127,7 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.akademik.penilaian, element: <GradesPage /> },
   { path: ROUTES.akademik.ujian, element: <ExamsPage /> },
   { path: ROUTES.akademik.ujianDetail, element: <ExamDetailPage /> },
+  { path: ROUTES.akademik.ujianRekap, element: <ExamRecapPage /> },
   { path: ROUTES.akademik.bankSoal, element: <QuestionBankPage /> },
   { path: ROUTES.keuangan.tagihan, element: <InvoicesPage /> },
   { path: ROUTES.keuangan.tagihanDetail, element: <InvoiceDetailPage /> },
@@ -236,6 +242,15 @@ function App() {
               />
             ))}
           </Route>
+        </Route>
+
+        {/* Genuinely public — di luar PublicOnlyRoute maupun ProtectedRoute,
+            tidak seperti PortalExamTakingPage di atas (yang tetap butuh
+            login). Diakses lewat link/QR ujian, mahasiswa cukup input NIM. */}
+        <Route element={<PublicExamLayout />}>
+          <Route path={ROUTES.examPublic.access} element={<ExamAccessPage />} />
+          <Route path={ROUTES.examPublic.attempt} element={<ExamPublicAttemptPage />} />
+          <Route path={ROUTES.examPublic.result} element={<ExamPublicResultPage />} />
         </Route>
 
         <Route path="/" element={<Navigate to={ROUTES.dashboard} replace />} />

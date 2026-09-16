@@ -7,13 +7,13 @@ use App\Support\Http\ApiResponse;
 use App\Support\Http\ListQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Modules\Academic\Enums\KrsItemStatus;
 use Modules\Academic\Models\Exam;
 use Modules\Academic\Models\ExamAttempt;
 use Modules\Academic\Models\KrsItem;
 use Modules\Academic\Requests\AnswerExamAttemptRequest;
 use Modules\Academic\Resources\ExamAttemptResource;
 use Modules\Academic\Resources\ExamParticipantResource;
+use Modules\Academic\Resources\ExamViolationResource;
 use Modules\Academic\Services\ExamService;
 
 /**
@@ -30,14 +30,7 @@ class ExamAttemptController extends Controller
     {
         $this->authorize('viewAny', ExamAttempt::class);
 
-        $query = KrsItem::query()
-            ->where('class_section_id', $exam->class_section_id)
-            ->where('status', KrsItemStatus::Enrolled)
-            ->with([
-                'student',
-                'examAttempts' => fn ($query) => $query->where('exam_id', $exam->id)->latest('attempt_number'),
-            ])
-            ->oldest();
+        $query = $this->exams->participantsQuery($exam)->oldest();
 
         $paginator = ListQuery::paginate(query: $query, request: $request);
 
@@ -50,7 +43,7 @@ class ExamAttemptController extends Controller
 
         $attempt = $this->exams->startAttempt($exam, $krsItem);
 
-        return ApiResponse::success(new ExamAttemptResource($attempt->load('answers')), 'Ujian dimulai.');
+        return ApiResponse::success(new ExamAttemptResource($attempt->load(['answers', 'violations'])), 'Ujian dimulai.');
     }
 
     public function answer(AnswerExamAttemptRequest $request, ExamAttempt $examAttempt): JsonResponse
@@ -63,7 +56,7 @@ class ExamAttemptController extends Controller
             $request->validated('exam_question_option_id'),
         );
 
-        return ApiResponse::success(new ExamAttemptResource($examAttempt->fresh()->load('answers')), 'Jawaban tersimpan.');
+        return ApiResponse::success(new ExamAttemptResource($examAttempt->fresh()->load(['answers', 'violations'])), 'Jawaban tersimpan.');
     }
 
     public function submit(ExamAttempt $examAttempt): JsonResponse
@@ -72,6 +65,29 @@ class ExamAttemptController extends Controller
 
         $attempt = $this->exams->submitAttempt($examAttempt);
 
-        return ApiResponse::success(new ExamAttemptResource($attempt->load('answers')), 'Ujian berhasil dikumpulkan.');
+        return ApiResponse::success(new ExamAttemptResource($attempt->load(['answers', 'violations'])), 'Ujian berhasil dikumpulkan.');
+    }
+
+    /** Linimasa pelanggaran + ringkasan skor satu percobaan, dilihat dosen (spec §5). */
+    public function violations(ExamAttempt $examAttempt): JsonResponse
+    {
+        $this->authorize('viewAny', ExamAttempt::class);
+
+        $examAttempt->loadMissing('krsItem.student');
+        $violations = $this->exams->violationsForAttempt($examAttempt);
+
+        return ApiResponse::success([
+            'student' => [
+                'name' => $examAttempt->krsItem->student->name,
+                'nim' => $examAttempt->krsItem->student->nim,
+            ],
+            'raw_score' => $examAttempt->raw_score,
+            'penalty_score' => $examAttempt->penalty_score,
+            'score' => $examAttempt->score,
+            'grade' => $examAttempt->grade,
+            'weighted_score' => $examAttempt->weighted_score,
+            'violation_count' => $violations->count(),
+            'violations' => ExamViolationResource::collection($violations),
+        ]);
     }
 }

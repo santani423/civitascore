@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Modules\Academic\Enums\ExamAttemptStatus;
+use Modules\Academic\Enums\ExamViolationType;
 use Modules\Academic\Enums\KrsItemStatus;
 use Modules\Academic\Models\Exam;
 use Modules\Academic\Models\ExamAttempt;
@@ -19,6 +20,7 @@ use Modules\Academic\Models\KrsItem;
 use Modules\Academic\Models\Student;
 use Modules\Academic\Policies\ExamParticipationPolicy;
 use Modules\Academic\Requests\AnswerExamAttemptRequest;
+use Modules\Academic\Requests\RecordExamViolationRequest;
 use Modules\Academic\Resources\StudentExamAttemptResource;
 use Modules\Academic\Resources\StudentExamResource;
 use Modules\Academic\Services\ExamService;
@@ -114,23 +116,14 @@ class StudentExamController extends Controller
         $krsItem = $this->exams->resolveEligibleKrsItem($exam, $student);
         abort_unless($this->policy->startOwn($user, $krsItem), 403);
 
-        if ($exam->starts_at !== null && now()->lessThan($exam->starts_at)) {
-            throw new ConflictException(sprintf(
-                'Ujian belum dapat dikerjakan — jadwal dimulai pada %s.',
-                $exam->starts_at->toIso8601String(),
-            ));
-        }
-
-        if ($exam->ends_at !== null && now()->greaterThan($exam->ends_at)) {
-            throw new ConflictException('Ujian sudah berakhir.');
-        }
+        $this->exams->assertWithinSchedule($exam);
 
         $attemptNumber = $this->exams->nextAttemptNumber($exam, $krsItem);
         $attempt = $this->exams->startAttempt($exam, $krsItem, $attemptNumber);
         $attempt = $this->exams->finalizeIfExpired($attempt);
 
         return ApiResponse::success(
-            new StudentExamAttemptResource($attempt->fresh()->load('answers'), $this->isResultVisible($exam, $attempt)),
+            new StudentExamAttemptResource($attempt->fresh()->load(['answers', 'violations']), $this->isResultVisible($exam, $attempt)),
             'Ujian dimulai.',
         );
     }
@@ -155,10 +148,32 @@ class StudentExamController extends Controller
 
         return ApiResponse::success(
             new StudentExamAttemptResource(
-                $examAttempt->fresh()->load('answers'),
+                $examAttempt->fresh()->load(['answers', 'violations']),
                 $this->isResultVisible($examAttempt->exam, $examAttempt),
             ),
             'Jawaban tersimpan.',
+        );
+    }
+
+    public function recordViolation(RecordExamViolationRequest $request, ExamAttempt $examAttempt): JsonResponse
+    {
+        $user = Auth::user();
+        $this->requireStudent($user);
+        abort_unless($this->policy->recordOwn($user, $examAttempt), 403);
+
+        $examAttempt = $this->exams->finalizeIfExpired($examAttempt);
+        $this->exams->recordViolation(
+            $examAttempt,
+            ExamViolationType::from($request->validated('violation_type')),
+            $request->validated('metadata'),
+        );
+
+        return ApiResponse::success(
+            new StudentExamAttemptResource(
+                $examAttempt->fresh()->load(['answers', 'violations']),
+                $this->isResultVisible($examAttempt->exam, $examAttempt),
+            ),
+            'Pelanggaran tercatat.',
         );
     }
 
@@ -176,7 +191,7 @@ class StudentExamController extends Controller
 
         return ApiResponse::success(
             new StudentExamAttemptResource(
-                $examAttempt->load('answers'),
+                $examAttempt->load(['answers', 'violations']),
                 $this->isResultVisible($examAttempt->exam, $examAttempt),
             ),
             'Ujian berhasil dikumpulkan.',
@@ -192,7 +207,7 @@ class StudentExamController extends Controller
         $examAttempt = $this->exams->finalizeIfExpired($examAttempt);
 
         return ApiResponse::success(new StudentExamAttemptResource(
-            $examAttempt->load('answers'),
+            $examAttempt->load(['answers', 'violations']),
             $this->isResultVisible($examAttempt->exam, $examAttempt),
         ));
     }
@@ -204,7 +219,7 @@ class StudentExamController extends Controller
         abort_unless($this->policy->recordOwn($user, $examAttempt), 403);
 
         $examAttempt = $this->exams->finalizeIfExpired($examAttempt);
-        $this->guardResultAvailable($examAttempt);
+        $this->exams->guardResultAvailable($examAttempt);
 
         return ApiResponse::success($this->exams->buildAttemptResult($examAttempt));
     }
@@ -216,30 +231,12 @@ class StudentExamController extends Controller
         abort_unless($this->policy->recordOwn($user, $examAttempt), 403);
 
         $examAttempt = $this->exams->finalizeIfExpired($examAttempt);
-        $this->guardResultAvailable($examAttempt);
+        $this->exams->guardResultAvailable($examAttempt);
 
         $result = $this->exams->buildAttemptResult($examAttempt);
         $filename = 'hasil-ujian-'.Str::slug($result['exam']['title']).'-'.$examAttempt->id.'.pdf';
 
         return Pdf::loadView('exams.result-pdf', ['result' => $result])->download($filename);
-    }
-
-    /**
-     * Menolak akses ke hasil/koreksi kalau percobaan belum Submitted (soal
-     * masih sedang dikerjakan) atau dosen belum mengizinkan hasil terlihat
-     * (`exam.show_result_after_submission`) — dipakai bersama oleh
-     * result()/resultPdf() supaya kunci jawaban tidak pernah bocor lebih
-     * awal dari jalur manapun (spec §6).
-     */
-    private function guardResultAvailable(ExamAttempt $attempt): void
-    {
-        if ($attempt->status !== ExamAttemptStatus::Submitted) {
-            throw new ConflictException('Ujian belum dikumpulkan, hasil belum tersedia.');
-        }
-
-        if (! $attempt->exam->show_result_after_submission) {
-            throw new ConflictException('Hasil ujian belum tersedia. Menunggu dipublikasikan oleh dosen.');
-        }
     }
 
     private function requireStudent(?User $user): Student

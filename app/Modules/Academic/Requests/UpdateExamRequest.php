@@ -30,6 +30,7 @@ class UpdateExamRequest extends FormRequest
             'allow_back_navigation' => ['sometimes', 'boolean'],
             'show_result_after_submission' => ['sometimes', 'boolean'],
             'max_attempts' => ['sometimes', 'integer', 'min:1'],
+            'weight_percentage' => ['sometimes', 'nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

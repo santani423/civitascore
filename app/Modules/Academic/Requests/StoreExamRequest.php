@@ -31,6 +31,7 @@ class StoreExamRequest extends FormRequest
             'allow_back_navigation' => ['boolean'],
             'show_result_after_submission' => ['boolean'],
             'max_attempts' => ['integer', 'min:1'],
+            'weight_percentage' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

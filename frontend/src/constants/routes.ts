@@ -21,6 +21,7 @@ export const ROUTES = {
     penilaian: '/akademik/penilaian',
     ujian: '/akademik/ujian',
     ujianDetail: '/akademik/ujian/:id',
+    ujianRekap: '/akademik/ujian/:id/rekap',
     bankSoal: '/akademik/bank-soal',
   },
   mahasiswa: '/mahasiswa',
@@ -83,5 +84,12 @@ export const ROUTES = {
     pengumuman: '/portal/pengumuman',
     evaluasiDosen: '/portal/evaluasi-dosen',
     wisuda: '/portal/wisuda',
+  },
+  // Akses ujian publik lewat link/QR + NIM, tanpa login — standalone,
+  // sengaja di luar DashboardLayout/portal (lihat App.tsx & PublicExamLayout).
+  examPublic: {
+    access: '/exam/:accessToken',
+    attempt: '/exam/:accessToken/attempt/:sessionToken',
+    result: '/exam/:accessToken/result/:sessionToken',
   },
 } as const

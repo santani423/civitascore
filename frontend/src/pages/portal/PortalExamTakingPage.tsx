@@ -8,38 +8,14 @@ import { Alert } from '@/components/ui/Alert'
 import { Modal } from '@/components/ui/Modal'
 import { studentExamService } from '@/services/academicService'
 import type { NormalizedApiError } from '@/services/api'
-import type { StudentExam, StudentExamAttempt } from '@/types/academic'
+import type { ExamViolationType, StudentExam, StudentExamAttempt } from '@/types/academic'
 import { ROUTES } from '@/constants/routes'
 import { cn } from '@/utils/cn'
+import { computeDeadlineMs, formatCountdown } from '@/utils/examTiming'
+import { useExamViolationTracking } from '@/hooks/useExamViolationTracking'
 
 const WARNING_THRESHOLD_MS = 5 * 60_000
 const DANGER_THRESHOLD_MS = 60_000
-const VIOLATION_DEBOUNCE_MS = 1000
-
-function formatCountdown(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000)
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-  const pad = (value: number) => value.toString().padStart(2, '0')
-
-  return hours > 0 ? `${pad(hours)}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`
-}
-
-/**
- * Batas waktu efektif percobaan ini di sisi klien — mirror dari
- * ExamService::attemptDeadline() di backend (mana yang lebih dulu antara
- * habisnya durasi dan jadwal berakhir ujian). Ini HANYA untuk tampilan
- * countdown/auto-submit UX; backend tetap satu-satunya sumber kebenaran
- * waktu lewat finalizeIfExpired() di setiap panggilan answer/submit/show.
- */
-function computeDeadlineMs(exam: StudentExam, attempt: StudentExamAttempt): number {
-  const startedAtMs = new Date(attempt.started_at).getTime()
-  const durationDeadlineMs = startedAtMs + exam.duration_minutes * 60_000
-  const examEndsAtMs = exam.ends_at ? new Date(exam.ends_at).getTime() : null
-
-  return examEndsAtMs !== null && examEndsAtMs < durationDeadlineMs ? examEndsAtMs : durationDeadlineMs
-}
 
 /**
  * Kombinasi shortcut devtools yang paling umum dipakai (Win/Linux Chrome:
@@ -98,14 +74,14 @@ export function PortalExamTakingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [nowMs, setNowMs] = useState(() => Date.now())
 
-  const [violationCount, setViolationCount] = useState(0)
   const [violationMessage, setViolationMessage] = useState<string | null>(null)
   const [isFullscreenActive, setIsFullscreenActive] = useState(() => Boolean(document.fullscreenElement))
 
   const autoSubmitTriggered = useRef(false)
-  const lastViolationAtRef = useRef(0)
+  const previousViolationCountRef = useRef(0)
 
   const isActive = examModeEntered && attempt?.status === 'in_progress'
+  const violationCount = attempt?.violation_count ?? 0
 
   useEffect(() => {
     if (!examId) return
@@ -159,78 +135,64 @@ export function PortalExamTakingPage() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [attempt?.status])
 
-  const reportViolation = useCallback((message: string) => {
-    const now = Date.now()
-    if (now - lastViolationAtRef.current < VIOLATION_DEBOUNCE_MS) return
-    lastViolationAtRef.current = now
+  // Pelanggaran (tab switch/blur/fullscreen exit/copy/paste/context menu)
+  // dilaporkan ke backend (ExamService::recordViolation) dan langsung
+  // memotong nilai (-1/pelanggaran, spec §4) — backend adalah satu-satunya
+  // sumber kebenaran jumlah pelanggaran, `attempt.violation_count`/
+  // `penalty_score` di bawah selalu datang dari response server, bukan
+  // dihitung di klien.
+  const handleViolation = useCallback((type: ExamViolationType) => {
+    if (!attempt) return
 
-    setViolationCount((count) => count + 1)
-    setViolationMessage(message)
-  }, [])
+    studentExamService
+      .reportViolation(attempt.id, { violation_type: type })
+      .then((updated) => setAttempt(updated))
+      .catch(() => {
+        // Fire-and-forget — kegagalan jaringan sesaat tidak boleh mengganggu
+        // pengerjaan ujian; backend tetap menolak jawaban yang tidak valid
+        // di titik lain kalau attempt sudah berakhir.
+      })
+  }, [attempt])
 
-  // Deteksi (bukan mencegah — lihat catatan di atas komponen) mahasiswa
-  // pindah tab/aplikasi lain selama ujian berlangsung.
-  useEffect(() => {
-    if (!isActive) return
-
-    function handleVisibilityChange() {
-      if (document.visibilityState === 'hidden') {
-        reportViolation('Anda terdeteksi berpindah ke tab/aplikasi lain.')
-      }
-    }
-
-    function handleBlur() {
-      reportViolation('Jendela ujian kehilangan fokus.')
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('blur', handleBlur)
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('blur', handleBlur)
-    }
-  }, [isActive, reportViolation])
+  useExamViolationTracking(isActive, handleViolation)
 
   useEffect(() => {
     function handleFullscreenChange() {
-      const active = Boolean(document.fullscreenElement)
-      setIsFullscreenActive(active)
-
-      if (!active && isActive) {
-        reportViolation('Anda keluar dari mode layar penuh.')
-      }
+      setIsFullscreenActive(Boolean(document.fullscreenElement))
     }
 
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  }, [isActive, reportViolation])
+  }, [])
 
-  // Penghalang ringan terhadap devtools/klik-kanan — TIDAK benar-benar
-  // mencegah pengguna yang tahu cara lain untuk membukanya (mis. lewat menu
-  // browser, browser lain, atau devtools yang sudah terbuka sebelum masuk
-  // halaman ini). Screenshot OS-level sama sekali tidak bisa diblokir dari
-  // halaman web — tidak ada API browser untuk itu.
+  // Menampilkan notifikasi singkat setiap kali jumlah pelanggaran
+  // (dikonfirmasi backend) bertambah — dibandingkan dengan hitungan
+  // sebelumnya, bukan dihitung ulang di klien.
+  useEffect(() => {
+    if (violationCount > previousViolationCountRef.current) {
+      setViolationMessage('Pelanggaran terdeteksi. Nilai akan dikurangi 1 poin.')
+    }
+    previousViolationCountRef.current = violationCount
+  }, [violationCount])
+
+  // Penghalang ringan terhadap devtools — TIDAK benar-benar mencegah
+  // pengguna yang tahu cara lain untuk membukanya (mis. lewat menu browser,
+  // browser lain, atau devtools yang sudah terbuka sebelum masuk halaman
+  // ini), jadi bukan salah satu jenis pelanggaran yang dicatat (spec §4
+  // hanya mencantumkan event yang bisa dideteksi cukup andal). Screenshot
+  // OS-level sama sekali tidak bisa diblokir dari halaman web.
   useEffect(() => {
     if (!isActive) return
 
     function handleKeyDown(event: KeyboardEvent) {
       if (isDevToolsShortcut(event)) {
         event.preventDefault()
-        reportViolation('Percobaan membuka developer tools terdeteksi.')
       }
     }
 
-    function handleContextMenu(event: MouseEvent) {
-      event.preventDefault()
-    }
-
     window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('contextmenu', handleContextMenu)
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('contextmenu', handleContextMenu)
-    }
-  }, [isActive, reportViolation])
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isActive])
 
   useEffect(() => {
     return () => {
@@ -409,7 +371,7 @@ export function PortalExamTakingPage() {
   const isDanger = remainingMs !== null && remainingMs <= DANGER_THRESHOLD_MS
 
   return pageShell(
-    <div className="flex select-none flex-col gap-4" onCopy={(event) => event.preventDefault()}>
+    <div className="flex select-none flex-col gap-4">
       <div className="sticky top-0 z-10 flex flex-col gap-3 rounded-xl border border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">

@@ -8,10 +8,12 @@ use Modules\Academic\Controllers\CurriculumController;
 use Modules\Academic\Controllers\EmployeeController;
 use Modules\Academic\Controllers\ExamAttemptController;
 use Modules\Academic\Controllers\ExamController;
+use Modules\Academic\Controllers\ExamGradeRangeController;
 use Modules\Academic\Controllers\ExamQuestionController;
 use Modules\Academic\Controllers\GradeController;
 use Modules\Academic\Controllers\KrsItemController;
 use Modules\Academic\Controllers\LecturerController;
+use Modules\Academic\Controllers\PublicExamController;
 use Modules\Academic\Controllers\QuestionBankController;
 use Modules\Academic\Controllers\StudentController;
 use Modules\Academic\Controllers\StudentExamController;
@@ -56,6 +58,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('exams/{exam}', [ExamController::class, 'update'])->middleware('permission:exams.update');
     Route::delete('exams/{exam}', [ExamController::class, 'destroy'])->middleware('permission:exams.delete');
     Route::patch('exams/{exam}/publish', [ExamController::class, 'publish'])->middleware('permission:exams.publish');
+    Route::patch('exams/{exam}/access-link', [ExamController::class, 'generateAccessLink'])->middleware('permission:exams.update');
+    Route::get('exams/{exam}/violations/recent', [ExamController::class, 'recentViolations'])->middleware('permission:exam_attempts.read');
+    Route::get('exams/{exam}/recap', [ExamController::class, 'recap'])->middleware('permission:exams.read');
+    Route::get('exams/{exam}/recap/export', [ExamController::class, 'exportRecap'])->middleware('permission:exams.read');
+    Route::get('exams/{exam}/download', [ExamController::class, 'downloadPdf'])->middleware('permission:exams.read');
+    Route::get('exams/{exam}/grade-ranges', [ExamGradeRangeController::class, 'index'])->middleware('permission:exams.read');
+    Route::put('exams/{exam}/grade-ranges', [ExamGradeRangeController::class, 'update'])->middleware('permission:exams.update');
 
     Route::get('exams/{exam}/questions', [ExamQuestionController::class, 'index'])->middleware('permission:exams.read');
     Route::post('exams/{exam}/questions', [ExamQuestionController::class, 'store'])->middleware('permission:exams.create,exams.update');
@@ -73,6 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('krs-items/{krsItem}/exams/{exam}/attempt', [ExamAttemptController::class, 'start'])->middleware('permission:exam_attempts.create');
     Route::put('exam-attempts/{examAttempt}/answer', [ExamAttemptController::class, 'answer'])->middleware('permission:exam_attempts.update');
     Route::patch('exam-attempts/{examAttempt}/submit', [ExamAttemptController::class, 'submit'])->middleware('permission:exam_attempts.update');
+    Route::get('exam-attempts/{examAttempt}/violations', [ExamAttemptController::class, 'violations'])->middleware('permission:exam_attempts.read');
 
     // Portal Mahasiswa — self-service mengerjakan ujian sendiri (terpisah
     // dari exam-attempts di atas, lihat komentar ExamParticipationPolicy).
@@ -82,6 +92,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('student/exam-attempts/{examAttempt}', [StudentExamController::class, 'showAttempt'])->middleware('permission:exam_participation.read');
     Route::put('student/exam-attempts/{examAttempt}/answer', [StudentExamController::class, 'answer'])->middleware('permission:exam_participation.update');
     Route::patch('student/exam-attempts/{examAttempt}/submit', [StudentExamController::class, 'submit'])->middleware('permission:exam_participation.update');
+    Route::post('student/exam-attempts/{examAttempt}/violations', [StudentExamController::class, 'recordViolation'])->middleware('permission:exam_participation.update');
     Route::get('student/exam-attempts/{examAttempt}/result', [StudentExamController::class, 'result'])->middleware('permission:exam_participation.read');
     Route::get('student/exam-attempts/{examAttempt}/result/pdf', [StudentExamController::class, 'resultPdf'])->middleware('permission:exam_participation.read');
+});
+
+// Akses ujian publik lewat link/QR + NIM, tanpa login (spec §3-11) — lihat
+// komentar PublicExamController. Tetap di bawah `tenant.resolve` (di
+// routes/api.php), yang sudah aman untuk guest/tanpa auth.
+Route::prefix('public')->group(function () {
+    Route::get('exams/{accessToken}', [PublicExamController::class, 'show']);
+    Route::post('exams/{accessToken}/access', [PublicExamController::class, 'access'])->middleware('throttle:10,1');
+    Route::get('exam-attempts/{sessionToken}', [PublicExamController::class, 'showAttempt']);
+    Route::put('exam-attempts/{sessionToken}/answer', [PublicExamController::class, 'answer']);
+    Route::patch('exam-attempts/{sessionToken}/submit', [PublicExamController::class, 'submit']);
+    Route::post('exam-attempts/{sessionToken}/violations', [PublicExamController::class, 'recordViolation']);
+    Route::get('exam-attempts/{sessionToken}/result', [PublicExamController::class, 'result']);
+    Route::get('exam-attempts/{sessionToken}/result/pdf', [PublicExamController::class, 'resultPdf']);
 });

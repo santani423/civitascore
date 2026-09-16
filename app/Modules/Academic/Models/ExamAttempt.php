@@ -25,12 +25,19 @@ use Modules\Academic\Enums\ExamAttemptStatus;
  * @property array<string, array<int, string>> $option_order
  * @property CarbonImmutable $started_at
  * @property CarbonImmutable|null $submitted_at
- * @property string|null $score
+ * @property string|null $score Final score (raw_score - penalty_score, floored at 0) — nama kolom legacy, tetap dipakai apa adanya oleh consumer lama.
+ * @property string|null $raw_score Skor murni dari jawaban benar, sebelum penalti pelanggaran.
+ * @property string $penalty_score Total penalti pelanggaran (spec §4) — bertambah tiap ExamService::recordViolation().
+ * @property string|null $grade Huruf nilai hasil ExamService::resolveGrade(), dihitung saat submit.
+ * @property string|null $weighted_score $score × exam.weight_percentage / 100, kalau exam punya bobot.
+ * @property string|null $session_token_hash
+ * @property CarbonImmutable|null $session_expires_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Exam $exam
  * @property-read KrsItem $krsItem
  * @property-read Collection<int, ExamAttemptAnswer> $answers
+ * @property-read Collection<int, ExamViolation> $violations
  */
 class ExamAttempt extends Model implements ScopesToInstitution
 {
@@ -40,6 +47,8 @@ class ExamAttempt extends Model implements ScopesToInstitution
     protected $fillable = [
         'university_id', 'exam_id', 'krs_item_id', 'attempt_number', 'status',
         'question_order', 'option_order', 'started_at', 'submitted_at', 'score',
+        'session_token_hash', 'session_expires_at',
+        'raw_score', 'penalty_score', 'grade', 'weighted_score',
     ];
 
     protected function casts(): array
@@ -52,6 +61,10 @@ class ExamAttempt extends Model implements ScopesToInstitution
             'started_at' => 'datetime',
             'submitted_at' => 'datetime',
             'score' => 'decimal:2',
+            'session_expires_at' => 'datetime',
+            'raw_score' => 'decimal:2',
+            'penalty_score' => 'decimal:2',
+            'weighted_score' => 'decimal:2',
         ];
     }
 
@@ -77,6 +90,14 @@ class ExamAttempt extends Model implements ScopesToInstitution
     public function answers(): HasMany
     {
         return $this->hasMany(ExamAttemptAnswer::class);
+    }
+
+    /**
+     * @return HasMany<ExamViolation, $this>
+     */
+    public function violations(): HasMany
+    {
+        return $this->hasMany(ExamViolation::class);
     }
 
     protected static function newFactory(): ExamAttemptFactory

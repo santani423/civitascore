@@ -36,6 +36,9 @@ class ExamResource extends JsonResource
             'max_attempts' => $this->max_attempts,
             'is_published' => $this->is_published,
             'published_at' => $this->published_at?->toIso8601String(),
+            'access_token' => $this->access_token,
+            'access_token_generated_at' => $this->access_token_generated_at?->toIso8601String(),
+            'weight_percentage' => $this->weight_percentage,
             'created_at' => $this->created_at->toIso8601String(),
         ];
     }

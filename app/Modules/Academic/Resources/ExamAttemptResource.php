@@ -40,6 +40,14 @@ class ExamAttemptResource extends JsonResource
             'started_at' => $this->started_at->toIso8601String(),
             'submitted_at' => $this->submitted_at?->toIso8601String(),
             'score' => $this->score,
+            'raw_score' => $this->raw_score,
+            // penalty_score/violation_count sengaja SELALU terlihat (juga
+            // saat masih in_progress) — bukan kunci jawaban, transparansi
+            // real-time ke peserta soal penalti yang sedang berjalan (spec §4).
+            'penalty_score' => (string) $this->penalty_score,
+            'violation_count' => $this->violations->count(),
+            'grade' => $this->grade,
+            'weighted_score' => $this->weighted_score,
             'questions' => collect($this->question_order)->map(function (string $questionId) use ($questionsById, $answersByQuestionId) {
                 $question = $questionsById->get($questionId);
                 $optionsById = $question?->options->keyBy('id');

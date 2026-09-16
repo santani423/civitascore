@@ -4,16 +4,22 @@ namespace Modules\Academic\Services;
 
 use App\Support\Http\Exceptions\ConflictException;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\Academic\Enums\ExamAttemptStatus;
+use Modules\Academic\Enums\ExamViolationType;
 use Modules\Academic\Enums\KrsItemStatus;
+use Modules\Academic\Enums\LetterGrade;
 use Modules\Academic\Enums\QuestionSelectionMode;
 use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Models\Exam;
 use Modules\Academic\Models\ExamAttempt;
 use Modules\Academic\Models\ExamAttemptAnswer;
+use Modules\Academic\Models\ExamGradeRange;
 use Modules\Academic\Models\ExamQuestion;
+use Modules\Academic\Models\ExamViolation;
 use Modules\Academic\Models\KrsItem;
 use Modules\Academic\Models\Student;
 
@@ -372,15 +378,132 @@ class ExamService
             }
         }
 
-        $score = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100, 2) : 0.0;
+        $rawScore = $totalPoints > 0 ? round(($earnedPoints / $totalPoints) * 100, 2) : 0.0;
+
+        // Penalti sudah terakumulasi real-time tiap kali recordViolation()
+        // dipanggil selama ujian berlangsung — di sini hanya dipakai untuk
+        // menurunkan final score, bukan dihitung ulang dari awal (spec §4/§12).
+        $penaltyScore = (float) $attempt->penalty_score;
+        $finalScore = max(0.0, round($rawScore - $penaltyScore, 2));
+        $grade = $this->resolveGrade($attempt->exam, $finalScore);
+        $weightedScore = $attempt->exam->weight_percentage !== null
+            ? round($finalScore * (float) $attempt->exam->weight_percentage / 100, 2)
+            : null;
 
         $attempt->update([
             'status' => ExamAttemptStatus::Submitted,
             'submitted_at' => $submittedAt,
-            'score' => $score,
+            'raw_score' => $rawScore,
+            'score' => $finalScore,
+            'grade' => $grade,
+            'weighted_score' => $weightedScore,
         ]);
 
         return $attempt;
+    }
+
+    /**
+     * Huruf nilai untuk satu skor akhir — pakai rentang yang dikonfigurasi
+     * dosen untuk ujian ini kalau ada (spec §8), jatuh kembali ke ambang
+     * batas standar LetterGrade::fromScore() kalau belum dikonfigurasi
+     * supaya tetap ada nilai yang masuk akal tanpa setup tambahan.
+     */
+    public function resolveGrade(Exam $exam, float $finalScore): ?string
+    {
+        $ranges = $exam->relationLoaded('gradeRanges') ? $exam->gradeRanges : $exam->gradeRanges()->get();
+
+        if ($ranges->isEmpty()) {
+            return LetterGrade::fromScore($finalScore)->value;
+        }
+
+        $matched = $ranges->first(
+            fn (ExamGradeRange $range) => $finalScore >= (float) $range->min_score && $finalScore <= (float) $range->max_score,
+        );
+
+        return $matched?->grade;
+    }
+
+    /**
+     * Mengganti seluruh rentang nilai ujian ini sekaligus (spec §8) — replace-all
+     * di dalam transaksi, sama seperti pola updateQuestion() mengganti opsi.
+     * Validasi non-overlap/non-duplikat/batas 0-100 dilakukan di
+     * UpsertExamGradeRangesRequest sebelum sampai ke sini.
+     *
+     * @param  array<int, array{grade: string, min_score: float, max_score: float}>  $ranges
+     * @return Collection<int, ExamGradeRange>
+     */
+    public function upsertGradeRanges(Exam $exam, array $ranges): Collection
+    {
+        return DB::transaction(function () use ($exam, $ranges): Collection {
+            $exam->gradeRanges()->delete();
+
+            foreach ($ranges as $range) {
+                $exam->gradeRanges()->create([
+                    'grade' => $range['grade'],
+                    'min_score' => $range['min_score'],
+                    'max_score' => $range['max_score'],
+                ]);
+            }
+
+            return $exam->gradeRanges()->orderBy('min_score')->get();
+        });
+    }
+
+    /**
+     * Mencatat satu pelanggaran (spec §4) dan langsung menambah
+     * `penalty_score` attempt (bukan dihitung ulang tiap kali, supaya
+     * lecturer bisa memantau penalti berjalan sebelum peserta submit).
+     * Ditolak kalau attempt sudah Submitted — pelanggaran setelah ujian
+     * berakhir tidak relevan lagi.
+     */
+    public function recordViolation(ExamAttempt $attempt, ExamViolationType $type, ?array $metadata = null): ExamViolation
+    {
+        if ($attempt->status === ExamAttemptStatus::Submitted) {
+            throw new ConflictException('Ujian ini sudah dikumpulkan, pelanggaran tidak lagi dicatat.');
+        }
+
+        return DB::transaction(function () use ($attempt, $type, $metadata): ExamViolation {
+            $sequenceNumber = $attempt->violations()->count() + 1;
+            $penaltyPoints = $type->penaltyPoints();
+
+            $violation = $attempt->violations()->create([
+                'violation_type' => $type,
+                'sequence_number' => $sequenceNumber,
+                'penalty_points' => $penaltyPoints,
+                'occurred_at' => now(),
+                'metadata' => $metadata,
+            ]);
+
+            $attempt->increment('penalty_score', $penaltyPoints);
+
+            return $violation;
+        });
+    }
+
+    /**
+     * @return Collection<int, ExamViolation>
+     */
+    public function violationsForAttempt(ExamAttempt $attempt): Collection
+    {
+        return $attempt->violations()->orderBy('sequence_number')->get();
+    }
+
+    /**
+     * Pelanggaran lintas semua peserta ujian ini sejak `$since` (spec §6) —
+     * dipakai endpoint polling yang di-poll berkala oleh halaman Detail
+     * Ujian dosen. Diurutkan terlama dulu supaya klien bisa memakai waktu
+     * kejadian terakhir sebagai cursor `since` panggilan berikutnya.
+     *
+     * @return Collection<int, ExamViolation>
+     */
+    public function recentViolationsForExam(Exam $exam, ?CarbonInterface $since): Collection
+    {
+        return ExamViolation::query()
+            ->whereHas('examAttempt', fn ($query) => $query->where('exam_id', $exam->id))
+            ->with('examAttempt.krsItem.student')
+            ->when($since !== null, fn ($query) => $query->where('occurred_at', '>', $since))
+            ->orderBy('occurred_at')
+            ->get();
     }
 
     /**
@@ -401,7 +524,7 @@ class ExamService
      */
     public function buildAttemptResult(ExamAttempt $attempt): array
     {
-        $attempt->loadMissing(['krsItem.student', 'exam.classSection.course', 'answers']);
+        $attempt->loadMissing(['krsItem.student', 'exam.classSection.course', 'answers', 'violations']);
 
         $questionsById = ExamQuestion::query()
             ->whereIn('id', $attempt->question_order)
@@ -466,9 +589,37 @@ class ExamService
                 'wrong_answers' => $totalQuestions - $correctAnswers,
                 'score' => $score,
                 'percentage' => $score,
+                // Rincian pipeline skor (spec §12) — raw_score dari jawaban
+                // benar saja, penalty_score dari pelanggaran, score di atas
+                // sudah final (raw - penalty, floor 0). Selalu tampil (bukan
+                // cuma saat ada pelanggaran) supaya mahasiswa & dosen bisa
+                // mengaudit cara nilai dihitung.
+                'raw_score' => (string) $attempt->raw_score,
+                'penalty_score' => (string) $attempt->penalty_score,
+                'violation_count' => $attempt->violations->count(),
+                'grade' => $attempt->grade,
+                'weighted_score' => $attempt->weighted_score !== null ? (string) $attempt->weighted_score : null,
             ],
             'questions' => $questions,
         ];
+    }
+
+    /**
+     * Query dasar "peserta terdaftar untuk ujian ini" (KrsItem Enrolled di
+     * class_section ujian, dengan attempt terbarunya) — satu sumber
+     * kebenaran dipakai bersama oleh ExamAttemptController::index() (tabel
+     * peserta) dan ExamController::recap()/exportRecap() (Score Recap,
+     * spec §7), supaya keduanya tidak bisa saling menyimpang.
+     */
+    public function participantsQuery(Exam $exam): \Illuminate\Database\Eloquent\Builder
+    {
+        return KrsItem::query()
+            ->where('class_section_id', $exam->class_section_id)
+            ->where('status', KrsItemStatus::Enrolled)
+            ->with([
+                'student',
+                'examAttempts' => fn ($query) => $query->where('exam_id', $exam->id)->latest('attempt_number')->withCount('violations'),
+            ]);
     }
 
     /**
@@ -524,5 +675,130 @@ class ExamService
         }
 
         return 'available';
+    }
+
+    /**
+     * Jendela waktu ujian ini boleh dikerjakan — dipakai bersama oleh
+     * self-service login (StudentExamController::start(), pesan default)
+     * dan akses publik lewat NIM (startPublicAttempt(), pesan di-override
+     * sesuai spec §4) supaya keduanya tidak bisa saling menyimpang aturan.
+     */
+    public function assertWithinSchedule(Exam $exam, ?string $notStartedMessage = null, string $endedMessage = 'Ujian sudah berakhir.'): void
+    {
+        if ($exam->starts_at !== null && now()->lessThan($exam->starts_at)) {
+            throw new ConflictException($notStartedMessage ?? sprintf(
+                'Ujian belum dapat dikerjakan — jadwal dimulai pada %s.',
+                $exam->starts_at->toIso8601String(),
+            ));
+        }
+
+        if ($exam->ends_at !== null && now()->greaterThan($exam->ends_at)) {
+            throw new ConflictException($endedMessage);
+        }
+    }
+
+    /**
+     * Menolak akses ke hasil/koreksi kalau percobaan belum Submitted atau
+     * dosen belum mengizinkan hasil terlihat — dipakai bersama oleh
+     * StudentExamController dan PublicExamController supaya kunci jawaban
+     * tidak pernah bocor lebih awal dari jalur manapun (spec §6).
+     */
+    public function guardResultAvailable(ExamAttempt $attempt): void
+    {
+        if ($attempt->status !== ExamAttemptStatus::Submitted) {
+            throw new ConflictException('Ujian belum dikumpulkan, hasil belum tersedia.');
+        }
+
+        if (! $attempt->exam->show_result_after_submission) {
+            throw new ConflictException('Hasil ujian belum tersedia. Menunggu dipublikasikan oleh dosen.');
+        }
+    }
+
+    /**
+     * Token opaque baru untuk URL akses publik ujian (spec §1-2) —
+     * dipanggil untuk "Generate" (belum ada token) maupun "Regenerate"
+     * (token lama langsung tidak valid karena diganti, bukan disimpan
+     * sebagai riwayat).
+     */
+    public function generateAccessToken(Exam $exam): Exam
+    {
+        $exam->update([
+            'access_token' => Str::random(40),
+            'access_token_generated_at' => now(),
+        ]);
+
+        return $exam;
+    }
+
+    public function findByAccessToken(string $token): Exam
+    {
+        return Exam::query()->where('access_token', $token)->firstOrFail();
+    }
+
+    public function resolveStudentByNim(string $nim): Student
+    {
+        $student = Student::query()->where('nim', $nim)->first();
+
+        if ($student === null) {
+            throw new ConflictException('NIM mahasiswa tidak ditemukan.');
+        }
+
+        return $student;
+    }
+
+    /**
+     * Orkestrasi akses ujian publik lewat NIM (spec §4-5) — mengomposisikan
+     * potongan yang sudah ada (resolveEligibleKrsItem/assertWithinSchedule/
+     * computeStudentStatus/startAttempt) dengan pesan Indonesia persis
+     * seperti spec, tanpa mengubah teks/pesan jalur self-service login yang
+     * sudah berjalan (StudentExamController::start()).
+     *
+     * @return array{attempt: ExamAttempt, session_token: string}
+     */
+    public function startPublicAttempt(Exam $exam, Student $student): array
+    {
+        if (! $exam->is_published) {
+            throw new ConflictException('Ujian belum tersedia.');
+        }
+
+        try {
+            $krsItem = $this->resolveEligibleKrsItem($exam, $student);
+        } catch (ConflictException) {
+            throw new ConflictException('NIM mahasiswa tidak ditemukan.');
+        }
+
+        $this->assertWithinSchedule($exam, 'Ujian belum tersedia.', 'Ujian telah berakhir.');
+
+        $latest = $krsItem->examAttempts()->where('exam_id', $exam->id)->orderByDesc('attempt_number')->first();
+
+        if ($latest !== null) {
+            $latest = $this->finalizeIfExpired($latest);
+        }
+
+        if ($this->computeStudentStatus($exam, $latest) === 'completed') {
+            throw new ConflictException('Anda sudah menyelesaikan ujian ini.');
+        }
+
+        $attemptNumber = $this->nextAttemptNumber($exam, $krsItem);
+        $attempt = $this->finalizeIfExpired($this->startAttempt($exam, $krsItem, $attemptNumber));
+
+        $sessionToken = Str::random(60);
+        $attempt->update([
+            'session_token_hash' => hash('sha256', $sessionToken),
+            // Grace period setelah deadline supaya link/QR yang sama masih
+            // bisa dipakai membuka halaman hasil & download PDF (spec §9-11)
+            // tanpa token tetap hidup tanpa batas waktu (spec §12).
+            'session_expires_at' => $this->attemptDeadline($attempt)->addHours(24),
+        ]);
+
+        return ['attempt' => $attempt->fresh()->load('answers'), 'session_token' => $sessionToken];
+    }
+
+    public function findAttemptBySessionToken(string $token): ExamAttempt
+    {
+        return ExamAttempt::query()
+            ->where('session_token_hash', hash('sha256', $token))
+            ->where('session_expires_at', '>=', now())
+            ->firstOrFail();
     }
 }

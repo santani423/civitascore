@@ -187,6 +187,9 @@ export interface Exam {
   max_attempts: number
   is_published: boolean
   published_at: string | null
+  access_token: string | null
+  access_token_generated_at: string | null
+  weight_percentage: string | null
   created_at: string
 }
 
@@ -221,6 +224,7 @@ export interface StoreExamPayload {
   allow_back_navigation?: boolean
   show_result_after_submission?: boolean
   max_attempts?: number
+  weight_percentage?: number | null
 }
 
 export type UpdateExamPayload = Partial<Omit<StoreExamPayload, 'class_section_id'>>
@@ -235,7 +239,82 @@ export interface ExamParticipant {
   attempts_used: number
   status: ExamParticipantStatus
   score: string | null
+  raw_score: string | null
+  penalty_score: string | null
+  grade: string | null
+  weighted_score: string | null
+  violation_count: number
+  latest_attempt_id: string | null
   submitted_at: string | null
+}
+
+/** Jenis pelanggaran yang bisa dideteksi dari implementasi anti-cheat browser (spec §4) — lihat utils/examViolationTracking. */
+export type ExamViolationType =
+  | 'tab_switch'
+  | 'window_blur'
+  | 'fullscreen_exit'
+  | 'copy_attempt'
+  | 'paste_attempt'
+  | 'context_menu'
+
+export interface RecordExamViolationPayload {
+  violation_type: ExamViolationType
+  metadata?: Record<string, unknown> | null
+}
+
+export interface ExamViolation {
+  id: string
+  exam_attempt_id: string
+  sequence_number: number
+  violation_type: ExamViolationType
+  violation_label: string
+  penalty_points: string
+  occurred_at: string
+  student_name?: string
+  student_nim?: string
+}
+
+export interface ExamAttemptViolationTimeline {
+  student: { name: string; nim: string }
+  raw_score: string | null
+  penalty_score: string
+  score: string | null
+  grade: string | null
+  weighted_score: string | null
+  violation_count: number
+  violations: ExamViolation[]
+}
+
+export interface ExamGradeRange {
+  id: string
+  grade: string
+  min_score: string
+  max_score: string
+}
+
+export interface UpsertExamGradeRangePayload {
+  grade: string
+  min_score: number
+  max_score: number
+}
+
+export interface ExamRecapSummary {
+  exam_title: string
+  course_name: string | null
+  class_code: string | null
+  semester_label: string | null
+  total_participants: number
+  completed: number
+  in_progress: number
+  not_started: number
+  average_score: number | null
+  highest_score: number | null
+  lowest_score: number | null
+}
+
+export interface ExamRecap {
+  summary: ExamRecapSummary
+  participants: ExamParticipant[]
 }
 
 export interface ExamQuestionOptionPayload {
@@ -337,8 +416,15 @@ export interface StudentExamAttempt {
   started_at: string
   submitted_at: string | null
   score: string | null
+  raw_score: string | null
+  penalty_score: string
+  violation_count: number
+  grade: string | null
+  weighted_score: string | null
   questions: StudentExamAttemptQuestion[]
   result_visible: boolean
+  /** Hanya terisi dari endpoint akses publik (/exam/*), yang tidak punya sesi login untuk menunjukkan identitas peserta. */
+  student?: { name: string; nim: string }
 }
 
 export interface AnswerExamAttemptPayload {
@@ -389,6 +475,29 @@ export interface StudentExamResult {
     wrong_answers: number
     score: string
     percentage: string
+    raw_score: string
+    penalty_score: string
+    violation_count: number
+    grade: string | null
+    weighted_score: string | null
   }
   questions: StudentExamResultQuestion[]
+}
+
+/**
+ * Info ujian di halaman akses publik (/exam/{access_token}), sebelum NIM
+ * divalidasi — aman ditampilkan ke siapa pun yang membuka link/scan QR,
+ * tidak pernah menyertakan soal/opsi/token (lihat PublicExamResource).
+ */
+export interface PublicExamInfo {
+  title: string
+  course_name: string | null
+  lecturer_name: string | null
+  duration_minutes: number
+  ends_at: string | null
+  allow_back_navigation: boolean
+}
+
+export interface PublicExamAccessResponse {
+  session_token: string
 }

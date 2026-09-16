@@ -9,13 +9,18 @@ import type {
   EnrollKrsPayload,
   Employee,
   Exam,
+  ExamAttemptViolationTimeline,
+  ExamGradeRange,
   ExamParticipant,
   ExamQuestion,
+  ExamRecap,
+  ExamViolation,
   Grade,
   KrsItem,
   Lecturer,
   QuestionBankItem,
   RecordAttendanceBatchPayload,
+  RecordExamViolationPayload,
   Student,
   StoreExamPayload,
   StoreExamQuestionPayload,
@@ -28,6 +33,7 @@ import type {
   UpdateExamPayload,
   UpdateExamQuestionPayload,
   UpdateQuestionBankItemPayload,
+  UpsertExamGradeRangePayload,
   UpsertGradePayload,
 } from '@/types/academic'
 import { toQueryParams } from '@/utils/listParams'
@@ -199,6 +205,62 @@ export const examService = {
     const response = await apiClient.patch<ApiSuccessResponse<Exam>>(`/exams/${id}/publish`)
     return response.data.data
   },
+
+  /** Generate (belum ada link) atau regenerate (link lama langsung tidak valid) akses ujian publik. */
+  async generateAccessLink(id: string): Promise<Exam> {
+    const response = await apiClient.patch<ApiSuccessResponse<Exam>>(`/exams/${id}/access-link`)
+    return response.data.data
+  },
+
+  /** Ringkasan + tabel nilai seluruh peserta (spec §7 "Score Recap"). */
+  async recap(id: string): Promise<ExamRecap> {
+    const response = await apiClient.get<ApiSuccessResponse<ExamRecap>>(`/exams/${id}/recap`)
+    return response.data.data
+  },
+
+  /** Backend men-stream file mentah (CSV/PDF), diambil sebagai blob lalu dipicu sebagai download browser (pola sama seperti downloadResultPdf). */
+  async downloadRecapExport(id: string, format: 'csv' | 'pdf', filename: string): Promise<void> {
+    const response = await apiClient.get(`/exams/${id}/recap/export`, { params: { format }, responseType: 'blob' })
+    triggerBlobDownload(response.data as Blob, filename)
+  },
+
+  /** Naskah ujian (PDF) — `withAnswers` hanya benar-benar disertakan kalau backend mengizinkan (exams.update), lihat ExamController::downloadPdf(). */
+  async downloadExamPdf(id: string, withAnswers: boolean, filename: string): Promise<void> {
+    const response = await apiClient.get(`/exams/${id}/download`, {
+      params: { with_answers: withAnswers ? 1 : 0 },
+      responseType: 'blob',
+    })
+    triggerBlobDownload(response.data as Blob, filename)
+  },
+
+  async getGradeRanges(id: string): Promise<ExamGradeRange[]> {
+    const response = await apiClient.get<ApiSuccessResponse<ExamGradeRange[]>>(`/exams/${id}/grade-ranges`)
+    return response.data.data
+  },
+
+  async updateGradeRanges(id: string, ranges: UpsertExamGradeRangePayload[]): Promise<ExamGradeRange[]> {
+    const response = await apiClient.put<ApiSuccessResponse<ExamGradeRange[]>>(`/exams/${id}/grade-ranges`, { ranges })
+    return response.data.data
+  },
+
+  /** Pelanggaran lintas semua peserta sejak `since` (spec §6) — dipoll berkala oleh halaman Detail Ujian. */
+  async getRecentViolations(id: string, since: string | null): Promise<ExamViolation[]> {
+    const response = await apiClient.get<ApiSuccessResponse<ExamViolation[]>>(`/exams/${id}/violations/recent`, {
+      params: since ? { since } : {},
+    })
+    return response.data.data
+  },
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
 }
 
 export const examParticipantService = {
@@ -207,6 +269,16 @@ export const examParticipantService = {
       params: toQueryParams(params),
     })
     return { data: response.data.data, meta: response.data.meta! }
+  },
+}
+
+/** Linimasa pelanggaran + ringkasan skor satu percobaan, dilihat dosen (spec §5). */
+export const examAttemptViolationService = {
+  async show(attemptId: string): Promise<ExamAttemptViolationTimeline> {
+    const response = await apiClient.get<ApiSuccessResponse<ExamAttemptViolationTimeline>>(
+      `/exam-attempts/${attemptId}/violations`,
+    )
+    return response.data.data
   },
 }
 
@@ -322,15 +394,16 @@ export const studentExamService = {
   /** Backend men-stream PDF mentah (bukan JSON) — diambil sebagai blob lalu dipicu sebagai download browser lewat anchor sementara (pola sama seperti fileUploadService.download). */
   async downloadResultPdf(attemptId: string, filename: string): Promise<void> {
     const response = await apiClient.get(`/student/exam-attempts/${attemptId}/result/pdf`, { responseType: 'blob' })
-    const url = URL.createObjectURL(response.data as Blob)
+    triggerBlobDownload(response.data as Blob, filename)
+  },
 
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = filename
-    document.body.appendChild(anchor)
-    anchor.click()
-    anchor.remove()
-    URL.revokeObjectURL(url)
+  /** Melaporkan satu pelanggaran terdeteksi (spec §4) — lihat utils/examViolationTracking. */
+  async reportViolation(attemptId: string, payload: RecordExamViolationPayload): Promise<StudentExamAttempt> {
+    const response = await apiClient.post<ApiSuccessResponse<StudentExamAttempt>>(
+      `/student/exam-attempts/${attemptId}/violations`,
+      payload,
+    )
+    return response.data.data
   },
 }
 

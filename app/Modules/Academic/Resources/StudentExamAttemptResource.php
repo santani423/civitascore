@@ -30,6 +30,9 @@ class StudentExamAttemptResource extends ExamAttemptResource
 
         if (! $this->resultVisible) {
             $data['score'] = null;
+            $data['raw_score'] = null;
+            $data['grade'] = null;
+            $data['weighted_score'] = null;
         }
 
         return $data;
