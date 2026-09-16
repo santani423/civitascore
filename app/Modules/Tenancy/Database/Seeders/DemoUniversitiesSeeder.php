@@ -3,6 +3,7 @@
 namespace Modules\Tenancy\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Modules\Academic\Database\Seeders\AtmaJayaStudentSeeder;
 use Modules\Tenancy\Enums\MembershipType;
 use Modules\Tenancy\Enums\SubscriptionStatus;
 
@@ -137,5 +138,28 @@ class DemoUniversitiesSeeder extends Seeder
             ),
             'academic_scale' => ['faculties' => 2, 'study_programs' => 3, 'students' => 60, 'lecturers' => 10, 'employees' => 6, 'classes' => 10],
         ]))->run();
+
+        (new UniversitySeeder([
+            'code' => 'UAJ',
+            'name' => 'Universitas Katolik Indonesia Atma Jaya',
+            'short_name' => 'Atma Jaya',
+            'domain' => 'atmajaya.test',
+            'education_institution_type' => 'Universitas',
+            'accreditation' => 'A',
+            'primary_color' => '#FBBF24',
+            'secondary_color' => '#1E3A8A',
+            'plan_code' => 'professional',
+            'subscription_status' => SubscriptionStatus::Active,
+            'modules' => ['academic'],
+            'feature_flags' => ['file_upload.virus_scan_enabled' => true, 'approval_workflow.delegation_enabled' => false],
+            'demo_accounts' => self::demoAccounts('atmajaya.test', 'Atma Jaya'),
+            // No faker-generated academic data here — the real Teknik
+            // Informatika roster is seeded right after by
+            // AtmaJayaStudentSeeder, which creates its own faculty/study
+            // program instead.
+            'academic_scale' => ['faculties' => 0, 'study_programs' => 0, 'students' => 0, 'lecturers' => 0, 'employees' => 0, 'classes' => 0],
+        ]))->run();
+
+        (new AtmaJayaStudentSeeder())->run();
     }
 }

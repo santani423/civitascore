@@ -16,9 +16,7 @@ use Modules\Academic\Models\AcademicTerm;
 use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Models\Course;
 use Modules\Academic\Models\Curriculum;
-use Modules\Academic\Models\Employee;
 use Modules\Academic\Models\Faculty;
-use Modules\Academic\Models\Lecturer;
 use Modules\Academic\Models\Student;
 use Modules\Academic\Models\StudyProgram;
 use Modules\Tenancy\Models\University;
@@ -85,10 +83,32 @@ class AcademicSeeder extends Seeder
         'dropped_out' => 1,
     ];
 
-    /** Courses generated per study program (plan calls for "~15-20/prodi"). */
-    private const COURSES_PER_STUDY_PROGRAM_MIN = 15;
-
-    private const COURSES_PER_STUDY_PROGRAM_MAX = 20;
+    /**
+     * The only course sample data seeded — no Faker-generated courses.
+     * Assigned one-per-study-program (in creation order), so a university
+     * ends up with at most COURSE_CATALOG's count of courses total; study
+     * programs beyond that have none (seedClassSections already skips a
+     * study program with no courses). credits/semester_level aren't part
+     * of the source data, so a plain default (3 credits, sequential
+     * semester_level) is used for all of them.
+     */
+    private const COURSE_CATALOG = [
+        ['code' => 'SFT 203', 'name' => 'Transformasi Digital'],
+        ['code' => 'FTA 105', 'name' => 'Anatomi dan Fisiologi Manusia'],
+        ['code' => 'SFT 303', 'name' => 'Tata Kelola Teknologi Informasi'],
+        ['code' => 'SFT 101', 'name' => 'Konsep Sistem Informasi'],
+        ['code' => 'SFT 207', 'name' => 'Sistem Basis Data'],
+        ['code' => 'MGN 216', 'name' => 'Analisis Big Data'],
+        ['code' => 'SFT 205', 'name' => 'Pemrograman Web'],
+        ['code' => 'SFT 209', 'name' => 'Pemrograman Mobile'],
+        ['code' => 'SFT 211', 'name' => 'Pemrograman Berorientasi Objek'],
+        ['code' => 'SFT 213', 'name' => 'Pemrograman Berbasis Framework'],
+        ['code' => 'SFT 215', 'name' => 'Pemrograman Berbasis Cloud'],
+        ['code' => 'SFT 217', 'name' => 'Pemrograman Berbasis AI/ML'],
+        ['code' => 'SFT 219', 'name' => 'Pemrograman Berbasis IoT'],
+        ['code' => 'SFT 221', 'name' => 'Pemrograman Berbasis Blockchain'],
+        ['code' => 'SFT 223', 'name' => 'Pemrograman Berbasis AR/VR'],
+    ];
 
     /** How many of a student's own-program classes they're enrolled in (KRS). */
     private const KRS_CLASSES_PER_STUDENT_MIN = 4;
@@ -297,41 +317,33 @@ class AcademicSeeder extends Seeder
     /**
      * @param  Collection<int, StudyProgram>  $studyPrograms
      * @param  Collection<string, Curriculum>  $curriculumsByProgram
-     * @return Collection<string, \Illuminate\Database\Eloquent\Collection<int, Course>>  courses grouped by study_program_id
+     * @return Collection<string, \Illuminate\Database\Eloquent\Collection<int, Course>> courses grouped by study_program_id
      */
     private function seedCourses(University $university, Collection $studyPrograms, Collection $curriculumsByProgram): Collection
     {
         $now = now();
         $rows = [];
-        $globalIndex = 0;
 
-        foreach ($studyPrograms as $studyProgram) {
+        foreach ($studyPrograms->take(count(self::COURSE_CATALOG))->values() as $index => $studyProgram) {
             $curriculum = $curriculumsByProgram[$studyProgram->id];
-            $prefix = Str::upper(Str::substr(Str::slug($studyProgram->name, ''), 0, 3));
-            $courseCount = fake()->numberBetween(self::COURSES_PER_STUDY_PROGRAM_MIN, self::COURSES_PER_STUDY_PROGRAM_MAX);
+            $course = self::COURSE_CATALOG[$index];
 
-            for ($j = 1; $j <= $courseCount; $j++) {
-                $globalIndex++;
-
-                $rows[] = [
-                    'id' => (string) Str::ulid(),
-                    'university_id' => $university->id,
-                    'study_program_id' => $studyProgram->id,
-                    'curriculum_id' => $curriculum->id,
-                    'code' => $prefix.str_pad((string) $globalIndex, 4, '0', STR_PAD_LEFT),
-                    'name' => Str::title(fake()->words(3, true)),
-                    'credits' => fake()->numberBetween(2, 4),
-                    'semester_level' => min(8, (int) ceil($j / ($courseCount / 8))),
-                    'is_active' => true,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
+            $rows[] = [
+                'id' => (string) Str::ulid(),
+                'university_id' => $university->id,
+                'study_program_id' => $studyProgram->id,
+                'curriculum_id' => $curriculum->id,
+                'code' => $course['code'],
+                'name' => $course['name'],
+                'credits' => 3,
+                'semester_level' => $index + 1,
+                'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
 
-        foreach (array_chunk($rows, 500) as $chunk) {
-            DB::table('courses')->insert($chunk);
-        }
+        DB::table('courses')->insert($rows);
 
         return Course::query()->get()->groupBy('study_program_id');
     }
@@ -339,7 +351,7 @@ class AcademicSeeder extends Seeder
     /**
      * @param  Collection<int, StudyProgram>  $studyPrograms
      * @param  Collection<string, \Illuminate\Database\Eloquent\Collection<int, Course>>  $coursesByProgram
-     * @return Collection<string, \Illuminate\Database\Eloquent\Collection<int, ClassSection>>  class sections grouped by study_program_id
+     * @return Collection<string, \Illuminate\Database\Eloquent\Collection<int, ClassSection>> class sections grouped by study_program_id
      */
     private function seedClassSections(University $university, Collection $studyPrograms, Collection $coursesByProgram, AcademicTerm $currentTerm, int $count): Collection
     {
