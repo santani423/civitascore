@@ -95,7 +95,12 @@ export function LoginPage() {
       const redirectTo = (location.state as LocationState | null)?.from?.pathname ?? ROUTES.dashboard
       navigate(redirectTo, { replace: true })
     } catch (error) {
-      setFormError((error as NormalizedApiError).message ?? 'Gagal masuk. Silakan coba lagi.')
+      const apiError = error as NormalizedApiError
+      // `message` di top-level cuma "Validasi data gagal." (generik) — alasan
+      // sebenarnya (mis. "NIM atau password tidak sesuai.") ada di `errors`,
+      // lihat AuthenticateUserAction di backend.
+      const specificMessage = Object.values(apiError.errors ?? {})[0]?.[0]
+      setFormError(specificMessage ?? apiError.message ?? 'Gagal masuk. Silakan coba lagi.')
     }
   }
 

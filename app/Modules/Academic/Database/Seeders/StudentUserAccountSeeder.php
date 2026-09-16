@@ -40,7 +40,7 @@ class StudentUserAccountSeeder extends Seeder
         Student::query()
             ->whereNull('user_id')
             ->with('university')
-            ->chunkById(200, function ($students) use ($studentRole): void {
+            ->chunkById(50, function ($students) use ($studentRole): void {
                 foreach ($students as $student) {
                     $this->linkStudent($student, $studentRole);
                 }

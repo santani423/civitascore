@@ -9,7 +9,6 @@ export function DashboardLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleMenuClick = () => {
-    setCollapsed((current) => !current)
     setMobileOpen((current) => !current)
   }
 
