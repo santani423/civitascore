@@ -345,3 +345,50 @@ export interface AnswerExamAttemptPayload {
   exam_question_id: string
   exam_question_option_id: string | null
 }
+
+/**
+ * Hasil + koreksi lengkap satu percobaan (backend adalah satu-satunya
+ * sumber kebenaran — lihat ExamService::buildAttemptResult) — hanya bisa
+ * diambil setelah attempt Submitted dan `exam.show_result_after_submission`
+ * bernilai true, lihat StudentExamController::guardResultAvailable().
+ */
+export interface StudentExamResultOption {
+  id: string
+  option_text: string | null
+}
+
+export interface StudentExamResultQuestion {
+  number: number
+  question_text: string | null
+  options: StudentExamResultOption[]
+  selected_option_id: string | null
+  correct_option_id: string | null
+  is_correct: boolean
+  explanation: string | null
+}
+
+export interface StudentExamResult {
+  attempt: {
+    id: string
+    attempt_number: number
+    started_at: string
+    submitted_at: string | null
+    duration_seconds: number | null
+  }
+  student: {
+    name: string
+    nim: string
+  }
+  exam: {
+    title: string
+    course_name: string | null
+  }
+  summary: {
+    total_questions: number
+    correct_answers: number
+    wrong_answers: number
+    score: string
+    percentage: string
+  }
+  questions: StudentExamResultQuestion[]
+}

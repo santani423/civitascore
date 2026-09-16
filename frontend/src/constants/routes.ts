@@ -73,6 +73,7 @@ export const ROUTES = {
     kuis: '/portal/kuis',
     ujian: '/portal/ujian',
     ujianKerjakan: '/portal/ujian/:id/kerjakan',
+    ujianHasil: '/portal/ujian/hasil/:attemptId',
     cuti: '/portal/cuti',
     surat: '/portal/surat',
     beasiswa: '/portal/beasiswa',

@@ -6,8 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Http\ApiResponse;
 use App\Support\Http\Exceptions\ConflictException;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Modules\Academic\Enums\ExamAttemptStatus;
 use Modules\Academic\Enums\KrsItemStatus;
 use Modules\Academic\Models\Exam;
@@ -192,6 +195,51 @@ class StudentExamController extends Controller
             $examAttempt->load('answers'),
             $this->isResultVisible($examAttempt->exam, $examAttempt),
         ));
+    }
+
+    public function result(ExamAttempt $examAttempt): JsonResponse
+    {
+        $user = Auth::user();
+        $this->requireStudent($user);
+        abort_unless($this->policy->recordOwn($user, $examAttempt), 403);
+
+        $examAttempt = $this->exams->finalizeIfExpired($examAttempt);
+        $this->guardResultAvailable($examAttempt);
+
+        return ApiResponse::success($this->exams->buildAttemptResult($examAttempt));
+    }
+
+    public function resultPdf(ExamAttempt $examAttempt): Response
+    {
+        $user = Auth::user();
+        $this->requireStudent($user);
+        abort_unless($this->policy->recordOwn($user, $examAttempt), 403);
+
+        $examAttempt = $this->exams->finalizeIfExpired($examAttempt);
+        $this->guardResultAvailable($examAttempt);
+
+        $result = $this->exams->buildAttemptResult($examAttempt);
+        $filename = 'hasil-ujian-'.Str::slug($result['exam']['title']).'-'.$examAttempt->id.'.pdf';
+
+        return Pdf::loadView('exams.result-pdf', ['result' => $result])->download($filename);
+    }
+
+    /**
+     * Menolak akses ke hasil/koreksi kalau percobaan belum Submitted (soal
+     * masih sedang dikerjakan) atau dosen belum mengizinkan hasil terlihat
+     * (`exam.show_result_after_submission`) — dipakai bersama oleh
+     * result()/resultPdf() supaya kunci jawaban tidak pernah bocor lebih
+     * awal dari jalur manapun (spec §6).
+     */
+    private function guardResultAvailable(ExamAttempt $attempt): void
+    {
+        if ($attempt->status !== ExamAttemptStatus::Submitted) {
+            throw new ConflictException('Ujian belum dikumpulkan, hasil belum tersedia.');
+        }
+
+        if (! $attempt->exam->show_result_after_submission) {
+            throw new ConflictException('Hasil ujian belum tersedia. Menunggu dipublikasikan oleh dosen.');
+        }
     }
 
     private function requireStudent(?User $user): Student

@@ -384,6 +384,94 @@ class ExamService
     }
 
     /**
+     * Data lengkap hasil + koreksi satu percobaan (dipakai endpoint hasil
+     * ujian JSON dan PDF) — backend satu-satunya sumber kebenaran skor dan
+     * kunci jawaban, dihitung ulang dari jawaban tersimpan (bukan dipercaya
+     * dari klien). TIDAK PERNAH dipanggil untuk attempt yang belum
+     * Submitted — pemanggilnya (StudentExamController::result()/resultPdf())
+     * wajib menolak sebelum sampai ke sini (spec §6).
+     *
+     * @return array{
+     *     attempt: array{id: string, attempt_number: int, started_at: string, submitted_at: string|null, duration_seconds: int|null},
+     *     student: array{name: string, nim: string},
+     *     exam: array{title: string, course_name: string|null},
+     *     summary: array{total_questions: int, correct_answers: int, wrong_answers: int, score: string, percentage: string},
+     *     questions: array<int, array{number: int, question_text: string|null, options: array<int, array{id: string, option_text: string|null}>, selected_option_id: string|null, correct_option_id: string|null, is_correct: bool, explanation: string|null}>,
+     * }
+     */
+    public function buildAttemptResult(ExamAttempt $attempt): array
+    {
+        $attempt->loadMissing(['krsItem.student', 'exam.classSection.course', 'answers']);
+
+        $questionsById = ExamQuestion::query()
+            ->whereIn('id', $attempt->question_order)
+            ->with('options')
+            ->get()
+            ->keyBy('id');
+
+        $answersByQuestionId = $attempt->answers->keyBy('exam_question_id');
+        $correctAnswers = 0;
+
+        $questions = collect($attempt->question_order)->values()->map(function (string $questionId, int $index) use ($attempt, $questionsById, $answersByQuestionId, &$correctAnswers) {
+            $question = $questionsById->get($questionId);
+            $optionsById = $question?->options->keyBy('id');
+            $orderedOptionIds = $attempt->option_order[$questionId] ?? [];
+
+            $selectedOptionId = $answersByQuestionId->get($questionId)?->exam_question_option_id;
+            $correctOption = $question?->options->firstWhere('is_correct', true);
+            $isCorrect = $selectedOptionId !== null && $correctOption !== null && $selectedOptionId === $correctOption->id;
+
+            if ($isCorrect) {
+                $correctAnswers++;
+            }
+
+            return [
+                'number' => $index + 1,
+                'question_text' => $question?->question_text,
+                'options' => collect($orderedOptionIds)->map(fn (string $optionId) => [
+                    'id' => $optionId,
+                    'option_text' => $optionsById?->get($optionId)?->option_text,
+                ])->values()->all(),
+                'selected_option_id' => $selectedOptionId,
+                'correct_option_id' => $correctOption?->id,
+                'is_correct' => $isCorrect,
+                'explanation' => null,
+            ];
+        })->values()->all();
+
+        $totalQuestions = count($attempt->question_order);
+        $startedAt = $attempt->started_at;
+        $submittedAt = $attempt->submitted_at;
+        $score = (string) $attempt->score;
+
+        return [
+            'attempt' => [
+                'id' => $attempt->id,
+                'attempt_number' => $attempt->attempt_number,
+                'started_at' => $startedAt->toIso8601String(),
+                'submitted_at' => $submittedAt?->toIso8601String(),
+                'duration_seconds' => $submittedAt !== null ? (int) $submittedAt->diffInSeconds($startedAt) : null,
+            ],
+            'student' => [
+                'name' => $attempt->krsItem->student->name,
+                'nim' => $attempt->krsItem->student->nim,
+            ],
+            'exam' => [
+                'title' => $attempt->exam->title,
+                'course_name' => $attempt->exam->classSection->course->name,
+            ],
+            'summary' => [
+                'total_questions' => $totalQuestions,
+                'correct_answers' => $correctAnswers,
+                'wrong_answers' => $totalQuestions - $correctAnswers,
+                'score' => $score,
+                'percentage' => $score,
+            ],
+            'questions' => $questions,
+        ];
+    }
+
+    /**
      * KrsItem milik `$student` yang berhak atas `$exam` — mahasiswa berhak
      * kalau ia terdaftar aktif (`Enrolled`) di class_section ujian ini.
      * Satu-satunya jalur resolusi KrsItem untuk endpoint self-service —

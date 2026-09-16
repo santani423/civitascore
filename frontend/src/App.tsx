@@ -63,6 +63,7 @@ import { PortalAssignmentsPage } from '@/pages/portal/PortalAssignmentsPage'
 import { PortalQuizzesPage } from '@/pages/portal/PortalQuizzesPage'
 import { PortalExamsPage } from '@/pages/portal/PortalExamsPage'
 import { PortalExamTakingPage } from '@/pages/portal/PortalExamTakingPage'
+import { PortalExamResultPage } from '@/pages/portal/PortalExamResultPage'
 import { PortalLeaveRequestPage } from '@/pages/portal/PortalLeaveRequestPage'
 import { PortalLetterRequestPage } from '@/pages/portal/PortalLetterRequestPage'
 import { PortalScholarshipPage } from '@/pages/portal/PortalScholarshipPage'
@@ -163,6 +164,7 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.portal.tugas, element: <PortalAssignmentsPage /> },
   { path: ROUTES.portal.kuis, element: <PortalQuizzesPage /> },
   { path: ROUTES.portal.ujian, element: <PortalExamsPage /> },
+  { path: ROUTES.portal.ujianHasil, element: <PortalExamResultPage /> },
   { path: ROUTES.portal.cuti, element: <PortalLeaveRequestPage /> },
   { path: ROUTES.portal.surat, element: <PortalLetterRequestPage /> },
   { path: ROUTES.portal.beasiswa, element: <PortalScholarshipPage /> },

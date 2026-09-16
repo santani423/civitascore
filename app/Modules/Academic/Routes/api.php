@@ -82,4 +82,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('student/exam-attempts/{examAttempt}', [StudentExamController::class, 'showAttempt'])->middleware('permission:exam_participation.read');
     Route::put('student/exam-attempts/{examAttempt}/answer', [StudentExamController::class, 'answer'])->middleware('permission:exam_participation.update');
     Route::patch('student/exam-attempts/{examAttempt}/submit', [StudentExamController::class, 'submit'])->middleware('permission:exam_participation.update');
+    Route::get('student/exam-attempts/{examAttempt}/result', [StudentExamController::class, 'result'])->middleware('permission:exam_participation.read');
+    Route::get('student/exam-attempts/{examAttempt}/result/pdf', [StudentExamController::class, 'resultPdf'])->middleware('permission:exam_participation.read');
 });

@@ -277,3 +277,142 @@ test('exam result is visible once submitted when the lecturer allows it', functi
     expect($submit->json('data.result_visible'))->toBeTrue();
     expect($submit->json('data.score'))->toBe('100.00');
 });
+
+test('student can view full correction and download pdf once result is visible', function () {
+    $university = University::factory()->create();
+    $fixture = makeParticipationClassSectionFixture($university);
+
+    $exam = Exam::factory()->create([
+        'university_id' => $university->id,
+        'class_section_id' => $fixture['classSection']->id,
+        'questions_per_participant' => 2,
+        'question_selection_mode' => QuestionSelectionMode::All,
+        'show_result_after_submission' => true,
+        'is_published' => true,
+        'published_at' => now(),
+    ]);
+    $q1 = addParticipationQuestionFixture($exam, 0);
+    $q2 = addParticipationQuestionFixture($exam, 1);
+
+    actingAsEnrolledStudent($university, $fixture['classSection'], $fixture['program']->id);
+
+    $start = $this->withHeader('X-University-ID', $university->id)
+        ->postJson("/api/v1/student/exams/{$exam->id}/start")
+        ->assertApiSuccess();
+    $attemptId = $start->json('data.id');
+
+    // Sebelum submit, endpoint hasil harus menolak — jawaban benar tidak
+    // boleh bocor selagi ujian masih berlangsung.
+    $this->withHeader('X-University-ID', $university->id)
+        ->getJson("/api/v1/student/exam-attempts/{$attemptId}/result")
+        ->assertApiError(409);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->putJson("/api/v1/student/exam-attempts/{$attemptId}/answer", [
+            'exam_question_id' => $q1['question']->id,
+            'exam_question_option_id' => $q1['correctOptionId'],
+        ])
+        ->assertApiSuccess();
+    $this->withHeader('X-University-ID', $university->id)
+        ->putJson("/api/v1/student/exam-attempts/{$attemptId}/answer", [
+            'exam_question_id' => $q2['question']->id,
+            'exam_question_option_id' => $q2['wrongOptionId'],
+        ])
+        ->assertApiSuccess();
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->patchJson("/api/v1/student/exam-attempts/{$attemptId}/submit")
+        ->assertApiSuccess();
+
+    $result = $this->withHeader('X-University-ID', $university->id)
+        ->getJson("/api/v1/student/exam-attempts/{$attemptId}/result")
+        ->assertApiSuccess();
+
+    expect($result->json('data.summary.total_questions'))->toBe(2);
+    expect($result->json('data.summary.correct_answers'))->toBe(1);
+    expect($result->json('data.summary.wrong_answers'))->toBe(1);
+    expect($result->json('data.summary.score'))->toBe('50.00');
+    expect($result->json('data.student.name'))->not->toBeEmpty();
+    expect($result->json('data.student.nim'))->not->toBeEmpty();
+
+    $questions = collect($result->json('data.questions'));
+    $q1Result = $questions->firstWhere('question_text', $q1['question']->question_text);
+    $q2Result = $questions->firstWhere('question_text', $q2['question']->question_text);
+
+    expect($q1Result['is_correct'])->toBeTrue();
+    expect($q1Result['correct_option_id'])->toBe($q1['correctOptionId']);
+    expect($q2Result['is_correct'])->toBeFalse();
+    expect($q2Result['selected_option_id'])->toBe($q2['wrongOptionId']);
+    expect($q2Result['correct_option_id'])->toBe($q2['correctOptionId']);
+
+    $pdf = $this->withHeader('X-University-ID', $university->id)
+        ->get("/api/v1/student/exam-attempts/{$attemptId}/result/pdf");
+
+    $pdf->assertOk();
+    expect($pdf->headers->get('Content-Type'))->toContain('application/pdf');
+});
+
+test('student cannot view or download another students result', function () {
+    $university = University::factory()->create();
+    $fixture = makeParticipationClassSectionFixture($university);
+
+    $exam = Exam::factory()->create([
+        'university_id' => $university->id,
+        'class_section_id' => $fixture['classSection']->id,
+        'questions_per_participant' => 1,
+        'question_selection_mode' => QuestionSelectionMode::All,
+        'show_result_after_submission' => true,
+        'is_published' => true,
+        'published_at' => now(),
+    ]);
+    addParticipationQuestionFixture($exam, 0);
+
+    actingAsEnrolledStudent($university, $fixture['classSection'], $fixture['program']->id);
+    $start = $this->withHeader('X-University-ID', $university->id)
+        ->postJson("/api/v1/student/exams/{$exam->id}/start")
+        ->assertApiSuccess();
+    $attemptId = $start->json('data.id');
+    $this->withHeader('X-University-ID', $university->id)
+        ->patchJson("/api/v1/student/exam-attempts/{$attemptId}/submit")
+        ->assertApiSuccess();
+
+    // Mahasiswa lain mencoba mengakses hasil di atas lewat ID attempt.
+    actingAsEnrolledStudent($university, $fixture['classSection'], $fixture['program']->id);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->getJson("/api/v1/student/exam-attempts/{$attemptId}/result")
+        ->assertStatus(403);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->get("/api/v1/student/exam-attempts/{$attemptId}/result/pdf")
+        ->assertStatus(403);
+});
+
+test('result stays unavailable when the lecturer has not enabled it', function () {
+    $university = University::factory()->create();
+    $fixture = makeParticipationClassSectionFixture($university);
+
+    $exam = Exam::factory()->create([
+        'university_id' => $university->id,
+        'class_section_id' => $fixture['classSection']->id,
+        'questions_per_participant' => 1,
+        'question_selection_mode' => QuestionSelectionMode::All,
+        'show_result_after_submission' => false,
+        'is_published' => true,
+        'published_at' => now(),
+    ]);
+    addParticipationQuestionFixture($exam, 0);
+
+    actingAsEnrolledStudent($university, $fixture['classSection'], $fixture['program']->id);
+    $start = $this->withHeader('X-University-ID', $university->id)
+        ->postJson("/api/v1/student/exams/{$exam->id}/start")
+        ->assertApiSuccess();
+    $attemptId = $start->json('data.id');
+    $this->withHeader('X-University-ID', $university->id)
+        ->patchJson("/api/v1/student/exam-attempts/{$attemptId}/submit")
+        ->assertApiSuccess();
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->getJson("/api/v1/student/exam-attempts/{$attemptId}/result")
+        ->assertApiError(409);
+});

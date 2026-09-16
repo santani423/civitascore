@@ -22,6 +22,7 @@ import type {
   StoreQuestionBankItemPayload,
   StudentExam,
   StudentExamAttempt,
+  StudentExamResult,
   StudyProgram,
   Transcript,
   UpdateExamPayload,
@@ -308,6 +309,28 @@ export const studentExamService = {
       `/student/exam-attempts/${attemptId}/submit`,
     )
     return response.data.data
+  },
+
+  /** Hasil + koreksi lengkap — hanya tersedia setelah attempt disubmit dan dosen mengizinkan hasil terlihat. */
+  async result(attemptId: string): Promise<StudentExamResult> {
+    const response = await apiClient.get<ApiSuccessResponse<StudentExamResult>>(
+      `/student/exam-attempts/${attemptId}/result`,
+    )
+    return response.data.data
+  },
+
+  /** Backend men-stream PDF mentah (bukan JSON) — diambil sebagai blob lalu dipicu sebagai download browser lewat anchor sementara (pola sama seperti fileUploadService.download). */
+  async downloadResultPdf(attemptId: string, filename: string): Promise<void> {
+    const response = await apiClient.get(`/student/exam-attempts/${attemptId}/result/pdf`, { responseType: 'blob' })
+    const url = URL.createObjectURL(response.data as Blob)
+
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
   },
 }
 

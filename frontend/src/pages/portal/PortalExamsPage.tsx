@@ -75,12 +75,29 @@ export function PortalExamsPage() {
     },
     {
       header: 'Aksi',
-      cell: (row) =>
-        (row.status === 'available' || row.status === 'in_progress') && (
-          <Button variant="primary" size="sm" onClick={() => navigate(`${ROUTES.portal.ujian}/${row.id}/kerjakan`)}>
-            {row.status === 'in_progress' ? 'Lanjutkan' : 'Mulai Ujian'}
-          </Button>
-        ),
+      cell: (row) => {
+        if (row.status === 'available' || row.status === 'in_progress') {
+          return (
+            <Button variant="primary" size="sm" onClick={() => navigate(`${ROUTES.portal.ujian}/${row.id}/kerjakan`)}>
+              {row.status === 'in_progress' ? 'Lanjutkan' : 'Mulai Ujian'}
+            </Button>
+          )
+        }
+
+        if (row.status === 'completed' && row.latest_attempt_id) {
+          return (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(ROUTES.portal.ujianHasil.replace(':attemptId', row.latest_attempt_id as string))}
+            >
+              Lihat Hasil
+            </Button>
+          )
+        }
+
+        return null
+      },
     },
   ]
 

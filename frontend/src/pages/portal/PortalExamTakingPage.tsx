@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Loader2, Maximize, ShieldAlert } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Clock, Loader2, Maximize, ShieldAlert } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -245,6 +245,16 @@ export function PortalExamTakingPage() {
 
   const remainingMs = deadlineMs !== null ? Math.max(0, deadlineMs - nowMs) : null
 
+  // Redirect ke Hasil Ujian begitu attempt berstatus submitted — baik lewat
+  // submit manual, auto-submit waktu habis, maupun attempt yang sudah
+  // submitted saat halaman ini dimuat (mis. exam berakhir tepat saat fetch).
+  // Satu-satunya jalur redirect supaya tidak ada logic ganda di handleSubmit.
+  useEffect(() => {
+    if (attempt?.status === 'submitted') {
+      navigate(ROUTES.portal.ujianHasil.replace(':attemptId', attempt.id), { replace: true })
+    }
+  }, [attempt?.status, attempt?.id, navigate])
+
   const handleSubmit = useCallback(async () => {
     if (!attempt) return
 
@@ -367,25 +377,14 @@ export function PortalExamTakingPage() {
     )
   }
 
+  // Ujian sudah dikumpulkan — redirect ke Hasil Ujian ditangani efek di
+  // atas; render ini hanya tampil sekejap di frame sebelum navigasi terjadi.
   if (attempt.status === 'submitted') {
     return pageShell(
-      <Card>
-        <div className="flex flex-col items-center gap-3 py-10 text-center">
-          <CheckCircle2 className="size-12 text-success" />
-          <p className="text-lg font-semibold text-ink-primary">Ujian Berhasil Dikumpulkan</p>
-          <p className="text-sm text-ink-tertiary">{exam.title}</p>
-
-          {attempt.result_visible ? (
-            <p className="text-4xl font-bold text-primary">{attempt.score}</p>
-          ) : (
-            <Badge variant="warning">Waiting for Result</Badge>
-          )}
-
-          <Button className="mt-2" variant="outline" onClick={() => navigate(ROUTES.portal.ujian)}>
-            Kembali ke Daftar Ujian
-          </Button>
-        </div>
-      </Card>,
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-center">
+        <Loader2 className="size-6 animate-spin text-ink-tertiary" />
+        <p className="text-sm text-ink-tertiary">Ujian berhasil dikumpulkan. Mengarahkan ke hasil ujian...</p>
+      </div>,
     )
   }
 
