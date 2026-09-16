@@ -3,9 +3,12 @@
 namespace Modules\Tenancy\Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Modules\Academic\Database\Seeders\AtmaJayaQuestionBankSeeder;
 use Modules\Academic\Database\Seeders\AtmaJayaStudentSeeder;
 use Modules\Tenancy\Enums\MembershipType;
 use Modules\Tenancy\Enums\SubscriptionStatus;
+use Modules\Tenancy\Models\University;
+use Modules\Tenancy\Models\UniversityDomain;
 
 /**
  * Three demo universities with deliberately different characteristics
@@ -161,5 +164,37 @@ class DemoUniversitiesSeeder extends Seeder
         ]))->run();
 
         (new AtmaJayaStudentSeeder())->run();
+        (new AtmaJayaQuestionBankSeeder())->run();
+
+        $this->seedLocalDevDomains();
+    }
+
+    /**
+     * ResolveUniversityMiddleware resolves the tenant off the request's
+     * Host header, but local dev hits the API at 127.0.0.1/localhost
+     * rather than a *.test domain mapped via /etc/hosts — without this,
+     * NIM login for UAJ's seeded students fails tenant resolution even
+     * with a correct password. Extra aliases on top of 'atmajaya.com' are
+     * fine since university_domains only requires 'domain' to be unique,
+     * not one row per university.
+     */
+    private function seedLocalDevDomains(): void
+    {
+        if (! app()->environment('local')) {
+            return;
+        }
+
+        $uaj = University::query()->where('code', 'UAJ')->first();
+
+        if (! $uaj) {
+            return;
+        }
+
+        foreach (['127.0.0.1', 'localhost'] as $domain) {
+            UniversityDomain::query()->updateOrCreate(
+                ['domain' => $domain],
+                ['university_id' => $uaj->id, 'is_primary' => false, 'verified_at' => now()],
+            );
+        }
     }
 }

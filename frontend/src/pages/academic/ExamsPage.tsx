@@ -161,22 +161,6 @@ function ExamFormModal({
     }
   }, [open, classSections])
 
-  // Daftar mata kuliah diturunkan dari kelas yang benar-benar ditawarkan
-  // (bukan dari seluruh katalog courseService) — supaya dosen tidak bisa
-  // memilih mata kuliah yang kelasnya kosong (dead-end di dropdown Kelas).
-  const courses = useMemo(() => {
-    if (classSections === null) return null
-
-    const seen = new Map<string, { id: string; name: string; code: string }>()
-    for (const cs of classSections) {
-      if (!seen.has(cs.course_id)) {
-        seen.set(cs.course_id, { id: cs.course_id, name: cs.course_name ?? '-', code: cs.course_code ?? '-' })
-      }
-    }
-
-    return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name))
-  }, [classSections])
-
   const {
     register,
     handleSubmit,
@@ -201,6 +185,24 @@ function ExamFormModal({
       randomize_options: false,
     },
   })
+
+  // Mata Kuliah diturunkan dari kelas yang benar-benar ditawarkan (bukan
+  // dari seluruh katalog courseService) — supaya dosen tidak bisa memilih
+  // mata kuliah yang kelasnya kosong. Satu kelas ("TI01") ditawarkan untuk
+  // setiap mata kuliah (satu class_section per mata kuliah), jadi daftar
+  // ini mencakup semua mata kuliah.
+  const courses = useMemo(() => {
+    if (classSections === null) return null
+
+    const seen = new Map<string, { id: string; name: string; code: string }>()
+    for (const cs of classSections) {
+      if (!seen.has(cs.course_id)) {
+        seen.set(cs.course_id, { id: cs.course_id, name: cs.course_name ?? '-', code: cs.course_code ?? '-' })
+      }
+    }
+
+    return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name))
+  }, [classSections])
 
   const selectedCourseId = watch('course_id')
   const filteredClassSections = useMemo(

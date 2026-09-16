@@ -55,12 +55,7 @@ class StudentUserAccountSeeder extends Seeder
             ['email' => $email],
             [
                 'name' => $student->name,
-                // Default password is the student's birth date as DDMMYYYY
-                // (hashed) — falls back to the NIM only when the birth date
-                // hasn't been recorded yet, since it can't be derived.
-                'password' => $student->tanggal_lahir
-                    ? Hash::make($student->tanggal_lahir->format('dmY'))
-                    : Hash::make($student->nim),
+                'password' => Hash::make('password'),
                 'must_change_password' => true,
                 'email_verified_at' => now(),
                 'is_active' => ! in_array($student->status, [StudentStatus::Inactive, StudentStatus::DroppedOut], true),
