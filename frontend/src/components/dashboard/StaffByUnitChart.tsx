@@ -27,7 +27,7 @@ export function StaffByUnitChart({ data, onLecturerBarClick, onEmployeeBarClick 
                 tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                interval={0}
+                interval="preserveStartEnd"
                 angle={-20}
                 textAnchor="end"
                 height={60}

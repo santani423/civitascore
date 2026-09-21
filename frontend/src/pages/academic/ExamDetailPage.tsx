@@ -31,7 +31,7 @@ import {
 import type { NormalizedApiError } from '@/services/api'
 import { applyServerErrors } from '@/utils/applyServerErrors'
 import { copyToClipboard } from '@/utils/clipboard'
-import { examDistributionSummary, examValidationErrors, QUESTION_SELECTION_MODE_LABEL } from '@/utils/examValidation'
+import { examDistributionSummary, examValidationErrors, isExamWindowOpen, QUESTION_SELECTION_MODE_LABEL } from '@/utils/examValidation'
 import { fromDatetimeLocalValue, toDatetimeLocalValue } from '@/utils/formatters'
 import type {
   Exam,
@@ -94,7 +94,25 @@ export function ExamDetailPage() {
   const [violationTimelineAttemptId, setViolationTimelineAttemptId] = useState<string | null>(null)
   const [showGradeRangeModal, setShowGradeRangeModal] = useState(false)
 
-  const { alerts: violationAlerts, dismiss: dismissViolationAlert } = useExamViolationAlerts(exam?.id, Boolean(exam?.is_published))
+  // Aktif hanya selama peserta benar-benar bisa mengerjakan (dipublikasikan DAN
+  // dalam jendela starts_at/ends_at) — di luar itu tidak ada aktivitas baru yang
+  // mungkin masuk, jadi polling dihentikan otomatis alih-alih terus berjalan sia-sia.
+  const examIsLive = exam ? exam.is_published && isExamWindowOpen(exam) : false
+
+  const { alerts: violationAlerts, dismiss: dismissViolationAlert } = useExamViolationAlerts(exam?.id, examIsLive)
+
+  // Refresh status/skor peserta secara berkala selama ujian berlangsung, supaya
+  // tabel "Mahasiswa yang Dapat Mengikuti Ujian" ikut ter-update near-real-time
+  // (mis. not_started -> in_progress -> completed) tanpa dosen perlu reload manual.
+  // Sama seperti useExamViolationAlerts, ini polling — bukan WebSocket/broadcasting,
+  // karena proyek belum punya driver broadcasting terkonfigurasi.
+  const refetchParticipants = participants.refetch
+  useEffect(() => {
+    if (!examIsLive) return
+
+    const interval = setInterval(refetchParticipants, 5000)
+    return () => clearInterval(interval)
+  }, [examIsLive, refetchParticipants])
 
   const manuallySelectedCount = (questions ?? []).filter((q) => q.is_selected).length
   const validationErrors = exam
@@ -438,8 +456,10 @@ export function ExamDetailPage() {
                 {exam.access_token && accessUrl ? (
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                     <div className="flex flex-1 flex-col gap-3">
-                      <div className="flex items-center gap-2">
-                        <Input readOnly value={accessUrl} className="font-mono text-xs" />
+                      <div className="flex min-w-0 items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                          <Input readOnly value={accessUrl} className="font-mono text-xs" />
+                        </div>
                         <Button variant="outline" size="sm" leftIcon={<Copy className="size-3.5" />} onClick={handleCopyAccessLink}>
                           {linkCopied ? 'Tersalin!' : 'Copy Link'}
                         </Button>
@@ -535,7 +555,17 @@ export function ExamDetailPage() {
           </Card>
 
           <Card
-            title="Mahasiswa yang Dapat Mengikuti Ujian"
+            title={
+              <span className="flex items-center gap-2">
+                Mahasiswa yang Dapat Mengikuti Ujian
+                {examIsLive && (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                    <span className="size-1.5 animate-pulse rounded-full bg-primary" />
+                    Live
+                  </span>
+                )}
+              </span>
+            }
             description="Mahasiswa yang terdaftar (KRS aktif) di kelas ini, beserta status pengerjaan ujian."
             noPadding
           >
