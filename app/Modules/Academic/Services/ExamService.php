@@ -295,7 +295,14 @@ class ExamService
 
         return ExamAttemptAnswer::query()->updateOrCreate(
             ['exam_attempt_id' => $attempt->id, 'exam_question_id' => $examQuestionId],
-            ['exam_question_option_id' => $examQuestionOptionId, 'answered_at' => now()],
+            [
+                // Explicit for the same reason as ExamAttempt::create() in
+                // startAttempt() above — no tenant context on the public
+                // guest route.
+                'university_id' => $attempt->university_id,
+                'exam_question_option_id' => $examQuestionOptionId,
+                'answered_at' => now(),
+            ],
         );
     }
 
@@ -473,6 +480,10 @@ class ExamService
             $penaltyPoints = $type->penaltyPoints();
 
             $violation = $attempt->violations()->create([
+                // Explicit for the same reason as ExamAttempt::create() in
+                // startAttempt() above — no tenant context on the public
+                // guest route.
+                'university_id' => $attempt->university_id,
                 'violation_type' => $type,
                 'sequence_number' => $sequenceNumber,
                 'penalty_points' => $penaltyPoints,
