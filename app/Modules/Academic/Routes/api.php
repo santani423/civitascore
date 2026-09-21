@@ -26,7 +26,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('students/{student}/transcript', [StudentController::class, 'transcript'])->middleware('permission:students.read');
 
     Route::get('lecturers', [LecturerController::class, 'index'])->middleware('permission:lecturers.read');
+    Route::post('lecturers', [LecturerController::class, 'store'])->middleware('permission:lecturers.create');
     Route::get('lecturers/{lecturer}', [LecturerController::class, 'show'])->middleware('permission:lecturers.read');
+    Route::put('lecturers/{lecturer}', [LecturerController::class, 'update'])->middleware('permission:lecturers.update');
+    Route::delete('lecturers/{lecturer}', [LecturerController::class, 'destroy'])->middleware('permission:lecturers.delete');
 
     Route::get('employees', [EmployeeController::class, 'index'])->middleware('permission:employees.read');
     Route::get('employees/{employee}', [EmployeeController::class, 'show'])->middleware('permission:employees.read');

@@ -114,6 +114,9 @@ class RolePermissionSeeder extends Seeder
         ],
         'lecturers' => [
             PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+            PermissionAction::Delete,
         ],
         'employees' => [
             PermissionAction::Read,

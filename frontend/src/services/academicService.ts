@@ -24,6 +24,7 @@ import type {
   Student,
   StoreExamPayload,
   StoreExamQuestionPayload,
+  StoreLecturerPayload,
   StoreQuestionBankItemPayload,
   StoreStudentPayload,
   StudentExam,
@@ -33,6 +34,7 @@ import type {
   Transcript,
   UpdateExamPayload,
   UpdateExamQuestionPayload,
+  UpdateLecturerPayload,
   UpdateQuestionBankItemPayload,
   UpsertExamGradeRangePayload,
   UpsertGradePayload,
@@ -74,6 +76,20 @@ export const lecturerService = {
   async show(id: string): Promise<Lecturer> {
     const response = await apiClient.get<ApiSuccessResponse<Lecturer>>(`/lecturers/${id}`)
     return response.data.data
+  },
+
+  async create(payload: StoreLecturerPayload): Promise<Lecturer> {
+    const response = await apiClient.post<ApiSuccessResponse<Lecturer>>('/lecturers', payload)
+    return response.data.data
+  },
+
+  async update(id: string, payload: UpdateLecturerPayload): Promise<Lecturer> {
+    const response = await apiClient.put<ApiSuccessResponse<Lecturer>>(`/lecturers/${id}`, payload)
+    return response.data.data
+  },
+
+  async remove(id: string): Promise<void> {
+    await apiClient.delete(`/lecturers/${id}`)
   },
 }
 

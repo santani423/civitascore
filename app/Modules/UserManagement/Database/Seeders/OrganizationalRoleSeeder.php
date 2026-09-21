@@ -111,7 +111,10 @@ class OrganizationalRoleSeeder extends Seeder
             'question_bank.read', 'question_bank.create', 'question_bank.update', 'question_bank.delete',
         ],
         'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read'],
-        'hr_administrator' => ['user_roles.read', 'users.read', 'employees.read', 'lecturers.read'],
+        'hr_administrator' => [
+            'user_roles.read', 'users.read', 'employees.read',
+            'lecturers.read', 'lecturers.create', 'lecturers.update', 'lecturers.delete',
+        ],
         'library_administrator' => ['file_uploads.read', 'file_uploads.delete', 'books.read'],
         'auditor' => [
             'audit_logs.read', 'approval_requests.read',

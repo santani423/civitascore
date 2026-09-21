@@ -36,6 +36,16 @@ export interface Lecturer {
   created_at: string
 }
 
+export interface StoreLecturerPayload {
+  faculty_id?: string | null
+  nidn: string
+  name: string
+  email?: string | null
+  is_active: boolean
+}
+
+export type UpdateLecturerPayload = Partial<StoreLecturerPayload>
+
 export interface Employee {
   id: string
   unit_kerja: string
