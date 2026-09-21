@@ -54,10 +54,6 @@ class ExamService
      */
     public function updateExam(Exam $exam, array $data): Exam
     {
-        if ($exam->is_published) {
-            throw new ConflictException('Ujian yang sudah dipublikasikan tidak dapat diubah konfigurasinya.');
-        }
-
         $exam->update($data);
 
         return $exam;

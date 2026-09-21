@@ -334,7 +334,7 @@ export function ExamDetailPage() {
                 Download Naskah
               </Button>
             )}
-            {canManage && exam && !exam.is_published && <Button onClick={() => setShowExamForm(true)}>Ubah Ujian</Button>}
+            {canManage && exam && <Button onClick={() => setShowExamForm(true)}>Ubah Ujian</Button>}
           </div>
         }
       />
