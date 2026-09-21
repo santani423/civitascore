@@ -259,6 +259,12 @@ class ExamService
         }
 
         return DB::transaction(fn (): ExamAttempt => ExamAttempt::query()->create([
+            // Set explicitly rather than relying on TenantScoped's
+            // TenantContext auto-fill: the public NIM-based access route
+            // (PublicExamController::access() -> startPublicAttempt()) is
+            // guest/unauthenticated and has no resolved tenant context, so
+            // university_id would otherwise be left null (spec §4).
+            'university_id' => $exam->university_id,
             'exam_id' => $exam->id,
             'krs_item_id' => $krsItem->id,
             'attempt_number' => $attemptNumber,
