@@ -100,7 +100,7 @@ class OrganizationalRoleSeeder extends Seeder
             'notification_templates.create', 'notification_templates.read', 'notification_templates.update',
             'file_uploads.read',
             'users.read',
-            'students.read', 'study_programs.read', 'classes.read',
+            'students.read', 'students.create', 'study_programs.read', 'classes.read',
             'curriculums.read', 'courses.read', 'krs.read', 'krs.create', 'krs.update', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],

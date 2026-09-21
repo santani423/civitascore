@@ -21,6 +21,7 @@ use Modules\Academic\Controllers\StudyProgramController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('students', [StudentController::class, 'index'])->middleware('permission:students.read');
+    Route::post('students', [StudentController::class, 'store'])->middleware('permission:students.create');
     Route::get('students/{student}', [StudentController::class, 'show'])->middleware('permission:students.read');
     Route::get('students/{student}/transcript', [StudentController::class, 'transcript'])->middleware('permission:students.read');
 

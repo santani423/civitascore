@@ -21,4 +21,9 @@ class StudentPolicy
     {
         return $user->hasPermissionTo('students.read');
     }
+
+    public function create(User $user): bool
+    {
+        return $user->hasPermissionTo('students.create');
+    }
 }

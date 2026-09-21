@@ -25,6 +25,7 @@ import type {
   StoreExamPayload,
   StoreExamQuestionPayload,
   StoreQuestionBankItemPayload,
+  StoreStudentPayload,
   StudentExam,
   StudentExamAttempt,
   StudentExamResult,
@@ -53,6 +54,11 @@ export const studentService = {
 
   async transcript(id: string): Promise<Transcript> {
     const response = await apiClient.get<ApiSuccessResponse<Transcript>>(`/students/${id}/transcript`)
+    return response.data.data
+  },
+
+  async create(payload: StoreStudentPayload): Promise<Student> {
+    const response = await apiClient.post<ApiSuccessResponse<Student>>('/students', payload)
     return response.data.data
   },
 }
