@@ -31,6 +31,7 @@ class ApprovalWorkflowResource extends JsonResource
                 'approver_type' => $step->approver_type->value,
                 'approver_role_id' => $step->approver_role_id,
                 'approver_user_id' => $step->approver_user_id,
+                'approver_position_id' => $step->approver_position_id,
                 'action_on_reject' => $step->action_on_reject->value,
             ])),
             'created_at' => $this->created_at?->toIso8601String(),

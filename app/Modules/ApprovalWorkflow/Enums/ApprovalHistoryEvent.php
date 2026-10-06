@@ -9,4 +9,6 @@ enum ApprovalHistoryEvent: string
     case Approved = 'approved';
     case Rejected = 'rejected';
     case ReturnedToPreviousStep = 'returned_to_previous_step';
+    case ReturnedToRequester = 'returned_to_requester';
+    case Resubmitted = 'resubmitted';
 }

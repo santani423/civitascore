@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Modules\ApprovalWorkflow\Contracts\ContextualApproverResolver;
+use Modules\ApprovalWorkflow\Contracts\NullContextualApproverResolver;
 use Modules\ApprovalWorkflow\Listeners\SendApprovalNotification;
 use Modules\Auth\Events\NewDeviceDetected;
 use Modules\Auth\Listeners\RecordNewDeviceLogin;
@@ -31,6 +33,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TenantContext::class);
         $this->app->bind(InstitutionContextResolver::class, UniversityInstitutionContextResolver::class);
         $this->app->bind(VirusScanner::class, NullVirusScanner::class);
+        // Modul SDM menimpa binding ini dengan resolver jabatan/atasan/kepala
+        // unit (HumanResourceServiceProvider); tanpa itu, approver
+        // kontekstual tidak pernah cocok dengan siapa pun.
+        $this->app->bindIf(ContextualApproverResolver::class, NullContextualApproverResolver::class);
     }
 
     /**

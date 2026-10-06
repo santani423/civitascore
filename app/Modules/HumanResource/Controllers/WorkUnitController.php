@@ -26,7 +26,7 @@ class WorkUnitController extends Controller
         $this->authorize('viewAny', WorkUnit::class);
 
         $paginator = ListQuery::paginate(
-            query: WorkUnit::query()->with('parent')->withCount('employees')
+            query: WorkUnit::query()->with(['parent', 'head'])->withCount('employees')
                 ->when(! $request->filled('sort'), fn ($query) => $query->orderBy('name')),
             request: $request,
             searchable: ['name', 'code'],
@@ -44,7 +44,7 @@ class WorkUnitController extends Controller
 
         $unit = WorkUnit::query()->create($data);
 
-        return ApiResponse::success(new WorkUnitResource($unit->load('parent')), 'Unit kerja ditambahkan.', status: 201);
+        return ApiResponse::success(new WorkUnitResource($unit->load(['parent', 'head'])), 'Unit kerja ditambahkan.', status: 201);
     }
 
     public function update(UpsertWorkUnitRequest $request, WorkUnit $workUnit, EmployeeService $employees): JsonResponse
@@ -63,7 +63,7 @@ class WorkUnitController extends Controller
             });
         }
 
-        return ApiResponse::success(new WorkUnitResource($workUnit->load('parent')), 'Unit kerja diperbarui.');
+        return ApiResponse::success(new WorkUnitResource($workUnit->load(['parent', 'head'])), 'Unit kerja diperbarui.');
     }
 
     public function destroy(WorkUnit $workUnit): JsonResponse
@@ -93,6 +93,9 @@ class WorkUnitController extends Controller
         }
         if (! empty($data['study_program_id'])) {
             StudyProgram::query()->whereKey($data['study_program_id'])->firstOrFail();
+        }
+        if (! empty($data['head_employee_id'])) {
+            Employee::query()->whereKey($data['head_employee_id'])->where('is_active', true)->firstOrFail();
         }
 
         return $data;

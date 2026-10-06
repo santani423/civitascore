@@ -1,7 +1,10 @@
 <?php
 
 use App\Models\User;
+use Modules\ApprovalWorkflow\Contracts\ContextualApproverResolver;
+use Modules\ApprovalWorkflow\Contracts\NullContextualApproverResolver;
 use Modules\ApprovalWorkflow\Enums\ApprovalApproverType;
+use Modules\ApprovalWorkflow\Models\ApprovalRequest;
 use Modules\ApprovalWorkflow\Models\ApprovalWorkflowStep;
 use Modules\ApprovalWorkflow\Support\ApproverResolver;
 use Modules\UserManagement\Models\Role;
@@ -13,7 +16,7 @@ test('a User-type step resolves immediately to its configured approver_user_id',
         'approver_user_id' => $approver->id,
     ]);
 
-    $resolved = (new ApproverResolver)->resolveAssignedUserId($step);
+    $resolved = (new ApproverResolver(new NullContextualApproverResolver))->resolveAssignedUserId($step);
 
     expect($resolved)->toBe($approver->id);
 });
@@ -26,13 +29,37 @@ test('a Role-type step deliberately resolves to null (checked at authorization t
         'approver_user_id' => null,
     ]);
 
-    $resolved = (new ApproverResolver)->resolveAssignedUserId($step);
+    $resolved = (new ApproverResolver(new NullContextualApproverResolver))->resolveAssignedUserId($step);
 
     expect($resolved)->toBeNull();
 });
 
-test('a Position-type step throws, since it is unsupported in Phase 1', function () {
+test('a Position-type step no longer throws — without a contextual resolver nobody is assigned', function () {
     $step = ApprovalWorkflowStep::factory()->create(['approver_type' => ApprovalApproverType::Position]);
 
-    (new ApproverResolver)->resolveAssignedUserId($step);
-})->throws(LogicException::class);
+    $resolved = (new ApproverResolver(new NullContextualApproverResolver))->resolveAssignedUserId($step);
+
+    expect($resolved)->toBeNull();
+});
+
+test('a contextual step is pinned to the single eligible user, never to the requester', function () {
+    $requester = User::factory()->create();
+    $holder = User::factory()->create();
+    $step = ApprovalWorkflowStep::factory()->create(['approver_type' => ApprovalApproverType::Position]);
+    $request = new ApprovalRequest(['requested_by' => $requester->id]);
+
+    $contextual = new class([$requester->id, $holder->id]) implements ContextualApproverResolver
+    {
+        /** @param list<string> $ids */
+        public function __construct(private array $ids) {}
+
+        public function resolveUserIds(ApprovalWorkflowStep $step, ApprovalRequest $request): array
+        {
+            return $this->ids;
+        }
+    };
+
+    $resolved = (new ApproverResolver($contextual))->resolveAssignedUserId($step, $request);
+
+    expect($resolved)->toBe($holder->id);
+});

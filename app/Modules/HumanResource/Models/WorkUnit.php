@@ -38,7 +38,7 @@ class WorkUnit extends Model implements ScopesToInstitution
     /** @use HasFactory<WorkUnitFactory> */
     use Auditable, HasFactory, HasUlids, TenantScoped;
 
-    protected $fillable = ['university_id', 'parent_id', 'faculty_id', 'study_program_id', 'code', 'name', 'type', 'is_active'];
+    protected $fillable = ['university_id', 'parent_id', 'faculty_id', 'study_program_id', 'head_employee_id', 'code', 'name', 'type', 'is_active'];
 
     protected function casts(): array
     {
@@ -78,6 +78,16 @@ class WorkUnit extends Model implements ScopesToInstitution
     public function studyProgram(): BelongsTo
     {
         return $this->belongsTo(StudyProgram::class);
+    }
+
+    /**
+     * Kepala unit — dasar approver `unit_head` pada pengajuan SDM.
+     *
+     * @return BelongsTo<Employee, $this>
+     */
+    public function head(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'head_employee_id');
     }
 
     /**

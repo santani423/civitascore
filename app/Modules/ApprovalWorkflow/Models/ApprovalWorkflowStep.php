@@ -21,6 +21,7 @@ use Modules\UserManagement\Models\Role;
  * @property ApprovalApproverType $approver_type
  * @property string|null $approver_role_id
  * @property string|null $approver_user_id
+ * @property string|null $approver_position_id
  * @property ApprovalRejectAction $action_on_reject
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -52,7 +53,7 @@ class ApprovalWorkflowStep extends Model
 
     protected $fillable = [
         'approval_workflow_id', 'sequence', 'name', 'approver_type',
-        'approver_role_id', 'approver_user_id', 'action_on_reject',
+        'approver_role_id', 'approver_user_id', 'approver_position_id', 'action_on_reject',
     ];
 
     protected function casts(): array

@@ -10,6 +10,7 @@ use Modules\ApprovalWorkflow\Models\ApprovalRequestStep;
 use Modules\ApprovalWorkflow\Requests\ApproveStepRequest;
 use Modules\ApprovalWorkflow\Requests\DelegateStepRequest;
 use Modules\ApprovalWorkflow\Requests\RejectStepRequest;
+use Modules\ApprovalWorkflow\Requests\ReturnStepRequest;
 use Modules\ApprovalWorkflow\Resources\ApprovalRequestResource;
 use Modules\ApprovalWorkflow\Services\ApprovalActionService;
 
@@ -33,6 +34,15 @@ class ApprovalRequestStepController extends Controller
         $approvalRequest = $this->actions->reject($approvalRequestStep, $request->user(), $request->validated('comment'));
 
         return ApiResponse::success(new ApprovalRequestResource($approvalRequest), 'Langkah berhasil ditolak.');
+    }
+
+    public function returnToRequester(ReturnStepRequest $request, ApprovalRequestStep $approvalRequestStep): JsonResponse
+    {
+        $this->authorize('act', $approvalRequestStep);
+
+        $approvalRequest = $this->actions->returnToRequester($approvalRequestStep, $request->user(), $request->validated('comment'));
+
+        return ApiResponse::success(new ApprovalRequestResource($approvalRequest), 'Pengajuan dikembalikan ke pemohon untuk direvisi.');
     }
 
     public function delegate(DelegateStepRequest $request, ApprovalRequestStep $approvalRequestStep): JsonResponse

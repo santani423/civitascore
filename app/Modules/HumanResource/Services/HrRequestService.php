@@ -56,11 +56,7 @@ class HrRequestService
         }
 
         if ($type === HrRequestType::DataChange) {
-            $changes = (array) data_get($data, 'payload.changes', []);
-
-            if ($changes === [] || array_diff(array_keys($changes), self::DATA_CHANGE_FIELDS) !== []) {
-                throw ValidationException::withMessages(['payload.changes' => 'Isi minimal satu data yang ingin diubah (nama, email, telepon, alamat, jenis kelamin, tempat/tanggal lahir, atau NIK).']);
-            }
+            $this->assertValidDataChange($data);
         }
 
         $workflow = $this->resolveWorkflow($type);
@@ -94,7 +90,11 @@ class HrRequestService
     public function approve(HrRequest $hrRequest, User $actor, ?string $note): HrRequest
     {
         $step = $this->actionableStep($hrRequest, $actor);
-        $this->approvalActions->approve($step, $actor, $note);
+
+        DB::transaction(function () use ($hrRequest, $step, $actor, $note): void {
+            $this->audit->recordAction($hrRequest, AuditAction::Approved, ['step' => $step->workflowStep->name, 'note' => $note]);
+            $this->approvalActions->approve($step, $actor, $note);
+        });
 
         return $hrRequest->refresh();
     }
@@ -102,20 +102,139 @@ class HrRequestService
     public function reject(HrRequest $hrRequest, User $actor, string $note): HrRequest
     {
         $step = $this->actionableStep($hrRequest, $actor);
-        $this->approvalActions->reject($step, $actor, $note);
+
+        DB::transaction(function () use ($hrRequest, $step, $actor, $note): void {
+            $this->audit->recordAction($hrRequest, AuditAction::Rejected, ['step' => $step->workflowStep->name, 'note' => $note]);
+            $this->approvalActions->reject($step, $actor, $note);
+        });
 
         return $hrRequest->refresh();
     }
 
     /**
-     * Dibatalkan pemohon (atau SDM) selama masih menunggu. ApprovalRequest
-     * terkait di-soft-delete supaya tidak lagi muncul di kotak persetujuan
-     * mana pun.
+     * Dikembalikan ke pemohon untuk direvisi (catatan wajib). Pemohon lalu
+     * merevisi dan mengajukan ulang lewat resubmit().
+     */
+    public function returnToRequester(HrRequest $hrRequest, User $actor, string $note): HrRequest
+    {
+        $step = $this->actionableStep($hrRequest, $actor);
+
+        DB::transaction(function () use ($hrRequest, $step, $actor, $note): void {
+            $this->audit->recordAction($hrRequest, AuditAction::Returned, ['step' => $step->workflowStep->name, 'note' => $note]);
+            $this->approvalActions->returnToRequester($step, $actor, $note);
+        });
+
+        return $hrRequest->refresh();
+    }
+
+    /**
+     * Setujui banyak pengajuan sekaligus (mis. 20 cuti). Setiap pengajuan
+     * diproses & diotorisasi sendiri-sendiri — satu yang gagal tidak
+     * membatalkan yang lain; hasil per pengajuan dikembalikan ke klien.
+     *
+     * @param  array<int, string>  $ids
+     * @return array<int, array{id: string, ok: bool, message: string}>
+     */
+    public function bulkApprove(array $ids, User $actor, ?string $note): array
+    {
+        $results = [];
+
+        foreach (HrRequest::query()->whereKey($ids)->get() as $hrRequest) {
+            try {
+                if (! $actor->can('approve', $hrRequest)) {
+                    throw new ConflictException('Anda tidak berwenang menyetujui jenis pengajuan ini.');
+                }
+
+                $this->approve($hrRequest, $actor, $note);
+                $results[] = ['id' => $hrRequest->id, 'ok' => true, 'message' => 'Disetujui.'];
+            } catch (ConflictException|AuthorizationException $exception) {
+                $results[] = ['id' => $hrRequest->id, 'ok' => false, 'message' => $exception->getMessage() ?: 'Tidak dapat diproses.'];
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Revisi isi pengajuan yang dikembalikan lalu ajukan ulang. Validasi sama
+     * dengan pengajuan baru (pegawai aktif, perubahan data sah; untuk cuti:
+     * tidak tumpang tindih & kuota cukup — dicek LeaveService). Alur
+     * persetujuan dimulai lagi dari langkah pertama.
+     *
+     * @param  array<string, mixed>  $data  title, description, payload, attachment_file_id
+     */
+    public function resubmit(HrRequest $hrRequest, array $data, User $actor): HrRequest
+    {
+        if ($hrRequest->status !== HrRequestStatus::Returned) {
+            throw new ConflictException('Hanya pengajuan yang dikembalikan yang dapat diajukan ulang.');
+        }
+
+        $employee = $hrRequest->employee;
+
+        if ($employee === null || ! $employee->is_active) {
+            throw new ConflictException('Pegawai nonaktif tidak dapat mengajukan permohonan.');
+        }
+
+        if ($hrRequest->type === HrRequestType::DataChange && array_key_exists('payload', $data)) {
+            $this->assertValidDataChange($data);
+        }
+
+        $approval = $hrRequest->approvalRequest;
+
+        if ($approval === null) {
+            throw new ConflictException('Pengajuan ini tidak terhubung ke alur persetujuan.');
+        }
+
+        return DB::transaction(function () use ($hrRequest, $data, $actor, $approval): HrRequest {
+            $revision = Arr::only($data, ['title', 'description', 'payload', 'attachment_file_id']);
+
+            if ($revision !== []) {
+                $this->saveWithFiles($hrRequest, $revision, ['attachment_file_id'], $actor);
+            }
+
+            $hrRequest->update(['status' => HrRequestStatus::Pending, 'returned_at' => null]);
+            $hrRequest->leaveRequest?->update(['status' => LeaveStatus::Submitted, 'submitted_at' => now()]);
+
+            $this->approvalActions->resubmit($approval, $actor);
+            $this->audit->recordAction($hrRequest, AuditAction::Resubmitted, ['resubmission' => $approval->refresh()->resubmission_count]);
+
+            return $hrRequest->refresh();
+        });
+    }
+
+    /**
+     * Dipanggil listener saat ApprovalRequest dikembalikan ke pemohon.
+     */
+    public function applyReturn(ApprovalRequest $approval, string $note): void
+    {
+        $hrRequest = HrRequest::query()->where('approval_request_id', $approval->id)->first();
+
+        if ($hrRequest === null || $hrRequest->status !== HrRequestStatus::Pending) {
+            return;
+        }
+
+        DB::transaction(function () use ($hrRequest, $note): void {
+            $hrRequest->update(['status' => HrRequestStatus::Returned, 'returned_at' => now(), 'approval_note' => $note]);
+            $hrRequest->leaveRequest?->update(['status' => LeaveStatus::Returned, 'approval_note' => $note]);
+        });
+
+        if ($hrRequest->employee !== null) {
+            $this->notifications->notifyEmployee($hrRequest->employee, 'hr.request_returned', [
+                'title' => $hrRequest->title,
+                'note' => $note,
+            ]);
+        }
+    }
+
+    /**
+     * Dibatalkan pemohon (atau SDM) selama masih menunggu atau dikembalikan.
+     * ApprovalRequest terkait di-soft-delete supaya tidak lagi muncul di
+     * kotak persetujuan mana pun.
      */
     public function cancel(HrRequest $hrRequest): HrRequest
     {
-        if ($hrRequest->status !== HrRequestStatus::Pending) {
-            throw new ConflictException('Hanya pengajuan yang masih menunggu yang dapat dibatalkan.');
+        if (! in_array($hrRequest->status, [HrRequestStatus::Pending, HrRequestStatus::Returned], true)) {
+            throw new ConflictException('Hanya pengajuan yang masih menunggu atau dikembalikan yang dapat dibatalkan.');
         }
 
         DB::transaction(function () use ($hrRequest): void {
@@ -285,6 +404,18 @@ class HrRequestService
         }
 
         return $workflow;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function assertValidDataChange(array $data): void
+    {
+        $changes = (array) data_get($data, 'payload.changes', []);
+
+        if ($changes === [] || array_diff(array_keys($changes), self::DATA_CHANGE_FIELDS) !== []) {
+            throw ValidationException::withMessages(['payload.changes' => 'Isi minimal satu data yang ingin diubah (nama, email, telepon, alamat, jenis kelamin, tempat/tanggal lahir, NIK, NPWP, atau rekening).']);
+        }
     }
 
     private function applyDataChange(HrRequest $hrRequest): void

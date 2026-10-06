@@ -8,6 +8,8 @@ use Modules\HumanResource\Enums\EducationLevel;
 use Modules\HumanResource\Enums\EmploymentStatus;
 use Modules\HumanResource\Enums\Gender;
 use Modules\HumanResource\Enums\LecturerStatus;
+use Modules\HumanResource\Enums\MaritalStatus;
+use Modules\HumanResource\Enums\Religion;
 use Modules\HumanResource\Enums\StaffCategory;
 
 /**
@@ -41,6 +43,17 @@ trait EmployeeRules
             'staff_category' => ['nullable', Rule::enum(StaffCategory::class)],
             'joined_at' => ['nullable', 'date'],
             'user_id' => ['nullable', 'string'],
+            'supervisor_employee_id' => ['nullable', 'string', Rule::notIn(array_filter([$ignoreEmployeeId]))],
+            'front_title' => ['nullable', 'string', 'max:50'],
+            'back_title' => ['nullable', 'string', 'max:100'],
+            'religion' => ['nullable', Rule::enum(Religion::class)],
+            'marital_status' => ['nullable', Rule::enum(MaritalStatus::class)],
+            'emergency_contact_name' => ['nullable', 'string', 'max:255'],
+            'emergency_contact_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
+            'npwp' => ['nullable', 'string', 'regex:/^[0-9.\-]{15,20}$/'],
+            'bank_name' => ['nullable', 'string', 'max:100'],
+            'bank_account_number' => ['nullable', 'string', 'max:30', 'regex:/^[0-9\-]+$/'],
+            'bank_account_name' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -79,6 +92,9 @@ trait EmployeeRules
             'nidn.required' => 'NIDN wajib diisi untuk dosen.',
             'phone.regex' => 'Nomor telepon hanya boleh berisi angka, spasi, +, -, dan tanda kurung.',
             'birth_date.before' => 'Tanggal lahir harus sebelum hari ini.',
+            'supervisor_employee_id.not_in' => 'Pegawai tidak dapat menjadi atasan dirinya sendiri.',
+            'npwp.regex' => 'Format NPWP tidak valid (15–16 digit, boleh dengan titik/strip).',
+            'bank_account_number.regex' => 'Nomor rekening hanya boleh berisi angka dan strip.',
         ];
     }
 }

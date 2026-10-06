@@ -10,6 +10,8 @@ use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Academic\Models\Employee;
+use Modules\AuditLog\Enums\AuditAction;
+use Modules\AuditLog\Services\AuditLogService;
 use Modules\HumanResource\Enums\EmployeeType;
 use Modules\HumanResource\Enums\EmploymentStatus;
 use Modules\HumanResource\Requests\StoreHrEmployeeRequest;
@@ -25,7 +27,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class HrEmployeeController extends Controller
 {
-    private const DETAIL_RELATIONS = ['lecturer', 'faculty', 'studyProgram', 'workUnit', 'rank', 'user'];
+    private const DETAIL_RELATIONS = ['lecturer', 'faculty', 'studyProgram', 'workUnit', 'rank', 'user', 'supervisor'];
 
     public function __construct(
         private readonly EmployeeService $employees,
@@ -105,6 +107,25 @@ class HrEmployeeController extends Controller
         $employee = $this->employees->activate($employee);
 
         return ApiResponse::success(new HrEmployeeDetailResource($employee->load(self::DETAIL_RELATIONS)), 'Pegawai diaktifkan kembali.');
+    }
+
+    /**
+     * Nilai lengkap data sensitif (NIK, NPWP, rekening). Terpisah dari
+     * detail supaya membuka data sensitif adalah tindakan eksplisit — dan
+     * setiap aksesnya tercatat di audit log (siapa, kapan, data siapa).
+     */
+    public function sensitive(Request $request, Employee $employee, AuditLogService $audit): JsonResponse
+    {
+        $this->authorize('hr.employees.view', $employee);
+        abort_unless($request->user()?->hasPermissionTo('hr_sensitive.read'), 403, 'Anda tidak memiliki izin melihat data sensitif pegawai.');
+
+        $audit->recordAction($employee, AuditAction::ViewedSensitive, ['fields' => HrEmployeeDetailResource::SENSITIVE_FIELDS]);
+
+        return ApiResponse::success([
+            'nik' => $employee->nik,
+            'npwp' => $employee->npwp,
+            'bank_account_number' => $employee->bank_account_number,
+        ]);
     }
 
     public function destroy(Employee $employee): JsonResponse

@@ -37,7 +37,7 @@ class ApprovalRequestService
                 $requestStep = $request->steps()->create([
                     'approval_workflow_step_id' => $templateStep->id,
                     'sequence' => $templateStep->sequence,
-                    'assigned_approver_user_id' => $this->approverResolver->resolveAssignedUserId($templateStep),
+                    'assigned_approver_user_id' => $this->approverResolver->resolveAssignedUserId($templateStep, $request),
                     'status' => ApprovalRequestStepStatus::Pending,
                 ]);
 

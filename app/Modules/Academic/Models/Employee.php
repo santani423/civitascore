@@ -21,6 +21,8 @@ use Modules\HumanResource\Enums\EducationLevel;
 use Modules\HumanResource\Enums\EmployeeType;
 use Modules\HumanResource\Enums\EmploymentStatus;
 use Modules\HumanResource\Enums\Gender;
+use Modules\HumanResource\Enums\MaritalStatus;
+use Modules\HumanResource\Enums\Religion;
 use Modules\HumanResource\Enums\StaffCategory;
 use Modules\HumanResource\Models\EmployeeCertification;
 use Modules\HumanResource\Models\EmployeeContract;
@@ -65,6 +67,17 @@ use Modules\Tenancy\Models\University;
  * @property string|null $work_unit_id
  * @property string|null $position_id
  * @property string|null $rank_id
+ * @property string|null $supervisor_employee_id
+ * @property string|null $front_title
+ * @property string|null $back_title
+ * @property Religion|null $religion
+ * @property MaritalStatus|null $marital_status
+ * @property string|null $emergency_contact_name
+ * @property string|null $emergency_contact_phone
+ * @property string|null $npwp
+ * @property string|null $bank_name
+ * @property string|null $bank_account_number
+ * @property string|null $bank_account_name
  * @property string|null $faculty_id
  * @property string|null $study_program_id
  * @property EducationLevel|null $highest_education
@@ -94,6 +107,8 @@ class Employee extends Model implements ScopesToInstitution
         'gender', 'birth_place', 'birth_date', 'phone', 'address', 'employment_status',
         'work_unit_id', 'position_id', 'rank_id', 'faculty_id', 'study_program_id',
         'highest_education', 'staff_category', 'joined_at', 'inactive_reason', 'inactive_at', 'is_active',
+        'supervisor_employee_id', 'front_title', 'back_title', 'religion', 'marital_status',
+        'emergency_contact_name', 'emergency_contact_phone', 'npwp', 'bank_name', 'bank_account_number', 'bank_account_name',
     ];
 
     /**
@@ -103,7 +118,16 @@ class Employee extends Model implements ScopesToInstitution
      *
      * @var list<string>
      */
-    protected $hidden = ['nik'];
+    protected $hidden = ['nik', 'npwp', 'bank_account_number'];
+
+    /**
+     * Dicatat tersamar (****1234) di audit log, bukan dibuang — perubahan
+     * NIK/NPWP/rekening tetap terlacak tanpa membocorkan nilainya
+     * (RANCANGAN-AKUN-SDM R18). Dibaca AuditLogService.
+     *
+     * @var list<string>
+     */
+    public array $auditMasked = ['nik', 'npwp', 'bank_account_number'];
 
     /**
      * Sama dengan default kolom di migration — supaya instance yang baru
@@ -125,6 +149,10 @@ class Employee extends Model implements ScopesToInstitution
             'gender' => Gender::class,
             'highest_education' => EducationLevel::class,
             'staff_category' => StaffCategory::class,
+            'religion' => Religion::class,
+            'marital_status' => MaritalStatus::class,
+            'npwp' => 'encrypted',
+            'bank_account_number' => 'encrypted',
             'birth_date' => 'immutable_date',
             'joined_at' => 'immutable_date',
             'inactive_at' => 'immutable_date',
@@ -180,6 +208,34 @@ class Employee extends Model implements ScopesToInstitution
     public function rank(): BelongsTo
     {
         return $this->belongsTo(Rank::class);
+    }
+
+    /**
+     * Atasan langsung — dasar approver `direct_supervisor` pada pengajuan SDM.
+     *
+     * @return BelongsTo<Employee, $this>
+     */
+    public function supervisor(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'supervisor_employee_id');
+    }
+
+    /**
+     * @return HasMany<Employee, $this>
+     */
+    public function subordinates(): HasMany
+    {
+        return $this->hasMany(Employee::class, 'supervisor_employee_id');
+    }
+
+    /**
+     * Nama bergelar, mis. "Dr. Budi Santoso, S.Kom., M.T.".
+     */
+    public function fullNameWithTitles(): string
+    {
+        $name = trim(($this->front_title ? $this->front_title.' ' : '').$this->name);
+
+        return $this->back_title ? "{$name}, {$this->back_title}" : $name;
     }
 
     /**

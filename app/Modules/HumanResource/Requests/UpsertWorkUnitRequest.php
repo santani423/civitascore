@@ -30,6 +30,7 @@ class UpsertWorkUnitRequest extends FormRequest
             'parent_id' => ['nullable', 'string', Rule::notIn(array_filter([$current?->id]))],
             'faculty_id' => ['nullable', 'string'],
             'study_program_id' => ['nullable', 'string'],
+            'head_employee_id' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

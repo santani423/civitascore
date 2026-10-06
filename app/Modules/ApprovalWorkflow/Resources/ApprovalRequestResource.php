@@ -4,6 +4,7 @@ namespace Modules\ApprovalWorkflow\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\ApprovalWorkflow\Enums\ApprovalRequestStatus;
 use Modules\ApprovalWorkflow\Models\ApprovalRequest;
 
 /**
@@ -25,7 +26,10 @@ class ApprovalRequestResource extends JsonResource
             'requested_by' => $this->requested_by,
             'current_step_id' => $this->current_step_id,
             'status' => $this->status->value,
+            'resubmission_count' => $this->resubmission_count,
             'submitted_at' => $this->submitted_at?->toIso8601String(),
+            'returned_at' => $this->returned_at?->toIso8601String(),
+            'can_resubmit' => $this->status === ApprovalRequestStatus::Returned && $request->user()?->id === $this->requested_by,
             'completed_at' => $this->completed_at?->toIso8601String(),
             'notes' => $this->notes,
             'histories' => ApprovalHistoryResource::collection($this->whenLoaded('histories')),

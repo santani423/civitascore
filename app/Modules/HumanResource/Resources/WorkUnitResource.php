@@ -22,6 +22,8 @@ class WorkUnitResource extends JsonResource
             'parent_name' => $this->whenLoaded('parent', fn () => $this->parent?->name),
             'faculty_id' => $this->faculty_id,
             'study_program_id' => $this->study_program_id,
+            'head_employee_id' => $this->head_employee_id,
+            'head_name' => $this->whenLoaded('head', fn () => $this->head?->name),
             'code' => $this->code,
             'name' => $this->name,
             'type' => $this->type->value,

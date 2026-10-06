@@ -237,6 +237,21 @@ class EmployeeService
             }
         }
 
+        if (! empty($data['supervisor_employee_id'])) {
+            $supervisor = Employee::query()->whereKey($data['supervisor_employee_id'])->firstOrFail();
+
+            // Rantai atasan tidak boleh melingkar (A atasan B, B atasan A) —
+            // approver `direct_supervisor` akan berputar tanpa ujung.
+            for ($cursor = $supervisor, $depth = 0; $cursor !== null && $depth < 50; $depth++) {
+                if ($current !== null && $cursor->id === $current->id) {
+                    throw ValidationException::withMessages(['supervisor_employee_id' => 'Atasan ini adalah bawahan (langsung/tidak langsung) dari pegawai tersebut.']);
+                }
+                $cursor = $cursor->supervisor_employee_id !== null
+                    ? Employee::query()->whereKey($cursor->supervisor_employee_id)->first()
+                    : null;
+            }
+        }
+
         if (! empty($data['user_id'])) {
             $isMember = UserUniversity::query()
                 ->where('user_id', $data['user_id'])

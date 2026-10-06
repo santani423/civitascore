@@ -16,10 +16,21 @@ use Modules\ApprovalWorkflow\Events\ApprovalRequestStepAdvanced;
 use Modules\ApprovalWorkflow\Models\ApprovalHistory;
 use Modules\ApprovalWorkflow\Models\ApprovalRequest;
 use Modules\ApprovalWorkflow\Models\ApprovalRequestStep;
+use Modules\ApprovalWorkflow\Events\ApprovalRequestResubmitted;
+use Modules\ApprovalWorkflow\Events\ApprovalRequestReturned;
 use Modules\ApprovalWorkflow\Notifications\ApprovalStepAssigned;
+use Modules\ApprovalWorkflow\Support\ApproverResolver;
+use Modules\SystemSetting\Services\SystemSettingService;
 
 class ApprovalActionService
 {
+    private const DEFAULT_MAX_RESUBMISSIONS = 3;
+
+    public function __construct(
+        private readonly ApproverResolver $approverResolver,
+        private readonly SystemSettingService $settings,
+    ) {}
+
     public function approve(ApprovalRequestStep $step, User $actor, ?string $comment = null): ApprovalRequest
     {
         $this->guardActionable($step);
@@ -163,6 +174,109 @@ class ApprovalActionService
             ]);
 
             $delegateTo->notify(new ApprovalStepAssigned($step->refresh()));
+
+            return $request;
+        });
+    }
+
+    /**
+     * Mengembalikan pengajuan ke pemohon untuk direvisi (berbeda dengan
+     * ApprovalRejectAction::ReturnToPreviousStep yang mengembalikan ke
+     * approver sebelumnya). Pengajuan berhenti di status `returned` sampai
+     * pemohon mengajukan ulang lewat resubmit().
+     */
+    public function returnToRequester(ApprovalRequestStep $step, User $actor, string $comment): ApprovalRequest
+    {
+        $this->guardActionable($step);
+
+        return DB::transaction(function () use ($step, $actor, $comment): ApprovalRequest {
+            $step->actions()->create([
+                'acted_by' => $actor->id,
+                'action' => ApprovalActionType::Return,
+                'comment' => $comment,
+            ]);
+
+            $step->update(['status' => ApprovalRequestStepStatus::Returned, 'acted_at' => now()]);
+
+            $request = $step->request;
+            $request->update([
+                'status' => ApprovalRequestStatus::Returned,
+                'current_step_id' => null,
+                'returned_at' => now(),
+            ]);
+
+            ApprovalHistory::create([
+                'approval_request_id' => $request->id,
+                'approval_request_step_id' => $step->id,
+                'event' => ApprovalHistoryEvent::ReturnedToRequester,
+                'actor_id' => $actor->id,
+                'description' => "Dikembalikan ke pemohon pada langkah '{$step->workflowStep->name}': {$comment}",
+            ]);
+
+            $request->refresh();
+
+            ApprovalRequestReturned::dispatch($request, $comment);
+
+            return $request;
+        });
+    }
+
+    /**
+     * Pengajuan yang dikembalikan diajukan ulang: seluruh langkah direset dan
+     * alur dimulai lagi dari langkah pertama (persetujuan sebelumnya tidak
+     * berlaku lagi karena isi pengajuan sudah berubah). Jumlah pengajuan
+     * ulang dibatasi pengaturan `approval.max_resubmissions`.
+     */
+    public function resubmit(ApprovalRequest $request, User $actor): ApprovalRequest
+    {
+        if ($request->status !== ApprovalRequestStatus::Returned) {
+            throw new ConflictException('Hanya pengajuan yang dikembalikan yang dapat diajukan ulang.');
+        }
+
+        $limit = (int) $this->settings->get('approval.max_resubmissions', self::DEFAULT_MAX_RESUBMISSIONS);
+
+        if ($request->resubmission_count >= $limit) {
+            throw new ConflictException("Pengajuan ini sudah diajukan ulang {$limit} kali, batas maksimum tercapai. Silakan buat pengajuan baru.");
+        }
+
+        return DB::transaction(function () use ($request, $actor): ApprovalRequest {
+            $request->loadMissing('steps.workflowStep');
+            $firstStep = null;
+
+            foreach ($request->steps as $step) {
+                $step->update([
+                    'status' => ApprovalRequestStepStatus::Pending,
+                    'acted_at' => null,
+                    'assigned_approver_user_id' => $this->approverResolver->resolveAssignedUserId($step->workflowStep, $request),
+                ]);
+                $firstStep ??= $step;
+            }
+
+            $firstStep?->update(['status' => ApprovalRequestStepStatus::InReview]);
+
+            $request->update([
+                'status' => ApprovalRequestStatus::InProgress,
+                'current_step_id' => $firstStep?->id,
+                'resubmission_count' => $request->resubmission_count + 1,
+                'returned_at' => null,
+                'completed_at' => null,
+            ]);
+
+            ApprovalHistory::create([
+                'approval_request_id' => $request->id,
+                'approval_request_step_id' => $firstStep?->id,
+                'event' => ApprovalHistoryEvent::Resubmitted,
+                'actor_id' => $actor->id,
+                'description' => 'Pengajuan direvisi dan diajukan ulang.',
+            ]);
+
+            $request->refresh();
+
+            ApprovalRequestResubmitted::dispatch($request);
+
+            if ($firstStep !== null) {
+                ApprovalRequestStepAdvanced::dispatch($request, $firstStep->refresh());
+            }
 
             return $request;
         });

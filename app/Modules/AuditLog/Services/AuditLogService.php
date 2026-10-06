@@ -2,7 +2,9 @@
 
 namespace Modules\AuditLog\Services;
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\AuditLog\Enums\AuditAction;
@@ -21,9 +23,13 @@ class AuditLogService
      */
     public function record(Model $model, AuditAction $action, array $oldValues, array $newValues): AuditLog
     {
-        $hidden = $model->getHidden();
-        $oldValues = $this->withoutHidden($oldValues, $hidden);
-        $newValues = $this->withoutHidden($newValues, $hidden);
+        // Atribut "masked" dicatat tersamar (****1234) — perubahannya tetap
+        // terlacak tanpa audit log menjadi jalur kebocoran. Selain itu,
+        // atribut $hidden dibuang sepenuhnya seperti sebelumnya.
+        $masked = $this->maskedAttributes($model);
+        $hidden = array_diff($model->getHidden(), $masked);
+        $oldValues = $this->mask($model, $this->withoutHidden($oldValues, $hidden), $masked);
+        $newValues = $this->mask($model, $this->withoutHidden($newValues, $hidden), $masked);
 
         return AuditLog::create([
             'user_id' => Auth::id(),
@@ -36,6 +42,30 @@ class AuditLogService
             'ip_address' => $this->request->ip(),
             'user_agent' => $this->request->userAgent(),
         ]);
+    }
+
+    /**
+     * Aksi non-CRUD atas sebuah record (setujui, verifikasi, unduh, lihat
+     * data sensitif, tautkan akun, dst.) — `context` disimpan sebagai
+     * new_values supaya tampil di detail audit log.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    public function recordAction(Model $model, AuditAction $action, array $context = []): AuditLog
+    {
+        return $this->record($model, $action, [], $context);
+    }
+
+    public static function maskValue(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $value = (string) $value;
+        $visible = mb_strlen($value) > 4 ? mb_substr($value, -4) : '';
+
+        return '****'.$visible;
     }
 
     /**
@@ -61,6 +91,46 @@ class AuditLogService
      * @param  array<int, string>  $hidden
      * @return array<string, mixed>
      */
+    /**
+     * @return array<int, string>
+     */
+    private function maskedAttributes(Model $model): array
+    {
+        return property_exists($model, 'auditMasked') ? (array) $model->auditMasked : [];
+    }
+
+    /**
+     * Nilai mentah dari getAttributes()/getChanges() untuk kolom ber-cast
+     * `encrypted` masih berupa ciphertext — didekripsi dulu sebelum
+     * disamarkan, supaya 4 digit terakhir yang tampil memang nilai aslinya.
+     *
+     * @param  array<string, mixed>  $values
+     * @param  array<int, string>  $masked
+     * @return array<string, mixed>
+     */
+    private function mask(Model $model, array $values, array $masked): array
+    {
+        foreach ($masked as $key) {
+            if (! array_key_exists($key, $values)) {
+                continue;
+            }
+
+            $value = $values[$key];
+
+            if (is_string($value) && $model->hasCast($key, ['encrypted'])) {
+                try {
+                    $value = Crypt::decryptString($value);
+                } catch (DecryptException) {
+                    // Sudah plaintext (mis. nilai yang baru di-set di memori).
+                }
+            }
+
+            $values[$key] = self::maskValue($value);
+        }
+
+        return $values;
+    }
+
     private function withoutHidden(array $values, array $hidden): array
     {
         foreach ($hidden as $key) {

@@ -26,6 +26,8 @@ use Modules\Tenancy\Models\University;
  * @property string $requested_by
  * @property string|null $current_step_id
  * @property ApprovalRequestStatus $status
+ * @property int $resubmission_count
+ * @property CarbonImmutable|null $returned_at
  * @property CarbonImmutable|null $submitted_at
  * @property CarbonImmutable|null $completed_at
  * @property string|null $notes
@@ -71,14 +73,16 @@ class ApprovalRequest extends Model implements ScopesToInstitution
 
     protected $fillable = [
         'university_id', 'approval_workflow_id', 'requestable_type', 'requestable_id', 'requested_by',
-        'current_step_id', 'status', 'submitted_at', 'completed_at', 'notes',
+        'current_step_id', 'status', 'resubmission_count', 'submitted_at', 'returned_at', 'completed_at', 'notes',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => ApprovalRequestStatus::class,
+            'resubmission_count' => 'integer',
             'submitted_at' => 'datetime',
+            'returned_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }
