@@ -26,7 +26,7 @@ export function FacultyDistributionChart({ data, onBarClick }: FacultyDistributi
                 tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                interval={0}
+                interval="preserveStartEnd"
                 angle={-20}
                 textAnchor="end"
                 height={50}

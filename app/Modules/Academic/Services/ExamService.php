@@ -54,10 +54,6 @@ class ExamService
      */
     public function updateExam(Exam $exam, array $data): Exam
     {
-        if ($exam->is_published) {
-            throw new ConflictException('Ujian yang sudah dipublikasikan tidak dapat diubah konfigurasinya.');
-        }
-
         $exam->update($data);
 
         return $exam;
@@ -259,6 +255,12 @@ class ExamService
         }
 
         return DB::transaction(fn (): ExamAttempt => ExamAttempt::query()->create([
+            // Set explicitly rather than relying on TenantScoped's
+            // TenantContext auto-fill: the public NIM-based access route
+            // (PublicExamController::access() -> startPublicAttempt()) is
+            // guest/unauthenticated and has no resolved tenant context, so
+            // university_id would otherwise be left null (spec §4).
+            'university_id' => $exam->university_id,
             'exam_id' => $exam->id,
             'krs_item_id' => $krsItem->id,
             'attempt_number' => $attemptNumber,
@@ -289,7 +291,14 @@ class ExamService
 
         return ExamAttemptAnswer::query()->updateOrCreate(
             ['exam_attempt_id' => $attempt->id, 'exam_question_id' => $examQuestionId],
-            ['exam_question_option_id' => $examQuestionOptionId, 'answered_at' => now()],
+            [
+                // Explicit for the same reason as ExamAttempt::create() in
+                // startAttempt() above — no tenant context on the public
+                // guest route.
+                'university_id' => $attempt->university_id,
+                'exam_question_option_id' => $examQuestionOptionId,
+                'answered_at' => now(),
+            ],
         );
     }
 
@@ -467,6 +476,10 @@ class ExamService
             $penaltyPoints = $type->penaltyPoints();
 
             $violation = $attempt->violations()->create([
+                // Explicit for the same reason as ExamAttempt::create() in
+                // startAttempt() above — no tenant context on the public
+                // guest route.
+                'university_id' => $attempt->university_id,
                 'violation_type' => $type,
                 'sequence_number' => $sequenceNumber,
                 'penalty_points' => $penaltyPoints,

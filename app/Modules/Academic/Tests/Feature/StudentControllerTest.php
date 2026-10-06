@@ -121,3 +121,75 @@ test('the student list can be filtered by class section', function () {
     expect($response->json('data'))->toHaveCount(1);
     expect($response->json('data.0.name'))->toBe('Enrolled Student');
 });
+
+test('creating a student requires the students.create permission', function () {
+    $university = University::factory()->create();
+    $user = User::factory()->create();
+    grantStudentPermission($user, $university, ['students.read']);
+
+    $this->actingAs($user)
+        ->withHeader('X-University-ID', $university->id)
+        ->postJson('/api/v1/students', [])
+        ->assertApiError(403);
+});
+
+test('a permitted user can create a student', function () {
+    $university = University::factory()->create();
+    app(TenantContext::class)->setUniversityId($university->id);
+
+    $faculty = Faculty::factory()->create(['university_id' => $university->id]);
+    $program = StudyProgram::factory()->create(['university_id' => $university->id, 'faculty_id' => $faculty->id]);
+
+    app(TenantContext::class)->setUniversityId(null);
+
+    $user = User::factory()->create();
+    grantStudentPermission($user, $university, ['students.create']);
+
+    $response = $this->actingAs($user)
+        ->withHeader('X-University-ID', $university->id)
+        ->postJson('/api/v1/students', [
+            'study_program_id' => $program->id,
+            'nim' => '20260099',
+            'name' => 'Mahasiswa Baru',
+            'email' => 'mahasiswa.baru@example.com',
+            'admission_year' => 2026,
+            'status' => 'active',
+            'enrolled_at' => '2026-08-01',
+        ]);
+
+    $response->assertApiSuccess(201);
+    expect($response->json('data.name'))->toBe('Mahasiswa Baru');
+    expect($response->json('data.nim'))->toBe('20260099');
+
+    $this->assertDatabaseHas('students', [
+        'university_id' => $university->id,
+        'nim' => '20260099',
+        'name' => 'Mahasiswa Baru',
+    ]);
+});
+
+test('creating a student rejects a NIM already used at the same university', function () {
+    $university = University::factory()->create();
+    app(TenantContext::class)->setUniversityId($university->id);
+
+    $faculty = Faculty::factory()->create(['university_id' => $university->id]);
+    $program = StudyProgram::factory()->create(['university_id' => $university->id, 'faculty_id' => $faculty->id]);
+    Student::factory()->create(['university_id' => $university->id, 'study_program_id' => $program->id, 'nim' => '20260099']);
+
+    app(TenantContext::class)->setUniversityId(null);
+
+    $user = User::factory()->create();
+    grantStudentPermission($user, $university, ['students.create']);
+
+    $this->actingAs($user)
+        ->withHeader('X-University-ID', $university->id)
+        ->postJson('/api/v1/students', [
+            'study_program_id' => $program->id,
+            'nim' => '20260099',
+            'name' => 'Mahasiswa Lain',
+            'admission_year' => 2026,
+            'status' => 'active',
+            'enrolled_at' => '2026-08-01',
+        ])
+        ->assertApiError(422);
+});

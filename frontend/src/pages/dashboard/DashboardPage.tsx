@@ -97,7 +97,7 @@ export function DashboardPage() {
         <>
           <SummaryCardsGrid summary={summary} isLoading={isLoading} links={cardLinks} />
 
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <StudentGrowthChart
               data={charts.student_growth ?? []}
               onPointClick={(point) =>
@@ -176,11 +176,11 @@ export function DashboardPage() {
         />
       )}
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
           <PendingApprovalsTable />
         </div>
-        <div className="xl:col-span-1">
+        <div className="lg:col-span-1">
           <AcademicAgendaList />
         </div>
       </div>

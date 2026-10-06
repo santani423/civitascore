@@ -9,12 +9,33 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Academic\Enums\KrsItemStatus;
 use Modules\Academic\Models\Student;
+use Modules\Academic\Models\StudyProgram;
+use Modules\Academic\Requests\StoreStudentRequest;
 use Modules\Academic\Resources\StudentResource;
 use Modules\Academic\Services\AcademicRecordService;
 
 class StudentController extends Controller
 {
     public function __construct(private readonly AcademicRecordService $records) {}
+
+    public function store(StoreStudentRequest $request): JsonResponse
+    {
+        $this->authorize('create', Student::class);
+
+        // Scoped findOrFail (not Rule::exists in the Request) so a
+        // study_program_id belonging to another tenant reads as "not
+        // found" rather than leaking cross-tenant existence — same
+        // reasoning as StoreKrsItemRequest/ExamService::createExam().
+        StudyProgram::query()->findOrFail((string) $request->validated('study_program_id'));
+
+        $student = Student::query()->create($request->validated());
+
+        return ApiResponse::success(
+            new StudentResource($student->load('studyProgram')),
+            'Mahasiswa berhasil ditambahkan.',
+            status: 201,
+        );
+    }
 
     public function transcript(Student $student): JsonResponse
     {

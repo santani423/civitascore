@@ -21,11 +21,11 @@ export function DashboardLayout() {
         onCloseMobile={() => setMobileOpen(false)}
       />
 
-      <div className="flex min-h-screen w-full flex-1 flex-col">
+      <div className="flex min-h-screen w-full min-w-0 flex-1 flex-col">
         <TenantModeBanner />
         <Header onMenuClick={handleMenuClick} />
 
-        <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6">
+        <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 sm:py-6">
           <Outlet />
         </main>
       </div>

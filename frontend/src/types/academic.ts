@@ -14,6 +14,17 @@ export interface Student {
   created_at: string
 }
 
+export interface StoreStudentPayload {
+  study_program_id: string
+  nim: string
+  name: string
+  email?: string | null
+  tanggal_lahir?: string | null
+  admission_year: number
+  status: StudentStatus
+  enrolled_at: string
+}
+
 export interface Lecturer {
   id: string
   faculty_id: string | null
@@ -24,6 +35,16 @@ export interface Lecturer {
   is_active: boolean
   created_at: string
 }
+
+export interface StoreLecturerPayload {
+  faculty_id?: string | null
+  nidn: string
+  name: string
+  email?: string | null
+  is_active: boolean
+}
+
+export type UpdateLecturerPayload = Partial<StoreLecturerPayload>
 
 export interface Employee {
   id: string

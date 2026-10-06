@@ -1,4 +1,4 @@
-import type { QuestionSelectionMode } from '@/types/academic'
+import type { Exam, QuestionSelectionMode } from '@/types/academic'
 
 /**
  * Aturan validasi konfigurasi ujian (spec §2/§8/§18), diduplikasi murni
@@ -73,6 +73,22 @@ export function examDistributionSummary({
   }
 
   return summary
+}
+
+/**
+ * Ujian sudah dipublikasikan DAN waktu sekarang ada dalam jendela
+ * starts_at/ends_at-nya — cermin dari ExamService::assertWithinSchedule di
+ * backend (app/Modules/Academic/Services/ExamService.php), dipakai untuk
+ * menyalakan polling aktivitas/pelanggaran near-real-time di halaman detail
+ * ujian (dosen) hanya selama peserta benar-benar bisa mengerjakan.
+ */
+export function isExamWindowOpen(exam: Pick<Exam, 'starts_at' | 'ends_at'>): boolean {
+  const now = new Date()
+
+  if (exam.starts_at && now < new Date(exam.starts_at)) return false
+  if (exam.ends_at && now > new Date(exam.ends_at)) return false
+
+  return true
 }
 
 export const QUESTION_SELECTION_MODE_LABEL: Record<QuestionSelectionMode, string> = {
