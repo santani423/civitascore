@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Tutorial Ujian Mahasiswa</title>
+<script src="timeline.js"></script>
+<style>
+:root{
+  --primary:#166534;--primary-h:#114f29;--success:#166534;--warning:#ca8a04;--danger:#dc2626;
+  --bg:#f8fafc;--surface:#fff;--hover:#f1f5f9;--border:#e2e8f0;--border-s:#cbd5e1;
+  --ink1:#0f172a;--ink2:#475569;--ink3:#94a3b8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:#0b1220;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;color:var(--ink1)}
+#frame{position:relative;width:1280px;height:720px;overflow:hidden;background:radial-gradient(1200px 600px at 80% -10%,#dcefe2 0,#eef3f0 45%,#e9eef3 100%)}
+#top{position:absolute;left:0;top:0;right:0;height:64px;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(255,255,255,.85);border-bottom:1px solid var(--border)}
+#top img{width:34px;height:34px;object-fit:contain}
+#top .brand{font-weight:700;font-size:18px}
+#top .sub{color:var(--ink2);font-size:15px;padding-left:12px;border-left:1px solid var(--border-s)}
+#chip{margin-left:auto;background:var(--primary);color:#fff;font-weight:600;font-size:15px;padding:7px 14px;border-radius:999px}
+#stage{position:absolute;left:0;top:64px;width:1280px;height:556px}
+.scene{position:absolute;inset:0;opacity:0;visibility:hidden}
+#cap{position:absolute;left:0;right:0;bottom:0;height:100px;background:#0f172a;display:flex;align-items:center;justify-content:center;padding:0 60px}
+#capText{color:#fff;font-size:25px;line-height:1.35;text-align:center;font-weight:500}
+#prog{position:absolute;left:0;bottom:0;height:4px;width:100%;background:rgba(255,255,255,.08)}
+#prog i{display:block;height:100%;background:#4ade80;width:0}
+#tap{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;pointer-events:none;opacity:0;z-index:50}
+#tap .dot{position:absolute;inset:8px;border-radius:50%;background:rgba(15,23,42,.35);border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+#tap .rip{position:absolute;inset:0;border-radius:50%;border:3px solid #22c55e;opacity:0}
+.hl{position:absolute;border:3px solid #f59e0b;border-radius:12px;box-shadow:0 0 0 9999px rgba(15,23,42,.0);opacity:0;pointer-events:none;z-index:20}
+
+/* generic */
+.row{display:flex;align-items:center}.between{justify-content:space-between}.g6{gap:6px}.g8{gap:8px}.g12{gap:12px}
+.h1{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.h2{font-size:30px;font-weight:800;letter-spacing:-.01em}
+.lead{font-size:19px;color:var(--ink2);line-height:1.5}
+.pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border-s);border-radius:999px;padding:9px 16px;font-weight:600;font-size:17px}
+.ic{width:1em;height:1em;flex-shrink:0;vertical-align:-.125em}
+.spin{animation:none}
+
+/* split layout */
+.split{position:absolute;inset:0;display:flex;align-items:center;gap:36px;padding:0 40px}
+.side{flex:1;position:relative;height:420px}
+.sidecard{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);background:#fff;border:1px solid var(--border);border-radius:18px;padding:26px 28px;box-shadow:0 10px 30px rgba(15,23,42,.08)}
+.sidecard .n{display:inline-flex;width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:17px;margin-bottom:12px}
+.sidecard h3{font-size:24px;line-height:1.25;margin-bottom:10px}
+.sidecard p{font-size:17px;line-height:1.5;color:var(--ink2)}
+.sidecard .warn{margin-top:14px;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:10px;padding:10px 12px;font-size:15.5px;font-weight:600}
+.sidecard .bad{margin-top:14px;background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;border-radius:10px;padding:10px 12px;font-size:15.5px;font-weight:600}
+
+/* browser */
+.browser{width:800px;height:536px;background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(15,23,42,.18);overflow:hidden;border:1px solid var(--border-s);flex-shrink:0;position:relative}
+.bbar{height:36px;background:#e9edf2;display:flex;align-items:center;gap:7px;padding:0 12px;border-bottom:1px solid var(--border-s)}
+.bbar i{width:11px;height:11px;border-radius:50%;display:block}
+.bbar .url{margin-left:14px;flex:1;background:#fff;border-radius:7px;height:23px;font-size:12.5px;color:var(--ink2);display:flex;align-items:center;padding:0 10px}
+.bcontent{position:absolute;top:36px;left:0;right:0;bottom:0;overflow:hidden;background:var(--bg)}
+.bcontent .inner{width:1000px;height:625px;transform:scale(.8);transform-origin:0 0;position:relative;overflow:hidden}
+
+/* phone */
+.phone{width:286px;height:560px;border-radius:40px;background:#0f172a;padding:10px;box-shadow:0 24px 50px rgba(15,23,42,.28);position:relative;flex-shrink:0}
+.pscreen{position:absolute;inset:10px;border-radius:31px;overflow:hidden;background:var(--bg)}
+.pstat{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:12px;font-weight:600;color:var(--ink1);background:#fff}
+.purl{background:#fff;padding:4px 10px 8px;border-bottom:1px solid var(--border)}
+.purl div{background:#eef1f5;border-radius:9px;font-size:11px;color:var(--ink2);padding:6px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pview{position:absolute;top:30px;left:0;right:0;bottom:0;overflow:hidden}
+.layer{position:absolute;inset:0;overflow:hidden}
+
+/* app (OneAtma public exam) */
+.pbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg)}
+.pbar .l{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.pbar img{width:26px;height:26px;object-fit:contain}
+.tog{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px}
+.card .ct{font-weight:600;font-size:16px}.card .cd{font-size:13px;color:var(--ink3);margin:2px 0 14px}
+.info{border:1px solid var(--border-s);background:var(--hover);border-radius:10px;padding:12px}
+.info .tt{font-weight:600;font-size:15px}.info .cs{font-size:13px;color:var(--ink3)}
+.info .mt{display:flex;flex-wrap:wrap;gap:12px;margin-top:9px;font-size:12.5px;color:var(--ink2)}
+.info .mt span{display:flex;align-items:center;gap:5px}
+.lbl{font-size:13px;font-weight:500;margin-bottom:5px;color:var(--ink1)}
+.inp{border:1px solid var(--border-s);border-radius:9px;height:38px;padding:0 11px;display:flex;align-items:center;font-size:14px;background:#fff}
+.inp.f{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,101,52,.18)}
+.inp .ph{color:var(--ink3)}
+.caret{display:inline-block;width:1.5px;height:17px;background:var(--ink1);margin-left:1px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:38px;padding:0 16px;border-radius:9px;font-size:14px;font-weight:600;border:1px solid transparent}
+.btn.p{background:var(--primary);color:#fff}.btn.o{background:#fff;border-color:var(--border-s);color:var(--ink1)}
+.btn.dis{opacity:.45}.btn.w{width:100%}
+.alert{border-radius:10px;padding:9px 12px;font-size:13px;display:flex;gap:8px;align-items:flex-start;line-height:1.4}
+.alert.d{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+.alert.w{background:#fefce8;border:1px solid #fde68a;color:#a16207}
+
+/* exam page */
+.ex{padding:16px 24px;display:flex;flex-direction:column;gap:12px;max-width:820px;margin:0 auto;user-select:none}
+.exh{border:1px solid var(--border);border-radius:14px;background:rgba(248,250,252,.95);padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.exh .t{font-weight:600;font-size:16px}.exh .s{font-size:12px;color:var(--ink3)}.exh .id{font-size:12px;color:var(--ink2);margin-top:4px}
+.timer{display:flex;align-items:center;gap:6px;border:1px solid var(--border-s);border-radius:9px;padding:6px 12px;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+.timer.w{border-color:rgba(202,138,4,.4);background:rgba(202,138,4,.1);color:var(--warning)}
+.timer.d{border-color:rgba(220,38,38,.4);background:rgba(220,38,38,.1);color:var(--danger)}
+.vb{display:flex;align-items:center;gap:5px;border:1px solid rgba(220,38,38,.4);background:rgba(220,38,38,.1);color:var(--danger);border-radius:9px;padding:6px 10px;font-size:13px;font-weight:600}
+.nums{display:flex;flex-wrap:wrap;gap:6px}
+.num{width:32px;height:32px;border-radius:9px;border:1px solid var(--border-s);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--ink2)}
+.num.a{border-color:rgba(22,101,52,.4);background:rgba(22,101,52,.1);color:var(--success)}
+.num.c{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--primary)}
+.num.l{opacity:.4}
+.cnt{font-size:12px;color:var(--ink3)}
+.qn{font-size:13px;font-weight:500;color:var(--ink3)}
+.sav{font-size:12px;color:var(--ink3);display:flex;align-items:center;gap:4px}
+.qt{font-size:16px;font-weight:500;margin:12px 0 14px;line-height:1.45}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;align-items:center;gap:12px;border:1px solid var(--border-s);border-radius:10px;padding:11px 12px;font-size:14px;color:var(--ink2);background:#fff}
+.opt .r{width:16px;height:16px;border-radius:50%;border:1px solid var(--border-s);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.opt.s{border-color:var(--primary);background:rgba(22,101,52,.05);color:var(--ink1)}
+.opt.s .r{border-color:var(--primary);background:var(--primary)}.opt.s .r::after{content:"";width:6px;height:6px;border-radius:50%;background:#fff}
+.modalbg{position:absolute;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;z-index:5}
+.modal{background:#fff;border-radius:16px;width:440px;padding:20px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal h4{font-size:17px;margin-bottom:14px}
+.center-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:380px;color:var(--ink3);font-size:14px;text-align:center}
+
+/* phone-compact exam */
+.phone .ex{padding:10px;gap:9px}
+.phone .exh{padding:9px 10px;gap:7px;border-radius:12px}
+.phone .exh .t{font-size:13px}.phone .exh .s,.phone .exh .id{font-size:10.5px}
+.phone .timer{font-size:12.5px;padding:4px 7px;gap:4px}.phone .vb{font-size:11px;padding:4px 7px}
+.phone .num{width:22px;height:22px;font-size:10px;border-radius:6px}.phone .nums{gap:4px}
+.phone .cnt{font-size:10.5px}.phone .card{padding:11px;border-radius:12px}
+.phone .qt{font-size:13px;margin:8px 0 10px}.phone .opt{padding:8px 9px;font-size:12px;gap:8px}
+.phone .qn{font-size:11px}.phone .btn{height:32px;font-size:12px;padding:0 11px}.phone .alert{font-size:11px;padding:6px 8px}
+.phone .card .ct{font-size:15px}
+
+/* result */
+.res{padding:20px 26px;display:flex;flex-direction:column;gap:14px}
+.ph1{font-size:22px;font-weight:700}.ph2{font-size:13px;color:var(--ink3)}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:13px}
+.grid4 .k{color:var(--ink3)}.grid4 .v{font-weight:500;margin-top:2px}
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.tiles5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.tile{border:1px solid var(--border-s);border-radius:10px;padding:10px;text-align:center}
+.tile b{display:block;font-size:19px}.tile span{font-size:11.5px;color:var(--ink3)}
+.tile.g{border-color:rgba(22,101,52,.4);background:rgba(22,101,52,.05)}.tile.g b{color:var(--success)}
+.tile.r{border-color:rgba(220,38,38,.4);background:rgba(220,38,38,.05)}.tile.r b{color:var(--danger)}
+.tile.pr{border-color:rgba(22,101,52,.4);background:rgba(22,101,52,.05)}.tile.pr b{color:var(--primary)}
+.hr{border-top:1px solid var(--border);margin:12px 0}
+.kor{border-left:4px solid var(--success)}.kor.x{border-left-color:var(--danger)}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-size:11.5px;font-weight:600;padding:3px 9px}
+.badge.g{background:rgba(22,101,52,.12);color:var(--success)}.badge.r{background:rgba(220,38,38,.12);color:var(--danger)}
+.ko{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--border-s);border-radius:9px;padding:8px 10px;font-size:13px;color:var(--ink2);margin-top:6px}
+.ko.g{border-color:rgba(22,101,52,.5);background:rgba(22,101,52,.1);color:var(--ink1)}
+.ko.r{border-color:rgba(220,38,38,.5);background:rgba(220,38,38,.1);color:var(--ink1)}
+.pemb{border:1px solid var(--border-s);background:var(--hover);border-radius:9px;padding:9px 11px;font-size:13px;color:var(--ink2);margin-top:8px}
+.toast{position:absolute;right:16px;top:12px;background:#0f172a;color:#fff;border-radius:10px;padding:10px 14px;font-size:13px;display:flex;gap:8px;align-items:center;z-index:9}
+
+/* misc scenes */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.feat{background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px 22px;display:flex;gap:16px;align-items:flex-start;box-shadow:0 6px 18px rgba(15,23,42,.05)}
+.feat .e{font-size:34px;line-height:1}
+.feat h4{font-size:20px;margin-bottom:5px}.feat p{font-size:16px;color:var(--ink2);line-height:1.45}
+.errrow{display:grid;grid-template-columns:430px 1fr;gap:18px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 16px}
+.errrow .alert{font-size:15px;font-weight:600}
+.errrow p{font-size:15.5px;color:var(--ink2);line-height:1.4}.errrow p b{color:var(--ink1)}
+.vcard{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:8px;position:relative}
+.vcard .e{font-size:30px}.vcard h4{font-size:18px}.vcard p{font-size:14.5px;color:var(--ink2);line-height:1.4}
+.vcard .pen{position:absolute;right:14px;top:14px;background:#fee2e2;color:#b91c1c;font-weight:700;font-size:14px;border-radius:999px;padding:4px 10px}
+.chat{position:absolute;inset:0;background:#efe7dd;display:flex;flex-direction:column}
+.chat .hd{background:#075e54;color:#fff;padding:9px 12px;display:flex;gap:9px;align-items:center}
+.chat .av{width:30px;height:30px;border-radius:50%;background:#9fd4b4;display:flex;align-items:center;justify-content:center;font-size:13px;color:#064e3b;font-weight:700}
+.chat .hd b{font-size:13px;display:block}.chat .hd small{font-size:10.5px;opacity:.8}
+.msgs{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:8px}
+.msg{background:#fff;border-radius:10px;padding:7px 9px;font-size:12px;line-height:1.4;max-width:88%;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+.msg .who{font-size:11px;font-weight:700;color:#0e7490;margin-bottom:2px}
+.msg.me{align-self:flex-end;background:#d9fdd3}
+.msg a{color:#0369a1;text-decoration:underline;word-break:break-all}
+.msg .tm{font-size:9.5px;color:#64748b;text-align:right;margin-top:2px}
+.tipcard{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 18px;display:flex;gap:14px;align-items:center}
+.tipcard .e{font-size:28px}.tipcard h4{font-size:18px}.tipcard p{font-size:15px;color:var(--ink2)}
+.check{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--border);border-radius:14px;padding:13px 16px;font-size:17px;line-height:1.35}
+.check .b{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:15px}
+.check .b.r{background:var(--danger)}
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="top"><img src="logo-atmajaya.gif" alt=""><span class="brand">OneAtma</span><span class="sub">Tutorial Ujian Mahasiswa</span><span id="chip"></span></div>
+  <div id="stage"></div>
+  <div id="cap"><p id="capText"></p></div>
+  <div id="prog"><i></i></div>
+  <div id="tap"><div class="rip"></div><div class="dot"></div></div>
+</div>
+<script>
+// ---------- icons ----------
+const I = {
+  clock:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+  user:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>',
+  shield:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4M12 16h.01"/></svg>',
+  tri:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>',
+  load:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>',
+  dl:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15V3M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5"/></svg>',
+  ok:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',
+  x:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>',
+  sun:'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  wifiOff:'<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"><path d="M12 20h.01M8.5 16.43a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 4.17-2.65M10.66 5c4.01-.36 8.14.9 11.34 3.76M16.85 11.25a10 10 0 0 1 2.22 1.68M5 12.86a10 10 0 0 1 5.17-2.69M2 2l20 20"/></svg>',
+};
+// ---------- helpers ----------
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+const P=(lt,s,d=.5)=>ease(clamp((lt-s)/d));
+const fmt=s=>{s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+function fade(el,p,dy=18,dx=0){el.style.opacity=p;el.style.transform=`translate(${(1-p)*dx}px,${(1-p)*dy}px)`;}
+const typed=(str,lt,t0,dur)=>str.slice(0,Math.round(str.length*clamp((lt-t0)/dur)));
+const FRAME=document.getElementById('frame'),STAGE=document.getElementById('stage'),TAP=document.getElementById('tap');
+function relRect(el,root){const a=el.getBoundingClientRect(),b=root.getBoundingClientRect();return{x:a.left-b.left,y:a.top-b.top,w:a.width,h:a.height};}
+function tap(el,lt,t0){
+  if(!el||lt<t0-.8||lt>t0+.7)return;
+  const r=relRect(el,FRAME);const pIn=P(lt,t0-.8,.55);
+  TAP.style.left=(r.x+r.w/2+(1-pIn)*60)+'px';TAP.style.top=(r.y+r.h/2+(1-pIn)*70)+'px';
+  TAP.style.opacity=Math.min(pIn,1-P(lt,t0+.35,.35));
+  const rp=clamp((lt-t0)/.5);const rip=TAP.querySelector('.rip');
+  rip.style.opacity=lt>=t0?1-rp:0;rip.style.transform=`scale(${.6+rp*1.2})`;
+  TAP.querySelector('.dot').style.transform=`scale(${lt>=t0&&lt<t0+.18?.82:1})`;
+}
+function hl(root,key,el,p,pad=6){
+  let h=root.querySelector('.hl[data-k="'+key+'"]');
+  if(!h){h=document.createElement('div');h.className='hl';h.dataset.k=key;root.appendChild(h);}
+  if(!el||p<=0){h.style.opacity=0;return;}
+  const r=relRect(el,root);
+  Object.assign(h.style,{left:r.x-pad+'px',top:r.y-pad+'px',width:r.w+pad*2+'px',height:r.h+pad*2+'px',opacity:p});
+}
+function cueIdx(lt,c){let i=-1;c.forEach((s,k)=>{if(lt>=s-.05)i=k});return i;}
+function sideCards(root,lt,c,items){
+  const side=root.querySelector('.side');
+  if(!side.dataset.b){side.innerHTML=items.map(it=>it?`<div class="sidecard">${it.n?`<span class="n">${it.n}</span>`:''}<h3>${it.t}</h3>${it.b?`<p>${it.b}</p>`:''}${it.x||''}</div>`:'<div class="sidecard" style="display:none"></div>').join('');side.dataset.b=1;}
+  const cards=[...side.children];let act=-1;
+  items.forEach((it,k)=>{if(it&&lt>=c[k]-.05)act=k});
+  cards.forEach((el,k)=>{
+    if(k!==act){el.style.opacity=0;return;}
+    const p=P(lt,c[k]-.05,.45);el.style.opacity=p;el.style.transform=`translateY(calc(-50% + ${(1-p)*20}px))`;
+  });
+}
+function qrSvg(size){
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const n=25,m=[];for(let y=0;y<n;y++){m.push([]);for(let x=0;x<n;x++)m[y].push(rnd()<.5);}
+  const finder=(ox,oy)=>{for(let y=-1;y<8;y++)for(let x=-1;x<8;x++){const X=ox+x,Y=oy+y;if(X<0||Y<0||X>=n||Y>=n)continue;const d=Math.max(Math.abs(x-3),Math.abs(y-3));m[Y][X]=d!==2&&d!==4;}};
+  finder(0,0);finder(n-7,0);finder(0,n-7);
+  let r='';for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(m[y][x])r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`;
+  return `<svg width="${size}" height="${size}" viewBox="-2 -2 29 29" style="background:#fff;display:block"><g fill="#0f172a">${r}</g></svg>`;
+}
+// ---------- mock data ----------
+const EXAM={title:'UTS Basis Data',course:'Basis Data — Kelas A',lecturer:'Dr. Maria Wijaya, M.Kom.',dur:90,nim:'220710045',name:'Andi Pratama'};
+const URL_='portal.kampus.ac.id/exam/k9Xa2Lq7TzP4mW8eR1vB';
+const QS=[
+ {t:'Perintah SQL untuk menghapus seluruh tabel beserta strukturnya adalah ...',o:['DELETE','DROP TABLE','TRUNCATE','REMOVE']},
+ {t:'Kunci yang mengacu ke primary key tabel lain disebut ...',o:['Candidate key','Super key','Foreign key','Composite key']},
+ {t:'Perintah SQL yang digunakan untuk mengambil data dari sebuah tabel adalah ...',o:['INSERT','SELECT','UPDATE','DELETE']},
+ {t:'Bentuk normal yang menghilangkan ketergantungan parsial adalah ...',o:['1NF','2NF','3NF','BCNF']},
+ {t:'Klausa yang digunakan untuk mengelompokkan baris hasil query adalah ...',o:['ORDER BY','GROUP BY','HAVING','WHERE']},
+ {t:'Relasi satu mahasiswa dapat mengambil banyak mata kuliah adalah relasi ...',o:['One to One','One to Many','Many to Many','Many to One']},
+ {t:'Fungsi agregat untuk menghitung jumlah baris adalah ...',o:['SUM()','COUNT()','AVG()','MAX()']},
+ {t:'Perintah untuk mengubah struktur tabel adalah ...',o:['ALTER TABLE','MODIFY','UPDATE TABLE','CHANGE']},
+ {t:'Jenis JOIN yang menampilkan semua baris dari tabel kiri adalah ...',o:['INNER JOIN','RIGHT JOIN','LEFT JOIN','CROSS JOIN']},
+ {t:'Properti ACID yang menjamin transaksi dijalankan seluruhnya atau tidak sama sekali adalah ...',o:['Atomicity','Consistency','Isolation','Durability']},
+];
+const pbar=()=>`<div class="pbar"><div class="l"><img src="logo-atmajaya.gif"><span>OneAtma</span></div><div class="tog">${I.sun}</div></div>`;
+function accessPage(o={}){
+  return `${pbar()}<div style="padding:${o.pad||22}px ${o.padx||16}px"><div class="card"><div class="ct">Akses Ujian</div><div class="cd">Masukkan NIM Anda untuk memulai ujian.</div>
+  <div class="info" data-r="info"><div class="tt">${EXAM.title}</div><div class="cs">${EXAM.course}</div><div class="mt"><span>${I.user} ${EXAM.lecturer}</span><span>${I.clock} ${EXAM.dur} menit</span></div></div>
+  ${o.err?`<div class="alert d" style="margin-top:12px">${o.err}</div>`:''}
+  <div style="margin-top:14px" data-r="nimwrap"><div class="lbl">NIM</div><div class="inp ${o.focus?'f':''}" data-r="nim">${o.nim?o.nim:'<span class="ph">Masukkan NIM Anda</span>'}${o.focus&&!o.loading?'<span class="caret"></span>':''}</div></div>
+  <div class="btn p w ${o.nim?'':'dis'}" data-r="start" style="margin-top:14px">${o.loading?I.load+' ':''}Mulai Ujian</div></div></div>`;
+}
+function examPage(s){
+  const n=QS.length,ans=s.ans||{},q=s.q||0;const cnt=Object.keys(ans).length;
+  const lvl=s.timer<=60?'d':s.timer<=300?'w':'';
+  if(s.done)return `${pbar()}<div class="center-msg"><span style="font-size:24px">${I.load}</span><p>Ujian berhasil dikumpulkan. Mengarahkan ke hasil ujian...</p></div>`;
+  const nums=QS.map((_,i)=>`<div class="num ${ans[i]!=null?'a':''} ${i===q?'c':''} ${s.lockBefore!=null&&i<s.lockBefore?'l':''}" data-r="n${i}">${i+1}</div>`).join('');
+  const Q=QS[q],ord=s.order||[0,1,2,3];
+  const opts=ord.map(k=>`<div class="opt ${ans[q]===k?'s':''}" data-r="o${k}"><span class="r"></span>${Q.o[k]}</div>`).join('');
+  const prevDis=q===0||(s.lockBefore!=null&&q-1<s.lockBefore);
+  return `${pbar()}<div class="ex">
+  <div class="exh" data-r="head"><div class="row between g12"><div data-r="ident"><p class="t">Ujian: ${EXAM.title}</p><p class="s">${EXAM.course}</p><p class="id">NIM: ${s.nim||EXAM.nim} · ${s.name||EXAM.name}</p></div>
+  <div class="row g8">${s.viol?`<div class="vb" data-r="vb">${I.shield} ${s.viol}</div>`:''}<div class="timer ${lvl}" data-r="timer">${I.clock} ${fmt(s.timer)}</div></div></div>
+  ${lvl?`<div class="alert ${lvl}">${lvl==='d'?'Waktu hampir habis! Ujian akan dikumpulkan otomatis.':'Waktu ujian hampir habis.'}</div>`:''}
+  ${s.viol?`<div class="alert w" data-r="valert">Pelanggaran terdeteksi (${s.viol}x). Nilai akan dikurangi ${s.viol} poin.</div>`:''}
+  <div class="nums" data-r="nums">${nums}</div><p class="cnt" data-r="cnt">${cnt} dari ${n} soal terjawab</p></div>
+  ${s.saveErr?`<div class="alert d">Gagal menyimpan jawaban.</div>`:''}
+  <div class="card"><div class="row between"><p class="qn">Soal ${q+1} dari ${n}</p>${s.saving?`<span class="sav" data-r="sav">${I.load} Menyimpan...</span>`:''}</div>
+  <p class="qt">${Q.t}</p><div class="opts">${opts}</div></div>
+  <div class="row between"><div class="btn o ${prevDis?'dis':''}" data-r="prev">Sebelumnya</div>${q<n-1?'<div class="btn p" data-r="next">Berikutnya</div>':'<div class="btn p" data-r="submit">Submit Ujian</div>'}</div>
+  </div>
+  ${s.modal?`<div class="modalbg"><div class="modal"><h4>Kumpulkan Ujian?</h4><div class="alert w" style="font-size:13.5px">${I.tri}<span>Anda telah menjawab ${cnt} dari ${n} soal. Setelah dikumpulkan, jawaban tidak dapat diubah lagi.</span></div><div class="row g8" style="justify-content:flex-end;margin-top:16px"><div class="btn o">Batal</div><div class="btn p" data-r="yes">${s.modal==='loading'?I.load+' ':''}Ya, Kumpulkan</div></div></div></div>`:''}`;
+}
+function browser(url){return `<div class="browser"><div class="bbar"><i style="background:#f87171"></i><i style="background:#fbbf24"></i><i style="background:#4ade80"></i><div class="url">🔒&nbsp; ${url}</div></div><div class="bcontent"><div class="inner"></div></div></div>`;}
+function phone(){return `<div class="phone"><div class="pscreen"><div class="pstat"><span>07:58</span><span>📶 🔋</span></div><div class="pview"></div></div></div>`;}
+const R=(root,k)=>root.querySelector('[data-r="'+k+'"]');
+function setHTML(el,html){if(el.__h!==html){el.innerHTML=html;el.__h=html;}}
+const phoneBrowser=(inner,url=URL_)=>`<div class="purl"><div>🔒 ${url}</div></div><div style="position:absolute;top:36px;left:0;right:0;bottom:0;overflow:hidden">${inner}</div>`;
+
+// ---------- scenes ----------
+const S={};
+S.intro={html:`<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:20px">
+  <img class="a0" src="logo-atmajaya.gif" style="width:96px;height:96px;object-fit:contain">
+  <div class="a1 h1" style="font-size:48px;max-width:980px">Mengerjakan Ujian lewat<br><span style="color:var(--primary)">Link &amp; QR Code</span> dari Dosen</div>
+  <div class="a2 lead">Panduan lengkap untuk mahasiswa — langkah demi langkah</div>
+  <div class="a3 row g12"><span class="pill">🔗 Link dari dosen</span><span class="pill">▦ Scan QR Code</span><span class="pill">🪪 Cukup NIM, tanpa login</span></div>
+  <div class="a4 pill" style="background:#fef3c7;border-color:#fcd34d;color:#92400e">⚠ Termasuk aturan &amp; pelanggaran yang mengurangi nilai</div></div>`,
+ f(lt,c,r){['a0','a1','a2','a3'].forEach((k,i)=>fade(r.querySelector('.'+k),P(lt,.2+i*.35,.6)));fade(r.querySelector('.a4'),P(lt,c[1],.5));}};
+
+S.prep={html:`<div style="position:absolute;inset:0;padding:44px 80px"><div class="h2 t0" style="margin-bottom:8px">Persiapan Sebelum Ujian</div><p class="lead t0" style="margin-bottom:28px">Siapkan 4 hal ini sebelum membuka link / QR Code.</p>
+ <div class="grid2">
+ <div class="feat k1"><div class="e">📱</div><div><h4>HP atau laptop + browser terbaru</h4><p>Chrome, Safari, atau Edge versi terbaru.</p></div></div>
+ <div class="feat k2"><div class="e">📶</div><div><h4>Internet stabil &amp; baterai cukup</h4><p>Hindari sinyal lemah; bawa charger bila perlu.</p></div></div>
+ <div class="feat k3"><div class="e">🪪</div><div><h4>NIM Anda</h4><p>Tidak perlu login / password — cukup NIM.</p></div></div>
+ <div class="feat k4"><div class="e">📋</div><div><h4>Terdaftar di kelas (KRS)</h4><p>Hanya mahasiswa yang terdaftar di kelas ujian yang bisa masuk.</p></div></div>
+ </div></div>`,
+ f(lt,c,r){r.querySelectorAll('.t0').forEach(e=>fade(e,P(lt,.1,.5)));[1,2,3,4].forEach(i=>fade(r.querySelector('.k'+i),P(lt,c[i]-.1,.5)));}};
+
+S.link={html:`<div class="split" style="justify-content:center;gap:70px">${phone()}<div class="side" style="flex:0 0 520px"></div></div>`,
+ f(lt,c,r){
+  const v=r.querySelector('.pview');
+  if(!v.dataset.b){v.dataset.b=1;v.innerHTML=`<div class="layer L1"><div class="chat"><div class="hd"><div class="av">BD</div><div><b>Basis Data — Kelas A</b><small>Dr. Maria, Anda, +40 lainnya</small></div></div>
+   <div class="msgs"><div class="msg"><div class="who">Ketua Kelas</div>Bu, UTS hari ini jam 08.00 ya?<div class="tm">07:41</div></div>
+   <div class="msg m2"><div class="who">Dr. Maria Wijaya</div>Selamat pagi. Berikut link UTS Basis Data, dikerjakan mulai 08.00 (90 menit):<br><a data-r="lnk">https://${URL_}</a><div class="tm">07:55</div></div></div></div></div>
+   <div class="layer L2" style="background:var(--bg)">${phoneBrowser(accessPage({pad:16,padx:10}))}</div>`;}
+  fade(r.querySelector('.m2'),P(lt,c[1]+.2,.5),12);
+  const lnk=R(r,'lnk');lnk.style.background=lt>c[2]+.9&&lt<c[2]+1.6?'rgba(3,105,161,.18)':'none';
+  const sw=P(lt,c[2]+1.5,.5);r.querySelector('.L2').style.transform=`translateX(${(1-sw)*100}%)`;
+  tap(lnk,lt,c[2]+.9);
+  sideCards(r,lt,c,[{n:'1',t:'Cara 1 — Buka link dari dosen',b:'Ada dua cara membuka ujian: <b>link</b> atau <b>QR Code</b>.'},
+   {n:'1',t:'Dosen membagikan link',b:'Biasanya lewat grup kelas (WhatsApp/Telegram) atau LMS. Formatnya:<br><code style="font-size:14px;color:var(--primary)">https://…/exam/&lt;kode-unik&gt;</code>'},
+   {n:'1',t:'Ketuk link-nya',b:'Halaman <b>Akses Ujian</b> terbuka langsung di browser. Tidak ada halaman login.'},
+   {n:'1',t:'Link bersifat rahasia',b:'Pastikan link berasal langsung dari dosen Anda.',x:'<div class="bad">🔒 Jangan bagikan link ujian ke pihak di luar kelas.</div>'}]);
+ }};
+
+S.qr={html:`<div class="split" style="justify-content:center;gap:60px">
+  <div class="proj" style="width:430px;background:#1e293b;border-radius:16px;padding:16px;box-shadow:0 20px 40px rgba(15,23,42,.25)"><div style="background:#fff;border-radius:8px;padding:22px;text-align:center"><div style="font-weight:700;font-size:20px">${EXAM.title}</div><div style="color:var(--ink3);font-size:14px;margin:4px 0 14px">Scan untuk mulai ujian</div><div style="display:inline-block">${qrSvg(230)}</div><div style="font-size:12px;color:var(--ink3);margin-top:10px">Ditampilkan dosen di proyektor</div></div><div style="height:40px;width:8px;background:#334155;margin:0 auto"></div></div>
+  ${phone()}<div class="side" style="flex:0 0 360px"></div></div>`,
+ f(lt,c,r){
+  fade(r.querySelector('.proj'),P(lt,c[1]-.2,.6),0,-30);
+  const v=r.querySelector('.pview');
+  if(!v.dataset.b){v.dataset.b=1;v.innerHTML=`<div class="layer" style="background:#111"><div class="cam" style="position:absolute;left:50%;top:44%;">${qrSvg(150)}</div>
+   <div class="vf" style="position:absolute;left:50%;top:44%;width:190px;height:190px;margin:-95px 0 0 -95px;border:3px solid rgba(255,255,255,.9);border-radius:18px"></div>
+   <div class="scan" style="position:absolute;left:50%;width:170px;margin-left:-85px;height:2px;background:#4ade80;box-shadow:0 0 12px #4ade80"></div>
+   <div class="pillq" data-r="pill" style="position:absolute;left:14px;right:14px;bottom:70px;background:#fde047;color:#111;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:600">🔗 portal.kampus.ac.id<br><span style="font-weight:500">Buka di browser</span></div>
+   <div style="position:absolute;bottom:14px;left:0;right:0;text-align:center;color:#fff;font-size:11px">FOTO · <b style="color:#fde047">KAMERA</b> · VIDEO</div></div>
+   <div class="layer L2" style="background:var(--bg)">${phoneBrowser(accessPage({pad:16,padx:10}))}</div>`;}
+  const ph=P(lt,c[2],1.6);const cam=r.querySelector('.cam');cam.style.transform=`translate(calc(-50% + ${(1-ph)*90}px), calc(-50% + ${(1-ph)*-60}px)) rotate(${(1-ph)*-12}deg)`;
+  const sc=r.querySelector('.scan');sc.style.opacity=lt>c[2]+1.2&&lt<c[3]+.3?1:0;sc.style.top=`calc(44% - 85px + ${((lt*120)%170)}px)`;
+  fade(R(r,'pill'),P(lt,c[3]-.3,.4),10);
+  tap(R(r,'pill'),lt,c[3]+1.1);
+  const sw=P(lt,c[3]+1.6,.5);r.querySelector('.L2').style.transform=`translateX(${(1-sw)*100}%)`;
+  sideCards(r,lt,c,[{n:'2',t:'Cara 2 — Scan QR Code'},
+   {n:'2',t:'QR Code dari dosen',b:'Ditampilkan di proyektor/layar kelas, atau dikirim sebagai gambar.'},
+   {n:'2',t:'Arahkan kamera',b:'Pakai <b>Kamera</b> bawaan HP atau <b>Google Lens</b>. Tunggu sampai link muncul.'},
+   {n:'2',t:'Ketuk link yang muncul',b:'Hasilnya sama persis dengan membuka link ujian.'}]);
+ }};
+
+S.access={html:`<div class="split" style="justify-content:center;gap:70px">${phone()}<div class="side" style="flex:0 0 520px"></div></div>`,
+ f(lt,c,r){
+  const v=r.querySelector('.pview');
+  const nim=typed(EXAM.nim,lt,c[2]+.9,1.8);const loading=lt>c[3]+.9;
+  setHTML(v,phoneBrowser(accessPage({pad:16,padx:10,nim,focus:lt>c[2]+.5,loading})));
+  hl(r,'info',R(r,'info'),lt>=c[1]&&lt<c[2]?P(lt,c[1],.3):0,4);
+  hl(r,'nim',R(r,'nimwrap'),lt>=c[2]&&lt<c[3]?P(lt,c[2],.3):0,4);
+  hl(r,'start',R(r,'start'),lt>=c[3]?P(lt,c[3],.3):0,4);
+  tap(R(r,'nim'),lt,c[2]+.5);tap(R(r,'start'),lt,c[3]+.9);
+  sideCards(r,lt,c,[{t:'Halaman Akses Ujian',b:'Halaman ini sama, baik dibuka lewat link maupun QR Code.'},
+   {n:'1',t:'Periksa informasi ujian',b:'Judul ujian, mata kuliah, nama dosen, dan durasi. Pastikan ini ujian yang benar.'},
+   {n:'2',t:'Ketik NIM dengan teliti',b:'Gunakan <b>NIM Anda sendiri</b>. Tanpa spasi tambahan.'},
+   {n:'3',t:'Tekan “Mulai Ujian”',x:'<div class="warn">⏱ Begitu tombol ditekan, waktu ujian langsung berjalan — siapkan diri dulu!</div>'}]);
+ }};
+
+S.errors={html:`<div style="position:absolute;inset:0;padding:26px 70px;display:flex;flex-direction:column;gap:10px"><div class="h2 t0" style="font-size:26px;margin-bottom:4px">Arti pesan error di halaman Akses Ujian</div>
+ ${[['NIM mahasiswa tidak ditemukan.','<b>NIM salah ketik</b> atau Anda <b>tidak terdaftar</b> di kelas ini. Cek NIM / hubungi bagian akademik.'],
+    ['Ujian belum tersedia.','Ujian <b>belum dibuka</b> atau <b>jadwal belum mulai</b>. Tunggu hingga waktunya.'],
+    ['Ujian telah berakhir.','Jadwal ujian <b>sudah ditutup</b>. Hubungi dosen bila ada kendala.'],
+    ['Anda sudah menyelesaikan ujian ini.','Batas <b>jumlah percobaan</b> sudah habis.'],
+    ['Ujian tidak ditemukan atau link sudah tidak berlaku.','Dosen <b>membuat link baru</b>. Minta link / QR Code terbaru.']]
+   .map((e,i)=>`<div class="errrow e${i}"><div class="alert d">${I.x}<span>${e[0]}</span></div><p>${e[1]}</p></div>`).join('')}</div>`,
+ f(lt,c,r){fade(r.querySelector('.t0'),P(lt,0,.5));const a=cueIdx(lt,c);
+  for(let i=0;i<5;i++){const e=r.querySelector('.e'+i);const p=P(lt,c[i+1]-.1,.45);e.style.opacity=p*(a===i+1?1:.55);e.style.transform=`translateX(${(1-p)*-30}px)`;e.style.boxShadow=a===i+1?'0 0 0 3px #f59e0b':'none';}}};
+
+function splitBrowser(url){return `<div class="split">${browser(url)}<div class="side"></div></div>`;}
+S.tour={html:splitBrowser(URL_+'/attempt/…'),
+ f(lt,c,r){
+  const inner=r.querySelector('.inner');
+  setHTML(inner,examPage({q:2,ans:{0:1,1:2},timer:87*60+42-lt}));
+  const a=cueIdx(lt,c);
+  hl(r,'id',R(r,'ident'),a===1?P(lt,c[1],.3):0,5);hl(r,'tm',R(r,'timer'),a===2?P(lt,c[2],.3):0,5);
+  hl(r,'nums',R(r,'nums'),a===3?P(lt,c[3],.3):0,5);hl(r,'cnt',R(r,'cnt'),a===4?P(lt,c[4],.3):0,5);
+  sideCards(r,lt,c,[{t:'Halaman pengerjaan ujian',b:'Tampil penuh tanpa menu dashboard — fokus pada soal.'},
+   {n:'1',t:'Judul, NIM &amp; nama Anda',b:'Pastikan identitas benar.',x:'<div class="warn">Jika NIM/nama salah, segera lapor ke pengawas.</div>'},
+   {n:'2',t:'Sisa waktu',b:'Menghitung mundur terus-menerus sampai waktu habis.'},
+   {n:'3',t:'Nomor soal',b:'<b style="color:var(--success)">Hijau</b> = sudah dijawab<br><b>Abu-abu</b> = belum dijawab<br>Bingkai tebal = soal yang sedang dibuka.'},
+   {n:'4',t:'Progres jawaban',b:'Contoh: “2 dari 10 soal terjawab”.'}]);
+ }};
+
+S.answer={html:splitBrowser(URL_+'/attempt/…'),
+ f(lt,c,r){
+  const inner=r.querySelector('.inner');
+  const st={q:2,ans:{0:1,1:2},timer:86*60+20-lt};
+  const t1=c[0]+1.6,t2=c[2]+.9,t3=c[3]+.8,t4=c[3]+2.4;
+  if(lt>=t1){st.ans[2]=1;st.saving=lt<c[1]+2.2;}
+  if(lt>=t2){st.ans[2]=3;st.saving=lt<t2+.8;}
+  if(lt>=t2+1.3){st.ans[2]=1;st.saving=lt<t2+2.0;}
+  if(lt>=t3)st.q=3; if(lt>=t4)st.q=0;
+  if(lt>=c[4]){st.q=4;st.lockBefore=4;st.ans={0:1,1:2,2:1,3:1};}
+  if(lt>=c[5]){st.order=[2,0,3,1];}
+  setHTML(inner,examPage(st));
+  tap(R(r,'o1'),lt,t1);tap(R(r,'o3'),lt,t2);tap(R(r,'o1'),lt,t2+1.3);tap(R(r,'next'),lt,t3);tap(R(r,'n0'),lt,t4);
+  hl(r,'sav',R(r,'sav'),lt>=c[1]&&lt<c[1]+2.2?P(lt,c[1],.3):0,5);
+  hl(r,'nums',R(r,'nums'),lt>=c[4]&&lt<c[5]?P(lt,c[4]+.2,.3):0,5);
+  sideCards(r,lt,c,[{n:'1',t:'Ketuk pilihan jawaban',b:'Pilihan yang dipilih ditandai dengan lingkaran hijau penuh.'},
+   {n:'2',t:'Tersimpan otomatis',b:'Tidak ada tombol simpan. Setiap klik langsung dikirim ke server.',x:'<div class="warn">Tunggu sampai tulisan “Menyimpan...” hilang sebelum pindah soal.</div>'},
+   {n:'3',t:'Boleh ganti jawaban',b:'Ketuk pilihan lain kapan saja — selama ujian <b>belum dikumpulkan</b>.'},
+   {n:'4',t:'Pindah soal',b:'Gunakan tombol <b>Berikutnya</b> / <b>Sebelumnya</b>, atau ketuk langsung nomor soal.'},
+   {n:'5',t:'Navigasi mundur bisa dikunci',b:'Jika dosen menonaktifkannya, nomor soal sebelumnya menjadi pudar dan tidak bisa dibuka lagi.',x:'<div class="warn">🔒 Yakinkan jawaban sebelum menekan Berikutnya.</div>'},
+   {n:'6',t:'Soal &amp; pilihan bisa diacak',b:'Urutan soal dan pilihan jawaban bisa berbeda untuk setiap mahasiswa.',x:'<div class="bad">Jawaban “B” teman Anda belum tentu “B” Anda. Kerjakan sendiri!</div>'}]);
+ }};
+
+S.timer={html:`<div class="split">${browser(URL_+'/attempt/…')}<div class="side"></div></div><div class="ff" style="position:absolute;left:60px;bottom:30px;background:#0f172a;color:#fff;border-radius:999px;padding:6px 14px;font-weight:600;font-size:15px">⏩ Waktu dipercepat untuk demo</div>`,
+ f(lt,c,r){
+  const inner=r.querySelector('.inner');let timer=62*60+15-lt,done=false;
+  if(lt>=c[2]){const k=lt-c[2];timer=k<2.6?310-k*6:k<5?62-(k-2.6)*2:57;}
+  if(lt>=c[3]){const k=lt-c[3];timer=Math.max(0,6-k*2.4);done=k>2.8;}
+  if(lt>=c[4]){done=true;}
+  setHTML(inner,examPage({q:5,ans:{0:1,1:2,2:1,3:1,4:1},timer,done}));
+  fade(r.querySelector('.ff'),lt>=c[2]&&lt<c[4]?1:0,0);
+  hl(r,'tm',R(r,'timer'),lt>=c[1]&&lt<c[3]+2.6?P(lt,c[1],.3):0,5);
+  sideCards(r,lt,c,[{t:'Perhatikan waktu ujian'},
+   {n:'1',t:'Waktu mulai saat “Mulai Ujian”',b:'Waktu dihitung di server — <b>tetap berjalan</b> walau browser ditutup atau HP mati.'},
+   {n:'2',t:'Warna penanda waktu',b:'<b style="color:var(--warning)">Kuning</b> — 5 menit terakhir<br><b style="color:var(--danger)">Merah</b> — 1 menit terakhir'},
+   {n:'3',t:'Waktu habis = terkumpul otomatis',b:'Jawaban yang sudah tersimpan tetap dinilai. Soal kosong dianggap salah.'},
+   {n:'4',t:'Batas waktu Anda',b:'Mana yang <b>lebih dulu</b>:',x:`<div style="margin-top:12px;font-size:15px;line-height:1.7">• Mulai + durasi: 07:40 + 90 mnt = <b>09:10</b><br>• Jam berakhir ujian: <b>09:00</b></div><div class="warn">➜ Ujian Anda berakhir pukul 09:00</div>`}]);
+ }};
+
+S.rules={html:`<div style="position:absolute;inset:0;padding:22px 60px"><div class="h2 t0" style="font-size:27px;margin-bottom:14px">6 jenis pelanggaran yang dicatat sistem</div>
+ <div class="vg" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+ ${[['🔀','Berpindah Tab/Aplikasi','Membuka tab lain, WhatsApp, kalkulator, atau kembali ke Home.'],
+    ['🪟','Jendela Kehilangan Fokus','Mengklik aplikasi lain, notifikasi, atau layar terbagi.'],
+    ['⛶','Keluar dari Layar Penuh','Menekan Esc / keluar dari mode fullscreen.'],
+    ['📋','Mencoba Menyalin (Copy)','Ctrl/⌘+C atau tahan-salin teks soal.'],
+    ['📥','Mencoba Menempel (Paste)','Ctrl/⌘+V ke halaman ujian.'],
+    ['🖱️','Membuka Klik Kanan','Klik kanan / menu konteks di halaman ujian.']]
+  .map((v,i)=>`<div class="vcard v${i}"><span class="pen">−1 poin</span><div class="e">${v[0]}</div><h4>${i+1}. ${v[1]}</h4><p>${v[2]}</p></div>`).join('')}</div>
+ <div class="ban" style="margin-top:16px;background:#991b1b;color:#fff;border-radius:14px;padding:14px 20px;font-size:19px;font-weight:700;text-align:center">Setiap pelanggaran = −1 poin · langsung tercatat di server · tidak bisa dihapus</div>
+ <div class="smp" style="position:absolute;left:50%;top:48%;width:640px;transform:translate(-50%,-50%);background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.35);overflow:hidden"></div></div>`,
+ f(lt,c,r){fade(r.querySelector('.t0'),P(lt,c[1]-.2,.5));
+  const ts=[c[2]+.2,c[2]+2.6,c[3]+.1,c[3]+1.6,c[3]+2.9,c[3]+4.1];
+  ts.forEach((t,i)=>fade(r.querySelector('.v'+i),P(lt,t,.45)));
+  fade(r.querySelector('.ban'),P(lt,c[4],.5));
+  const smp=r.querySelector('.smp');const sp=P(lt,c[5],.5);smp.style.opacity=sp;smp.style.transform=`translate(-50%,calc(-50% + ${(1-sp)*30}px))`;
+  r.querySelector('.vg').style.opacity=1-sp*.75;
+  if(lt>=c[5]-.1){setHTML(smp,`<div class="ex" style="padding:16px">${examPage({q:0,ans:{0:1},timer:3500-lt,viol:1}).split('<div class="ex">')[1].split('<div class="card">')[0]}</div>`);
+   hl(r,'vb',R(r,'vb'),P(lt,c[5]+.6,.3),4);hl(r,'va',R(r,'valert'),P(lt,c[5]+.6,.3),4);} else {hl(r,'vb',null,0);hl(r,'va',null,0);}
+ }};
+
+S.example={html:`<div class="split" style="justify-content:center;gap:80px">${phone()}<div class="side" style="flex:0 0 470px"></div></div>`,
+ f(lt,c,r){
+  const v=r.querySelector('.pview');
+  let viol=0;if(lt>=c[1]-.2)viol=1;if(lt>=c[2]+.7)viol=2;if(lt>=c[2]+1.5)viol=3;
+  if(!v.dataset.b){v.dataset.b=1;v.innerHTML=`<div class="layer EX"></div><div class="layer WA"><div class="chat"><div class="hd"><div class="av">IB</div><div><b>Ibu</b><small>online</small></div></div><div class="msgs"><div class="msg"><b></b>Nak, sudah sarapan?<div class="tm">08:12</div></div><div class="msg me wm"></div></div></div></div>`;}
+  setHTML(v.querySelector('.EX'),phoneBrowser(examPage({q:3,ans:{0:1,1:2,2:1},timer:70*60-lt,viol})));
+  const out=P(lt,c[0]+1.4,.45)*(1-P(lt,c[1]-.5,.45));
+  v.querySelector('.WA').style.transform=`translateX(${(1-out)*100}%)`;
+  const wm=v.querySelector('.wm');const tx=typed('Sudah bu, lagi ujian 🙏',lt,c[0]+2.1,1.4);wm.style.display=tx?'block':'none';wm.textContent=tx;
+  hl(r,'vb',R(r,'vb'),lt>=c[1]?P(lt,c[1]+.2,.3):0,4);
+  const side=r.querySelector('.side');
+  const score=80-viol;
+  setHTML(side,`<div class="sidecard" style="opacity:1;transform:translateY(-50%)"><h3>${lt<c[1]-.2?'Membuka WhatsApp sebentar…':'Pelanggaran tercatat!'}</h3>
+   <p>${lt<c[1]-.2?'Halaman ujian tidak terlihat → terdeteksi sebagai <b>Berpindah Tab/Aplikasi</b>.':'Tanda merah menunjukkan jumlah pelanggaran. Setiap pelanggaran memotong nilai akhir.'}</p>
+   <div style="display:flex;gap:14px;margin-top:18px"><div class="tile" style="flex:1"><b>${viol}x</b><span>Pelanggaran</span></div><div class="tile r" style="flex:1"><b>−${viol}</b><span>Penalti</span></div><div class="tile pr" style="flex:1"><b>${score}</b><span>Nilai (dari 80)</span></div></div></div>`);
+ }};
+
+S.tips={html:`<div style="position:absolute;inset:0;padding:30px 120px;display:flex;flex-direction:column;gap:12px"><div class="h2 t0" style="font-size:27px;margin-bottom:4px">Tips agar tidak terkena pelanggaran</div>
+ ${[['🌙','Aktifkan mode “Jangan Ganggu”','Notifikasi &amp; telepon masuk bisa membuat halaman kehilangan fokus.'],
+    ['🧹','Tutup aplikasi &amp; tab lain','Lakukan sebelum menekan “Mulai Ujian”.'],
+    ['🚫','Jangan tarik panel notifikasi, buka kalkulator, atau tekan Home','Semua itu meninggalkan halaman ujian → tercatat pelanggaran.'],
+    ['🔋','Isi daya baterai','HP mati di tengah ujian = waktu tetap berjalan.'],
+    ['🔄','Jangan refresh / tutup halaman tanpa alasan','Browser akan meminta konfirmasi sebelum halaman ditinggalkan.']]
+   .map((v,i)=>`<div class="tipcard p${i}"><div class="e">${v[0]}</div><div><h4>${v[1]}</h4><p>${v[2]}</p></div></div>`).join('')}</div>`,
+ f(lt,c,r){fade(r.querySelector('.t0'),P(lt,0,.5));const ts=[c[1],c[2],c[3],c[4],c[4]+1.8];ts.forEach((t,i)=>fade(r.querySelector('.p'+i),P(lt,t-.1,.45),0,-30));}};
+
+S.reconnect={html:`<div class="split" style="justify-content:center;gap:80px">${phone()}<div class="side" style="flex:0 0 480px"></div></div>`,
+ f(lt,c,r){
+  const v=r.querySelector('.pview');let html;
+  const ans={0:1,1:2,2:1,3:1,4:1};
+  if(lt<c[0]+1.6)html=phoneBrowser(examPage({q:5,ans,timer:51*60+30-lt}));
+  else if(lt<c[1]+.4)html=`<div class="center-msg" style="height:100%;background:#fff">${I.wifiOff}<b style="color:var(--ink1);font-size:15px">Tidak ada koneksi internet</b><span style="font-size:12px">ERR_INTERNET_DISCONNECTED</span></div>`;
+  else if(lt<c[2]){const nim=typed(EXAM.nim,lt,c[1]+1.4,1.3);html=phoneBrowser(accessPage({pad:16,padx:10,nim,focus:true,loading:lt>c[1]+3.4}));}
+  else html=phoneBrowser(examPage({q:5,ans:lt>=c[4]+.6?{...ans,5:2}:ans,timer:47*60+5-(lt-c[2]),viol:lt>=c[3]?1:0,saveErr:lt>=c[4]+.6}));
+  setHTML(v,html);
+  tap(R(r,'start'),lt,c[1]+3.2);tap(R(r,'o2'),lt,c[4]+.6);
+  hl(r,'nums',R(r,'nums'),lt>=c[2]&&lt<c[3]?P(lt,c[2]+.3,.3):0,3);
+  hl(r,'tm',R(r,'timer'),lt>=c[3]&&lt<c[4]?P(lt,c[3],.3):0,3);
+  sideCards(r,lt,c,[{t:'Internet putus / browser tertutup?'},
+   {n:'1',t:'Buka lagi link / QR yang sama',b:'Lalu masukkan <b>NIM yang sama</b> dan tekan Mulai Ujian.'},
+   {n:'2',t:'Ujian dilanjutkan',b:'Soal, urutan, dan jawaban yang sudah tersimpan <b>tetap sama</b> — tidak mulai dari awal.'},
+   {n:'3',t:'Yang perlu diingat',b:'',x:'<div class="warn">⏱ Waktu tetap berjalan selama Anda keluar.</div><div class="bad">🛡 Meninggalkan halaman ujian tetap tercatat sebagai pelanggaran.</div>'},
+   {n:'4',t:'“Gagal menyimpan jawaban”',b:'Periksa koneksi internet, lalu <b>ketuk ulang</b> pilihan jawaban Anda sampai tersimpan.'}]);
+ }};
+
+S.submit={html:splitBrowser(URL_+'/attempt/…'),
+ f(lt,c,r){
+  const inner=r.querySelector('.inner');
+  const ans={0:1,1:2,2:1,3:1,4:1,5:1,7:0,8:2,9:0};let q=9,modal=false,done=false;
+  const t7=c[1]+.9,ta=c[1]+1.9,t10=c[1]+3.0,ts=c[2]+.2,ty=c[3]+1.4;
+  if(lt>=t7&&lt<t10)q=6; if(lt>=ta)ans[6]=1;
+  if(lt>=ts)modal=true; if(lt>=ty)modal='loading'; if(lt>=ty+.9){modal=false;done=true;}
+  setHTML(inner,examPage({q,ans,timer:18*60-lt,modal,done}));
+  hl(r,'sub',R(r,'submit'),lt<c[1]?P(lt,c[0]+.8,.3):0,5);
+  hl(r,'n6',R(r,'n6'),lt>=c[1]&&lt<t7?P(lt,c[1],.3):0,4);
+  tap(R(r,'n6'),lt,t7);tap(R(r,'o1'),lt,ta);tap(R(r,'n9'),lt,t10);tap(R(r,'submit'),lt,ts);tap(R(r,'yes'),lt,ty);
+  sideCards(r,lt,c,[{n:'1',t:'Tombol “Submit Ujian”',b:'Hanya muncul di <b>soal terakhir</b>.'},
+   {n:'2',t:'Cek soal yang belum dijawab',b:'Cari nomor yang masih <b>abu-abu</b>, buka, lalu jawab.'},
+   {n:'3',t:'Konfirmasi pengumpulan',b:'Jendela konfirmasi menunjukkan jumlah soal yang sudah Anda jawab.'},
+   {n:'4',t:'Tekan “Ya, Kumpulkan”',x:'<div class="bad">Setelah dikumpulkan, jawaban tidak dapat diubah lagi.</div>'}]);
+ }};
+
+function resultPage(){
+  const kor=[[0,1,1,true,'DROP TABLE menghapus data sekaligus struktur tabel.'],[2,1,1,true,''],[3,0,1,false,'2NF menghilangkan ketergantungan parsial terhadap primary key.']];
+  return `<div class="res"><div class="row between"><div><div class="ph1">Hasil Ujian</div><div class="ph2">${EXAM.title} — Basis Data</div></div><div class="btn p" data-r="dl">${I.dl} Download Hasil Ujian</div></div>
+  <div class="card"><div class="ct" style="margin-bottom:12px">Identitas &amp; Ringkasan Nilai</div>
+  <div class="grid4"><div><div class="k">Nama Mahasiswa</div><div class="v">${EXAM.name}</div></div><div><div class="k">NIM</div><div class="v">${EXAM.nim}</div></div><div><div class="k">Waktu Mulai</div><div class="v">6 Okt 2026, 08.01</div></div><div><div class="k">Waktu Selesai</div><div class="v">6 Okt 2026, 09.13</div></div></div>
+  <div class="hr"></div><div class="tiles" data-r="tiles"><div class="tile"><b>10</b><span>Jumlah Soal</span></div><div class="tile g"><b>8</b><span>Jumlah Benar</span></div><div class="tile r"><b>2</b><span>Jumlah Salah</span></div><div class="tile pr"><b>78</b><span>Nilai Akhir</span></div><div class="tile"><b>78%</b><span>Persentase</span></div><div class="tile"><b>01:12:04</b><span>Durasi Pengerjaan</span></div></div>
+  <div class="hr"></div><div style="font-size:12px;color:var(--ink3);font-weight:500;margin-bottom:8px">Rincian Penalti Pelanggaran</div>
+  <div class="tiles5" data-r="pen"><div class="tile"><b>80</b><span>Raw Score</span></div><div class="tile r"><b>-2 (2x)</b><span>Penalti Pelanggaran</span></div><div class="tile pr"><b>78</b><span>Final Score</span></div><div class="tile"><b>B</b><span>Grade</span></div></div></div>
+  <div style="font-weight:600;font-size:14px" data-r="kor">Koreksi Jawaban</div>
+  ${kor.map(([qi,sel,cor,ok,ex])=>`<div class="card kor ${ok?'':'x'}"><div class="row between"><span class="qn">Soal ${qi+1}</span>${ok?`<span class="badge g">${I.ok} Benar</span>`:`<span class="badge r">${I.x} Salah</span>`}</div><p style="font-size:14px;font-weight:500;margin:8px 0 4px">${QS[qi].t}</p>
+   ${QS[qi].o.map((o,k)=>`<div class="ko ${k===cor?'g':k===sel?'r':''}"><span>${o}</span>${k===sel?`<span class="badge ${k===cor?'g':'r'}">Jawaban Anda</span>`:k===cor?'<span class="badge g">Jawaban Benar</span>':''}</div>`).join('')}
+   ${ex?`<div class="pemb"><b style="color:var(--ink1)">Pembahasan</b><br>${ex}</div>`:''}</div>`).join('')}</div>`;
+}
+S.result={html:splitBrowser(URL_+'/result/…'),
+ f(lt,c,r){
+  const inner=r.querySelector('.inner');
+  if(!inner.dataset.b){inner.dataset.b=1;inner.innerHTML=`${pbar()}<div style="position:absolute;top:51px;left:0;right:0;bottom:0;overflow:hidden"><div class="scr">${resultPage()}</div></div><div class="toast">${I.dl} hasil-ujian-uts-basis-data.pdf — selesai diunduh</div><div class="na" style="position:absolute;inset:51px 0 0 0;background:var(--bg);padding:30px 60px"><div class="card"><div class="center-msg" style="height:260px"><span style="font-size:44px">${I.clock}</span><b style="font-size:19px;color:var(--ink1)">Hasil Belum Tersedia</b><span style="font-size:14px">Hasil ujian belum tersedia. Menunggu dipublikasikan oleh dosen.</span></div></div></div>`;}
+  const scr=inner.querySelector('.scr');const down=P(lt,c[3],.9)*(1-P(lt,c[4]-.2,.6));scr.style.transform=`translateY(${-down*430}px)`;
+  const toast=inner.querySelector('.toast');fade(toast,lt>=c[4]+1.4&&lt<c[5]?P(lt,c[4]+1.4,.3):0,-10);
+  const na=inner.querySelector('.na');na.style.opacity=P(lt,c[5],.5);
+  hl(r,'tiles',R(r,'tiles'),lt>=c[1]&&lt<c[2]?P(lt,c[1],.3):0,5);
+  hl(r,'pen',R(r,'pen'),lt>=c[2]&&lt<c[3]?P(lt,c[2],.3):0,5);
+  hl(r,'dl',R(r,'dl'),lt>=c[4]&&lt<c[5]?P(lt,c[4],.3):0,5);
+  tap(R(r,'dl'),lt,c[4]+.9);
+  sideCards(r,lt,c,[{t:'Halaman Hasil Ujian',b:'Tampil langsung setelah submit — <b>jika dosen mengizinkan</b>.'},
+   {n:'1',t:'Ringkasan nilai',b:'Jumlah soal, benar, salah, nilai akhir, persentase, dan durasi pengerjaan.'},
+   {n:'2',t:'Penalti pelanggaran',b:'<b>Nilai Akhir = Raw Score − Penalti</b><br>Contoh: 80 − 2 = 78. Nilai tidak akan kurang dari 0.'},
+   {n:'3',t:'Koreksi jawaban',b:'<b style="color:var(--success)">Hijau</b> = jawaban benar, <b style="color:var(--danger)">merah</b> = jawaban Anda yang salah, lengkap dengan pembahasan.'},
+   {n:'4',t:'Download Hasil Ujian',b:'Simpan hasil dalam bentuk <b>PDF</b> sebagai bukti.'},
+   {n:'5',t:'“Hasil Belum Tersedia”',b:'Dosen belum mempublikasikan hasil. Nilai tetap tersimpan — tunggu pengumuman dosen.'},
+   {n:'!',t:'Unduh PDF segera',b:'',x:'<div class="warn">Halaman hasil hanya berlaku ±24 jam setelah batas waktu ujian. Memasukkan NIM lagi tidak membuka hasil.</div>'}]);
+ }};
+
+S.summary={html:`<div style="position:absolute;inset:0;padding:26px 70px"><div class="h2 t0" style="font-size:28px;margin-bottom:16px">Ringkasan aturan ujian</div>
+ <div class="grid2" style="gap:12px">
+ ${[['1','Gunakan NIM Anda sendiri.',''],['2','Waktu berjalan sejak menekan “Mulai Ujian”.',''],['3','Jawaban tersimpan otomatis setiap klik.',''],
+    ['✕','Jangan pindah tab/aplikasi atau keluar layar penuh.','r'],['✕','Jangan copy, paste, atau klik kanan.','r'],['−1','Setiap pelanggaran mengurangi 1 poin.','r'],
+    ['4','Waktu habis = ujian terkumpul otomatis.',''],['5','Setelah dikumpulkan, jawaban tidak bisa diubah.','']]
+   .map((v,i)=>`<div class="check s${i}"><span class="b ${v[2]}">${v[0]}</span><span>${v[1]}</span></div>`).join('')}</div>
+ <div class="fin" style="position:absolute;inset:0;background:linear-gradient(135deg,#166534,#14532d);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:14px"><img src="logo-atmajaya.gif" style="width:90px;height:90px;object-fit:contain;background:#fff;border-radius:50%;padding:8px"><div style="font-size:48px;font-weight:800">Selamat mengerjakan ujian!</div><div style="font-size:22px;opacity:.9">Semoga sukses 🍀 — OneAtma</div></div></div>`,
+ f(lt,c,r){fade(r.querySelector('.t0'),P(lt,0,.5));const ts=[c[1],c[1]+1.8,c[1]+3.6,c[2],c[2]+2,c[2]+4,c[3],c[3]+2.2];
+  ts.forEach((t,i)=>fade(r.querySelector('.s'+i),P(lt,t-.1,.4),0,-24));r.querySelector('.fin').style.opacity=P(lt,c[4]-.2,.6);}};
+
+// ---------- engine ----------
+const roots={};
+TL.scenes.forEach(s=>{const d=document.createElement('section');d.className='scene';d.innerHTML=S[s.id].html;STAGE.appendChild(d);roots[s.id]=d;});
+const CAP=document.getElementById('capText'),CHIP=document.getElementById('chip'),PROG=document.querySelector('#prog i');
+let cur=null;
+window.render=function(t){
+  const n=TL.scenes.length;let k=TL.scenes.findIndex(s=>t>=s.start&&t<s.start+s.dur);if(k<0)k=n-1;
+  const sc=TL.scenes[k],lt=t-sc.start,root=roots[sc.id];
+  if(cur!==root){if(cur){cur.style.visibility='hidden';cur.style.opacity=0;}root.style.visibility='visible';cur=root;}
+  root.style.opacity=k===0?P(lt,0,.6):P(lt,0,.45);
+  TAP.style.opacity=0;
+  const c=sc.lines.map(l=>l.start-sc.start);
+  S[sc.id].f(lt,c,root,sc.dur);
+  let li=-1;sc.lines.forEach((l,i)=>{if(t>=l.start-.12)li=i});
+  const txt=li>=0?sc.lines[li].cap:'';if(CAP.textContent!==txt)CAP.textContent=txt;
+  CAP.style.opacity=li>=0?P(t,sc.lines[li].start-.12,.2):0;
+  CHIP.textContent=k===0?'Panduan':`Bagian ${k}/${n-1} · ${sc.title}`;
+  PROG.style.width=(t/TL.total*100)+'%';
+};
+window.ready=Promise.all([...document.images].map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r})));
+const q=new URLSearchParams(location.search);
+if(q.has('t'))ready.then(()=>render(+q.get('t')));
+else if(q.has('play')){const t0=performance.now()-(+q.get('play')||0)*1000;const loop=()=>{render((performance.now()-t0)/1000%TL.total);requestAnimationFrame(loop)};ready.then(loop);}
+</script>
+</body>
+</html>

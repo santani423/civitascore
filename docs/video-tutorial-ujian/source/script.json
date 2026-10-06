@@ -1,0 +1,141 @@
+[
+  { "id": "intro", "title": "Pembuka", "lines": [
+    { "cap": "Halo! Di video ini kita belajar cara mengerjakan ujian di OneAtma melalui link atau QR Code dari dosen.",
+      "tts": "Halo! Di video ini, kita belajar cara mengerjakan ujian di wan atma, melalui link, atau kiu ar kode, dari dosen." },
+    { "cap": "Simak sampai akhir, karena ada aturan penting yang bisa memengaruhi nilai Anda." }
+  ]},
+  { "id": "prep", "title": "Persiapan", "lines": [
+    { "cap": "Sebelum mulai, siapkan beberapa hal berikut." },
+    { "cap": "Pertama, HP atau laptop dengan browser terbaru, seperti Chrome, Safari, atau Edge.",
+      "tts": "Pertama, ha pe atau laptop dengan browser terbaru, seperti Chrome, Safari, atau Edge." },
+    { "cap": "Kedua, koneksi internet yang stabil dan baterai yang cukup." },
+    { "cap": "Ketiga, NIM Anda. Tidak perlu login — cukup NIM.",
+      "tts": "Ketiga, nomor induk mahasiswa Anda. Tidak perlu login, cukup nim." },
+    { "cap": "Keempat, pastikan Anda sudah terdaftar di kelas tersebut melalui KRS.",
+      "tts": "Keempat, pastikan Anda sudah terdaftar di kelas tersebut melalui ka er es." }
+  ]},
+  { "id": "link", "title": "Cara 1 · Membuka Link", "lines": [
+    { "cap": "Ada dua cara membuka ujian. Cara pertama: melalui link." },
+    { "cap": "Dosen membagikan link ujian, misalnya di grup kelas atau di LMS.",
+      "tts": "Dosen membagikan link ujian, misalnya di grup kelas, atau di el em es." },
+    { "cap": "Ketuk link tersebut, dan halaman ujian akan terbuka di browser." },
+    { "cap": "Pastikan link berasal langsung dari dosen Anda, dan jangan bagikan ke pihak lain." }
+  ]},
+  { "id": "qr", "title": "Cara 2 · Scan QR Code", "lines": [
+    { "cap": "Cara kedua: melalui QR Code.", "tts": "Cara kedua: melalui kiu ar kode." },
+    { "cap": "Dosen biasanya menampilkan QR Code di layar proyektor, atau membagikan gambarnya.",
+      "tts": "Dosen biasanya menampilkan kiu ar kode di layar proyektor, atau membagikan gambarnya." },
+    { "cap": "Buka kamera HP atau Google Lens, lalu arahkan ke QR Code.",
+      "tts": "Buka kamera ha pe, atau Google Lens, lalu arahkan ke kiu ar kode." },
+    { "cap": "Ketuk link yang muncul. Hasilnya sama persis dengan membuka link ujian." }
+  ]},
+  { "id": "access", "title": "Masukkan NIM", "lines": [
+    { "cap": "Sekarang Anda berada di halaman Akses Ujian." },
+    { "cap": "Periksa informasinya: judul ujian, mata kuliah, nama dosen, dan durasi." },
+    { "cap": "Ketik NIM Anda dengan teliti di kolom yang tersedia.", "tts": "Ketik nim Anda dengan teliti di kolom yang tersedia." },
+    { "cap": "Lalu tekan Mulai Ujian. Perhatian: begitu ditekan, waktu ujian langsung berjalan!" }
+  ]},
+  { "id": "errors", "title": "Jika Muncul Pesan Error", "lines": [
+    { "cap": "Jika muncul pesan merah, berikut artinya." },
+    { "cap": "“NIM mahasiswa tidak ditemukan” — NIM salah ketik, atau Anda tidak terdaftar di kelas ini.",
+      "tts": "Nim mahasiswa tidak ditemukan. Artinya nim salah ketik, atau Anda tidak terdaftar di kelas ini. Periksa kembali, atau hubungi bagian akademik." },
+    { "cap": "“Ujian belum tersedia” — ujian belum dibuka atau jadwalnya belum dimulai.",
+      "tts": "Ujian belum tersedia. Artinya ujian belum dibuka, atau jadwalnya belum dimulai. Tunggu hingga waktunya." },
+    { "cap": "“Ujian telah berakhir” — jadwal ujian sudah ditutup.", "tts": "Ujian telah berakhir. Artinya jadwal ujian sudah ditutup." },
+    { "cap": "“Anda sudah menyelesaikan ujian ini” — batas jumlah percobaan sudah habis.",
+      "tts": "Anda sudah menyelesaikan ujian ini. Artinya batas jumlah percobaan sudah habis." },
+    { "cap": "“Link sudah tidak berlaku” — dosen membuat link baru. Minta link atau QR Code terbaru.",
+      "tts": "Dan jika link sudah tidak berlaku, kemungkinan dosen membuat link baru. Mintalah link atau kiu ar kode yang terbaru." }
+  ]},
+  { "id": "tour", "title": "Mengenal Halaman Ujian", "lines": [
+    { "cap": "Setelah berhasil, halaman pengerjaan ujian akan tampil." },
+    { "cap": "Di atas ada judul ujian, serta NIM dan nama Anda. Jika salah, segera lapor ke pengawas.",
+      "tts": "Di atas ada judul ujian, serta nim dan nama Anda. Pastikan benar. Jika salah, segera lapor ke pengawas." },
+    { "cap": "Di kanan atas ada sisa waktu yang terus menghitung mundur." },
+    { "cap": "Nomor soal hijau berarti sudah dijawab, nomor abu-abu berarti belum.",
+      "tts": "Di bawahnya ada nomor soal. Nomor berwarna hijau berarti sudah dijawab, nomor abu abu berarti belum." },
+    { "cap": "Di bawahnya terlihat berapa soal yang sudah terjawab." }
+  ]},
+  { "id": "answer", "title": "Menjawab Soal", "lines": [
+    { "cap": "Untuk menjawab, cukup ketuk salah satu pilihan jawaban." },
+    { "cap": "Jawaban tersimpan otomatis — tidak ada tombol simpan. Tunggu tulisan “Menyimpan…” hilang.",
+      "tts": "Jawaban tersimpan otomatis ke server. Tidak ada tombol simpan. Tunggu sampai tulisan menyimpan, hilang." },
+    { "cap": "Anda boleh mengganti jawaban selama ujian belum dikumpulkan." },
+    { "cap": "Pindah soal dengan tombol Berikutnya / Sebelumnya, atau ketuk nomor soal.",
+      "tts": "Pindah soal dengan tombol berikutnya, dan sebelumnya, atau ketuk nomor soal." },
+    { "cap": "Jika dosen menonaktifkan navigasi mundur, nomor sebelumnya terkunci. Yakinkan jawaban sebelum lanjut.",
+      "tts": "Catatan: jika dosen menonaktifkan navigasi mundur, nomor soal sebelumnya akan terkunci. Jadi yakinkan jawaban Anda sebelum lanjut." },
+    { "cap": "Soal dan urutan pilihan bisa diacak, berbeda untuk setiap mahasiswa. Kerjakan sendiri!",
+      "tts": "Soal dan urutan pilihan jawaban bisa diacak, dan berbeda untuk setiap mahasiswa. Jadi, kerjakan sendiri." }
+  ]},
+  { "id": "timer", "title": "Waktu Ujian", "lines": [
+    { "cap": "Perhatikan waktu ujian." },
+    { "cap": "Waktu dihitung sejak Anda menekan Mulai Ujian, dan tetap berjalan walau browser ditutup." },
+    { "cap": "5 menit terakhir, penghitung waktu berubah kuning. 1 menit terakhir, berubah merah.",
+      "tts": "Lima menit terakhir, penghitung waktu berubah kuning. Satu menit terakhir, berubah merah." },
+    { "cap": "Saat waktu habis, ujian dikumpulkan otomatis. Jawaban yang sudah tersimpan tetap dinilai." },
+    { "cap": "Jika dosen menetapkan jam berakhir ujian, waktu Anda bisa habis lebih cepat mengikuti jam tersebut." }
+  ]},
+  { "id": "rules", "title": "Aturan & Pelanggaran", "lines": [
+    { "cap": "Sekarang bagian terpenting: aturan ujian." },
+    { "cap": "Selama ujian berlangsung, sistem mencatat 6 jenis pelanggaran.", "tts": "Selama ujian berlangsung, sistem mencatat enam jenis pelanggaran." },
+    { "cap": "1. Berpindah tab atau aplikasi.  2. Jendela browser kehilangan fokus, misalnya mengklik aplikasi lain.",
+      "tts": "Satu: berpindah tab atau aplikasi. Dua: jendela browser kehilangan fokus, misalnya Anda mengklik aplikasi lain." },
+    { "cap": "3. Keluar dari layar penuh.  4. Mencoba menyalin (copy).  5. Mencoba menempel (paste).  6. Membuka klik kanan.",
+      "tts": "Tiga: keluar dari layar penuh. Empat: mencoba menyalin. Lima: mencoba menempel. Dan enam: membuka menu klik kanan." },
+    { "cap": "Setiap pelanggaran mengurangi nilai 1 poin, langsung tercatat di server, dan tidak bisa dihapus.",
+      "tts": "Setiap pelanggaran mengurangi nilai satu poin, langsung tercatat di server, dan tidak bisa dihapus." },
+    { "cap": "Saat terdeteksi, muncul tanda merah dan jumlah pelanggaran Anda." }
+  ]},
+  { "id": "example", "title": "Contoh Pelanggaran", "lines": [
+    { "cap": "Contoh: Anda membuka WhatsApp sebentar untuk membalas pesan.", "tts": "Contohnya: Anda membuka wotsap sebentar, untuk membalas pesan." },
+    { "cap": "Saat kembali, pelanggaran sudah tercatat dan nilai dikurangi 1 poin.", "tts": "Saat kembali, pelanggaran sudah tercatat, dan nilai Anda dikurangi satu poin." },
+    { "cap": "Jika terjadi 3 kali, nilai berkurang 3 poin.", "tts": "Jika terjadi tiga kali, nilai berkurang tiga poin." }
+  ]},
+  { "id": "tips", "title": "Tips Agar Aman", "lines": [
+    { "cap": "Agar aman, ikuti tips berikut." },
+    { "cap": "Aktifkan mode Jangan Ganggu agar notifikasi dan telepon tidak muncul." },
+    { "cap": "Tutup semua aplikasi dan tab lain sebelum menekan Mulai Ujian." },
+    { "cap": "Jangan tarik panel notifikasi, jangan buka kalkulator di aplikasi lain, jangan tekan tombol Home." },
+    { "cap": "Isi daya baterai, dan jangan memuat ulang (refresh) halaman tanpa alasan.",
+      "tts": "Isi daya baterai, dan jangan memuat ulang halaman tanpa alasan." }
+  ]},
+  { "id": "reconnect", "title": "Jika Terputus", "lines": [
+    { "cap": "Bagaimana jika internet terputus atau browser tertutup tidak sengaja?" },
+    { "cap": "Tenang. Buka kembali link atau QR Code yang sama, lalu masukkan NIM yang sama.",
+      "tts": "Tenang. Buka kembali link, atau kiu ar kode yang sama, lalu masukkan nim yang sama." },
+    { "cap": "Anda melanjutkan ujian yang sama, dengan soal dan jawaban yang sudah tersimpan." },
+    { "cap": "Ingat: waktu tetap berjalan, dan meninggalkan halaman ujian tetap tercatat sebagai pelanggaran." },
+    { "cap": "Jika muncul “Gagal menyimpan jawaban”, periksa koneksi lalu pilih ulang jawaban Anda.",
+      "tts": "Jika muncul pesan gagal menyimpan jawaban, periksa koneksi, lalu pilih ulang jawaban Anda." }
+  ]},
+  { "id": "submit", "title": "Mengumpulkan Ujian", "lines": [
+    { "cap": "Jika sudah selesai, buka soal terakhir dan tekan tombol Submit Ujian.", "tts": "Jika sudah selesai, buka soal terakhir, dan tekan tombol sabmit ujian." },
+    { "cap": "Sebelumnya, cek nomor soal yang masih abu-abu — artinya belum dijawab.", "tts": "Sebelumnya, cek nomor soal yang masih abu abu. Artinya belum dijawab." },
+    { "cap": "Muncul konfirmasi berisi jumlah soal yang sudah Anda jawab." },
+    { "cap": "Tekan “Ya, Kumpulkan”. Setelah dikumpulkan, jawaban tidak dapat diubah lagi.",
+      "tts": "Tekan, ya, kumpulkan. Setelah dikumpulkan, jawaban tidak dapat diubah lagi." }
+  ]},
+  { "id": "result", "title": "Melihat Hasil", "lines": [
+    { "cap": "Jika dosen mengizinkan, hasil ujian langsung tampil." },
+    { "cap": "Terlihat jumlah benar dan salah, nilai akhir, persentase, dan durasi pengerjaan." },
+    { "cap": "Jika ada pelanggaran: Nilai Akhir = Raw Score − Penalti. Nilai tidak akan kurang dari 0.",
+      "tts": "Jika ada pelanggaran, nilai akhir adalah nilai awal dikurangi penalti. Nilai tidak akan kurang dari nol." },
+    { "cap": "Di bawahnya ada koreksi setiap soal, lengkap dengan jawaban benar dan pembahasan." },
+    { "cap": "Tekan “Download Hasil Ujian” untuk menyimpan hasil dalam bentuk PDF.", "tts": "Tekan, daunlod hasil ujian, untuk menyimpan hasil dalam bentuk pe de ef." },
+    { "cap": "Jika tampil “Hasil Belum Tersedia”, hasil sedang menunggu dipublikasikan oleh dosen.",
+      "tts": "Jika tampil tulisan hasil belum tersedia, berarti hasil sedang menunggu dipublikasikan oleh dosen." },
+    { "cap": "Segera unduh PDF Anda — halaman hasil hanya berlaku sekitar 24 jam setelah ujian berakhir.",
+      "tts": "Segera unduh pe de ef Anda. Halaman hasil hanya berlaku sekitar dua puluh empat jam setelah ujian berakhir." }
+  ]},
+  { "id": "summary", "title": "Ringkasan Aturan", "lines": [
+    { "cap": "Mari kita rangkum aturannya." },
+    { "cap": "Gunakan NIM sendiri. Waktu berjalan sejak Mulai Ujian. Jawaban tersimpan otomatis.",
+      "tts": "Gunakan nim sendiri. Waktu berjalan sejak mulai ujian. Jawaban tersimpan otomatis." },
+    { "cap": "Jangan pindah aplikasi, jangan copy-paste, jangan klik kanan. Setiap pelanggaran −1 poin.",
+      "tts": "Jangan pindah aplikasi, jangan kopi paste, dan jangan klik kanan. Setiap pelanggaran, minus satu poin." },
+    { "cap": "Waktu habis = terkumpul otomatis. Setelah dikumpulkan, jawaban tidak bisa diubah.",
+      "tts": "Waktu habis, ujian terkumpul otomatis. Setelah dikumpulkan, jawaban tidak bisa diubah." },
+    { "cap": "Selamat mengerjakan ujian, semoga sukses!" }
+  ]}
+]

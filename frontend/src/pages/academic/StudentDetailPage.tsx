@@ -287,7 +287,7 @@ export function StudentDetailPage() {
             )}
           </Card>
 
-          {canSeeKrs && transcript && (
+          {/* {canSeeKrs && transcript && (
             <Card title="Transkrip" description="IP per periode dan IPK kumulatif berdasarkan nilai yang sudah terbit." noPadding>
               <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
                 <StatCard label="IPK" value={transcript.ipk.toFixed(2)} icon={GraduationCap} />
@@ -300,7 +300,7 @@ export function StudentDetailPage() {
                 emptyMessage="Belum ada nilai yang terbit."
               />
             </Card>
-          )}
+          )} */}
 
           {canSeeKrs && (
             <Card
