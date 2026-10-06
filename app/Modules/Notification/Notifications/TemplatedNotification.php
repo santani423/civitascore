@@ -22,11 +22,13 @@ class TemplatedNotification extends Notification implements ShouldQueue
     /**
      * @param  array<int, NotificationChannel>  $channels
      * @param  array<string, string>  $placeholders
+     * @param  array<string, string|null>  $data  Data terstruktur tambahan untuk kanal database (mis. `link` ke halaman terkait), ikut disimpan apa adanya.
      */
     public function __construct(
         private readonly string $eventKey,
         private readonly array $channels,
         private readonly array $placeholders = [],
+        private readonly array $data = [],
     ) {
         $this->assignUlidId();
     }
@@ -45,6 +47,7 @@ class TemplatedNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
+            ...$this->data,
             'event_key' => $this->eventKey,
             'message' => app(TemplateRenderer::class)->render($this->eventKey, NotificationChannel::Database, $this->placeholders),
         ];

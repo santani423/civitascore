@@ -111,6 +111,7 @@ class RolePermissionSeeder extends Seeder
         'students' => [
             PermissionAction::Read,
             PermissionAction::Create,
+            PermissionAction::Update,
         ],
         'lecturers' => [
             PermissionAction::Read,
@@ -124,8 +125,11 @@ class RolePermissionSeeder extends Seeder
         'study_programs' => [
             PermissionAction::Read,
         ],
+        // classes.update = Bagian Akademik mengelola kelas mana pun (jadwal,
+        // dosen pengampu, materi/tugas) — dosen cukup lewat kepemilikan kelas.
         'classes' => [
             PermissionAction::Read,
+            PermissionAction::Update,
         ],
         'invoices' => [
             PermissionAction::Read,
@@ -135,11 +139,64 @@ class RolePermissionSeeder extends Seeder
         ],
         'courses' => [
             PermissionAction::Read,
+            PermissionAction::Update,
         ],
         'krs' => [
             PermissionAction::Read,
             PermissionAction::Create,
             PermissionAction::Update,
+            PermissionAction::Approve,
+        ],
+        // Dosen wali menyetujui/menolak KRS mahasiswa perwaliannya sendiri
+        // (dicek object-level lewat students.academic_advisor_id) — terpisah
+        // dari krs.approve milik Bagian Akademik (semua mahasiswa).
+        'krs_advising' => [
+            PermissionAction::Read,
+            PermissionAction::Approve,
+        ],
+        // Layanan mandiri Portal Mahasiswa — selalu dibatasi ke data milik
+        // akun yang login ($user->student), tidak pernah membuka data
+        // mahasiswa lain (pola sama dengan exam_participation di bawah).
+        'student_portal' => [
+            PermissionAction::Read,
+            PermissionAction::Update,
+        ],
+        'krs_self_service' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+        ],
+        'student_requests' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+        ],
+        // Perkuliahan: materi & tugas dikelola dosen pengampu kelasnya
+        // sendiri (atau Bagian Akademik lewat classes.update).
+        'course_materials' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+            PermissionAction::Delete,
+        ],
+        'assignments' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+            PermissionAction::Delete,
+        ],
+        // create = mahasiswa mengumpulkan tugasnya sendiri; read/update =
+        // dosen pengampu melihat & menilai pengumpulan di kelasnya.
+        'assignment_submissions' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+        ],
+        'academic_calendar' => [
+            PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+            PermissionAction::Delete,
         ],
         'grades' => [
             PermissionAction::Read,
@@ -197,6 +254,9 @@ class RolePermissionSeeder extends Seeder
         ],
         'announcements' => [
             PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+            PermissionAction::Delete,
         ],
         'reports' => [
             PermissionAction::Read,

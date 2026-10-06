@@ -170,13 +170,9 @@ class DashboardStatsService
      */
     private function studentStatus(\Illuminate\Database\Eloquent\Builder $studentQuery): array
     {
-        $labels = [
-            StudentStatus::Active->value => 'Aktif',
-            StudentStatus::Leave->value => 'Cuti',
-            StudentStatus::Graduated->value => 'Lulus',
-            StudentStatus::Inactive->value => 'Nonaktif',
-            StudentStatus::DroppedOut->value => 'Drop Out',
-        ];
+        $labels = collect(StudentStatus::cases())
+            ->mapWithKeys(fn (StudentStatus $status): array => [$status->value => $status->label()])
+            ->all();
 
         return (clone $studentQuery)
             ->selectRaw('status, count(*) as total')

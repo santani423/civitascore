@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Academic\Database\Factories\LecturerFactory;
 use Modules\AuditLog\Support\Auditable;
 use Modules\HumanResource\Enums\AcademicRank;
@@ -91,6 +92,26 @@ class Lecturer extends Model implements ScopesToInstitution
     public function studyProgram(): BelongsTo
     {
         return $this->belongsTo(StudyProgram::class);
+    }
+
+    /**
+     * Kelas yang diampu dosen ini.
+     *
+     * @return HasMany<ClassSection, $this>
+     */
+    public function classSections(): HasMany
+    {
+        return $this->hasMany(ClassSection::class);
+    }
+
+    /**
+     * Mahasiswa perwalian (dosen ini sebagai dosen wali).
+     *
+     * @return HasMany<Student, $this>
+     */
+    public function advisees(): HasMany
+    {
+        return $this->hasMany(Student::class, 'academic_advisor_id');
     }
 
     protected static function newFactory(): LecturerFactory

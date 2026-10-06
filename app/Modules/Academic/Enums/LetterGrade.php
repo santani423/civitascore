@@ -12,6 +12,24 @@ enum LetterGrade: string
     case D = 'D';
     case E = 'E';
 
+    /**
+     * Nilai minimum yang dianggap "lulus" sebuah mata kuliah: tidak boleh
+     * diambil ulang lewat KRS dan memenuhi syarat prasyarat (kecuali
+     * prasyaratnya menetapkan nilai minimum sendiri). D/E boleh diulang
+     * untuk perbaikan — IPK memakai nilai terbaik (AcademicRecordService).
+     */
+    public const PASSING = self::C;
+
+    public function meets(self $minimum): bool
+    {
+        return $this->weight() >= $minimum->weight();
+    }
+
+    public function isPassing(): bool
+    {
+        return $this->meets(self::PASSING);
+    }
+
     /** Bobot IP standar (skala 4,00) dipakai untuk perhitungan IP/IPK. */
     public function weight(): float
     {

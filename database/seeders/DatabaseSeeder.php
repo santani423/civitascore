@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Modules\Academic\Database\Seeders\StudentUserAccountSeeder;
+use Modules\HumanResource\Database\Seeders\HumanResourceSeeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
 use Modules\SystemSetting\Database\Seeders\SystemSettingSeeder;
@@ -71,5 +72,11 @@ class DatabaseSeeder extends Seeder
         // being left unlinked — must run after DemoUniversitiesSeeder,
         // which is what actually creates the Student rows.
         $this->call(StudentUserAccountSeeder::class);
+
+        // Modul SDM: master unit/jabatan/pangkat, melengkapi data pegawai &
+        // dosen hasil seeder akademik, riwayat, kontrak, dokumen, cuti, dan
+        // menautkan akun demo pegawai@/dosen@ ke data pegawai. Harus setelah
+        // DemoUniversitiesSeeder (yang membuat dosen/pegawai & akun demo).
+        $this->call(HumanResourceSeeder::class);
     }
 }

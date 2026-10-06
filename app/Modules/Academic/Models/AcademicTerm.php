@@ -5,6 +5,7 @@ namespace Modules\Academic\Models;
 use App\Support\Scoping\ScopesToInstitution;
 use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,8 @@ use Modules\Tenancy\Models\University;
  * @property bool $is_current
  * @property CarbonImmutable $start_date
  * @property CarbonImmutable $end_date
+ * @property CarbonImmutable|null $krs_start_date
+ * @property CarbonImmutable|null $krs_end_date
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  */
@@ -29,7 +32,10 @@ class AcademicTerm extends Model implements ScopesToInstitution
     /** @use HasFactory<AcademicTermFactory> */
     use HasFactory, HasUlids, TenantScoped;
 
-    protected $fillable = ['university_id', 'academic_year', 'semester', 'is_current', 'start_date', 'end_date'];
+    protected $fillable = [
+        'university_id', 'academic_year', 'semester', 'is_current', 'start_date', 'end_date',
+        'krs_start_date', 'krs_end_date',
+    ];
 
     protected function casts(): array
     {
@@ -38,7 +44,31 @@ class AcademicTerm extends Model implements ScopesToInstitution
             'is_current' => 'boolean',
             'start_date' => 'date',
             'end_date' => 'date',
+            'krs_start_date' => 'date',
+            'krs_end_date' => 'date',
         ];
+    }
+
+    /**
+     * Periode KRS terbuka = semester ini semester aktif DAN hari ini berada
+     * dalam rentang krs_start_date..krs_end_date (inklusif). Periode yang
+     * belum diatur Bagian Akademik dianggap tertutup.
+     */
+    public function isKrsOpen(?CarbonInterface $at = null): bool
+    {
+        if (! $this->is_current || $this->krs_start_date === null || $this->krs_end_date === null) {
+            return false;
+        }
+
+        $today = CarbonImmutable::instance($at ?? now())->startOfDay();
+
+        return $today->betweenIncluded($this->krs_start_date->startOfDay(), $this->krs_end_date->startOfDay());
+    }
+
+    /** Tahun awal tahun akademik — "2026/2027" → 2026. */
+    public function startYear(): int
+    {
+        return (int) substr($this->academic_year, 0, 4);
     }
 
     /**

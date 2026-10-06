@@ -21,11 +21,14 @@ use Modules\UserManagement\Models\Role;
  * deliberately separate from `exam_attempts.*` (dosen/pengawas recording on
  * behalf of *any* KrsItem) so granting it can never let a student touch
  * another student's attempt; ownership is still re-checked at the object
- * level by `ExamParticipationPolicy`/`StudentExamController`. Other
- * self-service (KRS enrollment, grades, attendance) still isn't wired up
- * this way — granting blanket krs.create today would let any authenticated
- * "student" enroll *any* student into *any* class — so `student` otherwise
- * still gets none. `employee`/`lecturer`/`academic_advisor` get only
+ * level by `ExamParticipationPolicy`/`StudentExamController`. The rest of
+ * the Portal Mahasiswa follows the same pattern with its own self-service
+ * resources (`student_portal.*`, `krs_self_service.*`, `student_requests.*`,
+ * `assignment_submissions.create`) — every one of them is resolved from
+ * `$user->student` server-side, so `student` still never receives an admin
+ * slug like krs.create/grades.read that would open other students' data.
+ * Dosen wali approve KRS through `krs_advising.*`, re-checked against
+ * students.academic_advisor_id. `employee`/`lecturer`/`academic_advisor` get only
  * `hr_self_service.*` (own leave & HR requests, scoped by
  * employees.user_id — see Modules\HumanResource SelfServiceController).
  * These demo accounts remain useful to prove RBAC denies admin endpoints to
@@ -126,9 +129,15 @@ class OrganizationalRoleSeeder extends Seeder
             'notification_templates.create', 'notification_templates.read', 'notification_templates.update',
             'file_uploads.read',
             'users.read',
-            'students.read', 'students.create', 'study_programs.read', 'classes.read',
-            'curriculums.read', 'courses.read', 'krs.read', 'krs.create', 'krs.update', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
-            'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
+            'students.read', 'students.create', 'students.update', 'study_programs.read', 'classes.read', 'classes.update',
+            'curriculums.read', 'courses.read', 'courses.update', 'krs.read', 'krs.create', 'krs.update', 'krs.approve',
+            'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
+            'course_materials.read', 'course_materials.create', 'course_materials.update', 'course_materials.delete',
+            'assignments.read', 'assignments.create', 'assignments.update', 'assignments.delete',
+            'assignment_submissions.read', 'assignment_submissions.update',
+            'academic_calendar.read', 'academic_calendar.create', 'academic_calendar.update', 'academic_calendar.delete',
+            'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read',
+            'announcements.read', 'announcements.create', 'announcements.update', 'announcements.delete', 'reports.read',
         ],
         'lecturer' => [
             ...self::HR_SELF_SERVICE,
@@ -136,6 +145,13 @@ class OrganizationalRoleSeeder extends Seeder
             'krs.read', 'grades.read', 'grades.create', 'grades.update', 'attendance.read', 'attendance.create', 'attendance.update',
             'exams.read', 'exams.create', 'exams.update', 'exams.delete', 'exams.publish', 'exam_attempts.read', 'exam_attempts.create', 'exam_attempts.update',
             'question_bank.read', 'question_bank.create', 'question_bank.update', 'question_bank.delete',
+            // Perkuliahan & perwalian — object-level: hanya kelas yang ia ampu
+            // dan mahasiswa yang ia walikan (ClassSectionAccess / KrsApprovalPolicy).
+            'course_materials.read', 'course_materials.create', 'course_materials.update', 'course_materials.delete',
+            'assignments.read', 'assignments.create', 'assignments.update', 'assignments.delete',
+            'assignment_submissions.read', 'assignment_submissions.update',
+            'krs_advising.read', 'krs_advising.approve',
+            'academic_calendar.read',
         ],
         'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read'],
         // Bagian SDM: seluruh Modul SDM. Izin menu lama employees.read/
@@ -166,12 +182,19 @@ class OrganizationalRoleSeeder extends Seeder
             'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
         ],
-        'student' => ['exam_participation.read', 'exam_participation.create', 'exam_participation.update'],
+        'student' => [
+            'exam_participation.read', 'exam_participation.create', 'exam_participation.update',
+            'student_portal.read', 'student_portal.update',
+            'krs_self_service.read', 'krs_self_service.create', 'krs_self_service.update',
+            'student_requests.read', 'student_requests.create', 'student_requests.update',
+            'assignment_submissions.create',
+        ],
         // academic_advisor & employee: tanpa permission admin. Keduanya
-        // hanya mendapat layanan mandiri SDM (cuti/pengajuan milik sendiri,
-        // dibatasi lewat employees.user_id) — fitur bimbingan dosen PA masih
-        // menunggu identity link dosen (lihat komentar kelas di atas).
-        'academic_advisor' => self::HR_SELF_SERVICE,
+        // mendapat layanan mandiri SDM (cuti/pengajuan milik sendiri,
+        // dibatasi lewat employees.user_id); dosen PA juga menyetujui KRS
+        // mahasiswa perwaliannya sendiri (krs_advising.*, dicek terhadap
+        // students.academic_advisor_id lewat identity link dosen).
+        'academic_advisor' => [...self::HR_SELF_SERVICE, 'krs_advising.read', 'krs_advising.approve'],
         'employee' => self::HR_SELF_SERVICE,
     ];
 

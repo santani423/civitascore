@@ -58,7 +58,7 @@ class StudentUserAccountSeeder extends Seeder
                 'password' => Hash::make('password'),
                 'must_change_password' => true,
                 'email_verified_at' => now(),
-                'is_active' => ! in_array($student->status, [StudentStatus::Inactive, StudentStatus::DroppedOut], true),
+                'is_active' => ! in_array($student->status, StudentStatus::loginBlocked(), true),
             ],
         );
 

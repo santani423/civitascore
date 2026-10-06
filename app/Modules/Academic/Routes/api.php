@@ -12,11 +12,15 @@ use Modules\Academic\Controllers\ExamGradeRangeController;
 use Modules\Academic\Controllers\ExamQuestionController;
 use Modules\Academic\Controllers\GradeController;
 use Modules\Academic\Controllers\KrsItemController;
+use Modules\Academic\Controllers\KrsSubmissionController;
 use Modules\Academic\Controllers\LecturerController;
 use Modules\Academic\Controllers\PublicExamController;
 use Modules\Academic\Controllers\QuestionBankController;
+use Modules\Academic\Controllers\StudentAcademicRecordController;
 use Modules\Academic\Controllers\StudentController;
 use Modules\Academic\Controllers\StudentExamController;
+use Modules\Academic\Controllers\StudentKrsController;
+use Modules\Academic\Controllers\StudentProfileController;
 use Modules\Academic\Controllers\StudyProgramController;
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -99,6 +103,37 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('student/exam-attempts/{examAttempt}/violations', [StudentExamController::class, 'recordViolation'])->middleware('permission:exam_participation.update');
     Route::get('student/exam-attempts/{examAttempt}/result', [StudentExamController::class, 'result'])->middleware('permission:exam_participation.read');
     Route::get('student/exam-attempts/{examAttempt}/result/pdf', [StudentExamController::class, 'resultPdf'])->middleware('permission:exam_participation.read');
+
+    // Portal Mahasiswa — layanan mandiri. Tidak ada satu pun yang menerima
+    // student_id dari klien: mahasiswa selalu diresolusi dari akun yang login
+    // (ResolvesCurrentStudent), resource ber-id dicek kepemilikannya lewat policy.
+    Route::middleware('permission:student_portal.read')->group(function (): void {
+        Route::get('student/profile', [StudentProfileController::class, 'show']);
+        Route::get('student/academic-summary', [StudentProfileController::class, 'academicSummary']);
+        Route::get('student/academic-history', [StudentProfileController::class, 'history']);
+        Route::get('student/schedule', [StudentAcademicRecordController::class, 'schedule']);
+        Route::get('student/attendance', [StudentAcademicRecordController::class, 'attendance']);
+        Route::get('student/attendance/{krsItem}', [StudentAcademicRecordController::class, 'attendanceDetail']);
+        Route::get('student/grades', [StudentAcademicRecordController::class, 'grades']);
+        Route::get('student/khs', [StudentAcademicRecordController::class, 'khs']);
+        Route::get('student/transcript', [StudentAcademicRecordController::class, 'transcript']);
+        Route::get('student/calendar', [StudentAcademicRecordController::class, 'calendar']);
+    });
+    Route::patch('student/profile', [StudentProfileController::class, 'update'])->middleware('permission:student_portal.update');
+
+    Route::get('student/krs', [StudentKrsController::class, 'show'])->middleware('permission:krs_self_service.read');
+    Route::get('student/krs/offerings', [StudentKrsController::class, 'offerings'])->middleware('permission:krs_self_service.read');
+    Route::get('student/krs/history', [StudentKrsController::class, 'history'])->middleware('permission:krs_self_service.read');
+    Route::post('student/krs/items', [StudentKrsController::class, 'addItem'])->middleware('permission:krs_self_service.create');
+    Route::delete('student/krs/items/{krsItem}', [StudentKrsController::class, 'removeItem'])->middleware('permission:krs_self_service.update');
+    Route::post('student/krs/submit', [StudentKrsController::class, 'submit'])->middleware('permission:krs_self_service.update');
+    Route::post('student/krs/cancel', [StudentKrsController::class, 'cancel'])->middleware('permission:krs_self_service.update');
+
+    // Persetujuan KRS — dosen wali (mahasiswa perwaliannya) & Bagian Akademik.
+    Route::get('krs-submissions', [KrsSubmissionController::class, 'index'])->middleware('permission:krs.approve,krs_advising.read');
+    Route::get('krs-submissions/{krsSubmission}', [KrsSubmissionController::class, 'show'])->middleware('permission:krs.approve,krs_advising.read');
+    Route::post('krs-submissions/{krsSubmission}/approve', [KrsSubmissionController::class, 'approve'])->middleware('permission:krs.approve,krs_advising.approve');
+    Route::post('krs-submissions/{krsSubmission}/reject', [KrsSubmissionController::class, 'reject'])->middleware('permission:krs.approve,krs_advising.approve');
 });
 
 // Akses ujian publik lewat link/QR + NIM, tanpa login (spec §3-11) — lihat

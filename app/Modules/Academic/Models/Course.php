@@ -75,6 +75,16 @@ class Course extends Model implements ScopesToInstitution
         return $this->hasMany(ClassSection::class);
     }
 
+    /**
+     * Mata kuliah yang wajib lulus lebih dulu sebelum mata kuliah ini boleh diambil.
+     *
+     * @return HasMany<CoursePrerequisite, $this>
+     */
+    public function prerequisites(): HasMany
+    {
+        return $this->hasMany(CoursePrerequisite::class);
+    }
+
     protected static function newFactory(): CourseFactory
     {
         return CourseFactory::new();
