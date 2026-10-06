@@ -154,12 +154,12 @@ class OrganizationalRoleSeeder extends Seeder
             'academic_calendar.read',
         ],
         'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read'],
-        // Bagian SDM: seluruh Modul SDM. Izin menu lama employees.read/
-        // lecturers.* tidak lagi diberikan — Data Pegawai/Dosen dikelola
-        // dari menu SDM (yang ikut menyinkronkan tabel `lecturers`), jadi
-        // role ini tidak melihat menu Dosen/Pegawai ganda di sidebar.
+        // Bagian SDM: seluruh Modul SDM, plus CRUD menu Dosen (lecturers.*)
+        // — LecturerObserver menyinkronkan setiap perubahan dosen ke data
+        // pegawainya di Modul SDM, jadi tetap satu identitas.
         'hr_administrator' => [
             'user_roles.read', 'users.read',
+            'lecturers.read', 'lecturers.create', 'lecturers.update', 'lecturers.delete',
             ...self::HR_READ,
             'hr_employees.create', 'hr_employees.update', 'hr_employees.delete', 'hr_employees.export',
             'hr_lecturers.create', 'hr_lecturers.update', 'hr_lecturers.delete',

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Academic\Database\Seeders\AtmaJayaAccountSeeder;
 use Modules\Academic\Database\Seeders\StudentUserAccountSeeder;
 use Modules\HumanResource\Database\Seeders\HumanResourceSeeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
@@ -78,5 +79,9 @@ class DatabaseSeeder extends Seeder
         // menautkan akun demo pegawai@/dosen@ ke data pegawai. Harus setelah
         // DemoUniversitiesSeeder (yang membuat dosen/pegawai & akun demo).
         $this->call(HumanResourceSeeder::class);
+
+        // Seluruh akun @atmajaya.com (staf, dosen, mahasiswa sampel) tertaut
+        // ke kampus Atma Jaya; akun ber-role dosen dibuatkan data dosennya.
+        $this->call(AtmaJayaAccountSeeder::class);
     }
 }
