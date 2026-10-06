@@ -1,97 +1,100 @@
+import { useCallback, useState } from 'react'
+import { Download, FileText } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
-import { Badge, type BadgeVariant } from '@/components/ui/Badge'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Select'
+import { Alert } from '@/components/ui/Alert'
+import { PortalEmpty, PortalError, PortalLoading } from '@/components/portal/PortalState'
+import { GradeTable, SummaryTiles } from '@/components/portal/GradeTable'
+import { useFetch } from '@/hooks/useFetch'
+import { downloadBlob, studentPortalService } from '@/services/studentPortalService'
+import type { NormalizedApiError } from '@/services/api'
 import { ROUTES } from '@/constants/routes'
-
-type LetterGrade = 'A' | 'AB' | 'B' | 'BC' | 'C' | 'D' | 'E'
-
-const LETTER_GRADE_VARIANT: Record<LetterGrade, BadgeVariant> = {
-  A: 'success',
-  AB: 'success',
-  B: 'info',
-  BC: 'info',
-  C: 'warning',
-  D: 'danger',
-  E: 'danger',
-}
-
-const SEMESTER_OPTIONS = [
-  { value: 'ganjil-2026-2027', label: 'Ganjil 2026/2027' },
-  { value: 'genap-2025-2026', label: 'Genap 2025/2026' },
-  { value: 'ganjil-2025-2026', label: 'Ganjil 2025/2026' },
-]
-
-interface KhsRow {
-  code: string
-  course: string
-  credits: number
-  letterGrade: LetterGrade
-  weight: number
-  score: number
-}
-
-const KHS_ROWS: KhsRow[] = [
-  { code: 'IF301', course: 'Struktur Data', credits: 3, letterGrade: 'A', weight: 4.0, score: 90 },
-  { code: 'IF302', course: 'Basis Data', credits: 3, letterGrade: 'AB', weight: 3.7, score: 85 },
-  { code: 'IF303', course: 'Pemrograman Berorientasi Objek', credits: 3, letterGrade: 'A', weight: 4.0, score: 92 },
-  { code: 'UN201', course: 'Bahasa Inggris Akademik', credits: 2, letterGrade: 'B', weight: 3.0, score: 78 },
-  { code: 'IF304', course: 'Sistem Operasi', credits: 3, letterGrade: 'BC', weight: 2.7, score: 74 },
-  { code: 'IF305', course: 'Matematika Diskrit', credits: 3, letterGrade: 'AB', weight: 3.7, score: 86 },
-]
-
-const KHS_COLUMNS: DataTableColumn<KhsRow>[] = [
-  { header: 'Kode', cell: (row) => row.code },
-  { header: 'Mata Kuliah', cell: (row) => row.course },
-  { header: 'SKS', cell: (row) => row.credits },
-  {
-    header: 'Nilai Huruf',
-    cell: (row) => <Badge variant={LETTER_GRADE_VARIANT[row.letterGrade]}>{row.letterGrade}</Badge>,
-  },
-  { header: 'Bobot', cell: (row) => row.weight.toFixed(2) },
-  { header: 'Nilai Angka', cell: (row) => row.score },
-]
+import { formatGpa } from '@/utils/portalFormat'
 
 export function PortalKhsPage() {
+  const [termId, setTermId] = useState('')
+  const fetchKhs = useCallback(() => studentPortalService.khs(termId || undefined), [termId])
+  const { data, isLoading, error, refetch } = useFetch(fetchKhs)
+  const [downloading, setDownloading] = useState(false)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  const handleDownload = async () => {
+    if (!data?.term) return
+    setDownloading(true)
+    setDownloadError(null)
+
+    try {
+      await downloadBlob(`/student/documents/khs/${data.term.id}`, `KHS-${data.term.label.replace(/\W+/g, '-')}.pdf`)
+    } catch (err) {
+      setDownloadError((err as NormalizedApiError).message)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  if (isLoading && !data) return <PortalLoading cards={4} rows={6} />
+  if (error) return <PortalError message={error} onRetry={refetch} />
+  if (!data) return null
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
         title="Kartu Hasil Studi (KHS)"
-        description="Ringkasan nilai Anda per semester."
+        description={data.term ? `${data.semester_number ? `Semester ${data.semester_number} — ` : ''}${data.term.label}` : undefined}
         breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Akademik' }, { label: 'KHS' }]}
+        actions={
+          data.term ? (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {data.terms.length > 1 && (
+                <div className="w-full sm:w-56">
+                  <Select
+                    aria-label="Pilih semester"
+                    value={data.term.id}
+                    onChange={(event) => setTermId(event.target.value)}
+                    options={[...data.terms].reverse().map((term) => ({ value: term.id, label: term.label }))}
+                  />
+                </div>
+              )}
+              <Button variant="outline" size="sm" leftIcon={<Download className="size-3.5" />} isLoading={downloading} onClick={handleDownload}>
+                Unduh PDF
+              </Button>
+            </div>
+          ) : undefined
+        }
       />
 
-      <div className="max-w-xs">
-        <Select label="Semester" options={SEMESTER_OPTIONS} defaultValue={SEMESTER_OPTIONS[0].value} />
-      </div>
+      {downloadError && (
+        <Alert variant="danger" onDismiss={() => setDownloadError(null)}>
+          {downloadError}
+        </Alert>
+      )}
 
-      <Card title="Ringkasan Semester">
-        <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
-          <div>
-            <p className="text-ink-tertiary">IP Semester</p>
-            <p className="mt-0.5 text-lg font-semibold text-ink-primary">3.72</p>
-          </div>
-          <div>
-            <p className="text-ink-tertiary">SKS Diambil</p>
-            <p className="mt-0.5 text-lg font-semibold text-ink-primary">21</p>
-          </div>
-          <div>
-            <p className="text-ink-tertiary">SKS Lulus</p>
-            <p className="mt-0.5 text-lg font-semibold text-ink-primary">21</p>
-          </div>
-          <div>
-            <p className="text-ink-tertiary">Status</p>
-            <Badge variant="success" className="mt-1">
-              Lulus Semua
-            </Badge>
-          </div>
-        </div>
-      </Card>
+      {!data.term || !data.summary ? (
+        <PortalEmpty icon={FileText} title="KHS belum tersedia." description="KHS tersedia setelah Anda mengikuti perkuliahan dan nilai diinput dosen." />
+      ) : (
+        <>
+          <SummaryTiles
+            items={[
+              { label: 'SKS Semester (dinilai)', value: String(data.summary.term_credits) },
+              { label: 'IPS', value: formatGpa(data.summary.ips) },
+              { label: 'IPK (s.d. semester ini)', value: formatGpa(data.summary.ipk) },
+              { label: 'Total SKS Kumulatif', value: String(data.summary.cumulative_credits) },
+            ]}
+          />
 
-      <Card title="Rincian Nilai per Mata Kuliah" noPadding>
-        <DataTable columns={KHS_COLUMNS} data={KHS_ROWS} rowKey={(row) => row.code} />
-      </Card>
+          {!data.summary.all_graded && (
+            <Alert variant="info">Sebagian mata kuliah semester ini belum dinilai — IPS dihitung dari mata kuliah yang sudah dinilai.</Alert>
+          )}
+
+          <Card title="Rincian Nilai" noPadding>
+            <div className="px-4 py-2 sm:px-2">
+              <GradeTable rows={data.rows} />
+            </div>
+          </Card>
+        </>
+      )}
     </div>
   )
 }

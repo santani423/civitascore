@@ -47,7 +47,7 @@ class Assignment extends Model implements RestrictsFileAccess, ScopesToInstituti
     use HasFactory, HasUlids, TenantScoped;
 
     /** Format berkas default bila dosen tidak membatasi sendiri. */
-    public const DEFAULT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'jpg', 'jpeg', 'png'];
+    public const DEFAULT_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'];
 
     protected $fillable = [
         'university_id', 'class_section_id', 'title', 'description', 'attachment_file_id', 'due_at',

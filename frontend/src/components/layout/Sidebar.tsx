@@ -64,8 +64,8 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
   // (Akademik, Mahasiswa, dst.) cuma disisipkan setelah Tenant Switcher
   // aktif — lihat docs/RANCANGAN-SUPER-ADMIN.md §1-2. Lalu disaring lagi
   // per permission supaya menu yang pasti ditolak backend (403) tidak
-  // ditampilkan sama sekali. Mahasiswa dapat menu Portal tersendiri, tanpa
-  // filter permission (bukan resource admin, lihat PORTAL_NAV_ITEMS).
+  // ditampilkan sama sekali. Mahasiswa dapat menu Portal tersendiri, disaring
+  // dengan permission layanan mandiri mahasiswa (lihat PORTAL_NAV_ITEMS).
   const navItems = isSuperAdmin
     ? filterNavItems(
         tenantSelected
@@ -74,9 +74,16 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
         permissions,
       )
     : isStudent
-      ? PORTAL_NAV_ITEMS
+      ? filterNavItems(PORTAL_NAV_ITEMS, permissions)
       : filterNavItems(NAV_ITEMS, permissions)
-  const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(new Set([navItems[1]?.label ?? '']))
+  const [openSubmenus, setOpenSubmenus] = useState<Set<string>>(
+    () =>
+      new Set([
+        navItems.find((item) => isChildActive(pathname, item.children))?.label ??
+          navItems.find((item) => item.children?.length)?.label ??
+          '',
+      ]),
+  )
 
   const toggleSubmenu = (label: string) => {
     setOpenSubmenus((current) => {

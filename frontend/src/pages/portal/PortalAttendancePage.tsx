@@ -1,98 +1,149 @@
-import { CheckCircle } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { ClipboardCheck } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
-import { Badge, type BadgeVariant } from '@/components/ui/Badge'
+import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { StatCard } from '@/components/ui/StatCard'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { Modal } from '@/components/ui/Modal'
+import { Select } from '@/components/ui/Select'
+import { PortalEmpty, PortalError, PortalLoading, ProgressBar } from '@/components/portal/PortalState'
+import { useFetch } from '@/hooks/useFetch'
+import { studentPortalService } from '@/services/studentPortalService'
 import { ROUTES } from '@/constants/routes'
+import type { AttendanceCourse, AttendanceDetail } from '@/types/studentPortal'
+import { formatDate, formatPercent } from '@/utils/portalFormat'
+import type { NormalizedApiError } from '@/services/api'
 
-const TODAY_CLASSES = [
-  { id: '1', course: 'Struktur Data', time: '08:00 - 09:40', room: 'Lab Komputer 2', checkedIn: true },
-  { id: '2', course: 'Basis Data', time: '10:00 - 11:40', room: 'Ruang 301', checkedIn: false },
-]
+const MEETING_VARIANT = { present: 'success', permitted: 'info', sick: 'warning', absent: 'danger' } as const
 
-const ATTENDANCE_SUMMARY = [
-  { label: 'Hadir', value: 42 },
-  { label: 'Izin', value: 2 },
-  { label: 'Sakit', value: 1 },
-  { label: 'Alpa', value: 0 },
-]
-
-const ATTENDANCE_HISTORY = [
-  { id: '1', date: '2026-07-18', course: 'Struktur Data', meeting: 5, status: 'present' as const },
-  { id: '2', date: '2026-07-17', course: 'Basis Data', meeting: 5, status: 'present' as const },
-  { id: '3', date: '2026-07-16', course: 'Bahasa Inggris Akademik', meeting: 4, status: 'permitted' as const },
-  { id: '4', date: '2026-07-15', course: 'Struktur Data', meeting: 4, status: 'present' as const },
-  { id: '5', date: '2026-07-14', course: 'Basis Data', meeting: 4, status: 'sick' as const },
-  { id: '6', date: '2026-07-11', course: 'Bahasa Inggris Akademik', meeting: 3, status: 'present' as const },
-  { id: '7', date: '2026-07-10', course: 'Struktur Data', meeting: 3, status: 'absent' as const },
-  { id: '8', date: '2026-07-09', course: 'Basis Data', meeting: 3, status: 'present' as const },
-]
-
-const ATTENDANCE_STATUS_LABEL: Record<(typeof ATTENDANCE_HISTORY)[number]['status'], string> = {
-  present: 'Hadir',
-  permitted: 'Izin',
-  sick: 'Sakit',
-  absent: 'Alpa',
+function Counts({ row }: { row: Pick<AttendanceCourse, 'present' | 'permitted' | 'sick' | 'absent'> }) {
+  return (
+    <div className="grid grid-cols-4 gap-2 text-center text-xs">
+      {[
+        ['Hadir', row.present],
+        ['Izin', row.permitted],
+        ['Sakit', row.sick],
+        ['Alpa', row.absent],
+      ].map(([label, value]) => (
+        <div key={label as string} className="rounded-lg bg-surface-hover px-1 py-1.5">
+          <p className="text-base font-semibold text-ink-primary">{value}</p>
+          <p className="text-ink-tertiary">{label}</p>
+        </div>
+      ))}
+    </div>
+  )
 }
-
-const ATTENDANCE_STATUS_VARIANT: Record<(typeof ATTENDANCE_HISTORY)[number]['status'], BadgeVariant> = {
-  present: 'success',
-  permitted: 'info',
-  sick: 'warning',
-  absent: 'danger',
-}
-
-const ATTENDANCE_COLUMNS: DataTableColumn<(typeof ATTENDANCE_HISTORY)[number]>[] = [
-  { header: 'Tanggal', cell: (row) => row.date },
-  { header: 'Mata Kuliah', cell: (row) => row.course },
-  { header: 'Pertemuan Ke-', cell: (row) => `Ke-${row.meeting}` },
-  {
-    header: 'Status',
-    cell: (row) => <Badge variant={ATTENDANCE_STATUS_VARIANT[row.status]}>{ATTENDANCE_STATUS_LABEL[row.status]}</Badge>,
-  },
-]
 
 export function PortalAttendancePage() {
+  const [termId, setTermId] = useState<string>('')
+  const fetchAttendance = useCallback(() => studentPortalService.attendance(termId || undefined), [termId])
+  const { data, isLoading, error, refetch } = useFetch(fetchAttendance)
+
+  const [detail, setDetail] = useState<AttendanceDetail | null>(null)
+  const [detailError, setDetailError] = useState<string | null>(null)
+  const [loadingDetail, setLoadingDetail] = useState<string | null>(null)
+
+  const openDetail = async (row: AttendanceCourse) => {
+    setLoadingDetail(row.krs_item_id)
+    setDetailError(null)
+
+    try {
+      setDetail(await studentPortalService.attendanceDetail(row.krs_item_id))
+    } catch (err) {
+      setDetailError((err as NormalizedApiError).message)
+    } finally {
+      setLoadingDetail(null)
+    }
+  }
+
+  if (isLoading && !data) return <PortalLoading cards={3} rows={4} />
+  if (error) return <PortalError message={error} onRetry={refetch} />
+  if (!data) return null
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="Absensi"
-        breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Akademik' }, { label: 'Absensi' }]}
+        title="Presensi"
+        description={`Rekap kehadiran per mata kuliah. Batas minimum kehadiran ${formatPercent(data.minimum_percent)}.`}
+        breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Akademik' }, { label: 'Presensi' }]}
+        actions={
+          data.terms.length > 1 ? (
+            <div className="w-56">
+              <Select
+                aria-label="Pilih semester"
+                value={termId || data.term?.id || ''}
+                onChange={(event) => setTermId(event.target.value)}
+                options={data.terms.map((term) => ({ value: term.id, label: term.label }))}
+              />
+            </div>
+          ) : undefined
+        }
       />
 
-      <Card title="Presensi Kelas Hari Ini">
-        <ul className="divide-y divide-border">
-          {TODAY_CLASSES.map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-              <div>
-                <p className="font-medium text-ink-primary">{item.course}</p>
-                <p className="text-xs text-ink-tertiary">
-                  {item.time} · {item.room}
-                </p>
+      {detailError && <PortalError message={detailError} />}
+
+      <Card>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs text-ink-tertiary">Kehadiran keseluruhan {data.term ? `· ${data.term.label}` : ''}</p>
+            <p className="text-2xl font-semibold text-ink-primary">{formatPercent(data.overall.percentage)}</p>
+          </div>
+          <div className="w-full sm:max-w-sm">
+            <Counts row={data.overall} />
+          </div>
+        </div>
+      </Card>
+
+      {data.courses.length === 0 ? (
+        <PortalEmpty icon={ClipboardCheck} title="Belum ada data presensi." description="Presensi muncul setelah dosen mencatat kehadiran di kelas yang Anda ikuti." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {data.courses.map((row) => (
+            <Card key={row.krs_item_id}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-ink-primary">{row.course_name}</p>
+                  <p className="text-xs text-ink-secondary">
+                    {row.course_code} · Kelas {row.class_code} · {row.lecturer?.name ?? '-'}
+                  </p>
+                </div>
+                {row.is_below_minimum && <Badge variant="danger">Di bawah minimum</Badge>}
               </div>
-              {item.checkedIn ? (
-                <Badge variant="success">Sudah Presensi</Badge>
-              ) : (
-                <Button variant="primary" size="sm">
-                  Lakukan Presensi
-                </Button>
-              )}
-            </li>
+              <div className="mt-3 flex items-end justify-between">
+                <p className="text-xl font-semibold text-ink-primary">{formatPercent(row.percentage)}</p>
+                <p className="text-xs text-ink-tertiary">{row.total_meetings} pertemuan</p>
+              </div>
+              <div className="mt-1.5">
+                <ProgressBar value={row.percentage ?? 0} tone={row.is_below_minimum ? 'danger' : 'primary'} />
+              </div>
+              <div className="mt-3">
+                <Counts row={row} />
+              </div>
+              <Button size="sm" variant="ghost" className="mt-2 w-full" isLoading={loadingDetail === row.krs_item_id} onClick={() => openDetail(row)}>
+                Lihat detail pertemuan
+              </Button>
+            </Card>
           ))}
-        </ul>
-      </Card>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {ATTENDANCE_SUMMARY.map((item) => (
-          <StatCard key={item.label} label={item.label} value={String(item.value)} icon={CheckCircle} />
-        ))}
-      </div>
-
-      <Card title="Riwayat Kehadiran" noPadding>
-        <DataTable columns={ATTENDANCE_COLUMNS} data={ATTENDANCE_HISTORY} rowKey={(row) => row.id} />
-      </Card>
+      <Modal open={detail !== null} onClose={() => setDetail(null)} title={detail ? `Presensi ${detail.course_name}` : undefined}>
+        {detail && (
+          <ul className="flex flex-col divide-y divide-border">
+            {detail.meetings.length === 0 && <li className="py-2 text-sm text-ink-secondary">Belum ada pertemuan tercatat.</li>}
+            {detail.meetings.map((meeting) => (
+              <li key={meeting.meeting_number} className="flex items-center justify-between gap-2 py-2.5 text-sm">
+                <div>
+                  <p className="font-medium text-ink-primary">Pertemuan {meeting.meeting_number}</p>
+                  <p className="text-xs text-ink-secondary">{formatDate(meeting.meeting_date, 'long')}</p>
+                  {meeting.notes && <p className="text-xs text-ink-tertiary">{meeting.notes}</p>}
+                </div>
+                <Badge variant={MEETING_VARIANT[meeting.status]}>{meeting.status_label}</Badge>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
     </div>
   )
 }

@@ -19,7 +19,8 @@ import {
   BookOpen,
   FileText,
   ClipboardCheck,
-  Award,
+  CalendarDays,
+  Bell,
 } from 'lucide-react'
 import type { NavItem } from '@/types/navigation'
 import { ROUTES } from '@/constants/routes'
@@ -80,6 +81,9 @@ export const TENANT_BUSINESS_NAV_ITEMS: NavItem[] = [
       { label: 'Penilaian', path: ROUTES.akademik.penilaian, permission: 'grades.read' },
       { label: 'Ujian', path: ROUTES.akademik.ujian, permission: 'exams.read' },
       { label: 'Bank Soal', path: ROUTES.akademik.bankSoal, permission: 'question_bank.read' },
+      { label: 'Kelas Saya', path: ROUTES.akademik.kelasSaya, permission: ['course_materials.read', 'assignments.read'] },
+      { label: 'Persetujuan KRS', path: ROUTES.akademik.persetujuanKrs, permission: ['krs.approve', 'krs_advising.read'] },
+      { label: 'Pengajuan Mahasiswa', path: ROUTES.akademik.pengajuanMahasiswa, permission: 'approval_requests.read' },
     ],
   },
   { label: 'Mahasiswa', path: ROUTES.mahasiswa, icon: Users, permission: 'students.read' },
@@ -121,62 +125,46 @@ export const PLATFORM_NAV_ITEMS: NavItem[] = [
 ]
 
 /**
- * Menu Portal Mahasiswa — data serba "milik saya sendiri" (KRS, nilai,
- * tugas, tagihan, dst), bukan resource admin, jadi sengaja TIDAK dipasangi
- * `permission` seperti TENANT_BUSINESS_NAV_ITEMS: tidak ada permission
- * slug admin yang relevan untuk "lihat KRS saya sendiri" — batasnya adalah
- * kepemilikan data (scoped ke user login), bukan RBAC. Ditampilkan
- * menggantikan NAV_ITEMS saat role aktif pengguna adalah mahasiswa (lihat
- * Sidebar.tsx + useIsStudent()). Fase ini murni UI — halaman-halamannya
- * belum tersambung ke API sungguhan (lihat masing-masing page).
+ * Menu Portal Mahasiswa (RANCANGAN-AKUN-MAHASISWA.md) — data serba "milik
+ * saya sendiri". `permission` di sini adalah slug layanan mandiri mahasiswa
+ * (student_portal.*, krs_self_service.*, student_requests.*,
+ * exam_participation.*), bukan permission admin: backend selalu
+ * meresolusi data dari akun yang login, permission hanya menentukan
+ * layanan mana yang aktif untuk role tersebut. Ditampilkan menggantikan
+ * NAV_ITEMS saat role pengguna adalah mahasiswa (Sidebar.tsx + useIsStudent()).
  */
 export const PORTAL_NAV_ITEMS: NavItem[] = [
   DASHBOARD_ITEM,
-  { label: 'Profil Saya', path: ROUTES.portal.profil, icon: UserCircle },
+  { label: 'Profil', path: ROUTES.portal.profil, icon: UserCircle, permission: 'student_portal.read' },
   {
     label: 'Akademik',
-    path: ROUTES.portal.krs,
+    path: ROUTES.portal.akademik,
     icon: GraduationCap,
     children: [
-      { label: 'KRS', path: ROUTES.portal.krs },
-      { label: 'Jadwal Kuliah', path: ROUTES.portal.jadwal },
-      { label: 'KHS', path: ROUTES.portal.khs },
-      { label: 'Transkrip Sementara', path: ROUTES.portal.transkrip },
-      { label: 'Nilai', path: ROUTES.portal.nilai },
-      { label: 'Absensi', path: ROUTES.portal.absensi },
+      { label: 'Akademik Saya', path: ROUTES.portal.akademik, permission: 'student_portal.read' },
+      { label: 'KRS', path: ROUTES.portal.krs, permission: 'krs_self_service.read' },
+      { label: 'Jadwal', path: ROUTES.portal.jadwal, permission: 'student_portal.read' },
+      { label: 'KHS', path: ROUTES.portal.khs, permission: 'student_portal.read' },
+      { label: 'Nilai', path: ROUTES.portal.nilai, permission: 'student_portal.read' },
+      { label: 'Transkrip', path: ROUTES.portal.transkrip, permission: 'student_portal.read' },
+      { label: 'Presensi', path: ROUTES.portal.absensi, permission: 'student_portal.read' },
+      { label: 'Dokumen', path: ROUTES.portal.dokumen, permission: 'student_portal.read' },
     ],
   },
   {
     label: 'Perkuliahan',
-    path: ROUTES.portal.tugas,
+    path: ROUTES.portal.mataKuliah,
     icon: BookOpen,
     children: [
-      { label: 'Tugas', path: ROUTES.portal.tugas },
-      { label: 'Kuis', path: ROUTES.portal.kuis },
-      { label: 'Ujian', path: ROUTES.portal.ujian, permission: 'exam_participation.read' },
+      { label: 'Mata Kuliah', path: ROUTES.portal.mataKuliah, permission: 'student_portal.read' },
+      { label: 'Materi', path: ROUTES.portal.materi, permission: 'student_portal.read' },
+      { label: 'Tugas', path: ROUTES.portal.tugas, permission: 'student_portal.read' },
     ],
   },
-  {
-    label: 'Pengajuan',
-    path: ROUTES.portal.cuti,
-    icon: FileText,
-    children: [
-      { label: 'Cuti', path: ROUTES.portal.cuti },
-      { label: 'Surat', path: ROUTES.portal.surat },
-      { label: 'Beasiswa', path: ROUTES.portal.beasiswa },
-    ],
-  },
-  { label: 'Tagihan', path: ROUTES.portal.tagihan, icon: Wallet },
-  {
-    label: 'Bimbingan',
-    path: ROUTES.portal.bimbinganAkademik,
-    icon: Users,
-    children: [
-      { label: 'Bimbingan Akademik', path: ROUTES.portal.bimbinganAkademik },
-      { label: 'Bimbingan Skripsi', path: ROUTES.portal.bimbinganSkripsi },
-    ],
-  },
-  { label: 'Pengumuman', path: ROUTES.portal.pengumuman, icon: Megaphone },
-  { label: 'Evaluasi Dosen', path: ROUTES.portal.evaluasiDosen, icon: ClipboardCheck },
-  { label: 'Pendaftaran Wisuda', path: ROUTES.portal.wisuda, icon: Award },
+  { label: 'Ujian', path: ROUTES.portal.ujian, icon: ClipboardCheck, permission: 'exam_participation.read' },
+  { label: 'Kalender', path: ROUTES.portal.kalender, icon: CalendarDays, permission: 'student_portal.read' },
+  { label: 'Pengajuan', path: ROUTES.portal.pengajuan, icon: FileText, permission: 'student_requests.read' },
+  { label: 'Pengumuman', path: ROUTES.portal.pengumuman, icon: Megaphone, permission: 'student_portal.read' },
+  { label: 'Notifikasi', path: ROUTES.portal.notifikasi, icon: Bell },
+  { label: 'Pengaturan', path: ROUTES.portal.pengaturan, icon: Settings },
 ]

@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Academic\Controllers\AcademicAdministrationController;
+use Modules\Academic\Controllers\AcademicCalendarEventController;
 use Modules\Academic\Controllers\AttendanceController;
 use Modules\Academic\Controllers\ClassSectionController;
 use Modules\Academic\Controllers\CourseController;
@@ -18,9 +20,15 @@ use Modules\Academic\Controllers\PublicExamController;
 use Modules\Academic\Controllers\QuestionBankController;
 use Modules\Academic\Controllers\StudentAcademicRecordController;
 use Modules\Academic\Controllers\StudentController;
+use Modules\Academic\Controllers\StudentDashboardController;
+use Modules\Academic\Controllers\StudentDocumentController;
 use Modules\Academic\Controllers\StudentExamController;
 use Modules\Academic\Controllers\StudentKrsController;
+use Modules\Academic\Controllers\StudentLearningController;
 use Modules\Academic\Controllers\StudentProfileController;
+use Modules\Academic\Controllers\StudentRequestController;
+use Modules\Academic\Controllers\StudentRequestReviewController;
+use Modules\Academic\Controllers\TeachingController;
 use Modules\Academic\Controllers\StudyProgramController;
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -108,6 +116,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // student_id dari klien: mahasiswa selalu diresolusi dari akun yang login
     // (ResolvesCurrentStudent), resource ber-id dicek kepemilikannya lewat policy.
     Route::middleware('permission:student_portal.read')->group(function (): void {
+        Route::get('student/dashboard', [StudentDashboardController::class, 'show']);
+        Route::get('student/documents', [StudentDashboardController::class, 'documents']);
+        Route::get('student/documents/krs', [StudentDocumentController::class, 'krs']);
+        Route::get('student/documents/khs/{academicTerm}', [StudentDocumentController::class, 'khs']);
+        Route::get('student/documents/transcript', [StudentDocumentController::class, 'transcript']);
+        Route::get('student/courses', [StudentLearningController::class, 'courses']);
+        Route::get('student/materials', [StudentLearningController::class, 'materials']);
+        Route::get('student/courses/{classSection}', [StudentLearningController::class, 'course']);
+        Route::get('student/assignments', [StudentLearningController::class, 'assignments']);
+        Route::get('student/assignments/{assignment}', [StudentLearningController::class, 'assignment']);
         Route::get('student/profile', [StudentProfileController::class, 'show']);
         Route::get('student/academic-summary', [StudentProfileController::class, 'academicSummary']);
         Route::get('student/academic-history', [StudentProfileController::class, 'history']);
@@ -128,6 +146,48 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('student/krs/items/{krsItem}', [StudentKrsController::class, 'removeItem'])->middleware('permission:krs_self_service.update');
     Route::post('student/krs/submit', [StudentKrsController::class, 'submit'])->middleware('permission:krs_self_service.update');
     Route::post('student/krs/cancel', [StudentKrsController::class, 'cancel'])->middleware('permission:krs_self_service.update');
+
+    Route::post('student/assignments/{assignment}/submission', [StudentLearningController::class, 'submit'])->middleware('permission:assignment_submissions.create');
+
+    Route::get('student/requests', [StudentRequestController::class, 'index'])->middleware('permission:student_requests.read');
+    Route::get('student/requests/options', [StudentRequestController::class, 'options'])->middleware('permission:student_requests.read');
+    Route::get('student/requests/{studentRequest}', [StudentRequestController::class, 'show'])->middleware('permission:student_requests.read');
+    Route::get('student/requests/{studentRequest}/letter', [StudentDocumentController::class, 'letter'])->middleware('permission:student_requests.read');
+    Route::post('student/requests', [StudentRequestController::class, 'store'])->middleware('permission:student_requests.create');
+    Route::put('student/requests/{studentRequest}', [StudentRequestController::class, 'update'])->middleware('permission:student_requests.update');
+    Route::post('student/requests/{studentRequest}/submit', [StudentRequestController::class, 'submit'])->middleware('permission:student_requests.update');
+    Route::post('student/requests/{studentRequest}/cancel', [StudentRequestController::class, 'cancel'])->middleware('permission:student_requests.update');
+
+    // Pengajuan mahasiswa — ditinjau Bagian Akademik (keputusan lewat ApprovalWorkflow).
+    Route::get('student-requests', [StudentRequestReviewController::class, 'index'])->middleware('permission:approval_requests.read');
+    Route::get('student-requests/{studentRequest}', [StudentRequestReviewController::class, 'show'])->middleware('permission:approval_requests.read');
+    Route::post('student-requests/{studentRequest}/approve', [StudentRequestReviewController::class, 'approve'])->middleware('permission:approval_requests.read');
+    Route::post('student-requests/{studentRequest}/reject', [StudentRequestReviewController::class, 'reject'])->middleware('permission:approval_requests.read');
+
+    // Perkuliahan — dosen pengampu (kelasnya sendiri) & Bagian Akademik.
+    Route::get('teaching/classes', [TeachingController::class, 'classes'])->middleware('permission:course_materials.read,assignments.read');
+    Route::get('class-sections/{classSection}/materials', [TeachingController::class, 'materials'])->middleware('permission:course_materials.read');
+    Route::post('class-sections/{classSection}/materials', [TeachingController::class, 'storeMaterial'])->middleware('permission:course_materials.create');
+    Route::put('course-materials/{courseMaterial}', [TeachingController::class, 'updateMaterial'])->middleware('permission:course_materials.update');
+    Route::delete('course-materials/{courseMaterial}', [TeachingController::class, 'destroyMaterial'])->middleware('permission:course_materials.delete');
+    Route::get('class-sections/{classSection}/assignments', [TeachingController::class, 'assignments'])->middleware('permission:assignments.read');
+    Route::post('class-sections/{classSection}/assignments', [TeachingController::class, 'storeAssignment'])->middleware('permission:assignments.create');
+    Route::put('assignments/{assignment}', [TeachingController::class, 'updateAssignment'])->middleware('permission:assignments.update');
+    Route::delete('assignments/{assignment}', [TeachingController::class, 'destroyAssignment'])->middleware('permission:assignments.delete');
+    Route::get('assignments/{assignment}/submissions', [TeachingController::class, 'submissions'])->middleware('permission:assignment_submissions.read');
+    Route::put('assignment-submissions/{assignmentSubmission}/grade', [TeachingController::class, 'grade'])->middleware('permission:assignment_submissions.update');
+
+    // Data akademik yang dikonsumsi Portal Mahasiswa — dikelola Bagian Akademik.
+    Route::get('academic-terms', [AcademicAdministrationController::class, 'terms'])->middleware('permission:classes.read,krs.read,krs_advising.read,academic_calendar.read,course_materials.read');
+    Route::patch('academic-terms/{academicTerm}/krs-period', [AcademicAdministrationController::class, 'updateKrsPeriod'])->middleware('permission:krs.update');
+    Route::put('class-sections/{classSection}/teaching', [AcademicAdministrationController::class, 'updateTeaching'])->middleware('permission:classes.update');
+    Route::get('courses/{course}/prerequisites', [AcademicAdministrationController::class, 'prerequisites'])->middleware('permission:courses.read');
+    Route::put('courses/{course}/prerequisites', [AcademicAdministrationController::class, 'updatePrerequisites'])->middleware('permission:courses.update');
+    Route::patch('students/{student}/academic-advisor', [AcademicAdministrationController::class, 'assignAdvisor'])->middleware('permission:students.update');
+    Route::get('academic-calendar-events', [AcademicCalendarEventController::class, 'index'])->middleware('permission:academic_calendar.read');
+    Route::post('academic-calendar-events', [AcademicCalendarEventController::class, 'store'])->middleware('permission:academic_calendar.create');
+    Route::put('academic-calendar-events/{academicCalendarEvent}', [AcademicCalendarEventController::class, 'update'])->middleware('permission:academic_calendar.update');
+    Route::delete('academic-calendar-events/{academicCalendarEvent}', [AcademicCalendarEventController::class, 'destroy'])->middleware('permission:academic_calendar.delete');
 
     // Persetujuan KRS — dosen wali (mahasiswa perwaliannya) & Bagian Akademik.
     Route::get('krs-submissions', [KrsSubmissionController::class, 'index'])->middleware('permission:krs.approve,krs_advising.read');

@@ -15,4 +15,10 @@ class CoursePolicy
     {
         return $user->hasPermissionTo('courses.read');
     }
+
+    /** Mengatur prasyarat mata kuliah. */
+    public function update(User $user): bool
+    {
+        return $user->hasPermissionTo('courses.update');
+    }
 }
