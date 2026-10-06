@@ -12,6 +12,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -35,6 +36,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.resolve' => ResolveUniversityMiddleware::class,
             'tenant.access' => EnsureUniversityAccessMiddleware::class,
         ]);
+
+        // Tenant harus sudah ter-resolve SEBELUM route model binding.
+        // Tanpa ini SubstituteBindings jalan lebih dulu (ia ada di priority
+        // list bawaan, tenant.resolve tidak), TenantContext masih kosong,
+        // global scope tenant tidak aktif — `GET /lecturers/{id}` milik
+        // universitas lain ikut ter-resolve dan bisa dibaca/diubah/dihapus.
+        // Posisinya tetap setelah autentikasi (fallback membership default
+        // butuh $request->user()).
+        $middleware->prependToPriorityList(
+            before: SubstituteBindings::class,
+            prepend: ResolveUniversityMiddleware::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

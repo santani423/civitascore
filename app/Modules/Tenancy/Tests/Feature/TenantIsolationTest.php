@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
+use Modules\Academic\Models\Lecturer;
 use Modules\FileManagement\Models\FileUpload;
 use Modules\Tenancy\Enums\MembershipStatus;
 use Modules\Tenancy\Enums\MembershipType;
@@ -183,4 +184,34 @@ test('a user who is a member of two universities sees different data depending o
         ->getJson('/api/v1/tenant/profile')
         ->assertApiSuccess()
         ->assertJsonPath('data.id', $universityB->id);
+});
+
+test('route model binding never resolves a record that belongs to another university', function () {
+    // Regresi: tenant.resolve dulu berjalan SETELAH SubstituteBindings,
+    // sehingga {lecturer} milik universitas lain ikut ter-resolve (global
+    // scope tenant belum aktif) dan bisa dibaca/diubah/dihapus lewat ID.
+    $universityA = University::factory()->create();
+    $universityB = University::factory()->create();
+
+    $adminA = User::factory()->create();
+    grantTenantScopedPermissions($adminA, $universityA, ['lecturers.read', 'lecturers.update', 'lecturers.delete']);
+
+    $tenant = app(TenantContext::class);
+    $tenant->setUniversityId($universityB->id);
+    $foreignLecturer = Lecturer::factory()->create(['university_id' => $universityB->id, 'faculty_id' => null]);
+    $tenant->setUniversityId(null);
+
+    $this->actingAs($adminA)->withHeader('X-University-ID', $universityA->id)
+        ->getJson("/api/v1/lecturers/{$foreignLecturer->id}")
+        ->assertApiError(404);
+
+    $this->actingAs($adminA)->withHeader('X-University-ID', $universityA->id)
+        ->putJson("/api/v1/lecturers/{$foreignLecturer->id}", ['name' => 'Diubah lintas tenant'])
+        ->assertApiError(404);
+
+    $this->actingAs($adminA)->withHeader('X-University-ID', $universityA->id)
+        ->deleteJson("/api/v1/lecturers/{$foreignLecturer->id}")
+        ->assertApiError(404);
+
+    $this->assertDatabaseHas('lecturers', ['id' => $foreignLecturer->id, 'name' => $foreignLecturer->name]);
 });
