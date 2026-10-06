@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum PerformanceCategory: string
+enum PerformanceCategory: string implements HasLabel
 {
     case VeryGood = 'very_good';
     case Good = 'good';

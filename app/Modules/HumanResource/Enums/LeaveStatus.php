@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum LeaveStatus: string
+enum LeaveStatus: string implements HasLabel
 {
     case Draft = 'draft';
     case Submitted = 'submitted';

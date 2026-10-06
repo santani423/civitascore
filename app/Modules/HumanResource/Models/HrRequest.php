@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\ApprovalWorkflow\Models\ApprovalRequest;
 use Modules\AuditLog\Support\Auditable;
+use Modules\FileManagement\Contracts\RestrictsFileAccess;
 use Modules\FileManagement\Models\FileUpload;
 use Modules\HumanResource\Enums\HrRequestStatus;
 use Modules\HumanResource\Enums\HrRequestType;
 use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
+use Modules\HumanResource\Models\Concerns\GuardsEmployeeFiles;
 
 /**
  * Satu pintu seluruh pengajuan SDM. Model ini yang dikirim ke
@@ -51,15 +53,24 @@ use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
  * @property-read User|null $rejecter
  * @property-read User|null $processor
  */
-class HrRequest extends Model implements ScopesToInstitution
+class HrRequest extends Model implements RestrictsFileAccess, ScopesToInstitution
 {
-    use Auditable, BelongsToEmployee, HasUlids, TenantScoped;
+    use Auditable, BelongsToEmployee, GuardsEmployeeFiles, HasUlids, TenantScoped;
 
     protected $fillable = [
         'university_id', 'employee_id', 'type', 'title', 'description', 'payload', 'leave_request_id',
         'attachment_file_id', 'status', 'requested_by', 'approval_request_id', 'approved_by', 'approved_at',
         'rejected_by', 'rejected_at', 'approval_note', 'processed_at', 'processed_by', 'cancelled_at',
     ];
+
+    /**
+     * Isi formulir pengajuan (bisa berisi NIK baru pada perubahan data)
+     * tidak ikut ke audit log — AuditLogService membuang atribut $hidden.
+     * Resource tetap menampilkannya secara eksplisit.
+     *
+     * @var list<string>
+     */
+    protected $hidden = ['payload'];
 
     /**
      * @var array<string, mixed>

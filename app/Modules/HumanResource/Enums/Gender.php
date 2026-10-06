@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum Gender: string
+enum Gender: string implements HasLabel
 {
     case Male = 'male';
     case Female = 'female';

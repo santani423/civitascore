@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum DocumentStatus: string
+enum DocumentStatus: string implements HasLabel
 {
     case Pending = 'pending';
     case Valid = 'valid';

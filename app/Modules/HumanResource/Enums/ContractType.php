@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum ContractType: string
+enum ContractType: string implements HasLabel
 {
     case Pkwt = 'pkwt';
     case Pkwtt = 'pkwtt';

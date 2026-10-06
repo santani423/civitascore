@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum LecturerStatus: string
+enum LecturerStatus: string implements HasLabel
 {
     case Permanent = 'permanent';
     case NonPermanent = 'non_permanent';

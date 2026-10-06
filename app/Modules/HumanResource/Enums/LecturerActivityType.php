@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum LecturerActivityType: string
+enum LecturerActivityType: string implements HasLabel
 {
     case Research = 'research';
     case CommunityService = 'community_service';

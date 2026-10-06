@@ -201,6 +201,28 @@ class RolePermissionSeeder extends Seeder
         'reports' => [
             PermissionAction::Read,
         ],
+
+        // Modul SDM (app/Modules/HumanResource). Resource diberi prefix
+        // hr_ supaya tidak bertabrakan dengan izin menu lama
+        // employees.read/lecturers.* milik Modul Akademik.
+        'hr_dashboard' => [PermissionAction::Read],
+        'hr_employees' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete, PermissionAction::Export],
+        'hr_lecturers' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'hr_staff' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'hr_positions' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'hr_transfers' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update],
+        'hr_contracts' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'hr_documents' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'hr_leave' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Approve, PermissionAction::Reject],
+        'hr_requests' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Approve, PermissionAction::Reject],
+        'hr_training' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'hr_performance' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'hr_reports' => [PermissionAction::Read, PermissionAction::Export],
+        'hr_audit' => [PermissionAction::Read],
+        // Layanan mandiri pegawai/dosen (Pengajuan Saya) — sengaja terpisah
+        // dari izin admin di atas: memberikannya tidak pernah membuka data
+        // pegawai lain.
+        'hr_self_service' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update],
     ];
 
     public function run(): void

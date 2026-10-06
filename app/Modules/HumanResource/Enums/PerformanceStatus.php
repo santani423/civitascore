@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum PerformanceStatus: string
+enum PerformanceStatus: string implements HasLabel
 {
     case Draft = 'draft';
     case Final = 'final';

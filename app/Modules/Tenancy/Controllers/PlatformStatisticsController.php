@@ -50,7 +50,7 @@ class PlatformStatisticsController extends Controller
 
         $studentsByUniversity = Student::query()->selectRaw('university_id, count(*) as total')->groupBy('university_id')->pluck('total', 'university_id');
         $lecturersByUniversity = Lecturer::query()->selectRaw('university_id, count(*) as total')->groupBy('university_id')->pluck('total', 'university_id');
-        $employeesByUniversity = Employee::query()->selectRaw('university_id, count(*) as total')->groupBy('university_id')->pluck('total', 'university_id');
+        $employeesByUniversity = Employee::query()->educationStaff()->selectRaw('university_id, count(*) as total')->groupBy('university_id')->pluck('total', 'university_id');
         $unpaidInvoicesByUniversity = Invoice::query()->whereIn('status', $unpaidInvoiceStatuses)->selectRaw('university_id, count(*) as total')->groupBy('university_id')->pluck('total', 'university_id');
         $pendingApprovalsByUniversity = ApprovalRequest::query()->whereIn('status', $pendingApprovalStatuses)->selectRaw('university_id, count(*) as total')->groupBy('university_id')->pluck('total', 'university_id');
 

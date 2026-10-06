@@ -12,11 +12,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\AuditLog\Support\Auditable;
+use Modules\FileManagement\Contracts\RestrictsFileAccess;
 use Modules\FileManagement\Models\FileUpload;
 use Modules\HumanResource\Database\Factories\LeaveRequestFactory;
 use Modules\HumanResource\Enums\LeaveStatus;
 use Modules\HumanResource\Enums\LeaveType;
 use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
+use Modules\HumanResource\Models\Concerns\GuardsEmployeeFiles;
 
 /**
  * Detail cuti/izin. Proses persetujuannya berjalan lewat HrRequest
@@ -49,10 +51,10 @@ use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
  * @property-read User|null $approver
  * @property-read User|null $rejecter
  */
-class LeaveRequest extends Model implements ScopesToInstitution
+class LeaveRequest extends Model implements RestrictsFileAccess, ScopesToInstitution
 {
     /** @use HasFactory<LeaveRequestFactory> */
-    use Auditable, BelongsToEmployee, HasFactory, HasUlids, TenantScoped;
+    use Auditable, BelongsToEmployee, GuardsEmployeeFiles, HasFactory, HasUlids, TenantScoped;
 
     protected $fillable = [
         'university_id', 'employee_id', 'leave_type', 'start_date', 'end_date', 'days', 'reason', 'attachment_file_id',

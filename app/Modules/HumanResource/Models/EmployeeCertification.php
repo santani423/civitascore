@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AuditLog\Support\Auditable;
+use Modules\FileManagement\Contracts\RestrictsFileAccess;
 use Modules\FileManagement\Models\FileUpload;
 use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
+use Modules\HumanResource\Models\Concerns\GuardsEmployeeFiles;
 
 /**
  * @property string $id
@@ -27,9 +29,9 @@ use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
  * @property CarbonImmutable|null $updated_at
  * @property-read FileUpload|null $documentFile
  */
-class EmployeeCertification extends Model implements ScopesToInstitution
+class EmployeeCertification extends Model implements RestrictsFileAccess, ScopesToInstitution
 {
-    use Auditable, BelongsToEmployee, HasUlids, TenantScoped;
+    use Auditable, BelongsToEmployee, GuardsEmployeeFiles, HasUlids, TenantScoped;
 
     protected $fillable = [
         'university_id', 'employee_id', 'name', 'issuer', 'certificate_number', 'issued_at', 'expires_at',

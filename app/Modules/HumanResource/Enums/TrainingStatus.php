@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum TrainingStatus: string
+enum TrainingStatus: string implements HasLabel
 {
     case Planned = 'planned';
     case Ongoing = 'ongoing';

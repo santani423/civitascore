@@ -17,7 +17,7 @@ class EmployeeController extends Controller
         $this->authorize('viewAny', Employee::class);
 
         $paginator = ListQuery::paginate(
-            query: Employee::query()->orderBy('name'),
+            query: Employee::query()->educationStaff()->orderBy('name'),
             request: $request,
             searchable: ['name', 'position'],
             filterable: ['unit_kerja', 'is_active'],

@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AuditLog\Support\Auditable;
+use Modules\FileManagement\Contracts\RestrictsFileAccess;
 use Modules\FileManagement\Models\FileUpload;
 use Modules\HumanResource\Database\Factories\EmployeeContractFactory;
 use Modules\HumanResource\Enums\ContractStatus;
 use Modules\HumanResource\Enums\ContractType;
 use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
+use Modules\HumanResource\Models\Concerns\GuardsEmployeeFiles;
 
 /**
  * @property string $id
@@ -33,10 +35,10 @@ use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
  * @property CarbonImmutable|null $updated_at
  * @property-read FileUpload|null $documentFile
  */
-class EmployeeContract extends Model implements ScopesToInstitution
+class EmployeeContract extends Model implements RestrictsFileAccess, ScopesToInstitution
 {
     /** @use HasFactory<EmployeeContractFactory> */
-    use Auditable, BelongsToEmployee, HasFactory, HasUlids, TenantScoped;
+    use Auditable, BelongsToEmployee, GuardsEmployeeFiles, HasFactory, HasUlids, TenantScoped;
 
     protected $fillable = [
         'university_id', 'employee_id', 'contract_number', 'contract_type', 'start_date', 'end_date', 'status',

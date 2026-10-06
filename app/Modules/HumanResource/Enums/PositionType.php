@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum PositionType: string
+enum PositionType: string implements HasLabel
 {
     case Structural = 'structural';
     case Functional = 'functional';

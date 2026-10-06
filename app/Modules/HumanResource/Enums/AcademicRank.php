@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum AcademicRank: string
+enum AcademicRank: string implements HasLabel
 {
     case TeachingStaff = 'tenaga_pengajar';
     case AssistantExpert = 'asisten_ahli';

@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum EmployeeType: string
+enum EmployeeType: string implements HasLabel
 {
     case Lecturer = 'lecturer';
     case Staff = 'staff';

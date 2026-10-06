@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum HrRequestType: string
+enum HrRequestType: string implements HasLabel
 {
     case Leave = 'leave';
     case Transfer = 'transfer';

@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum ContractStatus: string
+enum ContractStatus: string implements HasLabel
 {
     case Active = 'active';
     case Expired = 'expired';

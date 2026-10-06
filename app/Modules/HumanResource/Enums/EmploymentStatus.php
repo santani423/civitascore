@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum EmploymentStatus: string
+enum EmploymentStatus: string implements HasLabel
 {
     case Permanent = 'permanent';
     case Contract = 'contract';

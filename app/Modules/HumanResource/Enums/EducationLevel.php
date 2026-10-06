@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum EducationLevel: string
+enum EducationLevel: string implements HasLabel
 {
     case HighSchool = 'sma';
     case D1 = 'd1';

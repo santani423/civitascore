@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum HrRequestStatus: string
+enum HrRequestStatus: string implements HasLabel
 {
     case Pending = 'pending';
     case Approved = 'approved';

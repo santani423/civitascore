@@ -10,9 +10,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\AuditLog\Support\Auditable;
+use Modules\FileManagement\Contracts\RestrictsFileAccess;
 use Modules\FileManagement\Models\FileUpload;
 use Modules\HumanResource\Enums\TransferStatus;
 use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
+use Modules\HumanResource\Models\Concerns\GuardsEmployeeFiles;
 
 /**
  * Penempatan & mutasi. Unit/jabatan asal disalin saat mutasi dibuat
@@ -44,9 +46,9 @@ use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
  * @property-read FileUpload|null $documentFile
  * @property-read User|null $creator
  */
-class EmployeeTransfer extends Model implements ScopesToInstitution
+class EmployeeTransfer extends Model implements RestrictsFileAccess, ScopesToInstitution
 {
-    use Auditable, BelongsToEmployee, HasUlids, TenantScoped;
+    use Auditable, BelongsToEmployee, GuardsEmployeeFiles, HasUlids, TenantScoped;
 
     protected $fillable = [
         'university_id', 'employee_id', 'from_work_unit_id', 'from_work_unit_name', 'to_work_unit_id',

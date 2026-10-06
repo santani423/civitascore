@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum DocumentType: string
+enum DocumentType: string implements HasLabel
 {
     case Ktp = 'ktp';
     case Kk = 'kk';

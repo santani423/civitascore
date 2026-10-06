@@ -11,10 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\AuditLog\Support\Auditable;
+use Modules\FileManagement\Contracts\RestrictsFileAccess;
 use Modules\FileManagement\Models\FileUpload;
 use Modules\HumanResource\Enums\DocumentStatus;
 use Modules\HumanResource\Enums\DocumentType;
 use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
+use Modules\HumanResource\Models\Concerns\GuardsEmployeeFiles;
 
 /**
  * Dokumen kepegawaian. Versioning sederhana: mengunggah ulang dokumen
@@ -44,9 +46,9 @@ use Modules\HumanResource\Models\Concerns\BelongsToEmployee;
  * @property-read FileUpload|null $file
  * @property-read User|null $verifier
  */
-class EmployeeDocument extends Model implements ScopesToInstitution
+class EmployeeDocument extends Model implements RestrictsFileAccess, ScopesToInstitution
 {
-    use Auditable, BelongsToEmployee, HasUlids, SoftDeletes, TenantScoped;
+    use Auditable, BelongsToEmployee, GuardsEmployeeFiles, HasUlids, SoftDeletes, TenantScoped;
 
     protected $fillable = [
         'university_id', 'employee_id', 'document_type', 'title', 'document_number', 'file_upload_id', 'issued_at',

@@ -65,7 +65,7 @@ class DashboardStatsService
             'summary' => [
                 'total_students' => (clone $studentQuery)->count(),
                 'total_lecturers' => Lecturer::query()->count(),
-                'total_employees' => Employee::query()->count(),
+                'total_employees' => Employee::query()->educationStaff()->count(),
                 'total_study_programs' => StudyProgram::query()->count(),
                 'active_students' => (clone $studentQuery)->where('status', StudentStatus::Active)->count(),
                 'active_classes' => (clone $classQuery)->where('is_active', true)->count(),
@@ -234,6 +234,7 @@ class DashboardStatsService
         );
 
         $employeesByUnit = Employee::query()
+            ->educationStaff()
             ->selectRaw('unit_kerja as unit, count(*) as total')
             ->groupBy('unit_kerja')
             ->pluck('total', 'unit');

@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Support\Scoping\ScopesToInstitution;
 use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -295,6 +297,21 @@ class Employee extends Model implements ScopesToInstitution
     public function isLecturer(): bool
     {
         return $this->employee_type === EmployeeType::Lecturer;
+    }
+
+    /**
+     * Hanya tenaga kependidikan. Sebelum Modul SDM, tabel ini memang hanya
+     * berisi tendik — fitur lama yang menghitung/menampilkan "Pegawai"
+     * (menu Pegawai, Dashboard, Laporan, statistik platform) memakai scope
+     * ini supaya dosen (yang kini juga punya baris di sini) tidak terhitung
+     * dua kali.
+     *
+     * @param  Builder<Employee>  $query
+     */
+    #[Scope]
+    protected function educationStaff(Builder $query): void
+    {
+        $query->where('employee_type', EmployeeType::Staff);
     }
 
     protected static function newFactory(): EmployeeFactory

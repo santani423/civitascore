@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum StaffCategory: string
+enum StaffCategory: string implements HasLabel
 {
     case Administration = 'administration';
     case Laboratory = 'laboratory';

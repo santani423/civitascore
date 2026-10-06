@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum WorkUnitType: string
+enum WorkUnitType: string implements HasLabel
 {
     case Rectorate = 'rectorate';
     case Faculty = 'faculty';

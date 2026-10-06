@@ -153,7 +153,7 @@ class ReportService
             'status' => $lecturer->is_active ? 'Aktif' : 'Nonaktif',
         ]);
 
-        $employees = Employee::query()->get()->map(fn (Employee $employee) => [
+        $employees = Employee::query()->educationStaff()->get()->map(fn (Employee $employee) => [
             'nama' => $employee->name,
             'jenis' => 'Pegawai',
             'unit' => $employee->unit_kerja,

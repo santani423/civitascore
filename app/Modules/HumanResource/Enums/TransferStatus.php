@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum TransferStatus: string
+enum TransferStatus: string implements HasLabel
 {
     case Scheduled = 'scheduled';
     case Applied = 'applied';

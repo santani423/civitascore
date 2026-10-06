@@ -2,7 +2,7 @@
 
 namespace Modules\HumanResource\Enums;
 
-enum LeaveType: string
+enum LeaveType: string implements HasLabel
 {
     case Annual = 'annual';
     case Sick = 'sick';
