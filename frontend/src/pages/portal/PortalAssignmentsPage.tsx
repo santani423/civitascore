@@ -1,80 +1,87 @@
+import { useCallback, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { NotebookPen } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
-import { Badge, type BadgeVariant } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { PortalEmpty, PortalError, PortalLoading } from '@/components/portal/PortalState'
+import { AssignmentStatusBadge } from '@/components/portal/badges'
+import { useFetch } from '@/hooks/useFetch'
+import { studentPortalService } from '@/services/studentPortalService'
 import { ROUTES } from '@/constants/routes'
+import type { AssignmentStatus } from '@/types/studentPortal'
+import { formatCountdown, formatDateTime } from '@/utils/portalFormat'
+import { cn } from '@/utils/cn'
 
-const ASSIGNMENTS = [
-  { id: '1', title: 'Tugas Besar 1 - Struktur Data', course: 'Struktur Data', dueDate: '2026-07-22', status: 'Belum Dikumpulkan' as const },
-  { id: '2', title: 'Kuis Normalisasi Database', course: 'Basis Data', dueDate: '2026-07-15', status: 'Terlambat' as const },
-  { id: '3', title: 'Esai Argumentatif', course: 'Bahasa Inggris Akademik', dueDate: '2026-07-10', status: 'Dikumpulkan' as const },
-  {
-    id: '4',
-    title: 'Laporan Praktikum Jaringan',
-    course: 'Jaringan Komputer',
-    dueDate: '2026-07-05',
-    status: 'Dinilai' as const,
-    score: 88,
-  },
-  {
-    id: '5',
-    title: 'Tugas Individu Pemrograman Web',
-    course: 'Pemrograman Web',
-    dueDate: '2026-07-25',
-    status: 'Belum Dikumpulkan' as const,
-  },
-  {
-    id: '6',
-    title: 'Review Jurnal Kecerdasan Buatan',
-    course: 'Kecerdasan Buatan',
-    dueDate: '2026-06-30',
-    status: 'Dinilai' as const,
-    score: 95,
-  },
-]
-
-const ASSIGNMENT_STATUS_VARIANT: Record<(typeof ASSIGNMENTS)[number]['status'], BadgeVariant> = {
-  'Belum Dikumpulkan': 'warning',
-  Dikumpulkan: 'success',
-  Terlambat: 'danger',
-  Dinilai: 'info',
-}
-
-const ASSIGNMENT_COLUMNS: DataTableColumn<(typeof ASSIGNMENTS)[number]>[] = [
-  { header: 'Judul Tugas', cell: (row) => row.title },
-  { header: 'Mata Kuliah', cell: (row) => row.course },
-  { header: 'Tenggat Waktu', cell: (row) => row.dueDate },
-  {
-    header: 'Status',
-    cell: (row) => (
-      <Badge variant={ASSIGNMENT_STATUS_VARIANT[row.status]}>
-        {row.status === 'Dinilai' ? `Dinilai (${row.score})` : row.status}
-      </Badge>
-    ),
-  },
-  {
-    header: 'Aksi',
-    cell: (row) =>
-      (row.status === 'Belum Dikumpulkan' || row.status === 'Terlambat') && (
-        <Button variant="outline" size="sm">
-          Kumpulkan
-        </Button>
-      ),
-  },
+const FILTERS: { value: 'all' | AssignmentStatus; label: string }[] = [
+  { value: 'all', label: 'Semua' },
+  { value: 'not_submitted', label: 'Belum dikerjakan' },
+  { value: 'submitted', label: 'Dikumpulkan' },
+  { value: 'late', label: 'Terlambat' },
+  { value: 'graded', label: 'Dinilai' },
+  { value: 'missed', label: 'Tidak dikumpulkan' },
 ]
 
 export function PortalAssignmentsPage() {
+  const [filter, setFilter] = useState<'all' | AssignmentStatus>('all')
+  const fetchAssignments = useCallback(() => studentPortalService.assignments(filter === 'all' ? undefined : filter), [filter])
+  const { data, isLoading, error, refetch } = useFetch(fetchAssignments)
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
         title="Tugas"
+        description="Tugas dari seluruh mata kuliah yang Anda ikuti semester ini."
         breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Perkuliahan' }, { label: 'Tugas' }]}
       />
 
-      <Card noPadding>
-        <DataTable columns={ASSIGNMENT_COLUMNS} data={ASSIGNMENTS} rowKey={(row) => row.id} />
-      </Card>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="tablist">
+        {FILTERS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            role="tab"
+            aria-selected={filter === option.value}
+            onClick={() => setFilter(option.value)}
+            className={cn(
+              'shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+              filter === option.value ? 'border-primary bg-primary text-white' : 'border-border text-ink-secondary hover:bg-surface-hover',
+            )}
+          >
+            {option.label}
+            {data?.counts && option.value !== 'all' && data.counts[option.value] > 0 ? ` (${data.counts[option.value]})` : ''}
+          </button>
+        ))}
+      </div>
+
+      {isLoading && !data ? (
+        <PortalLoading cards={0} rows={5} />
+      ) : error ? (
+        <PortalError message={error} onRetry={refetch} />
+      ) : !data || data.assignments.length === 0 ? (
+        <PortalEmpty icon={NotebookPen} title={filter === 'all' ? 'Belum ada tugas.' : 'Tidak ada tugas dengan status ini.'} />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {data.assignments.map((assignment) => (
+            <Link key={assignment.id} to={ROUTES.portal.tugasDetail.replace(':id', assignment.id)} className="group">
+              <Card className="transition-shadow group-hover:shadow-popover">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="font-medium text-ink-primary group-hover:text-primary">{assignment.title}</p>
+                    <p className="text-xs text-ink-secondary">
+                      {assignment.course?.name} · {assignment.course?.lecturer?.name ?? '-'}
+                    </p>
+                  </div>
+                  <AssignmentStatusBadge status={assignment.status} label={assignment.status_label} />
+                </div>
+                <p className={cn('mt-2 text-xs', assignment.is_past_due ? 'text-ink-tertiary' : 'text-ink-secondary')}>
+                  Batas: {formatDateTime(assignment.due_at)} ({formatCountdown(assignment.due_at)})
+                  {assignment.submission?.score && ` · Nilai ${assignment.submission.score}/${assignment.max_score}`}
+                </p>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
