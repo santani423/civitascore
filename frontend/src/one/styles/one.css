@@ -1,0 +1,262 @@
+/**
+ * Civitas One — design tokens.
+ *
+ * Every color in the Civitas One UI resolves to one of these variables, so a
+ * university re-brand only touches this file. Channels are stored as
+ * space-separated RGB so Tailwind's `/opacity` modifier works
+ * (`bg-one-royal/10`). Dark mode is its own designed palette — not an
+ * inversion — with elevated surfaces getting lighter, not darker.
+ *
+ * Scope: tokens live on `.one-root` (not :root) so they never leak into the
+ * legacy admin app that shares this bundle.
+ */
+
+.one-root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --one-canvas: 246 248 251;
+  --one-card: 255 255 255;
+  --one-elev: 255 255 255;
+  --one-sunken: 240 243 248;
+  --one-line: 228 233 241;
+  --one-line2: 203 212 225;
+
+  /* Text */
+  --one-fg: 13 24 46;
+  --one-muted: 71 85 105;
+  --one-subtle: 100 116 139;
+
+  /* Brand — deep navy university blue */
+  --one-brand: 18 44 99;
+  --one-onbrand: 255 255 255;
+  --one-hero: 14 33 74;
+
+  /* Secondary + accent (text-safe steps: >= 4.5:1 on white) */
+  --one-royal: 37 92 220;
+  --one-sky: 3 105 161;
+  --one-teal: 15 118 110;
+  --one-gold: 161 98 7;
+  /* Decorative warm-yellow highlight (logo point, hero accents) — not for text on light. */
+  --one-spark: 245 184 61;
+  /* Text on fixed white "stickers" over cover art — identical in both modes. */
+  --one-ink: 13 24 46;
+
+  /* Status */
+  --one-ok: 21 128 61;
+  --one-warn: 180 83 9;
+  --one-bad: 205 38 38;
+
+  /* Data-viz slots (validated reference palette, light steps) */
+  --one-viz-1: #2a78d6;
+  --one-viz-2: #eb6834;
+  --one-viz-3: #1baf7a;
+  --one-viz-grid: #e8ecf2;
+  --one-viz-axis: #64748b;
+
+  --one-shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.04);
+  --one-shadow-lift: 0 2px 4px rgb(15 23 42 / 0.04), 0 8px 24px -6px rgb(15 23 42 / 0.1);
+  --one-shadow-overlay: 0 12px 32px -8px rgb(15 23 42 / 0.18), 0 4px 12px -4px rgb(15 23 42 / 0.08);
+
+  --one-ring: 37 92 220;
+
+  /* Generated cover art (stand-in for photography). Same in both modes —
+     images don't invert — but dimmed slightly in dark via .one-cover. */
+  --cover-navy: #0e214a, #2456c9;
+  --cover-royal: #1e40af, #38a3f0;
+  --cover-teal: #0d5f5a, #1fb5a6;
+  --cover-gold: #92400e, #e8a317;
+  --cover-rose: #881337, #e5566f;
+  --cover-violet: #3b1d8f, #7c6cf0;
+  --cover-slate: #1e293b, #5b6b85;
+  --cover-green: #14532d, #3fae63;
+}
+
+.one-root[data-theme='dark'] .one-cover {
+  filter: brightness(0.88) saturate(0.95);
+}
+
+.one-root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --one-canvas: 8 12 21;
+  --one-card: 15 21 34;
+  --one-elev: 22 30 47;
+  --one-sunken: 11 16 27;
+  --one-line: 32 42 62;
+  --one-line2: 50 63 90;
+
+  --one-fg: 236 241 248;
+  --one-muted: 166 178 198;
+  --one-subtle: 128 141 165;
+
+  --one-brand: 66 112 238;
+  --one-onbrand: 255 255 255;
+  --one-hero: 17 27 50;
+
+  --one-royal: 132 166 255;
+  --one-sky: 102 200 250;
+  --one-teal: 70 210 190;
+  --one-gold: 246 196 84;
+
+  --one-ok: 92 214 140;
+  --one-warn: 248 186 64;
+  --one-bad: 250 120 120;
+
+  --one-viz-1: #3987e5;
+  --one-viz-2: #d95926;
+  --one-viz-3: #199e70;
+  --one-viz-grid: #1f2a3e;
+  --one-viz-axis: #8a97b0;
+
+  --one-shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3);
+  --one-shadow-lift: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px -6px rgb(0 0 0 / 0.5);
+  --one-shadow-overlay: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 16px 40px -8px rgb(0 0 0 / 0.6);
+
+  --one-ring: 132 166 255;
+}
+
+/* Accessibility: high contrast strengthens text and hairlines in both modes. */
+.one-root[data-contrast='high'] {
+  --one-muted: 40 52 72;
+  --one-subtle: 58 72 94;
+  --one-line: 170 182 200;
+  --one-line2: 120 134 156;
+}
+.one-root[data-theme='dark'][data-contrast='high'] {
+  --one-muted: 214 222 236;
+  --one-subtle: 190 200 218;
+  --one-line: 82 98 128;
+  --one-line2: 120 138 172;
+}
+
+.one-root {
+  background-color: rgb(var(--one-canvas));
+  color: rgb(var(--one-fg));
+  font-family: theme('fontFamily.sans');
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(.one-root *) {
+  border-color: rgb(var(--one-line));
+}
+
+:where(.one-root) :focus-visible {
+  outline: 2px solid rgb(var(--one-ring));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.one-root ::selection {
+  background-color: rgb(var(--one-royal) / 0.22);
+}
+
+/* Typography scale — Display / H1 / H2 / H3 / Body / Small / Caption. */
+:where(.one-root) .t-display {
+  font-family: theme('fontFamily.display');
+  font-weight: 700;
+  font-size: clamp(1.875rem, 1.3rem + 2.2vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+:where(.one-root) .t-h1 {
+  font-family: theme('fontFamily.display');
+  font-weight: 700;
+  font-size: clamp(1.5rem, 1.25rem + 0.9vw, 1.875rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+:where(.one-root) .t-h2 {
+  font-family: theme('fontFamily.display');
+  font-weight: 650;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+:where(.one-root) .t-h3 {
+  font-family: theme('fontFamily.display');
+  font-weight: 650;
+  font-size: 1rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+:where(.one-root) .t-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+:where(.one-root) .t-small {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+:where(.one-root) .t-caption {
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:where(.one-root[lang="zh"]) .t-caption {
+  letter-spacing: 0.02em;
+}
+
+:where(.one-root .tabular) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Scrollbars */
+.one-root ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.one-root ::-webkit-scrollbar-thumb {
+  background-color: rgb(var(--one-line2));
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.one-root .no-scrollbar {
+  scrollbar-width: none;
+}
+.one-root .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Generated cover art (no external images): soft mesh + grain-free pattern. */
+.one-root .one-cover-pattern {
+  background-image: radial-gradient(rgb(255 255 255 / 0.18) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+
+/* Reduced motion: honored from the OS and from the in-app accessibility toggle. */
+@media (prefers-reduced-motion: reduce) {
+  .one-root *,
+  .one-root *::before,
+  .one-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+.one-root[data-motion='reduce'] *,
+.one-root[data-motion='reduce'] *::before,
+.one-root[data-motion='reduce'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Recharts: inherit tokens so charts follow theme without re-render. */
+.one-root .recharts-cartesian-grid line {
+  stroke: var(--one-viz-grid);
+}
+.one-root .recharts-cartesian-axis-tick-value {
+  fill: var(--one-viz-axis);
+  font-size: 12px;
+}
+.one-root .recharts-surface:focus,
+.one-root .recharts-wrapper:focus {
+  outline: none;
+}

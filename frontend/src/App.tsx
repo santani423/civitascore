@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { useThemeSync } from '@/hooks/useThemeSync'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
@@ -95,6 +95,9 @@ import { ApprovalRequestsPage } from '@/pages/approvals/ApprovalRequestsPage'
 import { ApprovalRequestDetailPage } from '@/pages/approvals/ApprovalRequestDetailPage'
 import { ApprovalWorkflowsPage } from '@/pages/approvals/ApprovalWorkflowsPage'
 import { ROUTES } from '@/constants/routes'
+
+// Civitas One redesign (UI-only, mock data) — its own chunk, outside auth.
+const OneApp = lazy(() => import('@/one/OneApp'))
 
 /**
  * Satu tabel tunggal path -> halaman, dipakai sebagai daftar Route DAN
@@ -256,6 +259,15 @@ function App() {
           <Route path={ROUTES.examPublic.attempt} element={<ExamPublicAttemptPage />} />
           <Route path={ROUTES.examPublic.result} element={<ExamPublicResultPage />} />
         </Route>
+
+        <Route
+          path="/one/*"
+          element={
+            <Suspense fallback={null}>
+              <OneApp />
+            </Suspense>
+          }
+        />
 
         <Route path="/" element={<Navigate to={ROUTES.dashboard} replace />} />
         <Route path="*" element={<Navigate to={ROUTES.dashboard} replace />} />
