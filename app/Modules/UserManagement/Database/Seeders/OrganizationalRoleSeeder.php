@@ -145,9 +145,7 @@ class OrganizationalRoleSeeder extends Seeder
             'krs.read', 'grades.read', 'grades.create', 'grades.update', 'attendance.read', 'attendance.create', 'attendance.update',
             'exams.read', 'exams.create', 'exams.update', 'exams.delete', 'exams.publish', 'exam_attempts.read', 'exam_attempts.create', 'exam_attempts.update',
             'question_bank.read', 'question_bank.create', 'question_bank.update', 'question_bank.delete',
-<<<<<<< HEAD
             'lecturer_profile.read', 'lecturer_profile.update',
-=======
             // Perkuliahan & perwalian — object-level: hanya kelas yang ia ampu
             // dan mahasiswa yang ia walikan (ClassSectionAccess / KrsApprovalPolicy).
             'course_materials.read', 'course_materials.create', 'course_materials.update', 'course_materials.delete',
@@ -155,7 +153,6 @@ class OrganizationalRoleSeeder extends Seeder
             'assignment_submissions.read', 'assignment_submissions.update',
             'krs_advising.read', 'krs_advising.approve',
             'academic_calendar.read',
->>>>>>> feature/sdm
         ],
         'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read'],
         // Bagian SDM: seluruh Modul SDM, plus CRUD menu Dosen (lecturers.*)
