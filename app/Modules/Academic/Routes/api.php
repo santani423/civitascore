@@ -15,11 +15,8 @@ use Modules\Academic\Controllers\ExamQuestionController;
 use Modules\Academic\Controllers\FacultyController;
 use Modules\Academic\Controllers\GradeController;
 use Modules\Academic\Controllers\KrsItemController;
-<<<<<<< HEAD
-use Modules\Academic\Controllers\LecturerAccountController;
-=======
 use Modules\Academic\Controllers\KrsSubmissionController;
->>>>>>> feature/sdm
+use Modules\Academic\Controllers\LecturerAccountController;
 use Modules\Academic\Controllers\LecturerController;
 use Modules\Academic\Controllers\LecturerProfileController;
 use Modules\Academic\Controllers\PublicExamController;

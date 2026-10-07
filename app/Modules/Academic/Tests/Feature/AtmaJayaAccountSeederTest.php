@@ -71,7 +71,7 @@ test('Bagian SDM can create, update and delete lecturers', function () {
     $headers = hrHeaders($this->uaj);
 
     $id = $this->actingAs($sdm)->withHeaders($headers)
-        ->postJson('/api/v1/lecturers', ['nidn' => '0011223344', 'name' => 'Dosen Baru', 'is_active' => true])
+        ->postJson('/api/v1/lecturers', ['nidn' => '0011223344', 'name' => 'Dosen Baru', 'email' => 'dosen.baru@atmajaya.com', 'is_active' => true])
         ->assertStatus(201)
         ->json('data.id');
 
