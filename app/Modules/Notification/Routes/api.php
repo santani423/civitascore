@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Notification\Controllers\NotificationChannelController;
 use Modules\Notification\Controllers\NotificationTemplateController;
+use Modules\Notification\Controllers\UserNotificationController;
 use Modules\Notification\Controllers\UserNotificationPreferenceController;
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -15,4 +16,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('notification-preferences', [UserNotificationPreferenceController::class, 'index']);
     Route::post('notification-preferences', [UserNotificationPreferenceController::class, 'store']);
+
+    // Pusat notifikasi milik user yang login (tanpa permission — selalu data sendiri).
+    Route::get('notifications', [UserNotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [UserNotificationController::class, 'unreadCount']);
+    Route::post('notifications/read-all', [UserNotificationController::class, 'markAllRead']);
+    Route::patch('notifications/{notification}/read', [UserNotificationController::class, 'markRead']);
 });

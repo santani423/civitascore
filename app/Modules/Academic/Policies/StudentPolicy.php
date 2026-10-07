@@ -26,4 +26,10 @@ class StudentPolicy
     {
         return $user->hasPermissionTo('students.create');
     }
+
+    /** Bagian Akademik: menetapkan dosen wali, dsb. */
+    public function update(User $user): bool
+    {
+        return $user->hasPermissionTo('students.update');
+    }
 }

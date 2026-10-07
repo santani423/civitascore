@@ -21,6 +21,7 @@ use Modules\Tenancy\Models\University;
  * @property string $student_id
  * @property string $class_section_id
  * @property string $academic_term_id
+ * @property string|null $krs_submission_id
  * @property KrsItemStatus $status
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
@@ -28,13 +29,14 @@ use Modules\Tenancy\Models\University;
  * @property-read ClassSection $classSection
  * @property-read AcademicTerm $academicTerm
  * @property-read Grade|null $grade
+ * @property-read KrsSubmission|null $submission
  */
 class KrsItem extends Model implements ScopesToInstitution
 {
     /** @use HasFactory<KrsItemFactory> */
     use HasFactory, HasUlids, TenantScoped;
 
-    protected $fillable = ['university_id', 'student_id', 'class_section_id', 'academic_term_id', 'status'];
+    protected $fillable = ['university_id', 'student_id', 'class_section_id', 'academic_term_id', 'krs_submission_id', 'status'];
 
     protected function casts(): array
     {
@@ -95,6 +97,22 @@ class KrsItem extends Model implements ScopesToInstitution
     public function examAttempts(): HasMany
     {
         return $this->hasMany(ExamAttempt::class);
+    }
+
+    /**
+     * @return BelongsTo<KrsSubmission, $this>
+     */
+    public function submission(): BelongsTo
+    {
+        return $this->belongsTo(KrsSubmission::class, 'krs_submission_id');
+    }
+
+    /**
+     * @return HasMany<AssignmentSubmission, $this>
+     */
+    public function assignmentSubmissions(): HasMany
+    {
+        return $this->hasMany(AssignmentSubmission::class);
     }
 
     protected static function newFactory(): KrsItemFactory

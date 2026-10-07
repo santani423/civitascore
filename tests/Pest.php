@@ -29,6 +29,9 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature', 'Unit', '../app/Modules/*/Tests/Feature', '../app/Modules/*/Tests/Unit');
 
+// Fixture bersama Portal Mahasiswa (portalWorld(), portalClass(), ...).
+require_once __DIR__.'/Helpers/StudentPortal.php';
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

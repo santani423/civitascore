@@ -24,6 +24,7 @@ class ApprovalWorkflowService
                     'approver_type' => $step['approver_type'],
                     'approver_role_id' => $step['approver_role_id'] ?? null,
                     'approver_user_id' => $step['approver_user_id'] ?? null,
+                    'approver_position_id' => $step['approver_position_id'] ?? null,
                     'action_on_reject' => $step['action_on_reject'] ?? ApprovalRejectAction::StopWorkflow,
                 ]);
             }

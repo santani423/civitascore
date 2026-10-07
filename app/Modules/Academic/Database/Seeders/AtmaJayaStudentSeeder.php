@@ -146,7 +146,7 @@ class AtmaJayaStudentSeeder extends Seeder
         $students = collect(self::ROSTER)->map(function (array $entry) use ($university, $studyProgram) {
             $admissionYear = (int) substr($entry['nim'], 1, 4);
 
-            return Student::query()->updateOrCreate(
+            $student = Student::query()->updateOrCreate(
                 ['university_id' => $university->id, 'nim' => $entry['nim']],
                 [
                     'study_program_id' => $studyProgram->id,
@@ -157,6 +157,15 @@ class AtmaJayaStudentSeeder extends Seeder
                     'enrolled_at' => "{$admissionYear}-08-01",
                 ],
             );
+
+            // Email kampus (domain atmajaya.com) supaya akun login yang dibuat
+            // StudentUserAccountSeeder ikut tertaut ke Atma Jaya — lihat
+            // AtmaJayaAccountSeeder. Email yang sudah diisi tidak ditimpa.
+            if ($student->email === null) {
+                $student->update(['email' => AtmaJayaAccountSeeder::studentEmail($student->nim)]);
+            }
+
+            return $student;
         });
 
         $this->seedEnrollments($university, $classSections, $students);

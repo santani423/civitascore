@@ -5,8 +5,13 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+<<<<<<< HEAD
 use Modules\Academic\Database\Seeders\LecturerUserAccountSeeder;
+=======
+use Modules\Academic\Database\Seeders\AtmaJayaAccountSeeder;
+>>>>>>> feature/sdm
 use Modules\Academic\Database\Seeders\StudentUserAccountSeeder;
+use Modules\HumanResource\Database\Seeders\HumanResourceSeeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
 use Modules\SystemSetting\Database\Seeders\SystemSettingSeeder;
@@ -73,9 +78,21 @@ class DatabaseSeeder extends Seeder
         // which is what actually creates the Student rows.
         $this->call(StudentUserAccountSeeder::class);
 
+<<<<<<< HEAD
         // Same for lecturers.user_id — every dosen with an email gets a
         // login account, and the demo dosen@<domain> accounts get a linked
         // lecturer record.
         $this->call(LecturerUserAccountSeeder::class);
+=======
+        // Modul SDM: master unit/jabatan/pangkat, melengkapi data pegawai &
+        // dosen hasil seeder akademik, riwayat, kontrak, dokumen, cuti, dan
+        // menautkan akun demo pegawai@/dosen@ ke data pegawai. Harus setelah
+        // DemoUniversitiesSeeder (yang membuat dosen/pegawai & akun demo).
+        $this->call(HumanResourceSeeder::class);
+
+        // Seluruh akun @atmajaya.com (staf, dosen, mahasiswa sampel) tertaut
+        // ke kampus Atma Jaya; akun ber-role dosen dibuatkan data dosennya.
+        $this->call(AtmaJayaAccountSeeder::class);
+>>>>>>> feature/sdm
     }
 }

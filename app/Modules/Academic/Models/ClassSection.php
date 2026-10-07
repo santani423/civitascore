@@ -5,6 +5,7 @@ namespace Modules\Academic\Models;
 use App\Support\Scoping\ScopesToInstitution;
 use App\Support\Tenancy\TenantScoped;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ use Modules\Tenancy\Models\University;
  * @property string $study_program_id
  * @property string $academic_term_id
  * @property string $course_id
+ * @property string|null $lecturer_id
  * @property string $class_code
  * @property int $capacity
  * @property bool $is_active
@@ -27,6 +29,8 @@ use Modules\Tenancy\Models\University;
  * @property-read StudyProgram $studyProgram
  * @property-read AcademicTerm $academicTerm
  * @property-read Course $course
+ * @property-read Lecturer|null $lecturer
+ * @property-read Collection<int, ClassSchedule> $schedules
  */
 class ClassSection extends Model implements ScopesToInstitution
 {
@@ -35,7 +39,7 @@ class ClassSection extends Model implements ScopesToInstitution
 
     protected $fillable = [
         'university_id', 'study_program_id', 'academic_term_id',
-        'course_id', 'class_code', 'capacity', 'is_active',
+        'course_id', 'lecturer_id', 'class_code', 'capacity', 'is_active',
     ];
 
     protected function casts(): array
@@ -76,11 +80,53 @@ class ClassSection extends Model implements ScopesToInstitution
     }
 
     /**
+     * Dosen pengampu (penanggung jawab) kelas.
+     *
+     * @return BelongsTo<Lecturer, $this>
+     */
+    public function lecturer(): BelongsTo
+    {
+        return $this->belongsTo(Lecturer::class);
+    }
+
+    /**
      * @return HasMany<KrsItem, $this>
      */
     public function krsItems(): HasMany
     {
         return $this->hasMany(KrsItem::class);
+    }
+
+    /**
+     * @return HasMany<ClassSchedule, $this>
+     */
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(ClassSchedule::class)->orderBy('day_of_week')->orderBy('start_time');
+    }
+
+    /**
+     * @return HasMany<CourseMaterial, $this>
+     */
+    public function materials(): HasMany
+    {
+        return $this->hasMany(CourseMaterial::class);
+    }
+
+    /**
+     * @return HasMany<Assignment, $this>
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
+    /**
+     * @return HasMany<Exam, $this>
+     */
+    public function exams(): HasMany
+    {
+        return $this->hasMany(Exam::class);
     }
 
     protected static function newFactory(): ClassSectionFactory

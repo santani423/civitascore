@@ -63,19 +63,20 @@ import { PortalTranscriptPage } from '@/pages/portal/PortalTranscriptPage'
 import { PortalGradesPage } from '@/pages/portal/PortalGradesPage'
 import { PortalAttendancePage } from '@/pages/portal/PortalAttendancePage'
 import { PortalAssignmentsPage } from '@/pages/portal/PortalAssignmentsPage'
-import { PortalQuizzesPage } from '@/pages/portal/PortalQuizzesPage'
+import { PortalAssignmentDetailPage } from '@/pages/portal/PortalAssignmentDetailPage'
 import { PortalExamsPage } from '@/pages/portal/PortalExamsPage'
 import { PortalExamTakingPage } from '@/pages/portal/PortalExamTakingPage'
 import { PortalExamResultPage } from '@/pages/portal/PortalExamResultPage'
-import { PortalLeaveRequestPage } from '@/pages/portal/PortalLeaveRequestPage'
-import { PortalLetterRequestPage } from '@/pages/portal/PortalLetterRequestPage'
-import { PortalScholarshipPage } from '@/pages/portal/PortalScholarshipPage'
-import { PortalInvoicesPage } from '@/pages/portal/PortalInvoicesPage'
-import { PortalAcademicAdvisingPage } from '@/pages/portal/PortalAcademicAdvisingPage'
-import { PortalThesisAdvisingPage } from '@/pages/portal/PortalThesisAdvisingPage'
+import { PortalAcademicPage } from '@/pages/portal/PortalAcademicPage'
+import { PortalDocumentsPage } from '@/pages/portal/PortalDocumentsPage'
+import { PortalCoursesPage } from '@/pages/portal/PortalCoursesPage'
+import { PortalCourseDetailPage } from '@/pages/portal/PortalCourseDetailPage'
+import { PortalMaterialsPage } from '@/pages/portal/PortalMaterialsPage'
+import { PortalCalendarPage } from '@/pages/portal/PortalCalendarPage'
+import { PortalRequestsPage } from '@/pages/portal/PortalRequestsPage'
 import { PortalAnnouncementsPage } from '@/pages/portal/PortalAnnouncementsPage'
-import { PortalLecturerEvaluationPage } from '@/pages/portal/PortalLecturerEvaluationPage'
-import { PortalGraduationPage } from '@/pages/portal/PortalGraduationPage'
+import { PortalNotificationsPage } from '@/pages/portal/PortalNotificationsPage'
+import { PortalSettingsPage } from '@/pages/portal/PortalSettingsPage'
 import { ExamAccessPage } from '@/pages/exam-public/ExamAccessPage'
 import { ExamPublicAttemptPage } from '@/pages/exam-public/ExamPublicAttemptPage'
 import { ExamPublicResultPage } from '@/pages/exam-public/ExamPublicResultPage'
@@ -163,25 +164,26 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.laporan, element: <ReportsPage /> },
 
   { path: ROUTES.portal.profil, element: <PortalProfilePage /> },
+  { path: ROUTES.portal.akademik, element: <PortalAcademicPage /> },
   { path: ROUTES.portal.krs, element: <PortalKrsPage /> },
   { path: ROUTES.portal.jadwal, element: <PortalSchedulePage /> },
   { path: ROUTES.portal.khs, element: <PortalKhsPage /> },
   { path: ROUTES.portal.transkrip, element: <PortalTranscriptPage /> },
   { path: ROUTES.portal.nilai, element: <PortalGradesPage /> },
   { path: ROUTES.portal.absensi, element: <PortalAttendancePage /> },
+  { path: ROUTES.portal.dokumen, element: <PortalDocumentsPage /> },
+  { path: ROUTES.portal.mataKuliah, element: <PortalCoursesPage /> },
+  { path: ROUTES.portal.mataKuliahDetail, element: <PortalCourseDetailPage /> },
+  { path: ROUTES.portal.materi, element: <PortalMaterialsPage /> },
   { path: ROUTES.portal.tugas, element: <PortalAssignmentsPage /> },
-  { path: ROUTES.portal.kuis, element: <PortalQuizzesPage /> },
+  { path: ROUTES.portal.tugasDetail, element: <PortalAssignmentDetailPage /> },
   { path: ROUTES.portal.ujian, element: <PortalExamsPage /> },
   { path: ROUTES.portal.ujianHasil, element: <PortalExamResultPage /> },
-  { path: ROUTES.portal.cuti, element: <PortalLeaveRequestPage /> },
-  { path: ROUTES.portal.surat, element: <PortalLetterRequestPage /> },
-  { path: ROUTES.portal.beasiswa, element: <PortalScholarshipPage /> },
-  { path: ROUTES.portal.tagihan, element: <PortalInvoicesPage /> },
-  { path: ROUTES.portal.bimbinganAkademik, element: <PortalAcademicAdvisingPage /> },
-  { path: ROUTES.portal.bimbinganSkripsi, element: <PortalThesisAdvisingPage /> },
+  { path: ROUTES.portal.kalender, element: <PortalCalendarPage /> },
+  { path: ROUTES.portal.pengajuan, element: <PortalRequestsPage /> },
   { path: ROUTES.portal.pengumuman, element: <PortalAnnouncementsPage /> },
-  { path: ROUTES.portal.evaluasiDosen, element: <PortalLecturerEvaluationPage /> },
-  { path: ROUTES.portal.wisuda, element: <PortalGraduationPage /> },
+  { path: ROUTES.portal.notifikasi, element: <PortalNotificationsPage /> },
+  { path: ROUTES.portal.pengaturan, element: <PortalSettingsPage /> },
 ]
 
 /**

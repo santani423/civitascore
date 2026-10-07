@@ -32,6 +32,7 @@
             <directory>app/Modules/Alumni/Tests/Feature</directory>
             <directory>app/Modules/Announcement/Tests/Feature</directory>
             <directory>app/Modules/Report/Tests/Feature</directory>
+            <directory>app/Modules/HumanResource/Tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

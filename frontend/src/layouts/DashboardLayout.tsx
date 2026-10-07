@@ -1,12 +1,25 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { TenantModeBanner } from '@/components/layout/TenantModeBanner'
+import { useSessionRefresh } from '@/hooks/useSessionRefresh'
 
 export function DashboardLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { pathname } = useLocation()
+  const [lastPathname, setLastPathname] = useState(pathname)
+
+  useSessionRefresh()
+
+  // Drawer sidebar di mobile ditutup setiap kali halaman berpindah
+  // (state turunan saat render, bukan effect — lihat React docs
+  // "Adjusting some state when a prop changes").
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname)
+    if (mobileOpen) setMobileOpen(false)
+  }
 
   const handleMenuClick = () => {
     setMobileOpen((current) => !current)

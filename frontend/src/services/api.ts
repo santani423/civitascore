@@ -41,19 +41,37 @@ export interface NormalizedApiError {
   errors?: Record<string, string[]>
 }
 
+type ApiErrorBody = { message?: string; errors?: Record<string, string[]> }
+
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string; errors?: Record<string, string[]> }>) => {
+  async (error: AxiosError<ApiErrorBody | Blob>) => {
     const status = error.response?.status ?? null
 
     if (status === 401) {
       useAuthStore.getState().clearSession()
     }
 
+    // Unduhan berkas (`responseType: 'blob'`) yang gagal tetap membawa
+    // envelope JSON backend, tetapi terbungkus Blob — dibaca ulang supaya
+    // pesan aslinya (mis. "Transkrip belum tersedia...") sampai ke pengguna.
+    let body: ApiErrorBody | undefined
+    const raw = error.response?.data
+
+    if (raw instanceof Blob) {
+      try {
+        body = JSON.parse(await raw.text()) as ApiErrorBody
+      } catch {
+        body = undefined
+      }
+    } else {
+      body = raw
+    }
+
     const normalized: NormalizedApiError = {
       status,
-      message: error.response?.data?.message ?? 'Terjadi kesalahan. Silakan coba lagi.',
-      errors: error.response?.data?.errors,
+      message: body?.message ?? 'Terjadi kesalahan. Silakan coba lagi.',
+      errors: body?.errors,
     }
 
     return Promise.reject(normalized)

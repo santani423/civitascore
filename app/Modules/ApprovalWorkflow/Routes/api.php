@@ -13,8 +13,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('approval-requests', [ApprovalRequestController::class, 'index']);
     Route::get('approval-requests/{approvalRequest}', [ApprovalRequestController::class, 'show']);
+    Route::post('approval-requests/{approvalRequest}/resubmit', [ApprovalRequestController::class, 'resubmit']);
 
     Route::post('approval-request-steps/{approvalRequestStep}/approve', [ApprovalRequestStepController::class, 'approve']);
     Route::post('approval-request-steps/{approvalRequestStep}/reject', [ApprovalRequestStepController::class, 'reject']);
+    Route::post('approval-request-steps/{approvalRequestStep}/return', [ApprovalRequestStepController::class, 'returnToRequester']);
     Route::post('approval-request-steps/{approvalRequestStep}/delegate', [ApprovalRequestStepController::class, 'delegate']);
 });

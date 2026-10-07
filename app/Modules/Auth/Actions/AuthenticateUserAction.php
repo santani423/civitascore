@@ -134,7 +134,7 @@ class AuthenticateUserAction
             $genericFailure();
         }
 
-        if (! $user->is_active || in_array($student->status, [StudentStatus::Inactive, StudentStatus::DroppedOut], true)) {
+        if (! $user->is_active || in_array($student->status, StudentStatus::loginBlocked(), true)) {
             $this->sessions->recordFailedAttempt($user, $nim, $request, LoginFailureReason::AccountInactive);
 
             throw ValidationException::withMessages([

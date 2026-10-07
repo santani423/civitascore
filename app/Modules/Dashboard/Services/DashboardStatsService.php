@@ -65,7 +65,7 @@ class DashboardStatsService
             'summary' => [
                 'total_students' => (clone $studentQuery)->count(),
                 'total_lecturers' => Lecturer::query()->count(),
-                'total_employees' => Employee::query()->count(),
+                'total_employees' => Employee::query()->educationStaff()->count(),
                 'total_study_programs' => StudyProgram::query()->count(),
                 'active_students' => (clone $studentQuery)->where('status', StudentStatus::Active)->count(),
                 'active_classes' => (clone $classQuery)->where('is_active', true)->count(),
@@ -170,13 +170,9 @@ class DashboardStatsService
      */
     private function studentStatus(\Illuminate\Database\Eloquent\Builder $studentQuery): array
     {
-        $labels = [
-            StudentStatus::Active->value => 'Aktif',
-            StudentStatus::Leave->value => 'Cuti',
-            StudentStatus::Graduated->value => 'Lulus',
-            StudentStatus::Inactive->value => 'Nonaktif',
-            StudentStatus::DroppedOut->value => 'Drop Out',
-        ];
+        $labels = collect(StudentStatus::cases())
+            ->mapWithKeys(fn (StudentStatus $status): array => [$status->value => $status->label()])
+            ->all();
 
         return (clone $studentQuery)
             ->selectRaw('status, count(*) as total')
@@ -234,6 +230,7 @@ class DashboardStatsService
         );
 
         $employeesByUnit = Employee::query()
+            ->educationStaff()
             ->selectRaw('unit_kerja as unit, count(*) as total')
             ->groupBy('unit_kerja')
             ->pluck('total', 'unit');

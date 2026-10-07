@@ -12,6 +12,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -35,6 +36,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.resolve' => ResolveUniversityMiddleware::class,
             'tenant.access' => EnsureUniversityAccessMiddleware::class,
         ]);
+
+        // Tenant harus sudah ter-resolve SEBELUM route model binding.
+        // Tanpa ini SubstituteBindings jalan lebih dulu (ia ada di priority
+        // list bawaan, tenant.resolve tidak), TenantContext masih kosong,
+        // global scope tenant tidak aktif — `GET /lecturers/{id}` milik
+        // universitas lain ikut ter-resolve dan bisa dibaca/diubah/dihapus.
+        // Posisinya tetap setelah autentikasi (fallback membership default
+        // butuh $request->user()).
+        $middleware->prependToPriorityList(
+            before: SubstituteBindings::class,
+            prepend: ResolveUniversityMiddleware::class,
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -58,9 +71,30 @@ return Application::configure(basePath: dirname(__DIR__))
             return match (true) {
                 $e instanceof ValidationException => ApiResponse::error('Validasi data gagal.', $e->errors(), $e->status),
                 $e instanceof AuthenticationException => ApiResponse::error('Tidak terautentikasi.', status: 401),
-                $e instanceof AccessDeniedHttpException => ApiResponse::error($e->getMessage() ?: 'Anda tidak memiliki izin untuk mengakses resource ini.', status: 403),
+                // Pesan bawaan Gate ("This action is unauthorized.") diganti
+                // bahasa Indonesia; pesan deny() yang ditulis policy tetap dipakai.
+                $e instanceof AccessDeniedHttpException => ApiResponse::error(
+                    in_array($e->getMessage(), ['', 'This action is unauthorized.'], true)
+                        ? 'Anda tidak memiliki izin untuk mengakses resource ini.'
+                        : $e->getMessage(),
+                    status: 403,
+                ),
                 $e instanceof NotFoundHttpException => ApiResponse::error('Data tidak ditemukan.', status: 404),
                 $e instanceof ThrottleRequestsException => ApiResponse::error('Terlalu banyak permintaan. Coba lagi nanti.', status: 429),
+                // abort(403/404, '...') dan Response::denyAsNotFound() menghasilkan
+                // HttpException generik — pesannya memang ditulis untuk pengguna,
+                // jadi tetap ditampilkan walau APP_DEBUG mati (bukan pesan
+                // "kesalahan server" untuk kondisi yang sebenarnya 4xx).
+                $e instanceof HttpExceptionInterface && $e->getStatusCode() < 500 => ApiResponse::error(
+                    $e->getMessage() !== '' && ! in_array($e->getMessage(), ['Not Found', 'Forbidden'], true)
+                        ? $e->getMessage()
+                        : match ($e->getStatusCode()) {
+                            403 => 'Anda tidak memiliki izin untuk mengakses resource ini.',
+                            404 => 'Data tidak ditemukan.',
+                            default => 'Permintaan tidak dapat diproses.',
+                        },
+                    status: $e->getStatusCode(),
+                ),
                 // Catch-all so any unhandled exception on api/* still comes back as
                 // the app's standard { success, message, data, errors } JSON envelope
                 // instead of Laravel's bare default error body — without this, an

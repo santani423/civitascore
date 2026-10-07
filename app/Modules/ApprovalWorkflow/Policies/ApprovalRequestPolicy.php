@@ -18,4 +18,13 @@ class ApprovalRequestPolicy
             || $user->id === $request->currentStep?->assigned_approver_user_id
             || $user->hasPermissionTo('approval_requests.read');
     }
+
+    /**
+     * Hanya pemohon yang boleh mengajukan ulang pengajuan yang
+     * dikembalikan kepadanya.
+     */
+    public function resubmit(User $user, ApprovalRequest $request): bool
+    {
+        return $user->id === $request->requested_by;
+    }
 }

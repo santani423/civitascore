@@ -1,105 +1,273 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Camera, Lock, Pencil } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
-import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Select } from '@/components/ui/Select'
-import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
+import { Textarea } from '@/components/ui/Textarea'
+import { Alert } from '@/components/ui/Alert'
+import { Avatar } from '@/components/ui/Avatar'
+import { InfoList, PortalError, PortalLoading } from '@/components/portal/PortalState'
+import { StudentStatusBadge } from '@/components/portal/badges'
+import { useFetch } from '@/hooks/useFetch'
+import { fetchObjectUrl, studentPortalService } from '@/services/studentPortalService'
+import { fileUploadService } from '@/services/fileUploadService'
+import type { NormalizedApiError } from '@/services/api'
 import { ROUTES } from '@/constants/routes'
+import { formatDate } from '@/utils/portalFormat'
 
-const STUDENT_PROFILE = {
-  name: 'Muhammad Rizky Pratama',
-  nim: '202400512',
-  studyProgram: 'S1 Teknik Informatika',
-  admissionYear: 2024,
-  email: 'rizky.pratama@student.civitas.ac.id',
-  phone: '0812-3456-7890',
-  address: 'Jl. Merdeka No. 45, Bandung, Jawa Barat',
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Nama',
+  email: 'Email',
+  birth_place: 'Tempat lahir',
+  tanggal_lahir: 'Tanggal lahir',
+  gender: 'Jenis kelamin',
 }
 
-const CHANGE_TYPE_OPTIONS = [
-  { value: 'alamat', label: 'Alamat' },
-  { value: 'telepon', label: 'No. Telepon' },
-  { value: 'email', label: 'Email' },
-  { value: 'nama', label: 'Nama' },
-]
+function usePhotoUrl(fileId: string | null | undefined) {
+  const [url, setUrl] = useState<string | null>(null)
 
-const CHANGE_REQUESTS = [
-  { id: '1', submittedAt: '2026-06-10', dataType: 'No. Telepon', status: 'Disetujui' as const },
-  { id: '2', submittedAt: '2026-06-28', dataType: 'Alamat', status: 'Ditolak' as const },
-  { id: '3', submittedAt: '2026-07-15', dataType: 'Email', status: 'Diajukan' as const },
-]
+  useEffect(() => {
+    if (!fileId) return
 
-const CHANGE_REQUEST_STATUS_VARIANT: Record<(typeof CHANGE_REQUESTS)[number]['status'], BadgeVariant> = {
-  Diajukan: 'neutral',
-  Disetujui: 'success',
-  Ditolak: 'danger',
-}
+    let objectUrl: string | null = null
+    let cancelled = false
 
-const CHANGE_REQUEST_COLUMNS: DataTableColumn<(typeof CHANGE_REQUESTS)[number]>[] = [
-  { header: 'Tanggal Pengajuan', cell: (row) => row.submittedAt },
-  { header: 'Jenis Data', cell: (row) => row.dataType },
-  {
-    header: 'Status',
-    cell: (row) => <Badge variant={CHANGE_REQUEST_STATUS_VARIANT[row.status]}>{row.status}</Badge>,
-  },
-]
+    fetchObjectUrl(`/file-uploads/${fileId}/preview`)
+      .then((value) => {
+        objectUrl = value
+        if (!cancelled) setUrl(value)
+      })
+      .catch(() => {
+        if (!cancelled) setUrl(null)
+      })
 
-function DetailField({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div>
-      <p className="text-ink-tertiary">{label}</p>
-      <p className="font-medium text-ink-primary">{value}</p>
-    </div>
-  )
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [fileId])
+
+  return fileId ? url : null
 }
 
 export function PortalProfilePage() {
+  const fetchProfile = useCallback(() => studentPortalService.profile(), [])
+  const { data: profile, setData: setProfile, isLoading, error, refetch } = useFetch(fetchProfile)
+  const photoUrl = usePhotoUrl(profile?.photo?.file_id)
+
+  const [editing, setEditing] = useState(false)
+  const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [message, setMessage] = useState<{ variant: 'success' | 'danger'; text: string } | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({})
+  const fileInput = useRef<HTMLInputElement>(null)
+
+  const startEdit = () => {
+    setPhone(profile?.contact.phone ?? '')
+    setAddress(profile?.address ?? '')
+    setFieldErrors({})
+    setEditing(true)
+  }
+
+  const save = async () => {
+    setSaving(true)
+    setMessage(null)
+    setFieldErrors({})
+
+    try {
+      const result = await studentPortalService.updateProfile({ phone: phone || null, address: address || null })
+      setProfile(result.data)
+      setEditing(false)
+      setMessage({ variant: 'success', text: result.message ?? 'Profil berhasil diperbarui.' })
+    } catch (err) {
+      const apiError = err as NormalizedApiError
+      setFieldErrors(apiError.errors ?? {})
+      setMessage({ variant: 'danger', text: apiError.message })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const uploadPhoto = async (file: File) => {
+    setUploading(true)
+    setMessage(null)
+
+    try {
+      const upload = await fileUploadService.upload(file)
+      const result = await studentPortalService.updateProfile({ photo_file_id: upload.id })
+      setProfile(result.data)
+      setMessage({ variant: 'success', text: 'Foto profil diperbarui.' })
+    } catch (err) {
+      const apiError = err as NormalizedApiError
+      setMessage({ variant: 'danger', text: apiError.errors?.photo_file_id?.[0] ?? apiError.errors?.file?.[0] ?? apiError.message })
+    } finally {
+      setUploading(false)
+      if (fileInput.current) fileInput.current.value = ''
+    }
+  }
+
+  if (isLoading && !profile) return <PortalLoading cards={0} rows={8} />
+  if (error) return <PortalError message={error} onRetry={refetch} />
+  if (!profile) return null
+
+  const { personal, contact, academic } = profile
+
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="Profil Saya"
-        breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Profil Saya' }]}
+        title="Profil"
+        description="Data diri dan data akademik Anda."
+        breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Profil' }]}
       />
 
-      <Card title="Data Pribadi" description={`NIM ${STUDENT_PROFILE.nim}`}>
-        <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          <DetailField label="Nama Lengkap" value={STUDENT_PROFILE.name} />
-          <DetailField label="NIM" value={STUDENT_PROFILE.nim} />
-          <DetailField label="Program Studi" value={STUDENT_PROFILE.studyProgram} />
-          <DetailField label="Angkatan" value={STUDENT_PROFILE.admissionYear} />
-          <DetailField label="Email" value={STUDENT_PROFILE.email} />
-          <DetailField label="No. Telepon" value={STUDENT_PROFILE.phone} />
-          <DetailField label="Alamat" value={STUDENT_PROFILE.address} />
-          <div>
-            <p className="text-ink-tertiary">Status Mahasiswa</p>
-            <Badge variant="success">Aktif</Badge>
+      {message && (
+        <Alert variant={message.variant} onDismiss={() => setMessage(null)}>
+          {message.text}
+        </Alert>
+      )}
+
+      {profile.pending_data_change && (
+        <Alert variant="info" title="Pengajuan perubahan data sedang ditinjau">
+          {Object.entries(profile.pending_data_change.changes)
+            .map(([field, value]) => `${FIELD_LABELS[field] ?? field}: ${value}`)
+            .join(' · ')}
+        </Alert>
+      )}
+
+      <Card>
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
+          <div className="relative">
+            {photoUrl ? (
+              <img src={photoUrl} alt={`Foto ${personal.name}`} className="size-20 rounded-full object-cover" />
+            ) : (
+              <Avatar name={personal.name} size="lg" />
+            )}
+            <button
+              type="button"
+              onClick={() => fileInput.current?.click()}
+              disabled={uploading}
+              aria-label="Ganti foto profil"
+              className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full border border-border bg-surface text-ink-secondary shadow-card hover:text-primary disabled:opacity-50"
+            >
+              <Camera className="size-4" />
+            </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/png,image/jpeg"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) void uploadPhoto(file)
+              }}
+            />
+          </div>
+          <div className="min-w-0">
+            <h2 className="text-lg font-semibold text-ink-primary">{personal.name}</h2>
+            <p className="text-sm text-ink-secondary">
+              {personal.nim} · {academic.study_program.name}
+            </p>
+            <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <StudentStatusBadge status={academic.status} />
+            </div>
+            <p className="mt-1 text-xs text-ink-tertiary">Foto JPG/PNG maksimal 2 MB.</p>
           </div>
         </div>
       </Card>
 
-      <Card title="Ajukan Perubahan Data">
-        <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
-          <Select label="Jenis Data yang Diubah" options={CHANGE_TYPE_OPTIONS} placeholder="Pilih jenis data" />
-          <Input label="Data Baru" placeholder="Masukkan data baru" />
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-ink-primary">Alasan Perubahan</label>
-            <textarea
-              rows={4}
-              className="w-full rounded-lg border border-border-strong bg-surface px-3 py-2 text-sm text-ink-primary placeholder:text-ink-tertiary transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              placeholder="Jelaskan alasan pengajuan perubahan data..."
-            />
-          </div>
-          <div>
-            <Button type="submit" variant="primary">
-              Ajukan Perubahan
-            </Button>
-          </div>
-        </form>
-      </Card>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <Card
+          title="Data Pribadi"
+          description="Perubahan data ini memerlukan persetujuan Bagian Akademik."
+          actions={
+            <Link to={`${ROUTES.portal.pengajuan}?jenis=data_change`}>
+              <Button size="sm" variant="outline">
+                Ajukan perubahan
+              </Button>
+            </Link>
+          }
+        >
+          <InfoList
+            items={[
+              { label: 'Nama lengkap', value: personal.name },
+              { label: 'NIM', value: personal.nim },
+              { label: 'Tempat lahir', value: personal.birth_place ?? '-' },
+              { label: 'Tanggal lahir', value: formatDate(personal.birth_date, 'long') },
+              { label: 'Jenis kelamin', value: personal.gender_label ?? '-' },
+              { label: 'Email', value: contact.email ?? '-' },
+            ]}
+          />
+        </Card>
 
-      <Card title="Riwayat Pengajuan Perubahan Data" noPadding>
-        <DataTable columns={CHANGE_REQUEST_COLUMNS} data={CHANGE_REQUESTS} rowKey={(row) => row.id} />
+        <Card
+          title="Kontak & Alamat"
+          description="Dapat Anda ubah sendiri."
+          actions={
+            !editing && (
+              <Button size="sm" variant="outline" leftIcon={<Pencil className="size-3.5" />} onClick={startEdit}>
+                Ubah
+              </Button>
+            )
+          }
+        >
+          {editing ? (
+            <div className="flex flex-col gap-3">
+              <Input
+                label="Nomor telepon"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                error={fieldErrors.phone?.[0]}
+                placeholder="+62 812 0000 0000"
+                inputMode="tel"
+              />
+              <Textarea label="Alamat" rows={3} value={address} onChange={(event) => setAddress(event.target.value)} error={fieldErrors.address?.[0]} />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditing(false)}>
+                  Batal
+                </Button>
+                <Button isLoading={saving} onClick={save}>
+                  Simpan
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <InfoList
+              columns={1}
+              items={[
+                { label: 'Nomor telepon', value: contact.phone ?? '-' },
+                { label: 'Alamat', value: profile.address ?? '-' },
+              ]}
+            />
+          )}
+        </Card>
+      </div>
+
+      <Card
+        title="Data Akademik"
+        description="Ditetapkan Bagian Akademik."
+        actions={
+          <span className="inline-flex items-center gap-1 text-xs text-ink-tertiary">
+            <Lock className="size-3.5" /> Hanya baca
+          </span>
+        }
+      >
+        <InfoList
+          columns={3}
+          items={[
+            { label: 'Program studi', value: `${academic.study_program.name} (${academic.study_program.degree_level})` },
+            { label: 'Fakultas', value: academic.faculty?.name ?? '-' },
+            { label: 'Angkatan', value: academic.admission_year },
+            { label: 'Semester', value: academic.semester ?? '-' },
+            { label: 'Status', value: academic.status.label },
+            { label: 'Dosen wali', value: academic.academic_advisor?.name ?? 'Belum ditetapkan' },
+            { label: 'Kurikulum', value: academic.curriculum?.name ?? '-' },
+            { label: 'Terdaftar sejak', value: formatDate(academic.enrolled_at, 'long') },
+          ]}
+        />
       </Card>
     </div>
   )

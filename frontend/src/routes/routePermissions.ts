@@ -1,4 +1,4 @@
-import { NAV_ITEMS, PLATFORM_NAV_ITEMS } from '@/constants/nav'
+import { NAV_ITEMS, PLATFORM_NAV_ITEMS, PORTAL_NAV_ITEMS } from '@/constants/nav'
 import { ROUTES } from '@/constants/routes'
 import type { NavItem } from '@/types/navigation'
 
@@ -23,6 +23,7 @@ function collectNavPermissions(items: NavItem[], map: Map<string, string | strin
 const routePermissions = new Map<string, string | string[]>()
 collectNavPermissions(NAV_ITEMS, routePermissions)
 collectNavPermissions(PLATFORM_NAV_ITEMS, routePermissions)
+collectNavPermissions(PORTAL_NAV_ITEMS, routePermissions)
 
 /**
  * Detail routes aren't sidebar items, so they can't be derived above —
@@ -46,6 +47,9 @@ const DETAIL_ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   [ROUTES.akademik.ujianRekap]: 'exams.read',
   [ROUTES.portal.ujianKerjakan]: 'exam_participation.read',
   [ROUTES.portal.ujianHasil]: 'exam_participation.read',
+  [ROUTES.portal.mataKuliahDetail]: 'student_portal.read',
+  [ROUTES.portal.tugasDetail]: 'student_portal.read',
+  [ROUTES.akademik.kelasSayaDetail]: ['course_materials.read', 'assignments.read'],
   [ROUTES.keuangan.tagihanDetail]: 'invoices.read',
   [ROUTES.keuangan.beasiswaDetail]: 'scholarships.read',
   [ROUTES.skripsiDetail]: 'theses.read',
