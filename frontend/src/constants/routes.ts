@@ -28,6 +28,7 @@ export const ROUTES = {
   mahasiswaDetail: '/mahasiswa/:id',
   dosen: '/dosen',
   dosenDetail: '/dosen/:id',
+  profilDosen: '/profil-dosen',
   pegawai: '/pegawai',
   pegawaiDetail: '/pegawai/:id',
   keuangan: {

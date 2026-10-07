@@ -118,6 +118,7 @@ test('creating a lecturer rejects a faculty_id belonging to another university',
             'faculty_id' => $foreignFaculty->id,
             'nidn' => '1234567890',
             'name' => 'Dosen',
+            'create_account' => false,
         ])
         ->assertNotFound();
 });
@@ -169,5 +170,6 @@ test('a permitted user can delete a lecturer', function () {
         ->deleteJson("/api/v1/lecturers/{$lecturer->id}")
         ->assertApiSuccess();
 
-    $this->assertDatabaseMissing('lecturers', ['id' => $lecturer->id]);
+    // Soft delete — history is preserved (see LecturerController::destroy()).
+    $this->assertSoftDeleted('lecturers', ['id' => $lecturer->id]);
 });

@@ -30,4 +30,14 @@ class LecturerPolicy
     {
         return $user->hasPermissionTo('lecturers.delete');
     }
+
+    /**
+     * Provision / reset password / activate-deactivate the login account.
+     * Whether the specific linked account may be touched at all is decided
+     * separately by LecturerAccountService::isManageable().
+     */
+    public function manageAccount(User $user): bool
+    {
+        return $user->hasPermissionTo('lecturers.update');
+    }
 }

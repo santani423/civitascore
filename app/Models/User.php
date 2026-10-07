@@ -18,6 +18,7 @@ use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
+use Modules\Academic\Models\Lecturer;
 use Modules\Academic\Models\Student;
 use Modules\AuditLog\Support\Auditable;
 use Modules\Auth\Models\LoginHistory;
@@ -145,5 +146,16 @@ class User extends Authenticatable
     public function student(): HasOne
     {
         return $this->hasOne(Student::class);
+    }
+
+    /**
+     * The Lecturer record this login identity belongs to in the current
+     * tenant (Lecturer is TenantScoped), if this user is a dosen.
+     *
+     * @return HasOne<Lecturer, $this>
+     */
+    public function lecturer(): HasOne
+    {
+        return $this->hasOne(Lecturer::class);
     }
 }

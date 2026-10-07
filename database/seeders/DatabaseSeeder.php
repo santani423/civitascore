@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Academic\Database\Seeders\LecturerUserAccountSeeder;
 use Modules\Academic\Database\Seeders\StudentUserAccountSeeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
@@ -71,5 +72,10 @@ class DatabaseSeeder extends Seeder
         // being left unlinked — must run after DemoUniversitiesSeeder,
         // which is what actually creates the Student rows.
         $this->call(StudentUserAccountSeeder::class);
+
+        // Same for lecturers.user_id — every dosen with an email gets a
+        // login account, and the demo dosen@<domain> accounts get a linked
+        // lecturer record.
+        $this->call(LecturerUserAccountSeeder::class);
     }
 }

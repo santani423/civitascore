@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Menu, Search, Bell, LogOut, Settings, UserRound, Circle } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
+import { usePermission } from '@/hooks/usePermission'
+import { authService } from '@/services/authService'
 import { ROUTES } from '@/constants/routes'
 import { Avatar } from '@/components/ui/Avatar'
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
@@ -23,9 +25,25 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   const unreadCount = NOTIFICATIONS.filter((notification) => !notification.isRead).length
 
-  const handleLogout = () => {
-    clearSession()
-    navigate(ROUTES.login, { replace: true })
+  const isLecturer = usePermission('lecturer_profile.read')
+  const canOpenSettings = usePermission('system_settings.read')
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  // Revoke the Sanctum token server-side first (not just forget it locally)
+  // so a copied/leaked token stops working too; local session is cleared
+  // regardless of whether the request succeeds.
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
+
+    try {
+      await authService.logout()
+    } catch {
+      // Token already invalid/expired or network down — still sign out locally.
+    } finally {
+      clearSession()
+      navigate(ROUTES.login, { replace: true })
+    }
   }
 
   return (
@@ -105,14 +123,16 @@ export function Header({ onMenuClick }: HeaderProps) {
             </span>
           }
         >
-          <DropdownItem onClick={() => navigate(ROUTES.pengaturan.security)}>
+          <DropdownItem onClick={() => navigate(isLecturer ? ROUTES.profilDosen : ROUTES.pengaturan.security)}>
             <UserRound className="size-4" /> Profil Saya
           </DropdownItem>
-          <DropdownItem onClick={() => navigate(ROUTES.pengaturan.systemSettings)}>
-            <Settings className="size-4" /> Pengaturan
-          </DropdownItem>
+          {canOpenSettings && (
+            <DropdownItem onClick={() => navigate(ROUTES.pengaturan.systemSettings)}>
+              <Settings className="size-4" /> Pengaturan
+            </DropdownItem>
+          )}
           <div className="my-1 border-t border-border" />
-          <DropdownItem onClick={handleLogout} className="text-danger hover:bg-red-50 dark:hover:bg-red-950">
+          <DropdownItem onClick={() => void handleLogout()} className="text-danger hover:bg-red-50 dark:hover:bg-red-950">
             <LogOut className="size-4" /> Keluar
           </DropdownItem>
         </Dropdown>

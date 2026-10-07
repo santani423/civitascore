@@ -109,6 +109,7 @@ class OrganizationalRoleSeeder extends Seeder
             'krs.read', 'grades.read', 'grades.create', 'grades.update', 'attendance.read', 'attendance.create', 'attendance.update',
             'exams.read', 'exams.create', 'exams.update', 'exams.delete', 'exams.publish', 'exam_attempts.read', 'exam_attempts.create', 'exam_attempts.update',
             'question_bank.read', 'question_bank.create', 'question_bank.update', 'question_bank.delete',
+            'lecturer_profile.read', 'lecturer_profile.update',
         ],
         'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read'],
         'hr_administrator' => [

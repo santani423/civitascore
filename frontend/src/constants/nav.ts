@@ -104,7 +104,25 @@ export const TENANT_BUSINESS_NAV_ITEMS: NavItem[] = [
 ]
 
 /** Menu pengguna tenant biasa (admin universitas, dosen, mahasiswa, dst) — tidak berubah, selalu di tenant sendiri. */
-export const NAV_ITEMS: NavItem[] = [DASHBOARD_ITEM, ...TENANT_BUSINESS_NAV_ITEMS, PERSETUJUAN_ITEM, PENGATURAN_ITEM]
+/**
+ * "Profil Saya" dosen — self-service (lecturer_profile.read hanya dimiliki
+ * role lecturer), sengaja tidak di TENANT_BUSINESS_NAV_ITEMS supaya tidak
+ * ikut muncul di menu Super Admin yang memegang seluruh permission.
+ */
+const LECTURER_PROFILE_ITEM: NavItem = {
+  label: 'Profil Saya',
+  path: ROUTES.profilDosen,
+  icon: UserCircle,
+  permission: 'lecturer_profile.read',
+}
+
+export const NAV_ITEMS: NavItem[] = [
+  DASHBOARD_ITEM,
+  LECTURER_PROFILE_ITEM,
+  ...TENANT_BUSINESS_NAV_ITEMS,
+  PERSETUJUAN_ITEM,
+  PENGATURAN_ITEM,
+]
 
 /**
  * Menu inti Super Admin — platform (lintas-universitas) + aktivitas yang

@@ -10,9 +10,12 @@ use Modules\Academic\Controllers\ExamAttemptController;
 use Modules\Academic\Controllers\ExamController;
 use Modules\Academic\Controllers\ExamGradeRangeController;
 use Modules\Academic\Controllers\ExamQuestionController;
+use Modules\Academic\Controllers\FacultyController;
 use Modules\Academic\Controllers\GradeController;
 use Modules\Academic\Controllers\KrsItemController;
+use Modules\Academic\Controllers\LecturerAccountController;
 use Modules\Academic\Controllers\LecturerController;
+use Modules\Academic\Controllers\LecturerProfileController;
 use Modules\Academic\Controllers\PublicExamController;
 use Modules\Academic\Controllers\QuestionBankController;
 use Modules\Academic\Controllers\StudentController;
@@ -30,6 +33,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('lecturers/{lecturer}', [LecturerController::class, 'show'])->middleware('permission:lecturers.read');
     Route::put('lecturers/{lecturer}', [LecturerController::class, 'update'])->middleware('permission:lecturers.update');
     Route::delete('lecturers/{lecturer}', [LecturerController::class, 'destroy'])->middleware('permission:lecturers.delete');
+    Route::post('lecturers/{lecturer}/account', [LecturerAccountController::class, 'store'])->middleware('permission:lecturers.update');
+    Route::post('lecturers/{lecturer}/account/reset-password', [LecturerAccountController::class, 'resetPassword'])->middleware('permission:lecturers.update');
+    Route::patch('lecturers/{lecturer}/account/status', [LecturerAccountController::class, 'updateStatus'])->middleware('permission:lecturers.update');
+
+    // Self-service profile of the logged-in dosen (resolved via
+    // lecturers.user_id, never a client-supplied id).
+    Route::get('lecturer-profile', [LecturerProfileController::class, 'show'])->middleware('permission:lecturer_profile.read');
+    Route::put('lecturer-profile', [LecturerProfileController::class, 'update'])->middleware('permission:lecturer_profile.update');
+
+    Route::get('faculties', [FacultyController::class, 'index'])->middleware('permission:lecturers.read,study_programs.read');
 
     Route::get('employees', [EmployeeController::class, 'index'])->middleware('permission:employees.read');
     Route::get('employees/{employee}', [EmployeeController::class, 'show'])->middleware('permission:employees.read');

@@ -118,6 +118,14 @@ class RolePermissionSeeder extends Seeder
             PermissionAction::Update,
             PermissionAction::Delete,
         ],
+        // Self-service "Profil Saya" dosen — resource terpisah dari
+        // lecturers.* (data induk yang dikelola SDM) supaya memberikannya ke
+        // role lecturer tidak pernah membuka akses ke data dosen lain;
+        // kepemilikan dicek lewat lecturers.user_id di LecturerProfileController.
+        'lecturer_profile' => [
+            PermissionAction::Read,
+            PermissionAction::Update,
+        ],
         'employees' => [
             PermissionAction::Read,
         ],

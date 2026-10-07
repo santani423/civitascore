@@ -25,26 +25,86 @@ export interface StoreStudentPayload {
   enrolled_at: string
 }
 
+export type LecturerEmploymentStatus = 'permanent' | 'contract' | 'honorary'
+export type LecturerFunctionalRank = 'none' | 'asisten_ahli' | 'lektor' | 'lektor_kepala' | 'guru_besar'
+export type LecturerEducationLevel = 's1' | 's2' | 's3'
+
+/** Akun login yang tertaut ke dosen (lecturers.user_id). */
+export interface LecturerAccount {
+  id: string
+  email: string
+  is_active: boolean
+  must_change_password: boolean
+  password_changed_at: string | null
+  /**
+   * Apakah SDM boleh reset password / aktif-nonaktifkan akun ini — false
+   * bila akun juga memegang role lain atau terdaftar di universitas lain.
+   * Null di endpoint list (hanya dihitung di detail).
+   */
+  manageable: boolean | null
+}
+
 export interface Lecturer {
   id: string
+  user_id: string | null
   faculty_id: string | null
-  faculty_name: string | null
+  faculty_name?: string | null
   nidn: string
+  nip: string | null
   name: string
   email: string | null
+  phone: string | null
+  employment_status: LecturerEmploymentStatus | null
+  functional_rank: LecturerFunctionalRank | null
+  highest_education: LecturerEducationLevel | null
+  hired_at: string | null
   is_active: boolean
+  has_account: boolean
+  account?: LecturerAccount | null
   created_at: string
+  updated_at: string | null
 }
 
 export interface StoreLecturerPayload {
   faculty_id?: string | null
   nidn: string
+  nip?: string | null
   name: string
   email?: string | null
+  phone?: string | null
+  employment_status?: LecturerEmploymentStatus | null
+  functional_rank?: LecturerFunctionalRank | null
+  highest_education?: LecturerEducationLevel | null
+  hired_at?: string | null
   is_active: boolean
+  /** Default true di backend — buat akun login sekaligus. */
+  create_account?: boolean
 }
 
-export type UpdateLecturerPayload = Partial<StoreLecturerPayload>
+export type UpdateLecturerPayload = Partial<Omit<StoreLecturerPayload, 'create_account'>>
+
+/**
+ * Kredensial yang dikembalikan sekali saja saat akun dibuat / password
+ * direset — `password` null berarti dosen ditautkan ke akun yang sudah ada
+ * (password lamanya tidak diubah).
+ */
+export interface LecturerAccountCredentials {
+  email: string
+  password: string | null
+  account_created: boolean
+}
+
+export interface LecturerWithCredentials {
+  lecturer: Lecturer
+  credentials: LecturerAccountCredentials | null
+}
+
+export interface FacultyOption {
+  id: string
+  code: string
+  name: string
+  is_active: boolean
+}
 
 export interface Employee {
   id: string

@@ -20,6 +20,7 @@ import { StudentsPage } from '@/pages/academic/StudentsPage'
 import { StudentDetailPage } from '@/pages/academic/StudentDetailPage'
 import { LecturersPage } from '@/pages/academic/LecturersPage'
 import { LecturerDetailPage } from '@/pages/academic/LecturerDetailPage'
+import { LecturerProfilePage } from '@/pages/lecturer/LecturerProfilePage'
 import { EmployeesPage } from '@/pages/academic/EmployeesPage'
 import { EmployeeDetailPage } from '@/pages/academic/EmployeeDetailPage'
 import { StudyProgramsPage } from '@/pages/academic/StudyProgramsPage'
@@ -112,6 +113,7 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.mahasiswaDetail, element: <StudentDetailPage /> },
   { path: ROUTES.dosen, element: <LecturersPage /> },
   { path: ROUTES.dosenDetail, element: <LecturerDetailPage /> },
+  { path: ROUTES.profilDosen, element: <LecturerProfilePage /> },
   { path: ROUTES.pegawai, element: <EmployeesPage /> },
   { path: ROUTES.pegawaiDetail, element: <EmployeeDetailPage /> },
   { path: ROUTES.akademik.programStudi, element: <StudyProgramsPage /> },

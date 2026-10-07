@@ -7,6 +7,7 @@ import { PasswordInput } from '@/components/ui/PasswordInput'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
 import { authService } from '@/services/authService'
+import { applyServerErrors } from '@/utils/applyServerErrors'
 import type { NormalizedApiError } from '@/services/api'
 import { useAuthStore } from '@/stores/authStore'
 import { ROUTES } from '@/constants/routes'
@@ -30,21 +31,24 @@ const changePasswordSchema = z
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
 
 /**
- * Ditampilkan lewat redirect paksa dari ProtectedRoute ketika akun masih
- * memakai password default (NIM+tanggal lahir untuk mahasiswa) — lihat
- * users.must_change_password di backend. Tidak ada jalan keluar selain
- * berhasil ganti password (tidak ada tombol "lewati"/logout link di sini
- * dengan sengaja).
+ * Dua mode:
+ * - Paksa: redirect dari ProtectedRoute ketika akun masih memakai password
+ *   default/sementara (NIM+tanggal lahir mahasiswa, password awal dosen dari
+ *   SDM) — lihat users.must_change_password. Tidak ada jalan keluar selain
+ *   berhasil ganti password (tidak ada tombol "lewati" dengan sengaja).
+ * - Sukarela: dibuka sendiri dari "Profil Saya" — ada tombol Batal.
  */
 export function ChangePasswordPage() {
   const navigate = useNavigate()
   const session = useAuthStore((state) => state.session)
   const setSession = useAuthStore((state) => state.setSession)
   const [formError, setFormError] = useState<string | null>(null)
+  const isForced = session?.user.mustChangePassword ?? false
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -63,7 +67,9 @@ export function ChangePasswordPage() {
 
       navigate(ROUTES.dashboard, { replace: true })
     } catch (error) {
-      setFormError((error as NormalizedApiError).message ?? 'Gagal mengubah password. Silakan coba lagi.')
+      // Field errors (e.g. "Password saat ini tidak sesuai.") land under the
+      // matching input instead of a generic "Validasi data gagal." banner.
+      setFormError(applyServerErrors(error as NormalizedApiError, setError))
     }
   }
 
@@ -72,7 +78,9 @@ export function ChangePasswordPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight text-ink-primary">Ubah Password</h1>
         <p className="mt-1.5 text-sm text-ink-secondary">
-          Akun Anda di {APP_NAME} masih menggunakan password default. Buat password baru sebelum melanjutkan.
+          {isForced
+            ? `Akun Anda di ${APP_NAME} masih menggunakan password sementara. Buat password baru sebelum melanjutkan.`
+            : `Ganti password akun ${APP_NAME} Anda. Gunakan minimal 8 karakter.`}
         </p>
       </div>
 
@@ -107,6 +115,12 @@ export function ChangePasswordPage() {
         <Button type="submit" size="lg" isLoading={isSubmitting} className="mt-1 w-full">
           Simpan Password Baru
         </Button>
+
+        {!isForced && (
+          <Button type="button" variant="ghost" size="lg" className="w-full" onClick={() => navigate(-1)}>
+            Batal
+          </Button>
+        )}
       </form>
     </div>
   )

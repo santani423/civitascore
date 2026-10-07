@@ -16,6 +16,8 @@ import { ApprovalStatusChart } from '@/components/dashboard/ApprovalStatusChart'
 import { RecentActivityList } from '@/components/dashboard/RecentActivityList'
 import { AcademicAgendaList } from '@/components/dashboard/AcademicAgendaList'
 import { PendingApprovalsTable } from '@/components/dashboard/PendingApprovalsTable'
+import { LecturerSummaryCard } from '@/components/dashboard/LecturerSummaryCard'
+import { usePermission } from '@/hooks/usePermission'
 import { useAuthStore } from '@/stores/authStore'
 import { useFetch } from '@/hooks/useFetch'
 import { dashboardService } from '@/services/dashboardService'
@@ -39,6 +41,7 @@ function monthToDateRange(month: string): { date_from: string; date_to: string }
 export function DashboardPage() {
   const userName = useAuthStore((state) => state.session?.user.name)
   const navigate = useNavigate()
+  const isLecturer = usePermission('lecturer_profile.read')
   const [filters, setFilters] = useState<DashboardQueryFilters>({})
 
   const fetchStats = useCallback(() => dashboardService.getStats(filters), [filters])
@@ -88,6 +91,8 @@ export function DashboardPage() {
         title="Dashboard"
         description={userName ? `Selamat datang kembali, ${userName}.` : 'Ringkasan aktivitas akademik universitas.'}
       />
+
+      {isLecturer && <LecturerSummaryCard />}
 
       {error && <Alert variant="danger">{error}</Alert>}
 

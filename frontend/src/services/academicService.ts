@@ -17,7 +17,10 @@ import type {
   ExamViolation,
   Grade,
   KrsItem,
+  FacultyOption,
   Lecturer,
+  LecturerAccountCredentials,
+  LecturerWithCredentials,
   QuestionBankItem,
   RecordAttendanceBatchPayload,
   RecordExamViolationPayload,
@@ -65,6 +68,14 @@ export const studentService = {
   },
 }
 
+type LecturerMutationResponse = ApiSuccessResponse<Lecturer> & {
+  meta?: { credentials?: LecturerAccountCredentials }
+}
+
+function withCredentials(body: LecturerMutationResponse): LecturerWithCredentials {
+  return { lecturer: body.data, credentials: body.meta?.credentials ?? null }
+}
+
 export const lecturerService = {
   async index(params: ListParams = {}): Promise<PaginatedResult<Lecturer>> {
     const response = await apiClient.get<ApiSuccessResponse<Lecturer[]>>('/lecturers', {
@@ -78,9 +89,9 @@ export const lecturerService = {
     return response.data.data
   },
 
-  async create(payload: StoreLecturerPayload): Promise<Lecturer> {
-    const response = await apiClient.post<ApiSuccessResponse<Lecturer>>('/lecturers', payload)
-    return response.data.data
+  async create(payload: StoreLecturerPayload): Promise<LecturerWithCredentials> {
+    const response = await apiClient.post<LecturerMutationResponse>('/lecturers', payload)
+    return withCredentials(response.data)
   },
 
   async update(id: string, payload: UpdateLecturerPayload): Promise<Lecturer> {
@@ -90,6 +101,43 @@ export const lecturerService = {
 
   async remove(id: string): Promise<void> {
     await apiClient.delete(`/lecturers/${id}`)
+  },
+
+  async createAccount(id: string): Promise<LecturerWithCredentials> {
+    const response = await apiClient.post<LecturerMutationResponse>(`/lecturers/${id}/account`)
+    return withCredentials(response.data)
+  },
+
+  async resetAccountPassword(id: string): Promise<LecturerWithCredentials> {
+    const response = await apiClient.post<LecturerMutationResponse>(`/lecturers/${id}/account/reset-password`)
+    return withCredentials(response.data)
+  },
+
+  async setAccountActive(id: string, isActive: boolean): Promise<Lecturer> {
+    const response = await apiClient.patch<ApiSuccessResponse<Lecturer>>(`/lecturers/${id}/account/status`, {
+      is_active: isActive,
+    })
+    return response.data.data
+  },
+}
+
+/** "Profil Saya" dosen yang sedang login — selalu milik sendiri (lecturers.user_id). */
+export const lecturerProfileService = {
+  async show(): Promise<Lecturer> {
+    const response = await apiClient.get<ApiSuccessResponse<Lecturer>>('/lecturer-profile')
+    return response.data.data
+  },
+
+  async update(payload: { phone: string | null }): Promise<Lecturer> {
+    const response = await apiClient.put<ApiSuccessResponse<Lecturer>>('/lecturer-profile', payload)
+    return response.data.data
+  },
+}
+
+export const facultyService = {
+  async options(): Promise<FacultyOption[]> {
+    const response = await apiClient.get<ApiSuccessResponse<FacultyOption[]>>('/faculties')
+    return response.data.data
   },
 }
 
