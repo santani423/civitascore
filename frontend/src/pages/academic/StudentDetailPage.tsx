@@ -1,17 +1,16 @@
 import { useCallback } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { GraduationCap, Layers, Wallet } from 'lucide-react'
+import { Wallet } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
 import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
-import { StatCard } from '@/components/ui/StatCard'
 import { useFetch } from '@/hooks/useFetch'
 import { usePermission } from '@/hooks/usePermission'
 import { attendanceService, gradeService, krsItemService, studentService } from '@/services/academicService'
-import type { Attendance, AttendanceStatus, Grade, KrsItem, LetterGrade, StudentStatus, TranscriptTerm } from '@/types/academic'
+import type { Attendance, AttendanceStatus, Grade, KrsItem, LetterGrade, StudentStatus } from '@/types/academic'
 import { internshipService } from '@/services/internshipService'
 import type { Internship, InternshipProgramType, InternshipStatus } from '@/types/internship'
 import { scholarshipApplicationService } from '@/services/scholarshipService'
@@ -30,12 +29,6 @@ const LETTER_GRADE_VARIANT: Record<LetterGrade, BadgeVariant> = {
   D: 'danger',
   E: 'danger',
 }
-
-const TRANSCRIPT_COLUMNS: DataTableColumn<TranscriptTerm>[] = [
-  { header: 'Periode', cell: (row) => row.label },
-  { header: 'SKS', cell: (row) => row.sks },
-  { header: 'IP', cell: (row) => row.ip.toFixed(2) },
-]
 
 const KRS_COLUMNS: DataTableColumn<KrsItem>[] = [
   { header: 'Mata Kuliah', cell: (row) => row.course_name ?? '-' },
@@ -193,12 +186,6 @@ export function StudentDetailPage() {
 
   const getStudent = useCallback(() => studentService.show(id ?? ''), [id])
   const { data: student, isLoading, error } = useFetch(getStudent)
-
-  const getTranscript = useCallback(async () => {
-    if (!canSeeKrs) return null
-    return studentService.transcript(id ?? '')
-  }, [id, canSeeKrs])
-  const { data: transcript } = useFetch(getTranscript)
 
   const getKrsItems = useCallback(async () => {
     if (!canSeeKrs) return []
