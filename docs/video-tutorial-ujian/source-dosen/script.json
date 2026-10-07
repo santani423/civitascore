@@ -1,0 +1,376 @@
+[
+  {
+    "id": "intro",
+    "title": "Pembuka",
+    "lines": [
+      {
+        "cap": "Halo, Bapak dan Ibu dosen! Di video ini kita belajar mengelola ujian di OneAtma — dari bank soal sampai rekap nilai.",
+        "tts": "Halo Bapak dan Ibu dosen! Di video ini kita belajar mengelola ujian di wan atma, dari bank soal sampai rekap nilai."
+      },
+      {
+        "cap": "Semua langkah dilakukan lewat browser, di menu Akademik. Tidak perlu aplikasi tambahan.",
+        "tts": "Semua langkah dilakukan lewat brauser, di menu akademik. Tidak perlu aplikasi tambahan."
+      }
+    ]
+  },
+  {
+    "id": "flow",
+    "title": "Alur Lengkap",
+    "lines": [
+      {
+        "cap": "Secara garis besar, ada delapan langkah."
+      },
+      {
+        "cap": "Isi bank soal, buat ujian, lalu masukkan soal ke dalam ujian."
+      },
+      {
+        "cap": "Atur rentang nilai dan bobot, periksa konfigurasi, lalu publish ujian.",
+        "tts": "Atur rentang nilai dan bobot, periksa konfigurasi, lalu pablis ujian."
+      },
+      {
+        "cap": "Bagikan link atau QR Code, pantau ujian secara langsung, dan terakhir unduh rekap nilai.",
+        "tts": "Bagikan link, atau kiu ar kode, pantau ujian secara langsung, dan terakhir, unduh rekap nilai."
+      }
+    ]
+  },
+  {
+    "id": "menu",
+    "title": "Masuk & Menu Ujian",
+    "lines": [
+      {
+        "cap": "Masuk ke OneAtma menggunakan akun dosen Anda.",
+        "tts": "Masuk ke wan atma, menggunakan akun dosen Anda."
+      },
+      {
+        "cap": "Di sidebar, buka menu Akademik. Ada dua menu yang kita pakai: Ujian dan Bank Soal.",
+        "tts": "Di menu samping, buka menu akademik. Ada dua menu yang kita pakai: ujian, dan bank soal."
+      },
+      {
+        "cap": "Kita mulai dari Bank Soal."
+      }
+    ]
+  },
+  {
+    "id": "bank",
+    "title": "Langkah 1 · Bank Soal",
+    "lines": [
+      {
+        "cap": "Bank Soal adalah kumpulan soal pilihan ganda yang bisa dipakai ulang di banyak ujian."
+      },
+      {
+        "cap": "Tekan Tambah Soal. Pilih mata kuliah — opsional — lalu tulis pertanyaannya.",
+        "tts": "Tekan tambah soal. Pilih mata kuliah, ini opsional, lalu tulis pertanyaannya."
+      },
+      {
+        "cap": "Isi poin soal. Semakin besar poinnya, semakin besar pengaruh soal itu terhadap nilai."
+      },
+      {
+        "cap": "Tulis opsi jawaban. Tekan Tambah Opsi untuk menambah pilihan — minimal dua opsi.",
+        "tts": "Tulis opsi jawaban. Tekan tambah opsi untuk menambah pilihan. Minimal dua opsi."
+      },
+      {
+        "cap": "Tandai jawaban benar dengan tombol bulat di kiri opsi. Setiap soal wajib punya tepat satu jawaban benar."
+      },
+      {
+        "cap": "Tekan Simpan. Kolom Dipakai menunjukkan di berapa ujian soal itu sudah digunakan.",
+        "tts": "Tekan simpan. Kolom dipakai, menunjukkan di berapa ujian soal itu sudah digunakan."
+      }
+    ]
+  },
+  {
+    "id": "create",
+    "title": "Langkah 2 · Buat Ujian",
+    "lines": [
+      {
+        "cap": "Selanjutnya, buka menu Ujian lalu tekan Buat Ujian.",
+        "tts": "Selanjutnya, buka menu ujian, lalu tekan buat ujian."
+      },
+      {
+        "cap": "Pilih mata kuliah, lalu kelas. Kelas tidak bisa diubah setelah ujian dibuat, jadi pastikan benar."
+      },
+      {
+        "cap": "Isi judul ujian, durasi dalam menit, dan batas percobaan — biasanya cukup satu kali.",
+        "tts": "Isi judul ujian, durasi dalam menit, dan batas percobaan. Biasanya cukup satu kali."
+      },
+      {
+        "cap": "Waktu Mulai dan Waktu Selesai menentukan kapan ujian bisa dikerjakan. Boleh dikosongkan bila tidak dibatasi."
+      },
+      {
+        "cap": "Isi jumlah soal per peserta, pilih mode pemilihan soal dan pengacakan, lalu tekan Buat Ujian.",
+        "tts": "Isi jumlah soal per peserta, pilih mode pemilihan soal dan pengacakan, lalu tekan buat ujian."
+      }
+    ]
+  },
+  {
+    "id": "modes",
+    "title": "Pemilihan Soal & Pengacakan",
+    "lines": [
+      {
+        "cap": "Ada tiga mode pemilihan soal."
+      },
+      {
+        "cap": "Semua Soal: setiap peserta mengerjakan seluruh soal di question pool ujian.",
+        "tts": "Pertama, semua soal. Setiap peserta mengerjakan seluruh soal, di kumpulan soal ujian."
+      },
+      {
+        "cap": "Acak dari Question Pool: misalnya 10 soal diambil acak dari 12 soal — berbeda untuk setiap mahasiswa.",
+        "tts": "Kedua, acak. Misalnya, sepuluh soal diambil secara acak dari dua belas soal, dan berbeda untuk setiap mahasiswa."
+      },
+      {
+        "cap": "Pilih Manual: Anda sendiri yang mencentang soal yang dipakai, di kolom Dipilih.",
+        "tts": "Ketiga, pilih manual. Anda sendiri yang mencentang soal yang dipakai, di kolom dipilih."
+      },
+      {
+        "cap": "Urutan soal dan urutan pilihan jawaban juga bisa diacak, sehingga sulit saling mencontek."
+      }
+    ]
+  },
+  {
+    "id": "questions",
+    "title": "Langkah 3 · Masukkan Soal",
+    "lines": [
+      {
+        "cap": "Setelah ujian dibuat, klik judulnya untuk membuka halaman detail ujian."
+      },
+      {
+        "cap": "Di bagian Soal Ujian, tekan Terapkan dari Bank Soal.",
+        "tts": "Di bagian soal ujian, tekan terapkan dari bank soal."
+      },
+      {
+        "cap": "Centang soal yang ingin dipakai — bisa dicari lewat kolom pencarian — lalu tekan Terapkan.",
+        "tts": "Centang soal yang ingin dipakai. Soal juga bisa dicari lewat kolom pencarian. Lalu tekan terapkan."
+      },
+      {
+        "cap": "Soal disalin ke ujian dengan label “Dari Bank Soal”. Soal yang sama tidak akan terduplikasi.",
+        "tts": "Soal disalin ke ujian, dengan label, dari bank soal. Soal yang sama tidak akan terduplikasi."
+      },
+      {
+        "cap": "Anda juga bisa menulis soal khusus untuk ujian ini lewat tombol Tambah Soal.",
+        "tts": "Anda juga bisa menulis soal khusus untuk ujian ini, lewat tombol tambah soal."
+      }
+    ]
+  },
+  {
+    "id": "grade",
+    "title": "Langkah 4 · Rentang Nilai & Bobot",
+    "lines": [
+      {
+        "cap": "Berikutnya, atur rentang nilai huruf. Tekan Atur Rentang Nilai.",
+        "tts": "Berikutnya, atur rentang nilai huruf. Tekan atur rentang nilai."
+      },
+      {
+        "cap": "Isi grade beserta nilai minimum dan maksimumnya. Tambah baris dengan Tambah Rentang.",
+        "tts": "Isi nilai huruf, beserta nilai minimum dan maksimumnya. Tambah baris dengan tombol tambah rentang."
+      },
+      {
+        "cap": "Pastikan rentang tidak tumpang tindih dan tidak ada celah — tulis 79,99, bukan 79.",
+        "tts": "Pastikan rentang tidak tumpang tindih, dan tidak ada celah. Tulis tujuh puluh sembilan koma sembilan sembilan, bukan tujuh puluh sembilan."
+      },
+      {
+        "cap": "Jika tidak diatur, sistem memakai ambang standar: A mulai 85, AB 75, B 65, BC 55, C 45, dan D 35.",
+        "tts": "Jika tidak diatur, sistem memakai ambang standar: A mulai delapan puluh lima, A B tujuh puluh lima, B enam puluh lima, B C lima puluh lima, C empat puluh lima, dan D tiga puluh lima."
+      },
+      {
+        "cap": "Bobot ujian diisi lewat tombol Ubah Ujian. Contohnya, UTS berbobot 30 persen.",
+        "tts": "Bobot ujian diisi lewat tombol ubah ujian. Contohnya, u te es berbobot tiga puluh persen."
+      }
+    ]
+  },
+  {
+    "id": "publish",
+    "title": "Langkah 5 · Periksa & Publish",
+    "lines": [
+      {
+        "cap": "Sebelum publish, periksa kartu Distribusi Soal.",
+        "tts": "Sebelum pablis, periksa kartu distribusi soal."
+      },
+      {
+        "cap": "Kotak biru merangkum soal yang akan diterima setiap peserta."
+      },
+      {
+        "cap": "Jika konfigurasi belum benar, muncul pesan merah dan tombol Publish tidak bisa ditekan.",
+        "tts": "Jika konfigurasi belum benar, muncul pesan merah, dan tombol pablis tidak bisa ditekan."
+      },
+      {
+        "cap": "Contoh: soal per peserta 15, padahal question pool hanya 12. Setelah diperbaiki, pesan merah hilang.",
+        "tts": "Contohnya, soal per peserta lima belas, padahal kumpulan soal hanya dua belas. Setelah diperbaiki, pesan merah akan hilang."
+      },
+      {
+        "cap": "Tekan Publish Ujian. Status berubah menjadi Dipublikasikan.",
+        "tts": "Tekan pablis ujian. Status berubah menjadi dipublikasikan."
+      },
+      {
+        "cap": "Perhatian: setelah dipublikasikan, soal tidak bisa lagi ditambah, diubah, atau dihapus."
+      },
+      {
+        "cap": "Tombol Download Naskah menghasilkan PDF naskah ujian, lengkap dengan kunci jawaban, untuk arsip Anda.",
+        "tts": "Tombol daunlod naskah menghasilkan pe de ef naskah ujian, lengkap dengan kunci jawaban, untuk arsip Anda."
+      }
+    ]
+  },
+  {
+    "id": "access",
+    "title": "Langkah 6 · Link & QR Code",
+    "lines": [
+      {
+        "cap": "Agar mahasiswa bisa masuk, buka kartu Akses Ujian dan tekan Generate Link.",
+        "tts": "Agar mahasiswa bisa masuk, buka kartu akses ujian, dan tekan jeneret link."
+      },
+      {
+        "cap": "Link dan QR Code langsung muncul. Tekan Copy Link untuk menyalinnya.",
+        "tts": "Link dan kiu ar kode langsung muncul. Tekan kopi link untuk menyalinnya."
+      },
+      {
+        "cap": "Bagikan link di grup kelas, atau tekan Download QR Code untuk ditampilkan di proyektor.",
+        "tts": "Bagikan link di grup kelas, atau tekan daunlod kiu ar kode, untuk ditampilkan di proyektor."
+      },
+      {
+        "cap": "Mahasiswa cukup memasukkan NIM, tanpa login. Hanya mahasiswa yang terdaftar di kelas lewat KRS yang bisa masuk.",
+        "tts": "Mahasiswa cukup memasukkan nim, tanpa login. Hanya mahasiswa yang terdaftar di kelas lewat ka er es, yang bisa masuk."
+      },
+      {
+        "cap": "Jika link tersebar ke luar kelas, tekan Regenerate Link. Link lama langsung tidak berlaku.",
+        "tts": "Jika link tersebar ke luar kelas, tekan ri jeneret link. Link lama langsung tidak berlaku."
+      },
+      {
+        "cap": "Mahasiswa yang sedang mengerjakan ujian tidak terganggu."
+      }
+    ]
+  },
+  {
+    "id": "monitor",
+    "title": "Langkah 7 · Pantau Ujian",
+    "lines": [
+      {
+        "cap": "Saat ujian berlangsung, buka halaman detail ujian untuk memantau peserta."
+      },
+      {
+        "cap": "Tabel peserta bertanda Live dan diperbarui otomatis setiap 5 detik — tidak perlu memuat ulang halaman.",
+        "tts": "Tabel peserta bertanda laif, dan diperbarui otomatis setiap lima detik. Tidak perlu memuat ulang halaman."
+      },
+      {
+        "cap": "Status berubah dari Belum Mengerjakan, menjadi Sedang Mengerjakan, lalu Sudah Mengerjakan."
+      },
+      {
+        "cap": "Jika ada pelanggaran, peringatan kuning langsung muncul: siapa, jenis pelanggaran, dan jam kejadiannya."
+      }
+    ]
+  },
+  {
+    "id": "violations",
+    "title": "Pelanggaran & Linimasa",
+    "lines": [
+      {
+        "cap": "Sistem mencatat 6 jenis pelanggaran: pindah tab, jendela kehilangan fokus, keluar layar penuh, copy, paste, dan klik kanan.",
+        "tts": "Sistem mencatat enam jenis pelanggaran: pindah tab atau aplikasi, jendela kehilangan fokus, keluar dari layar penuh, menyalin, menempel, dan klik kanan."
+      },
+      {
+        "cap": "Setiap pelanggaran otomatis mengurangi nilai 1 poin.",
+        "tts": "Setiap pelanggaran otomatis mengurangi nilai satu poin."
+      },
+      {
+        "cap": "Untuk melihat rinciannya, klik angka merah di kolom Pelanggaran."
+      },
+      {
+        "cap": "Linimasa menampilkan setiap pelanggaran beserta waktunya, dan ringkasan nilai mahasiswa tersebut."
+      }
+    ]
+  },
+  {
+    "id": "scoring",
+    "title": "Cara Nilai Dihitung",
+    "lines": [
+      {
+        "cap": "Bagaimana nilai dihitung? Raw Score adalah total poin benar dibagi total poin, dikali 100.",
+        "tts": "Bagaimana nilai dihitung? Pertama, nilai mentah. Total poin benar, dibagi total poin, dikali seratus."
+      },
+      {
+        "cap": "Final Score adalah Raw Score dikurangi penalti pelanggaran. Nilai tidak pernah kurang dari 0.",
+        "tts": "Kedua, nilai akhir. Nilai mentah dikurangi penalti pelanggaran. Nilai tidak pernah kurang dari nol."
+      },
+      {
+        "cap": "Grade ditentukan dari rentang nilai yang Anda atur.",
+        "tts": "Ketiga, nilai huruf, ditentukan dari rentang nilai yang Anda atur."
+      },
+      {
+        "cap": "Weighted Score adalah Final Score dikali bobot ujian.",
+        "tts": "Keempat, nilai berbobot. Nilai akhir dikali bobot ujian."
+      },
+      {
+        "cap": "Contoh: Andi benar 8 dari 10 soal → Raw 80. Dua pelanggaran → Final 78, grade B. Dikali bobot 30% → 23,4.",
+        "tts": "Contohnya, Andi menjawab benar delapan dari sepuluh soal, jadi nilai mentahnya delapan puluh. Ada dua pelanggaran, maka nilai akhirnya tujuh puluh delapan, dengan nilai huruf B. Dikali bobot tiga puluh persen, nilai berbobotnya dua puluh tiga koma empat."
+      }
+    ]
+  },
+  {
+    "id": "recap",
+    "title": "Langkah 8 · Rekap Nilai",
+    "lines": [
+      {
+        "cap": "Terakhir, tekan tombol Rekap Nilai di halaman detail ujian.",
+        "tts": "Terakhir, tekan tombol rekap nilai, di halaman detail ujian."
+      },
+      {
+        "cap": "Bagian atas menampilkan total peserta, yang selesai, sedang mengerjakan, dan belum mengerjakan."
+      },
+      {
+        "cap": "Juga rata-rata kelas, serta nilai tertinggi dan terendah."
+      },
+      {
+        "cap": "Gunakan kolom Cari untuk mencari NIM atau nama, dan filter Status untuk menyaring peserta.",
+        "tts": "Gunakan kolom cari untuk mencari nim atau nama, dan filter status untuk menyaring peserta."
+      },
+      {
+        "cap": "Tabel memuat Raw Score, penalti, Final Score, Grade, dan Weighted Score setiap mahasiswa.",
+        "tts": "Tabel memuat nilai mentah, penalti, nilai akhir, nilai huruf, dan nilai berbobot setiap mahasiswa."
+      },
+      {
+        "cap": "Tekan Excel/CSV untuk diolah di spreadsheet, atau PDF untuk arsip dan laporan resmi.",
+        "tts": "Tekan eksel, atau ce es ve, untuk diolah di spredsit. Atau tekan pe de ef, untuk arsip dan laporan resmi."
+      }
+    ]
+  },
+  {
+    "id": "tips",
+    "title": "Tips Penting",
+    "lines": [
+      {
+        "cap": "Berikut beberapa tips penting."
+      },
+      {
+        "cap": "Periksa semua soal dan kunci jawaban sebelum publish — setelah itu soal terkunci.",
+        "tts": "Periksa semua soal dan kunci jawaban sebelum pablis. Setelah itu, soal terkunci."
+      },
+      {
+        "cap": "Isi Waktu Selesai. Waktu peserta habis saat durasi habis atau jam selesai tercapai — mana yang lebih dulu.",
+        "tts": "Isi waktu selesai. Waktu peserta habis saat durasinya habis, atau saat jam selesai tercapai, mana yang lebih dulu."
+      },
+      {
+        "cap": "Bagikan juga video tutorial ujian mahasiswa, agar mereka paham aturan dan pelanggaran."
+      },
+      {
+        "cap": "Simpan soal di Bank Soal, agar bisa dipakai ulang di ujian dan semester berikutnya."
+      }
+    ]
+  },
+  {
+    "id": "summary",
+    "title": "Ringkasan",
+    "lines": [
+      {
+        "cap": "Mari kita rangkum."
+      },
+      {
+        "cap": "Isi Bank Soal, buat ujian, terapkan soal, atur rentang nilai, lalu publish.",
+        "tts": "Isi bank soal, buat ujian, terapkan soal, atur rentang nilai, lalu pablis."
+      },
+      {
+        "cap": "Generate link dan QR Code, pantau secara live, lalu unduh rekap nilai.",
+        "tts": "Jeneret link dan kiu ar kode, pantau secara langsung, lalu unduh rekap nilai."
+      },
+      {
+        "cap": "Selamat mengelola ujian. Semoga bermanfaat!"
+      }
+    ]
+  }
+]
