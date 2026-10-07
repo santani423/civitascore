@@ -68,11 +68,24 @@ class HrEmployeeController extends Controller
         $type = EmployeeType::from((string) $request->validated('employee_type'));
         $this->authorize('hr.employees.create', $type);
 
-        $employee = $this->employees->create($request->validated(), $this->actor($request));
+        ['employee' => $employee, 'account' => $account] = $this->employees->create($request->validated(), $this->actor($request));
+
+        // Kredensial awal dosen dikembalikan sekali ini saja supaya SDM bisa
+        // menyerahkannya ke dosen — sama seperti POST /lecturers.
+        $message = match (true) {
+            $account === null => 'Pegawai berhasil ditambahkan.',
+            $account['created'] => 'Dosen dan akun login berhasil ditambahkan.',
+            default => 'Dosen berhasil ditambahkan dan ditautkan ke akun login yang sudah ada.',
+        };
 
         return ApiResponse::success(
             new HrEmployeeDetailResource($employee->load(self::DETAIL_RELATIONS)),
-            'Pegawai berhasil ditambahkan.',
+            $message,
+            meta: $account === null ? [] : ['credentials' => [
+                'email' => $account['user']->email,
+                'password' => $account['password'],
+                'account_created' => $account['created'],
+            ]],
             status: 201,
         );
     }

@@ -7,6 +7,7 @@ use App\Support\Http\Exceptions\ConflictException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Modules\Academic\Models\Employee;
 use Modules\Academic\Models\Lecturer;
 use Modules\Auth\Actions\LogoutUserAction;
 use Modules\Tenancy\Enums\MembershipStatus;
@@ -21,6 +22,11 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  * a login account when SDM registers a dosen, keeping name/email/active
  * status in sync, and the account actions SDM may take (reset password,
  * activate/deactivate).
+ *
+ * The same account is mirrored onto the dosen's employee row
+ * (employees.user_id), which is what the SDM self-service endpoints
+ * (`me/hr/*`, granted to the `lecturer` role) resolve — so one login works
+ * for both the academic and the HR side.
  *
  * SDM (lecturers.update) is deliberately NOT allowed to touch every linked
  * account: resetting the password of, or disabling, a user who also holds
@@ -50,22 +56,25 @@ class LecturerAccountService
      * never changed — $password is only returned when a new account was
      * created.
      *
+     * $existing links that specific account instead of looking one up by
+     * the lecturer's email (SDM choosing "tautkan akun" on the employee form).
+     *
      * @return array{user: User, password: string|null, created: bool}
      */
-    public function provision(Lecturer $lecturer, ?string $password = null, ?User $actor = null): array
+    public function provision(Lecturer $lecturer, ?string $password = null, ?User $actor = null, ?User $existing = null): array
     {
         if ($lecturer->user_id !== null) {
             throw new ConflictException('Dosen ini sudah memiliki akun login.');
         }
 
-        if (! $lecturer->email) {
+        if ($existing === null && ! $lecturer->email) {
             throw ValidationException::withMessages([
                 'email' => ['Email dosen wajib diisi sebelum membuat akun login.'],
             ]);
         }
 
-        return DB::transaction(function () use ($lecturer, $password, $actor): array {
-            $user = User::withTrashed()->where('email', $lecturer->email)->first();
+        return DB::transaction(function () use ($lecturer, $password, $actor, $existing): array {
+            $user = $existing ?? User::withTrashed()->where('email', $lecturer->email)->first();
 
             if ($user?->trashed()) {
                 throw new ConflictException('Email ini milik akun pengguna yang sudah dihapus. Hubungi administrator universitas untuk memulihkannya.');
@@ -101,6 +110,8 @@ class LecturerAccountService
 
             $lecturer->user()->associate($user);
             $lecturer->save();
+
+            $this->linkEmployee($lecturer, $user);
 
             return ['user' => $user, 'password' => $plainPassword, 'created' => $created];
         });
@@ -189,10 +200,54 @@ class LecturerAccountService
             }
 
             $this->revokeLecturerRole($user, $lecturer->university_id);
+            $this->unlinkEmployee($lecturer, $user);
 
             $lecturer->user()->dissociate();
             $lecturer->save();
         });
+    }
+
+    /**
+     * Mirrors the login account onto the dosen's employee row so SDM
+     * self-service resolves the same person. employees.user_id is unique
+     * across all tenants, so an account already tied to another employee
+     * (e.g. the same dosen in a second university) is left alone rather
+     * than failing the whole provisioning.
+     */
+    public function linkEmployee(Lecturer $lecturer, User $user): void
+    {
+        $employee = $this->employeeOf($lecturer);
+
+        if ($employee === null || $employee->user_id !== null) {
+            return;
+        }
+
+        $takenElsewhere = Employee::withoutGlobalScopes()
+            ->where('user_id', $user->id)
+            ->whereKeyNot($employee->id)
+            ->exists();
+
+        if (! $takenElsewhere) {
+            $employee->user_id = $user->id;
+            $employee->save();
+        }
+    }
+
+    private function unlinkEmployee(Lecturer $lecturer, User $user): void
+    {
+        $employee = $this->employeeOf($lecturer);
+
+        if ($employee !== null && $employee->user_id === $user->id) {
+            $employee->user_id = null;
+            $employee->save();
+        }
+    }
+
+    private function employeeOf(Lecturer $lecturer): ?Employee
+    {
+        return $lecturer->employee_id === null
+            ? null
+            : Employee::withoutGlobalScopes()->whereKey($lecturer->employee_id)->first();
     }
 
     /**
