@@ -1,0 +1,16 @@
+{
+  "name": "presentasi-semester-pendek",
+  "private": true,
+  "type": "module",
+  "description": "Sumber video presentasi mekanisme Semester Pendek (rancangan, OneAtma).",
+  "scripts": {
+    "audio": "node build_audio.mjs",
+    "snap": "node render.mjs snap",
+    "render": "node render.mjs video ../mekanisme-semester-pendek.mp4"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "msedge-tts": "^2.0.9",
+    "playwright-core": "1.63.0"
+  }
+}

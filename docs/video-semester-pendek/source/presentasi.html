@@ -1,0 +1,966 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Mekanisme Semester Pendek</title>
+<script src="timeline.js"></script>
+<style>
+:root{
+  --primary:#166534;--p50:#ecfdf3;--success:#166534;--warning:#ca8a04;--danger:#dc2626;
+  --bg:#f8fafc;--surface:#fff;--hover:#f1f5f9;--border:#e2e8f0;--border-s:#cbd5e1;
+  --ink1:#0f172a;--ink2:#475569;--ink3:#94a3b8;--amber:#f59e0b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:#0b1220;font-family:"Segoe UI",-apple-system,Inter,Roboto,sans-serif;color:var(--ink1)}
+#frame{position:relative;width:1280px;height:720px;overflow:hidden;background:radial-gradient(1200px 600px at 80% -10%,#dcefe2 0,#eef3f0 45%,#e9eef3 100%)}
+#top{position:absolute;left:0;top:0;right:0;height:64px;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(255,255,255,.85);border-bottom:1px solid var(--border)}
+#top img{width:34px;height:34px;object-fit:contain}
+#top .brand{font-weight:700;font-size:18px}
+#top .sub{color:var(--ink2);font-size:15px;padding-left:12px;border-left:1px solid var(--border-s)}
+#draft{margin-left:auto;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;font-weight:700;font-size:12.5px;padding:5px 11px;border-radius:999px;letter-spacing:.02em}
+#chip{background:var(--primary);color:#fff;font-weight:600;font-size:15px;padding:7px 14px;border-radius:999px}
+#stage{position:absolute;left:0;top:64px;width:1280px;height:556px}
+.scene{position:absolute;inset:0;opacity:0;visibility:hidden}
+#cap{position:absolute;left:0;right:0;bottom:0;height:100px;background:#0f172a;display:flex;align-items:center;justify-content:center;padding:0 60px}
+#capText{color:#fff;font-size:24px;line-height:1.35;text-align:center;font-weight:500}
+#prog{position:absolute;left:0;bottom:0;height:4px;width:100%;background:rgba(255,255,255,.08)}
+#prog i{display:block;height:100%;background:#4ade80;width:0}
+#cur{position:absolute;width:0;height:0;pointer-events:none;opacity:0;z-index:60}
+#cur svg{position:absolute;left:-4px;top:-3px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+#cur .rip{position:absolute;left:-20px;top:-20px;width:40px;height:40px;border-radius:50%;border:3px solid #22c55e;opacity:0}
+.hl{position:absolute;border:3px solid #f59e0b;border-radius:10px;opacity:0;pointer-events:none;z-index:20;box-shadow:0 0 0 4px rgba(245,158,11,.18)}
+.ic{width:1em;height:1em;flex-shrink:0;vertical-align:-.125em}
+
+/* ===== generic presentation ===== */
+.row{display:flex;align-items:center}.g6{gap:6px}.g8{gap:8px}.g12{gap:12px}
+.h1{font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.15}
+.lead{font-size:19px;color:var(--ink2);line-height:1.5}
+.pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border-s);border-radius:999px;padding:9px 16px;font-weight:600;font-size:17px}
+.ttl{position:absolute;left:50px;top:16px;font-size:28px;font-weight:800;letter-spacing:-.01em}
+.ttl span{color:var(--primary)}
+.box{position:absolute;background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 6px 18px rgba(15,23,42,.06);transition:none}
+.glow{box-shadow:0 0 0 3px var(--amber),0 12px 28px rgba(15,23,42,.12)!important}
+.dim{opacity:.38!important}
+.k{font-family:Consolas,"Cascadia Mono",monospace;font-size:.86em;background:#f1f5f9;border-radius:5px;padding:1px 6px;color:#334155}
+.tag{display:inline-flex;align-items:center;gap:5px;border-radius:999px;font-size:12.5px;font-weight:700;padding:3px 10px;white-space:nowrap}
+.t-n{background:#f1f5f9;color:#475569}.t-s{background:#dcfce7;color:#166534}.t-w{background:#fef3c7;color:#a16207}.t-d{background:#fee2e2;color:#b91c1c}.t-i{background:#dbeafe;color:#1d4ed8}.t-p{background:#f3e8ff;color:#7e22ce}
+.ok{color:#16a34a;font-weight:800}.no{color:#dc2626;font-weight:800}
+.bx-h{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.bx-p{font-size:14.5px;color:var(--ink2);line-height:1.45}
+.num{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;border-radius:999px;background:var(--primary);color:#fff;font-weight:700;font-size:14px;padding:0 8px}
+svg.ov{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.nd{position:absolute;border-radius:14px;background:#fff;border:2px solid var(--border-s);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px 10px;opacity:0;box-shadow:0 6px 16px rgba(15,23,42,.06)}
+.nd b{font-size:17px}.nd small{font-size:12.5px;color:var(--ink2);line-height:1.3;margin-top:2px}
+.nd.q{border-style:dashed;background:#fffbeb;border-color:#f59e0b}
+ul.li{list-style:none;display:flex;flex-direction:column;gap:7px}
+ul.li li{font-size:14.5px;color:var(--ink2);line-height:1.35;position:relative;padding-left:16px}
+ul.li li::before{content:"•";position:absolute;left:2px;top:0;color:var(--primary);font-weight:800}
+.mono{font-family:Consolas,"Cascadia Mono",monospace}
+
+/* status colors */
+.st-draft{--c:#475569;--cb:#f1f5f9}.st-planned{--c:#1d4ed8;--cb:#dbeafe}.st-open{--c:#15803d;--cb:#dcfce7}.st-closed{--c:#b45309;--cb:#fef3c7}
+.st-ongoing{--c:#4338ca;--cb:#e0e7ff}.st-grading{--c:#7e22ce;--cb:#f3e8ff}.st-completed{--c:#047857;--cb:#d1fae5}.st-archived{--c:#334155;--cb:#e2e8f0}
+.sn{position:absolute;width:250px;height:76px;border-radius:14px;background:var(--cb);border:2px solid var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0}
+.sn b{font-family:Consolas,monospace;font-size:16px;color:var(--c);letter-spacing:.02em}
+.sn span{font-size:14px;color:var(--ink2);margin-top:2px;font-weight:600}
+.sn i{position:absolute;right:-9px;top:-9px;width:24px;height:24px;border-radius:50%;background:#16a34a;color:#fff;font-style:normal;font-size:14px;font-weight:800;display:none;align-items:center;justify-content:center}
+.sn.done i{display:flex}
+.sn.act{transform:scale(1.07);box-shadow:0 0 0 4px var(--amber),0 12px 26px rgba(15,23,42,.15)}
+
+/* apa */
+.tlbar{position:absolute;left:60px;right:60px;top:84px;display:flex;gap:8px}
+.seg{height:70px;border-radius:12px;background:#fff;border:1px solid var(--border-s);display:flex;flex-direction:column;justify-content:center;padding:0 14px;opacity:0}
+.seg b{font-size:17px}.seg span{font-size:13.5px;color:var(--ink2)}
+.seg.sp{background:#166534;border-color:#166534;color:#fff}.seg.sp span{color:#dcfce7}
+.seg.nx{border-style:dashed;background:transparent}
+.fact{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 16px;display:flex;gap:12px;align-items:center;flex:1;opacity:0}
+.fact .e{font-size:28px}.fact b{font-size:17px;display:block}.fact span{font-size:14px;color:var(--ink2)}
+.goal{flex:1;background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 14px;text-align:center;opacity:0;box-shadow:0 6px 18px rgba(15,23,42,.05)}
+.goal .e{font-size:34px;line-height:1.1}.goal b{display:block;font-size:16.5px;margin-top:8px;line-height:1.3}
+
+/* tree */
+.tn{position:absolute;background:#fff;border:2px solid var(--border-s);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:0}
+.tn b{font-size:16px}.tn small{font-size:12px;color:var(--ink3);font-family:Consolas,monospace}
+.tn.sp{border-color:#166534;background:#ecfdf3}.tn.sp b{color:#166534}
+.ghost{position:absolute;font-size:12.5px;color:var(--ink3);text-align:center;line-height:1.4;opacity:0}
+.strike{text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:#dc2626;color:var(--ink2)}
+
+/* roles */
+.role{position:absolute;top:150px;width:226px;height:290px;padding:16px;display:flex;flex-direction:column;gap:8px;opacity:0}
+.role .av{font-size:36px}.role h4{font-size:18px;line-height:1.2}.role .k{font-size:11px;align-self:flex-start}
+.role ul.li li{font-size:14px}
+
+/* detail panel */
+.dp{position:absolute;left:65px;right:65px;top:350px;height:176px;padding:16px 22px;display:flex;gap:22px}
+.dp .dh{width:250px;flex-shrink:0;border-right:1px solid var(--border);padding-right:18px;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.dp .dh b{font-family:Consolas,monospace;font-size:18px;color:var(--c)}
+.dp .dh span{font-size:22px;font-weight:800}
+.dp .cols{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;align-content:center}
+.dp .cols h5{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:5px}
+.dp .cols p{font-size:14.5px;line-height:1.42;color:var(--ink1)}
+
+/* forms */
+.fcol{position:absolute;top:78px;width:375px;height:350px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;opacity:0}
+.fcol h4{font-size:18px;display:flex;gap:9px;align-items:center}
+.fr{display:flex;flex-direction:column;gap:3px}
+.fr label{font-size:12px;color:var(--ink3);font-weight:600}
+.fr .in{border:1px solid var(--border-s);border-radius:8px;height:32px;padding:0 10px;display:flex;align-items:center;font-size:14px;background:#fff;white-space:nowrap;overflow:hidden}
+.chk{display:flex;align-items:center;gap:8px;font-size:13.5px;color:#14532d;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:5px 9px;opacity:0}
+.chk.bad{color:#991b1b;background:#fef2f2;border-color:#fecaca}
+
+/* settings tiles */
+.set{position:absolute;width:368px;height:118px;padding:13px 16px;display:flex;flex-direction:column;gap:3px;opacity:0}
+.set .t{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700}
+.set .t .e{font-size:20px}
+.set .v{font-size:25px;font-weight:800;color:var(--primary);margin-top:2px}
+.set .v small{font-size:12.5px;font-weight:600;color:var(--ink3);margin-left:6px}
+.set .kk{font-family:Consolas,monospace;font-size:11.5px;color:var(--ink3);margin-top:auto}
+.set .sc{position:absolute;right:12px;top:12px}
+.tg{display:inline-flex;width:40px;height:22px;border-radius:999px;background:#16a34a;position:relative;vertical-align:middle}
+.tg::after{content:"";position:absolute;right:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff}
+.tg.off{background:#cbd5e1}.tg.off::after{right:auto;left:3px}
+
+/* checks */
+.ck12{position:absolute;width:187px;height:74px;border-radius:12px;background:#fff;border:2px solid var(--border-s);padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:2px;opacity:0}
+.ck12 .r1{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:700;line-height:1.2}
+.ck12 .r1 i{font-style:normal;width:22px;height:22px;border-radius:50%;background:#e2e8f0;color:#475569;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ck12 small{font-family:Consolas,monospace;font-size:10.5px;color:var(--ink3);padding-left:29px}
+.ck12.pass{border-color:#22c55e;background:#f0fdf4}.ck12.pass .r1 i{background:#16a34a;color:#fff}
+.ck12.fail{border-color:#dc2626;background:#fef2f2}.ck12.fail .r1 i{background:#dc2626;color:#fff}
+.ban{position:absolute;left:50px;right:50px;top:266px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:17px;font-weight:700;opacity:0}
+.ban.g{background:#dcfce7;color:#14532d;border:1px solid #86efac}.ban.r{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+
+/* grade chips */
+.gch{display:inline-flex;width:44px;height:36px;border-radius:9px;align-items:center;justify-content:center;font-weight:800;font-size:16px;background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0}
+.gch.y{background:#dcfce7;color:#166534;border-color:#86efac}
+.gch.cur{box-shadow:0 0 0 3px #dc2626}
+
+/* sks units */
+.units{display:flex;gap:5px;position:relative}
+.unit{width:38px;height:40px;border-radius:7px;border:1.5px dashed #cbd5e1;background:#fff}
+.unit.e{background:#166534;border:0}.unit.p{background:#f59e0b;border:0}.unit.n{background:#2563eb;border:0}.unit.x{background:#dc2626;border:0}
+.lim{position:absolute;top:-10px;bottom:-10px;width:0;border-left:3px solid #0f172a}
+.lim span{position:absolute;top:-22px;left:-30px;font-size:12px;font-weight:700;white-space:nowrap}
+table.tt{width:100%;border-collapse:collapse;font-size:14.5px}
+table.tt th{font-size:12.5px;color:var(--ink2);text-align:left;font-weight:600;background:var(--bg);padding:8px 10px;border-bottom:1px solid var(--border)}
+table.tt td{padding:9px 10px;border-bottom:1px solid var(--border)}
+table.tt tr:last-child td{border-bottom:0}
+table.tt tr.hi td{background:#fffbeb}
+
+/* ===== browser + app mock (portal) ===== */
+.split{position:absolute;inset:0;display:flex;align-items:center;gap:28px;padding:0 30px}
+.side{flex:1;position:relative;height:440px}
+.sidecard{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);background:#fff;border:1px solid var(--border);border-radius:18px;padding:22px 24px;box-shadow:0 10px 30px rgba(15,23,42,.08)}
+.sidecard .n{display:inline-flex;min-width:32px;height:32px;padding:0 9px;border-radius:999px;background:var(--primary);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:16px;margin-bottom:10px}
+.sidecard h3{font-size:22px;line-height:1.25;margin-bottom:8px}
+.sidecard p{font-size:16px;line-height:1.5;color:var(--ink2)}
+.sidecard .warn{margin-top:12px;background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:10px;padding:9px 12px;font-size:15px;font-weight:600;line-height:1.4}
+.sidecard .good{margin-top:12px;background:#dcfce7;border:1px solid #86efac;color:#14532d;border-radius:10px;padding:9px 12px;font-size:15px;font-weight:600;line-height:1.4}
+.browser{width:830px;height:536px;background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(15,23,42,.18);overflow:hidden;border:1px solid var(--border-s);flex-shrink:0;position:relative}
+.bbar{height:36px;background:#e9edf2;display:flex;align-items:center;gap:7px;padding:0 12px;border-bottom:1px solid var(--border-s)}
+.bbar i{width:11px;height:11px;border-radius:50%;display:block}
+.bbar .url{margin-left:14px;flex:1;background:#fff;border-radius:7px;height:23px;font-size:12.5px;color:var(--ink2);display:flex;align-items:center;padding:0 10px;white-space:nowrap;overflow:hidden}
+.bbar .ill{font-size:11px;font-weight:700;color:#92400e;background:#fef3c7;border-radius:6px;padding:3px 8px}
+.bcontent{position:absolute;top:36px;left:0;right:0;bottom:0;overflow:hidden;background:var(--bg)}
+.bcontent .inner{width:1038px;height:625px;transform:scale(.8);transform-origin:0 0;position:relative;overflow:hidden}
+.app{position:absolute;inset:0;background:var(--bg);font-size:13.5px;color:var(--ink1)}
+.sb{position:absolute;left:0;top:0;bottom:0;width:210px;background:#fff;border-right:1px solid var(--border);overflow:hidden}
+.sb .lg{height:54px;display:flex;align-items:center;gap:9px;padding:0 15px;border-bottom:1px solid var(--border);font-weight:700;font-size:14.5px}
+.sb .lg img{width:32px;height:32px;object-fit:contain}
+.sb nav{padding:10px 8px;display:flex;flex-direction:column;gap:2px}
+.ni{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--ink2);font-weight:500;font-size:13px;white-space:nowrap}
+.ni.act{background:var(--p50);color:var(--primary);font-weight:600}
+.ni .nb{margin-left:auto;font-size:10px;background:#166534;color:#fff;border-radius:999px;padding:1px 7px}
+.subm{display:flex;flex-direction:column;gap:1px;margin:2px 0 4px 22px;border-left:1px solid var(--border);padding-left:7px}
+.subm div{padding:6px 10px;border-radius:7px;font-size:12.5px;color:var(--ink2);white-space:nowrap}
+.subm div.act{background:var(--p50);color:var(--primary);font-weight:600}
+.mn{position:absolute;top:0;right:0;bottom:0;left:210px}
+.hd{height:54px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 18px}
+.hd .rt{margin-left:auto;display:flex;align-items:center;gap:10px}
+.av{width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.who{line-height:1.25}.who b{display:block;font-size:12.5px}.who span{font-size:11px;color:var(--ink3)}
+.ct0{position:absolute;top:54px;left:0;right:0;bottom:0;overflow:hidden}
+.scr{position:relative;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.bc{font-size:11.5px;color:var(--ink3)}
+.ph1{font-size:20px;font-weight:700}
+.strip{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:12.5px;color:var(--ink2)}
+.strip b{color:var(--ink1)}
+.bd{display:inline-flex;align-items:center;gap:4px;border-radius:999px;font-size:11px;font-weight:600;padding:2px 9px;white-space:nowrap}
+.bd.n{background:#f1f5f9;color:var(--ink2)}.bd.s{background:#dcfce7;color:#166534}.bd.w{background:#fef3c7;color:#a16207}.bd.i{background:#dbeafe;color:#1d4ed8}.bd.d{background:#fee2e2;color:#b91c1c}
+.pg{display:grid;grid-template-columns:1fr 262px;gap:14px;align-items:start}
+.cc{background:#fff;border:1px solid var(--border);border-radius:11px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;margin-bottom:9px}
+.cc .r{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2)}
+.cc .r b{color:var(--ink1);font-size:14px}
+.cc .r .mono{font-size:12px;color:var(--ink1);font-weight:700}
+.cc.off{background:#f8fafc;opacity:.62}
+.cc .why{font-size:12px;color:#b91c1c;font-weight:600}
+.b{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:30px;padding:0 12px;border-radius:8px;font-size:12.5px;font-weight:600;border:1px solid transparent;white-space:nowrap}
+.b.p{background:var(--primary);color:#fff}.b.o{background:#fff;border-color:var(--border-s);color:var(--ink1)}.b.dis{opacity:.45}.b.sel{background:#dcfce7;color:#166534;border-color:#86efac}
+.b.red{background:#dc2626;color:#fff}
+.cart{background:#fff;border:1px solid var(--border);border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:9px;font-size:12.5px}
+.cart h4{font-size:14px}
+.cart .it{display:flex;justify-content:space-between;border-bottom:1px dashed var(--border);padding-bottom:6px}
+.bar{height:9px;border-radius:999px;background:#e2e8f0;overflow:hidden}.bar i{display:block;height:100%;background:#166534}
+.mbg{position:absolute;inset:0;background:rgba(15,23,42,.45);display:flex;justify-content:center;align-items:flex-start;padding-top:60px;z-index:20}
+.mdl{background:#fff;border-radius:14px;box-shadow:0 25px 60px rgba(0,0,0,.3);overflow:hidden;width:470px}
+.mh{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--border);font-size:15px}
+.mb{padding:14px 18px;display:flex;flex-direction:column;gap:10px;font-size:13px}
+.al{border-radius:9px;padding:9px 12px;font-size:12.5px;line-height:1.45}
+.al.i{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.tst{position:absolute;right:18px;bottom:18px;background:#0f172a;color:#fff;border-radius:10px;padding:10px 14px;font-size:12.5px;display:flex;gap:8px;align-items:center;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+
+/* seats */
+.seats{display:grid;grid-template-columns:repeat(10,26px);gap:6px}
+.seat{width:26px;height:26px;border-radius:6px;background:#166534}
+.seat.f{background:#fff;border:2px dashed #94a3b8}
+.seat.n{background:#22c55e;box-shadow:0 0 0 3px #bbf7d0}
+.seat.x{background:#dc2626;box-shadow:0 0 0 3px #fecaca}
+.stu{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:14px;font-weight:700}
+.stu .a{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;background:#e0e7ff}
+.bub{position:absolute;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;white-space:nowrap;opacity:0}
+.bub.g{background:#dcfce7;color:#14532d;border:1px solid #86efac}.bub.r{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}.bub.n{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}.bub.w{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+
+/* time axis */
+.tbar{position:absolute;height:26px;border-radius:7px;color:#fff;font-size:12.5px;font-weight:700;display:flex;align-items:center;padding:0 9px;opacity:0;white-space:nowrap}
+
+/* misc lists */
+.cons{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--border);border-radius:11px;padding:7px 12px;font-size:14.5px;opacity:0}
+.cons .e{font-size:20px}
+.att{display:grid;grid-template-columns:90px repeat(8,34px) 1fr;gap:5px;align-items:center;font-size:13.5px}
+.att i{font-style:normal;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.a-H{background:#dcfce7;color:#166534}.a-I{background:#dbeafe;color:#1d4ed8}.a-S{background:#f3e8ff;color:#7e22ce}.a-A{background:#fee2e2;color:#b91c1c}
+.ntf{display:flex;gap:10px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:9px 11px;font-size:13px;line-height:1.35;align-items:flex-start}
+.ntf .e{font-size:20px}.ntf b{display:block;font-size:13.5px}.ntf small{color:var(--ink3);font-size:11.5px}
+.ev{display:inline-flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:13.5px;margin:0 6px 7px 0;opacity:0}
+.ev .w{font-size:10.5px;font-weight:800;background:#dc2626;color:#fff;border-radius:5px;padding:1px 5px}
+.stat2{background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.stat2 span{font-size:12px;color:var(--ink3);display:block;line-height:1.25}.stat2 b{display:block;font-size:24px;margin-top:3px}
+.act{display:flex;align-items:center;gap:10px;font-size:14px;padding:8px 10px;border-radius:9px}
+.act .lnk{margin-left:auto;color:var(--primary);font-weight:700;font-size:13px}
+.ph{position:absolute;height:74px;width:260px;padding:10px 13px;display:flex;flex-direction:column;justify-content:center;gap:3px;opacity:0}
+.ph .t{display:flex;align-items:center;gap:8px;font-size:15.5px;font-weight:700}
+.ph small{font-size:12px;color:var(--ink2);line-height:1.3}
+.nb2{position:absolute;opacity:0}
+.check{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px 18px;font-size:18px;line-height:1.35;opacity:0}
+.check .b2{width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;font-size:17px}
+.check .e{font-size:26px}
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="top"><img src="logo-atmajaya.gif" alt=""><span class="brand">OneAtma</span><span class="sub">Presentasi · Mekanisme Semester Pendek</span><span id="draft">RANCANGAN · belum diterapkan</span><span id="chip"></span></div>
+  <div id="stage"></div>
+  <div id="cap"><p id="capText"></p></div>
+  <div id="prog"><i></i></div>
+  <div id="cur"><div class="rip"></div><svg width="24" height="28" viewBox="0 0 24 28"><path d="M4 3 L4 23 L9.2 18.4 L12.6 26 L16.2 24.4 L12.8 17 L19.6 17 Z" fill="#0f172a" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+</div>
+<script>
+// ---------- helpers ----------
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+const P=(lt,s,d=.5)=>ease(clamp((lt-s)/d));
+const typed=(str,lt,t0,dur)=>str.slice(0,Math.round(str.length*clamp((lt-t0)/dur)));
+const FRAME=document.getElementById('frame'),STAGE=document.getElementById('stage'),CUR=document.getElementById('cur');
+function fade(el,p,dy=18,dx=0){if(!el)return;el.style.opacity=p;el.style.transform=p>=1?'none':`translate(${(1-p)*dx}px,${(1-p)*dy}px)`;}
+function relRect(el,root){const a=el.getBoundingClientRect(),b=root.getBoundingClientRect();return{x:a.left-b.left,y:a.top-b.top,w:a.width,h:a.height};}
+const R=(root,k)=>root.querySelector('[data-r="'+k+'"]');
+const A=(root,k)=>root.querySelector('[data-a="'+k+'"]');
+const AA=(root,k)=>[...root.querySelectorAll('[data-a="'+k+'"]')];
+function setHTML(el,html){if(el&&el.__h!==html){el.innerHTML=html;el.__h=html;}}
+function setTxt(el,t){if(el&&el.textContent!==t)el.textContent=t;}
+function hl(root,key,el,p,pad=5){
+  let h=root.querySelector('.hl[data-k="'+key+'"]');
+  if(!h){h=document.createElement('div');h.className='hl';h.dataset.k=key;root.appendChild(h);}
+  if(!el||p<=0){h.style.opacity=0;return;}
+  const r=relRect(el,root);
+  Object.assign(h.style,{left:r.x-pad+'px',top:r.y-pad+'px',width:r.w+pad*2+'px',height:r.h+pad*2+'px',opacity:p});
+}
+const win=(lt,a,b)=>lt>=a&&lt<b?P(lt,a,.3):0;
+function cueIdx(lt,c){let i=-1;c.forEach((s,k)=>{if(lt>=s-.05)i=k});return i;}
+const glow=(el,on)=>{if(el)el.classList.toggle('glow',!!on);};
+const dim=(el,on)=>{if(el)el.classList.toggle('dim',!!on);};
+// svg-overlay items (paths / labels) tagged data-k
+function sk(root,k,p){root.querySelectorAll('[data-k="'+k+'"]').forEach(e=>e.style.opacity=p);}
+const COL={g:'#94a3b8',k:'#475569',s:'#16a34a',d:'#dc2626',w:'#d97706',b:'#2563eb'};
+const defs=id=>`<defs>${Object.entries(COL).map(([k,c])=>`<marker id="${id}-${k}" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="${c}"/></marker>`).join('')}</defs>`;
+const pth=(id,k,d,c='k',o={})=>`<path data-k="${k}" d="${d}" fill="none" stroke="${COL[c]}" stroke-width="${o.w||2.6}" ${o.dash?'stroke-dasharray="8 6"':''} ${o.noarrow?'':`marker-end="url(#${id}-${c})"`} style="opacity:0"/>`;
+const txt=(k,x,y,t,c='k',o={})=>`<text data-k="${k}" x="${x}" y="${y}" text-anchor="${o.a||'middle'}" font-size="${o.fs||13.5}" font-weight="700" fill="${COL[c]}" font-family="Segoe UI,sans-serif" style="opacity:0">${t}</text>`;
+const svg=(id,inner,w=1280,h=556)=>`<svg class="ov" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${defs(id)}${inner}</svg>`;
+// mouse cursor: list of [element|null, clickTime]
+function cursor(root,lt,list){
+  const cache=root.__cc||(root.__cc={});
+  const pts=list.map(([el,t],i)=>{if(el){const r=relRect(el,FRAME);cache[i]={x:r.x+r.w/2,y:r.y+r.h/2};}return cache[i]?{...cache[i],t}:null;});
+  let ni=list.findIndex(x=>x[1]>lt);
+  const prev=ni===-1?pts[pts.length-1]:(ni>0?pts[ni-1]:null);
+  const next=ni===-1?null:pts[ni];
+  let x,y,op=0;
+  if(next&&prev&&next.t-prev.t<=2.6){
+    const s=Math.max(prev.t+.08,next.t-.8),d=Math.max(.05,Math.min(.6,next.t-.08-s));
+    const g=P(lt,s,d);x=prev.x+(next.x-prev.x)*g;y=prev.y+(next.y-prev.y)*g;op=1;
+  }else if(prev&&lt<prev.t+.75){x=prev.x;y=prev.y;op=1-P(lt,prev.t+.4,.35);}
+  else if(next){const pIn=P(lt,next.t-.85,.6);x=next.x+(1-pIn)*70;y=next.y+(1-pIn)*80;op=pIn;}
+  if(x==null){CUR.style.opacity=0;return;}
+  CUR.style.left=x+'px';CUR.style.top=y+'px';CUR.style.opacity=op;
+  const rip=CUR.querySelector('.rip');
+  if(prev&&lt>=prev.t&&lt<prev.t+.5){const rp=(lt-prev.t)/.5;rip.style.opacity=1-rp;rip.style.transform=`scale(${.5+rp*1.1})`;}else rip.style.opacity=0;
+  CUR.querySelector('svg').style.transform=prev&&lt>=prev.t&&lt<prev.t+.15?'scale(.85)':'none';
+}
+function sideCards(root,lt,c,items){
+  const side=root.querySelector('.side');
+  if(!side.dataset.b){side.innerHTML=items.map(it=>it?`<div class="sidecard">${it.n?`<span class="n">${it.n}</span>`:''}<h3>${it.t}</h3>${it.b?`<p>${it.b}</p>`:''}${it.x||''}</div>`:'<div class="sidecard" style="display:none"></div>').join('');side.dataset.b=1;}
+  const cards=[...side.children];let act=-1;
+  items.forEach((it,k)=>{if(it&&lt>=c[k]-.05)act=k});
+  cards.forEach((el,k)=>{
+    if(k!==act){el.style.opacity=0;return;}
+    const p=P(lt,c[k]-.05,.45);el.style.opacity=p;el.style.transform=`translateY(calc(-50% + ${(1-p)*20}px))`;
+  });
+}
+function qrSvg(size,seed0=7){
+  let seed=seed0;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  const n=25,m=[];for(let y=0;y<n;y++){m.push([]);for(let x=0;x<n;x++)m[y].push(rnd()<.5);}
+  const finder=(ox,oy)=>{for(let y=-1;y<8;y++)for(let x=-1;x<8;x++){const X=ox+x,Y=oy+y;if(X<0||Y<0||X>=n||Y>=n)continue;const d=Math.max(Math.abs(x-3),Math.abs(y-3));m[Y][X]=d!==2&&d!==4;}};
+  finder(0,0);finder(n-7,0);finder(0,n-7);
+  let r='';for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(m[y][x])r+=`<rect x="${x}" y="${y}" width="1.02" height="1.02"/>`;
+  return `<svg width="${size}" height="${size}" viewBox="-2 -2 29 29" style="background:#fff;display:block"><g fill="#0f172a">${r}</g></svg>`;
+}
+// point along polyline at progress g (0..1)
+function along(pts,g){
+  const L=[];let tot=0;for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);L.push(d);tot+=d;}
+  let s=g*tot;for(let i=0;i<L.length;i++){if(s<=L[i]||i===L.length-1){const f=L[i]?clamp(s/L[i]):1;return[pts[i][0]+(pts[i+1][0]-pts[i][0])*f,pts[i][1]+(pts[i+1][1]-pts[i][1])*f];}s-=L[i];}
+  return pts[pts.length-1];
+}
+const ttl=(t,a='')=>`<div class="ttl" data-a="ttl">${t}${a}</div>`;
+const HOST='portal.kampus.ac.id';
+
+// ---------- scenes ----------
+const S={};
+
+/* 0 · intro */
+S.intro={html:`<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px">
+  <img data-a="a0" src="logo-atmajaya.gif" style="width:92px;height:92px;object-fit:contain">
+  <div data-a="a1" class="h1" style="max-width:1100px">Mekanisme Semester Pendek<br><span style="color:var(--primary);font-size:34px">dari pembukaan periode sampai transkrip</span></div>
+  <div data-a="a2" class="lead">Penjelasan mendetail berdasarkan dokumen rancangan <span class="k">docs/semester-pendek</span></div>
+  <div data-a="a3" class="row g12"><span class="pill">📅 Periode &amp; Status</span><span class="pill">✅ Kelayakan &amp; KRS</span><span class="pill">💳 Tagihan</span><span class="pill">📝 Nilai, IPK &amp; Transkrip</span></div>
+  <div data-a="a4" class="pill" style="background:#fef3c7;border-color:#fcd34d;color:#92400e;font-size:18px"><span>⚠️ Fitur <b>belum diterapkan</b> — yang dibahas adalah <b>rancangan</b></span></div></div>`,
+ f(lt,c,r){['a0','a1','a2','a3'].forEach((k,i)=>fade(A(r,k),P(lt,.2+i*.35,.6)));fade(A(r,'a4'),P(lt,c[1],.5));}};
+
+/* 1 · apa */
+const GOALS=[['🔁','Mengulang MK bernilai rendah'],['📈','Memperbaiki IPK'],['➕','Melengkapi SKS'],['⏩','Mempercepat masa studi'],['🔑','Memenuhi prasyarat']];
+S.apa={html:`${ttl('Apa itu <span>Semester Pendek</span>?')}
+ <div class="tlbar"><div class="seg" data-a="s0" style="flex:5"><b>Ganjil 2026/2027</b><span>Sep – Jan · reguler</span></div><div class="seg" data-a="s1" style="flex:5"><b>Genap 2026/2027</b><span>Feb – Jun · reguler</span></div><div class="seg sp" data-a="s2" style="flex:2.4"><b>Pendek</b><span>Jul – Agu</span></div><div class="seg nx" data-a="s3" style="flex:2.2"><b style="color:var(--ink3)">Ganjil 2027/2028</b><span>Sep – …</span></div></div>
+ <div class="row g12" style="position:absolute;left:60px;right:60px;top:180px">
+  <div class="fact" data-a="f0"><span class="e">⏱️</span><div><b>± 6–8 minggu</b><span>lebih singkat dari semester reguler</span></div></div>
+  <div class="fact" data-a="f1"><span class="e">🔥</span><div><b>Kelas intensif</b><span>beberapa pertemuan per minggu</span></div></div>
+  <div class="fact" data-a="f2"><span class="e">📏</span><div><b>Batas SKS kecil</b><span>standar maksimal 9 SKS</span></div></div></div>
+ <div style="position:absolute;left:60px;right:60px;top:262px;font-size:14px;font-weight:700;color:var(--ink3);letter-spacing:.06em" data-a="gl">TUJUAN UMUM</div>
+ <div class="row g12" style="position:absolute;left:60px;right:60px;top:288px;align-items:stretch">${GOALS.map((g,i)=>`<div class="goal" data-a="g${i}"><div class="e">${g[0]}</div><b>${g[1]}</b></div>`).join('')}</div>
+ <div data-a="cfg" class="pill" style="position:absolute;left:50%;transform:translateX(-50%);top:445px;background:#ecfdf3;border-color:#86efac;color:#14532d;opacity:0;white-space:nowrap"><span>⚙️ Semua dapat diatur <b>per kampus</b> lewat pengaturan — tidak dikunci di kode</span></div>`,
+ f(lt,c,r,e){fade(A(r,'ttl'),P(lt,0,.4));
+  ['s0','s1','s2','s3'].forEach((k,i)=>fade(A(r,k),P(lt,.3+i*.45,.45),14));
+  const sp=A(r,'s2');sp.style.boxShadow=lt<c[1]&&lt>1.3?'0 0 0 4px #f59e0b':'none';
+  [0,1.6,3.2].forEach((d,i)=>fade(A(r,'f'+i),P(lt,c[1]+.2+d,.45),14));
+  fade(A(r,'gl'),P(lt,c[2],.4),0);
+  const L=Math.max(3,e[2]-c[2]-.6);GOALS.forEach((_,i)=>fade(A(r,'g'+i),P(lt,c[2]+.2+i*L/5,.45),16));
+  const cf=A(r,'cfg');const p=P(lt,c[3],.45);cf.style.opacity=p;cf.style.transform=`translateX(-50%) translateY(${(1-p)*12}px)`;}};
+
+/* 2 · konsep */
+S.konsep={html:`${ttl('SP = satu <span>periode akademik</span>, bukan sistem baru')}
+ ${svg('kon',`${pth('kon','l1','M415 140 L135 178','g',{noarrow:1})}${pth('kon','l2','M415 140 L345 178','g',{noarrow:1})}${pth('kon','l3','M415 140 L585 178','s',{noarrow:1,w:3})}
+  ${pth('kon','l4','M585 228 L585 258','s')}${pth('kon','l5','M585 306 L585 334','s')}
+  ${pth('kon','l6','M585 382 L455 414','s')}${pth('kon','l7','M585 382 L585 414','s')}${pth('kon','l8','M585 382 L715 414','s')}`)}
+ <div class="tn" data-a="root" style="left:260px;top:88px;width:310px;height:52px"><b>Tahun Akademik 2026/2027</b><small>academic_year (string)</small></div>
+ <div class="tn" data-a="tg1" style="left:45px;top:178px;width:180px;height:50px"><b>Ganjil</b><small>semester = ganjil</small></div>
+ <div class="tn" data-a="tg2" style="left:255px;top:178px;width:180px;height:50px"><b>Genap</b><small>semester = genap</small></div>
+ <div class="tn sp" data-a="tsp" style="left:470px;top:178px;width:230px;height:50px"><b>Pendek 🆕</b><small>semester = pendek</small></div>
+ <div class="ghost" data-a="gh" style="left:45px;top:246px;width:390px">kelas → KRS → absensi · ujian · nilai<br><b>(rantai yang sama persis)</b></div>
+ <div class="tn sp" data-a="cls" style="left:470px;top:258px;width:230px;height:48px"><b>Kelas SP</b><small>class_sections</small></div>
+ <div class="tn sp" data-a="krs" style="left:470px;top:334px;width:230px;height:48px"><b>KRS</b><small>krs_items</small></div>
+ <div class="tn" data-a="lv0" style="left:400px;top:414px;width:110px;height:46px"><b>Absensi</b><small>attendances</small></div>
+ <div class="tn" data-a="lv1" style="left:530px;top:414px;width:110px;height:46px"><b>Ujian</b><small>exams</small></div>
+ <div class="tn" data-a="lv2" style="left:660px;top:414px;width:110px;height:46px"><b>Nilai</b><small>grades</small></div>
+ <div class="box" data-a="pa" style="left:830px;top:84px;width:400px;height:200px;padding:16px 18px;opacity:0">
+   <div class="bx-h">✗ Tidak dibuat</div>
+   <div class="mono" style="font-size:14.5px;line-height:1.75;margin-top:6px"><span class="strike">short_semesters</span> · <span class="strike">short_krs</span><br><span class="strike">short_grades</span> · <span class="strike">short_exams</span><br><span class="strike">course_offerings</span></div>
+   <div class="bx-p" style="margin-top:8px">✓ IPK, KHS &amp; transkrip tetap dari <b>satu</b> tabel nilai</div></div>
+ <div class="box" data-a="pb" style="left:830px;top:300px;width:400px;height:180px;padding:16px 18px;opacity:0">
+   <div class="bx-h">🆕 Yang baru: <span style="color:var(--primary)">aturan</span></div>
+   <div class="bx-p" style="margin:4px 0 10px">bergantung pada jenis periode</div>
+   <div style="display:flex;flex-wrap:wrap;gap:8px">${['📏 Batas SKS','✅ Kelayakan','💳 Biaya','🔄 Siklus status'].map((t,i)=>`<span class="tag t-s" data-a="nb${i}" style="font-size:15px;padding:6px 12px;opacity:0">${t}</span>`).join('')}</div></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));
+  fade(A(r,'root'),P(lt,.3,.45));fade(A(r,'tsp'),P(lt,.9,.45));sk(r,'l3',P(lt,.8,.4));
+  glow(A(r,'tsp'),lt>=1.2&&lt<c[1]);
+  fade(A(r,'tg1'),P(lt,c[1]+.3,.45));fade(A(r,'tg2'),P(lt,c[1]+.7,.45));sk(r,'l1',P(lt,c[1]+.2,.4));sk(r,'l2',P(lt,c[1]+.6,.4));
+  fade(A(r,'cls'),P(lt,c[2]+.3,.4));sk(r,'l4',P(lt,c[2]+.2,.3));
+  fade(A(r,'krs'),P(lt,c[2]+1.3,.4));sk(r,'l5',P(lt,c[2]+1.2,.3));
+  [0,1,2].forEach(i=>{fade(A(r,'lv'+i),P(lt,c[2]+2.3+i*.4,.4));sk(r,'l'+(6+i),P(lt,c[2]+2.2+i*.4,.3));});
+  fade(A(r,'gh'),P(lt,c[2]+4,.5),0);
+  fade(A(r,'pa'),P(lt,c[3],.45),0,30);fade(A(r,'pb'),P(lt,c[4],.45),0,30);
+  [0,1,2,3].forEach(i=>fade(A(r,'nb'+i),P(lt,c[4]+1.4+i*.6,.35),8));}};
+
+/* 3 · peran */
+const ROLES=[['🏛️','Bagian Akademik','academic_administrator',['Buat &amp; kelola periode SP','Buka kelas, dosen &amp; jadwal','Ubah status periode','Finalisasi nilai']],
+ ['🎓','Kaprodi','head_of_study_program',['Memantau','Penyetuju KRS / revisi nilai — bila alur persetujuan aktif','<span style="color:var(--ink3)">Dosen PA: menyusul setelah relasi dosen-wali ada</span>']],
+ ['👩‍🏫','Dosen','lecturer',['Hanya kelas yang <b>ditugaskan</b>','Absensi, ujian &amp; nilai','<span class="no">✗</span> tidak membuat periode / kelas']],
+ ['🧑‍🎓','Mahasiswa','student',['Pilih &amp; daftar mata kuliah','Bayar tagihan','Kuliah &amp; ujian','Lihat nilai final']],
+ ['💰','Keuangan','finance_administrator',['Catat pembayaran','Batalkan tagihan','Daftar perlu refund']]];
+S.peran={html:`${ttl('Siapa <span>berperan</span>?')}
+ <div data-a="ban" class="box" style="left:50px;right:50px;top:76px;height:56px;display:flex;align-items:center;justify-content:center;gap:28px;font-size:20px;font-weight:700;background:#ecfdf3;border-color:#86efac;color:#14532d;opacity:0">
+  <span data-a="b0">🏛️ Akademik <u>mengonfigurasi</u></span><span data-a="b1">👩‍🏫 Dosen <u>mengajar</u></span><span data-a="b2">🧑‍🎓 Mahasiswa <u>mendaftar</u></span></div>
+ ${ROLES.map((x,i)=>`<div class="box role" data-a="r${i}" style="left:${50+i*240}px"><div class="av">${x[0]}</div><h4>${x[1]}</h4><span class="k">${x[2]}</span><ul class="li" style="margin-top:6px">${x[3].map(t=>`<li><span>${t}</span></li>`).join('')}</ul></div>`).join('')}`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'ban'),P(lt,.2,.4),0);['b0','b1','b2'].forEach((k,i)=>fade(A(r,k),P(lt,.4+i*.9,.4),8));
+  const a=cueIdx(lt,c);const on=[[],[0],[1],[2],[3,4]][Math.max(0,a)]||[];
+  ROLES.forEach((_,i)=>{const el=A(r,'r'+i);fade(el,P(lt,c[0]+2.8+i*.25,.45),18);glow(el,on.includes(i));});}};
+
+/* 4 · siklus */
+const STS=[['draft','DRAFT','Disusun'],['planned','PLANNED','Diumumkan'],['open','REGISTRATION_OPEN','Pendaftaran dibuka'],['closed','REGISTRATION_CLOSED','Pendaftaran ditutup'],
+ ['ongoing','ONGOING','Perkuliahan'],['grading','GRADING','Penilaian'],['completed','COMPLETED','Selesai'],['archived','ARCHIVED','Diarsipkan']];
+const SX=[65,365,665,965];const SPOS=STS.map((_,i)=>i<4?[SX[i],112]:[SX[7-i],232]);
+const SDET=[
+ ['Periode sedang dikonfigurasi.','Tidak terlihat mahasiswa &amp; dosen. Boleh dihapus bila belum ada kelas.','Keluar ke: PLANNED.'],
+ ['Diumumkan; pendaftaran belum dibuka.','Kelas, dosen, jadwal masih bebas diubah. Tombol daftar nonaktif.','Keluar ke: REGISTRATION_OPEN, atau kembali ke DRAFT (0 KRS).'],
+ ['Mahasiswa bisa mendaftar.','Wajib ≥ 1 kelas aktif. Hanya di dalam jendela waktu. Kapasitas tak boleh &lt; peserta.','Notifikasi “pendaftaran dibuka” ke mahasiswa yang layak.'],
+ ['Pendaftaran mandiri ditutup.','Mahasiswa tak bisa daftar/batal. Admin masih bisa mendaftarkan — wajib alasan.','Proses sisa persetujuan &amp; pembayaran; batalkan kelas sepi.'],
+ ['Perkuliahan berjalan.','Tambah peserta hanya oleh admin (late add + alasan).','Absensi &amp; ujian aktif. KRS pending belum lunas → kedaluwarsa.'],
+ ['Periode input nilai.','Dosen input &amp; serahkan; admin finalisasi. Absensi masih bisa dikoreksi.','Notifikasi tenggat nilai ke dosen.'],
+ ['Seluruh nilai final.','Syarat: semua nilai finalized (atau dipaksa + alasan).','Nilai tampil di KHS &amp; transkrip. Ubah nilai hanya via revisi.'],
+ ['Arsip baca-saja.','Semua penulisan ditolak (409), termasuk revisi nilai.','Data tetap dibaca untuk transkrip &amp; IPK.']];
+S.siklus={html:`${ttl('Siklus hidup <span>periode SP</span>')}
+ ${svg('sik',`${[0,1,2].map(i=>pth('sik','h'+i,`M${SX[i]+250} 150 L${SX[i+1]-6} 150`,'g')).join('')}
+  ${pth('sik','v0','M1090 188 L1090 226','g')}
+  ${[0,1,2].map(i=>pth('sik','h'+(3+i),`M${SX[3-i]} 270 L${SX[2-i]+256} 270`,'g')).join('')}
+  ${pth('sik','bk1','M470 110 C450 74 210 74 190 106','w',{dash:1})}${txt('bk1',330,74,'kembali · bila 0 KRS','w')}
+  ${pth('sik','bk2','M1070 110 C1050 74 810 74 790 106','w',{dash:1})}${txt('bk2',930,74,'buka ulang · sebelum kuliah mulai','w')}`)}
+ ${STS.map((s,i)=>`<div class="sn st-${s[0]}" data-a="n${i}" style="left:${SPOS[i][0]}px;top:${SPOS[i][1]}px"><i>✓</i><b>${s[1]}</b><span>${s[2]}</span></div>`).join('')}
+ <div class="box dp" data-a="dp"></div>`,
+ f(lt,c,r,e){fade(A(r,'ttl'),P(lt,0,.4));
+  STS.forEach((_,i)=>fade(A(r,'n'+i),P(lt,.3+i*.32,.4),12));
+  for(let i=0;i<6;i++)sk(r,'h'+i,P(lt,.5+(i<3?i:i+1)*.32,.3));sk(r,'v0',P(lt,.5+3*.32,.3));
+  const a=cueIdx(lt,c);let act=-1,t0=0;
+  if(a>=1&&a<=7){act=a-1;t0=c[a];}
+  const mid=c[7]+(e[7]-c[7])*.48;if(a===7&&lt>=mid){act=7;t0=mid;}
+  STS.forEach((_,i)=>{const el=A(r,'n'+i);el.classList.toggle('act',i===act);el.classList.toggle('done',act>=0&&i<act||a>=8);});
+  const back=a>=8;sk(r,'bk1',P(lt,c[8]+.3,.4)*(back?1:0));sk(r,'bk2',P(lt,c[8]+5.3,.4)*(back?1:0));
+  if(back){A(r,'n1').classList.add('act');A(r,'n0').classList.add('act');}
+  if(back&&lt>=c[8]+5.3){A(r,'n1').classList.remove('act');A(r,'n0').classList.remove('act');A(r,'n3').classList.add('act');A(r,'n2').classList.add('act');}
+  const dp=A(r,'dp');
+  if(act>=0){const s=STS[act],d=SDET[act];dp.className='box dp st-'+s[0];
+    setHTML(dp,`<div class="dh"><b>${s[1]}</b><span>${s[2]}</span></div><div class="cols"><div><h5>Arti</h5><p>${d[0]}</p></div><div><h5>Pembatasan</h5><p>${d[1]}</p></div><div><h5>Konsekuensi</h5><p>${d[2]}</p></div></div>`);fade(dp,P(lt,t0,.35),10);}
+  else if(back){dp.className='box dp st-closed';setHTML(dp,`<div class="dh"><b>JALUR MUNDUR</b><span>Hanya dua</span></div><div class="cols" style="grid-template-columns:1fr 1fr"><div><h5>PLANNED → DRAFT</h5><p>Hanya bila belum ada KRS sama sekali.</p></div><div><h5>CLOSED → OPEN</h5><p>Perpanjangan pendaftaran — hanya sebelum tanggal mulai kuliah.</p></div></div>`);fade(dp,P(lt,c[8],.35),10);}
+  else{dp.className='box dp st-draft';setHTML(dp,`<div class="dh"><b>8 STATUS</b><span>Mesin transisi</span></div><div class="cols"><div><h5>Siapa</h5><p>Bagian Akademik (izin <span class="k">academic_terms.update</span>).</p></div><div><h5>Aturan</h5><p>Transisi lain ditolak: “Transisi status dari X ke Y tidak diizinkan.”</p></div><div><h5>Jejak</h5><p>Setiap perubahan status tercatat di audit log.</p></div></div>`);fade(dp,P(lt,2.6,.4),10);}
+ }};
+
+/* 5 · siapkan */
+const F1=[['Tahun akademik','2026/2027'],['Semester','Pendek'],['Tanggal kuliah','5 Jul – 20 Ags 2027'],['Jendela pendaftaran','21 – 30 Jun 2027'],['Maks. SKS','9']];
+const F2=[['Mata kuliah','IF302 · Basis Data (3 SKS)'],['Kode kelas','SP-A'],['Kapasitas','30'],['Minimum peserta','5  (standar)']];
+const F3=[['Dosen pengampu','Dr. Maria Wijaya — koordinator'],['Jadwal 1','Senin 08.00–10.30 · R. 301'],['Jadwal 2','Rabu 08.00–10.30 · R. 301']];
+const fset=(arr,p)=>arr.map((f,i)=>`<div class="fr"><label>${f[0]}</label><div class="in" data-a="${p}${i}"></div></div>`).join('');
+S.siapkan={html:`${ttl('Menyiapkan <span>periode &amp; kelas</span> — oleh Bagian Akademik')}
+ <div class="box fcol" data-a="c0" style="left:50px"><h4><span class="num">1</span>Buat Periode</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 10px">${fset(F1,'a')}</div>
+  <div style="display:flex;flex-direction:column;gap:5px;margin-top:2px">${['Tidak beririsan dengan Genap 2026/2027','Pendaftaran ditutup sebelum kuliah','Satu SP per tahun akademik'].map((t,i)=>`<div class="chk" data-a="v${i}">✓ ${t}</div>`).join('')}</div></div>
+ <div class="box fcol" data-a="c1" style="left:452px"><h4><span class="num">2</span>Buka Kelas</h4>${fset(F2,'b')}
+  <div class="bx-p" data-a="n2" style="opacity:0;margin-top:4px">💡 Kelas SP = kelas biasa di periode SP — bukan tabel penawaran baru.</div></div>
+ <div class="box fcol" data-a="c2" style="left:855px"><h4><span class="num">3</span>Dosen &amp; Jadwal</h4>${fset(F3,'d')}
+  <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">${['Tidak bentrok jadwal dosen','Tidak bentrok ruangan'].map((t,i)=>`<div class="chk" data-a="w${i}">✓ ${t}</div>`).join('')}</div></div>
+ <div class="box" data-a="ban" style="left:50px;right:50px;top:448px;height:58px;display:flex;align-items:center;justify-content:center;gap:14px;font-size:18px;font-weight:700;opacity:0">
+  <span class="tag t-i" style="font-size:14px">PLANNED</span>→<span class="tag t-s" style="font-size:14px">REGISTRATION_OPEN</span><span>hanya bila ada <u>minimal 1 kelas aktif</u></span></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));
+  [0,1,2].forEach(i=>fade(A(r,'c'+i),P(lt,.2+i*.3,.45),16));
+  const a=cueIdx(lt,c);[0,1,2].forEach(i=>glow(A(r,'c'+i),(i===0&&(a===0||a===1))||(i===1&&a===2)||(i===2&&a===3)));
+  F1.forEach((f,i)=>setTxt(A(r,'a'+i),typed(f[1],lt,c[0]+1.6+i*1.0,.6)));
+  [0,1,2].forEach(i=>fade(A(r,'v'+i),P(lt,c[1]+.5+i*1.6,.35),8));
+  F2.forEach((f,i)=>setTxt(A(r,'b'+i),typed(f[1],lt,c[2]+.5+i*.9,.55)));fade(A(r,'n2'),P(lt,c[2]+4.2,.4),0);
+  F3.forEach((f,i)=>setTxt(A(r,'d'+i),typed(f[1],lt,c[3]+.4+i*.9,.6)));
+  [0,1].forEach(i=>fade(A(r,'w'+i),P(lt,c[3]+3.6+i*.8,.35),8));
+  fade(A(r,'ban'),P(lt,c[4],.45),12);}};
+
+/* 6 · kebijakan */
+const SET=[['📏','Maks. SKS SP','9 SKS','','academic.short_term.max_credits','SP'],
+ ['👥','Minimum peserta kelas','5 orang','','…short_term.min_participants','SP'],
+ ['⏳','Batas waktu bayar','3 hari','','…short_term.payment_due_days','SP'],
+ ['🆕','Boleh ambil MK baru','<span class="tg"></span> Ya','','…short_term.allow_new_courses','SP'],
+ ['🔁','Nilai maks. yang boleh diulang','C','contoh · kosong = semua','…short_term.retake_max_letter_grade','SP'],
+ ['💳','Biaya per SKS','Rp150.000','contoh · 0 = tanpa tagihan','…short_term.fee_per_credit','SP'],
+ ['🧾','Wajib bebas tunggakan','<span class="tg"></span> Ya','','…short_term.require_no_outstanding_invoices','SP'],
+ ['📈','Nilai ulang untuk IPK','Tertinggi','atau: terakhir','academic.repeat_grade_policy','Semua periode'],
+ ['✅','Minimum kehadiran','75%','','academic.min_attendance_percentage','Semua periode']];
+S.kebijakan={html:`${ttl('Kebijakan <span>per kampus</span>','<span style="font-size:15px;color:var(--ink3);font-weight:600;margin-left:12px">Pengaturan Akademik › Semester Pendek</span>')}
+ ${SET.map((s,i)=>`<div class="box set" data-a="t${i}" style="left:${50+(i%3)*394}px;top:${78+Math.floor(i/3)*132}px"><span class="sc tag ${s[5]==='SP'?'t-s':'t-i'}">${s[5]}</span><div class="t"><span class="e">${s[0]}</span>${s[1]}</div><div class="v">${s[2]}${s[3]?`<small>${s[3]}</small>`:''}</div><div class="kk">${s[4]}</div></div>`).join('')}`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));const a=cueIdx(lt,c);const G=[[],[0,1,2],[3,4],[5,6],[7,8]][Math.max(0,a)]||[];
+  SET.forEach((_,i)=>{const el=A(r,'t'+i);fade(el,P(lt,.4+i*.18,.4),14);glow(el,G.includes(i));});}};
+
+/* 7 · kelayakan */
+const CK=[['Status periode','TERM_NOT_OPEN'],['Status mahasiswa','STUDENT_NOT_ACTIVE'],['Tunggakan keuangan','OUTSTANDING_INVOICE'],['Kelas aktif','CLASS_INACTIVE'],['Program studi','CLASS_OTHER_PROGRAM'],['Duplikat kelas','ALREADY_ENROLLED'],
+ ['Duplikat mata kuliah','COURSE_ALREADY_TAKEN'],['Baru vs ulang','COURSE_NOT_RETAKABLE'],['Prasyarat','PREREQUISITE_NOT_MET'],['Batas SKS','SKS_LIMIT_EXCEEDED'],['Bentrok jadwal','SCHEDULE_CONFLICT'],['Kapasitas','CLASS_FULL']];
+S.kelayakan={html:`${ttl('<span>12 pemeriksaan</span> kelayakan')}
+ <div class="box" data-a="tok" style="left:560px;top:20px;width:670px;height:44px;display:flex;align-items:center;gap:10px;padding:0 14px;font-size:15px;opacity:0"></div>
+ ${CK.map((k,i)=>`<div class="ck12" data-a="k${i}" style="left:${50+(i%6)*197}px;top:${80+Math.floor(i/6)*88}px"><div class="r1"><i>${i+1}</i>${k[0]}</div><small>${k[1]}</small></div>`).join('')}
+ <div class="ban" data-a="bn"></div>
+ <div class="box" data-a="ev" style="left:50px;top:340px;width:680px;height:130px;padding:12px 16px;display:flex;gap:14px;opacity:0">
+  <div style="flex:1"><div class="bx-h" style="font-size:16px">👀 Saat melihat daftar kelas</div><p class="bx-p" style="font-size:14px">Pemeriksaan 1–11 dijalankan dalam <b>mode evaluasi</b> — alasan langsung tampil, tanpa menulis data.</p></div>
+  <div style="flex:1;border-left:1px solid var(--border);padding-left:14px"><div class="bx-h" style="font-size:16px">🔒 Saat KRS dikirim</div><p class="bx-p" style="font-size:14px">Semua diperiksa <b>ulang</b> di server, di dalam transaksi &amp; kunci. Hasil tampilan tidak dipercaya.</p></div></div>
+ <div class="box" data-a="ss" style="left:750px;top:340px;width:480px;height:130px;padding:12px 16px;opacity:0">
+  <div class="bx-h" style="font-size:16px">🎓 Status mahasiswa</div>
+  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px"><span class="tag t-s" style="font-size:14px">✓ Aktif</span>${['Cuti','Nonaktif','Lulus','Keluar'].map(t=>`<span class="tag t-d" style="font-size:14px">✗ ${t}</span>`).join('')}</div></div>`,
+ f(lt,c,r,e){fade(A(r,'ttl'),P(lt,0,.4));
+  const second=lt>=c[3];
+  setHTML(A(r,'tok'),second?`🧑‍🎓 <b>Rina Putri</b> · 2201077 <span style="color:var(--ink3)">→</span> <b>IF302 Basis Data · SP-A</b> <span class="tag t-d" style="margin-left:auto">terisi 30/30</span>`
+    :`🧑‍🎓 <b>Budi Santoso</b> · 2201045 <span style="color:var(--ink3)">→</span> <b>IF302 Basis Data · SP-A</b> <span class="tag t-s" style="margin-left:auto">terisi 24/30</span>`);
+  fade(A(r,'tok'),P(lt,.4,.4),0);if(second)A(r,'tok').style.opacity=P(lt,c[3],.3);
+  const L1=Math.max(3,e[1]-c[1]-.4),L2=Math.max(4,e[2]-c[2]-.4);
+  CK.forEach((_,i)=>{const el=A(r,'k'+i);fade(el,P(lt,.3+i*.12,.35),10);
+    let st='';
+    if(!second){const t=i<5?c[1]+.3+i*L1/5:c[2]+.3+(i-5)*L2/7;if(lt>=t)st='pass';}
+    else{const t=c[3]+.3+i*.13;if(i<11&&lt>=t)st='pass';if(i===11&&lt>=c[3]+1.9)st='fail';}
+    el.classList.toggle('pass',st==='pass');el.classList.toggle('fail',st==='fail');
+    el.style.boxShadow=(lt>=c[5]&&i===1)?'0 0 0 3px #f59e0b':'none';});
+  const bn=A(r,'bn');const okT=c[2]+.3+6*L2/7+.5;
+  if(second&&lt>=c[3]+1.9){bn.className='ban r';setHTML(bn,'✗ Ditolak · 409 <span class="k">CLASS_FULL</span> — “Kelas sudah penuh.”');bn.style.opacity=P(lt,c[3]+1.9,.3);}
+  else if(!second&&lt>=okT){bn.className='ban g';setHTML(bn,'✓ Lolos semua pemeriksaan → KRS dibuat dengan status <span class="k">pending</span>');bn.style.opacity=P(lt,okT,.3);}
+  else bn.style.opacity=0;
+  fade(A(r,'ev'),P(lt,c[4],.45),12);fade(A(r,'ss'),P(lt,c[5],.45),12);}};
+
+/* 8 · ulang */
+const GR=['A','AB','B','BC','C','D','E'];
+S.ulang={html:`${ttl('Mata kuliah <span>baru</span> vs <span>ulang</span>')}
+ <div class="box" data-a="q" style="left:50px;top:74px;width:710px;height:46px;display:flex;align-items:center;gap:10px;padding:0 16px;font-size:15.5px;opacity:0">🔎 Cari percobaan sebelumnya untuk <b>mata kuliah yang sama</b> <span class="k">course_id</span></div>
+ <div class="box" data-a="k0" style="left:50px;top:132px;width:710px;height:96px;padding:12px 16px;display:flex;gap:14px;align-items:center;opacity:0"><div style="font-size:34px">⏳</div><div style="flex:1"><div class="bx-h">Masih berjalan</div><div class="bx-p">Diambil di periode lain, belum bernilai, periode belum selesai</div></div><span class="tag t-d" style="font-size:13px">✗ COURSE_IN_PROGRESS</span></div>
+ <div class="box" data-a="k1" style="left:50px;top:240px;width:710px;height:96px;padding:12px 16px;display:flex;gap:14px;align-items:center;opacity:0"><div style="font-size:34px">🆕</div><div style="flex:1"><div class="bx-h">Mata kuliah baru</div><div class="bx-p">Belum pernah diambil → boleh bila kampus mengizinkan MK baru di SP</div></div><div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end"><span class="tag t-s" style="font-size:13px">✓ diizinkan</span><span class="tag t-d" style="font-size:13px">✗ NEW_COURSE_NOT_ALLOWED</span></div></div>
+ <div class="box" data-a="k2" style="left:50px;top:348px;width:710px;height:160px;padding:12px 16px;opacity:0"><div style="display:flex;gap:14px;align-items:center"><div style="font-size:34px">🔁</div><div style="flex:1"><div class="bx-h">Mata kuliah ulang</div><div class="bx-p">Sudah bernilai → nilai efektif dibandingkan dengan batas kampus (contoh: <b>C</b>)</div></div></div>
+  <div style="display:flex;align-items:center;gap:8px;margin:12px 0 0 48px">${GR.map((g,i)=>`<span class="gch" data-a="g${i}">${g}</span>`).join('')}</div><div data-a="gm" style="margin:10px 0 0 48px;font-size:14.5px;opacity:0"><span class="ok">C, D, E</span> boleh diulang · <span class="no">B</span> → <span class="k">COURSE_NOT_RETAKABLE</span></div></div>
+ <div class="box" data-a="hs" style="left:790px;top:74px;width:440px;height:434px;padding:16px 18px;opacity:0">
+  <div class="bx-h">📚 Riwayat: Basis Data <span class="k">IF302</span></div>
+  <div class="bx-p" style="margin-top:2px">Riwayat tidak pernah dihapus atau ditimpa</div>
+  <div style="position:relative;margin-top:18px;padding-left:28px;display:flex;flex-direction:column;gap:16px">
+   <div style="position:absolute;left:9px;top:10px;bottom:10px;border-left:3px solid #cbd5e1"></div>
+   <div data-a="h0" style="position:relative"><span style="position:absolute;left:-27px;top:6px;width:16px;height:16px;border-radius:50%;background:#94a3b8"></span><div style="font-size:13px;color:var(--ink3);font-weight:700">PERCOBAAN #1</div><div style="font-size:16px;font-weight:700">2026/2027 Ganjil · nilai <span class="no">D</span></div><span class="tag t-n" style="margin-top:4px">tetap ada</span></div>
+   <div data-a="h1" style="position:relative"><span style="position:absolute;left:-27px;top:6px;width:16px;height:16px;border-radius:50%;background:#166534"></span><div style="font-size:13px;color:var(--ink3);font-weight:700">PERCOBAAN #2</div><div style="font-size:16px;font-weight:700">2026/2027 Pendek · nilai <span class="ok">B</span></div><span class="tag t-s" style="margin-top:4px">baris KRS &amp; nilai baru</span></div></div>
+  <div class="bx-p" data-a="h2" style="margin-top:22px;font-size:13.5px;background:#f8fafc;border-radius:10px;padding:10px 12px">Nomor percobaan &amp; penanda “ulang” <b>dihitung saat dibaca</b> — tidak disimpan, sehingga tidak bisa tidak sinkron.</div></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'q'),P(lt,.4,.4),0);
+  const a=cueIdx(lt,c);
+  [0,1,2].forEach(i=>{const el=A(r,'k'+i);fade(el,P(lt,1+i*.3,.4),12);dim(el,a>=1&&a<=3&&a!==i+1);glow(el,a===i+1);});
+  GR.forEach((g,i)=>{const el=A(r,'g'+i);const on=lt>=c[3]+4;el.classList.toggle('y',on&&i>=4);el.classList.toggle('cur',lt>=c[3]+8&&i===2);});
+  fade(A(r,'gm'),P(lt,c[3]+8,.4),0);
+  fade(A(r,'hs'),P(lt,c[4],.45),0,30);fade(A(r,'h0'),P(lt,c[4]+.6,.4),8);fade(A(r,'h1'),P(lt,c[4]+2.4,.4),8);fade(A(r,'h2'),P(lt,c[4]+3.6,.4),8);}};
+
+/* 9 · sks */
+S.sks={html:`${ttl('Batas <span>SKS</span>')}
+ <div class="box" data-a="L" style="left:50px;top:74px;width:570px;height:434px;padding:18px 20px;opacity:0">
+  <div class="bx-h">📏 Di Semester Pendek</div>
+  <div class="mono" style="margin-top:10px;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:14px;line-height:1.6">batas = <span style="color:#86efac">max_credits</span> periode<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;?? pengaturan kampus <span style="color:#fcd34d">(standar 9)</span></div>
+  <div style="margin-top:46px;position:relative"><div class="units" data-a="U">${Array.from({length:12},(_,i)=>`<div class="unit" data-a="u${i}"></div>`).join('')}<div class="lim" style="left:${9*43-3}px"><span>batas 9</span></div></div></div>
+  <div style="display:flex;flex-direction:column;gap:7px;margin-top:16px;font-size:14.5px">
+   <div data-a="i0" style="opacity:0"><span class="tag" style="background:#166534;color:#fff">3</span> Basis Data — <b>enrolled</b></div>
+   <div data-a="i1" style="opacity:0"><span class="tag" style="background:#f59e0b;color:#fff">3</span> Statistika — <b>pending</b> (tetap dihitung)</div>
+   <div data-a="i2" style="opacity:0"><span class="tag" style="background:#2563eb;color:#fff">3</span> Jaringan Komputer — yang akan diambil → <span class="ok">9 ≤ 9 ✓</span></div>
+   <div data-a="i3" style="opacity:0"><span class="tag" style="background:#dc2626;color:#fff">+3</span> Grafika → <span class="no">12 &gt; 9 ✗</span> <span class="k">SKS_LIMIT_EXCEEDED</span></div></div></div>
+ <div class="box" data-a="R" style="left:650px;top:74px;width:580px;height:434px;padding:18px 20px;opacity:0">
+  <div class="bx-h">🔜 Kuota semester reguler berikutnya</div>
+  <div style="position:relative;height:172px;margin-top:6px">
+   ${svg('sks',`${pth('sks','sk1','M95 108 C150 152 405 152 458 110','s',{w:3})}${txt('sk1',275,166,'kuota dihitung dari IP Genap','s')}${pth('sks','sk2','M275 108 C300 150 430 150 458 110','b',{w:3})}${txt('sk2',368,166,'IP SP ikut dihitung','b')}`,560,172)}
+   <div class="tn" data-a="tb0" style="left:10px;top:40px;width:170px;height:66px;opacity:1"><b>Genap 26/27</b><small>IP 1,80</small></div>
+   <div class="tn sp" data-a="tb1" style="left:195px;top:40px;width:160px;height:66px;opacity:1"><b>SP 26/27</b><small data-a="sx">tidak dihitung</small></div>
+   <div class="tn" data-a="tb2" style="left:370px;top:40px;width:180px;height:66px;opacity:1"><b>Ganjil 27/28</b><small>kuota ?</small></div></div>
+  <table class="tt" data-a="tab" style="margin-top:6px;opacity:0"><tr><th>Mhs</th><th>IP Genap</th><th>Ikut SP?</th><th>Batas Ganjil berikutnya</th></tr>
+   <tr data-a="ra"><td>A</td><td>1,80</td><td>Tidak</td><td><b>18</b> <span style="font-size:12px;color:var(--ink3)">(tanpa perbaikan: 24 ✗)</span></td></tr>
+   <tr data-a="rb"><td>B</td><td>1,80</td><td>Ya · IP SP 3,50</td><td><b data-a="bv">18</b></td></tr>
+   <tr><td>C</td><td>3,20</td><td>Tidak</td><td><b>24</b></td></tr></table>
+  <div data-a="tgl" style="margin-top:12px;font-size:14px;display:flex;align-items:center;gap:10px;opacity:0"><span class="tg off" data-a="tgv"></span>IP SP ikut menentukan kuota berikutnya <span class="k">counts_toward_next_term_sks_quota</span></div></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'L'),P(lt,.2,.45),0,-20);
+  const fill=(n,t)=>lt>=t?n:0;let cls=Array(12).fill('');
+  const t0=c[0]+3,t1=c[1]+.5,t2=c[1]+2.4,t3=c[1]+4.4;
+  for(let i=0;i<3;i++)if(lt>=t0)cls[i]='e';for(let i=3;i<6;i++)if(lt>=t1)cls[i]='p';for(let i=6;i<9;i++)if(lt>=t2)cls[i]='n';
+  if(lt>=t3&&lt<c[2]+1)for(let i=9;i<12;i++)cls[i]='x';
+  cls.forEach((k,i)=>{const u=A(r,'u'+i);u.className='unit'+(k?' '+k:'');});
+  fade(A(r,'i0'),P(lt,t0,.35),6);fade(A(r,'i1'),P(lt,t1,.35),6);fade(A(r,'i2'),P(lt,t2,.35),6);fade(A(r,'i3'),P(lt,t3,.35),6);
+  fade(A(r,'R'),P(lt,c[2],.45),0,30);
+  const on=lt>=c[4]+1.4;
+  sk(r,'sk1',P(lt,c[2]+1.2,.4)*(on?0:1));sk(r,'sk2',on?P(lt,c[4]+1.4,.4):0);
+  setTxt(A(r,'sx'),on?'IP 3,50 dihitung':'tidak dihitung');A(r,'tb1').style.opacity=on?1:(lt>=c[2]+1.2?.45:1);
+  fade(A(r,'tab'),P(lt,c[3],.4),8);A(r,'ra').classList.toggle('hi',lt>=c[3]&&lt<c[4]);A(r,'rb').classList.toggle('hi',lt>=c[3]+3&&lt<c[4]||lt>=c[4]+1.4);
+  setTxt(A(r,'bv'),on?'24':'18');A(r,'bv').style.color=on?'#2563eb':'';
+  fade(A(r,'tgl'),P(lt,c[4],.4),6);A(r,'tgv').classList.toggle('off',!on);}};
+
+/* 10 · portal */
+const CLS=[{code:'IF302',nm:'Basis Data',kl:'SP-A',dos:'Dr. Maria Wijaya',jd:'Sen &amp; Rab 08.00–10.30 · R.301',sisa:'6/30',fee:'Rp450.000',tag:['w','Ulang · nilai sebelumnya D']},
+ {code:'IF210',nm:'Statistika',kl:'SP-A',dos:'Budi Hartono, M.Kom.',jd:'Sel &amp; Kam 10.00–12.30 · R.204',sisa:'12/30',fee:'Rp450.000',tag:['i','Baru']},
+ {code:'IF301',nm:'Jaringan Komputer',kl:'SP-A',dos:'Ir. Sari Dewi',jd:'Sen &amp; Rab 13.00–15.30 · Lab 2',sisa:'15/30',fee:'Rp450.000',off:'✗ Nilai B tidak memenuhi syarat untuk diulang (maksimal C).',tag:['n','Ulang']},
+ {code:'IF204',nm:'Struktur Data',kl:'SP-A',dos:'Andreas Lim, M.T.',jd:'Sel &amp; Kam 08.00–10.30 · R.105',sisa:'0/30',fee:'Rp450.000',off:'✗ Kelas sudah penuh.',tag:['d','Penuh']}];
+function portalPage(s){
+  const cards=CLS.map((k,i)=>`<div class="cc ${k.off?'off':''}" data-r="cc${i}"><div class="r"><span class="mono">${k.code}</span><b>${k.nm}</b><span class="bd n">3 SKS</span><span class="bd n">Kelas ${k.kl}</span><span class="bd ${k.tag[0]}" style="margin-left:auto">${k.tag[1]}</span></div>
+   <div class="r">👩‍🏫 ${k.dos} &nbsp;·&nbsp; 🗓 ${k.jd}</div>
+   <div class="r">${k.off?`<span class="why">${k.off}</span>`:`Sisa kursi <b style="font-size:12.5px">${k.sisa}</b> &nbsp;·&nbsp; ${k.fee}`}<span style="margin-left:auto">${k.off?`<span class="b o dis">+ Pilih</span>`:(s.sel[i]?`<span class="b sel" data-r="pick${i}">✓ Dipilih</span>`:`<span class="b o" data-r="pick${i}">+ Pilih</span>`)}</span></div></div>`).join('');
+  const n=s.sel.filter(Boolean).length,sks=n*3;
+  const items=CLS.map((k,i)=>s.sel[i]?`<div class="it"><span>${k.code} ${k.nm}</span><b>3 SKS</b></div>`:'').join('');
+  const cart=`<div class="cart" data-r="cart"><h4>🧺 Pilihan Anda</h4>${items||'<div style="color:var(--ink3)">Belum ada mata kuliah dipilih.</div>'}
+   <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span>Total SKS</span><b>${sks} / 9</b></div><div class="bar"><i style="width:${sks/9*100}%"></i></div></div>
+   <div style="display:flex;justify-content:space-between"><span>Total biaya</span><b>Rp${(n*450).toLocaleString('id-ID')}.000</b></div>
+   <div style="color:#166534;font-weight:600">${n?'✓ Tidak ada bentrok jadwal':'&nbsp;'}</div>
+   <span class="b p ${n?'':'dis'}" data-r="daftar">Daftar${n?` (${n})`:''}</span></div>`;
+  const modal=s.modal?`<div class="mbg"><div class="mdl"><div class="mh"><b>Konfirmasi Pendaftaran</b><span style="color:var(--ink3);font-size:20px">×</span></div><div class="mb">
+   <div class="cart" style="border:0;padding:0">${items}</div>
+   <div style="display:flex;justify-content:space-between;font-size:14px"><span>Total</span><b>6 SKS · Rp900.000</b></div>
+   <div class="al i">KRS akan berstatus <b>pending</b>. Tagihan dibuat setelah KRS disetujui.</div>
+   <div style="display:flex;justify-content:flex-end;gap:8px"><span class="b o">Batal</span><span class="b p" data-r="kirim">${s.sending?'Mengirim…':'Kirim KRS'}</span></div></div></div></div>`:'';
+  return `<div class="app"><aside class="sb"><div class="lg"><img src="logo-atmajaya.gif"><span>OneAtma</span></div><nav>
+   <div class="ni">🏠 Beranda</div><div class="ni">📘 Akademik</div><div class="ni">📅 Jadwal</div><div class="ni">📝 Nilai</div>
+   <div class="ni act" data-r="nav-sp">☀️ Semester Pendek<span class="nb">Baru</span></div>
+   <div class="subm"><div>Ringkasan</div><div class="act">Pilih Mata Kuliah</div><div>KRS Saya</div><div>Tagihan</div></div>
+   <div class="ni">💰 Keuangan</div></nav></aside>
+   <div class="mn"><div class="hd"><b style="font-size:13px;color:var(--ink2)">Portal Mahasiswa</b><div class="rt"><div class="av">BS</div><div class="who"><b>Budi Santoso</b><span>Mahasiswa · 2201045</span></div></div></div>
+   <div class="ct0"><div class="scr"><div><div class="bc">Semester Pendek › 2026/2027 Pendek</div><div class="ph1">Pilih Mata Kuliah</div></div>
+    <div class="strip" data-r="strip"><span class="bd s">REGISTRATION_OPEN</span><span>Ditutup <b>30 Jun 2027</b></span><span>Maks <b>9 SKS</b></span><span><b>Rp150.000</b>/SKS</span></div>
+    <div class="pg"><div>${cards}</div>${cart}</div></div></div></div>${modal}${s.toast?`<div class="tst">✅ <span>${s.toast}</span></div>`:''}</div>`;
+}
+S.portal={html:`<div class="split"><div class="browser"><div class="bbar"><i style="background:#f87171"></i><i style="background:#fbbf24"></i><i style="background:#4ade80"></i><div class="url">🔒&nbsp; ${HOST}/portal/semester-pendek/pilih</div><span class="ill">ILUSTRASI RANCANGAN</span></div><div class="bcontent"><div class="inner"></div></div></div><div class="side"></div></div>`,
+ f(lt,c,r){
+  const inner=r.querySelector('.inner');
+  const tP0=c[3]+.6,tP1=c[3]+2.0,tD=c[4]+.4,tK=c[4]+3.0;
+  const sel=[lt>=tP0,lt>=tP1,false,false];
+  const modal=lt>=tD+.35&&lt<tK+.6;
+  setHTML(inner,portalPage({sel,modal,sending:lt>=tK,toast:lt>=tK+.6?'KRS terkirim — 2 mata kuliah berstatus pending':''}));
+  const ts=inner.querySelector('.tst');if(ts){const p=P(lt,tK+.6,.3);ts.style.opacity=p;ts.style.transform=`translateY(${(1-p)*12}px)`;}
+  hl(r,'sp',R(r,'nav-sp'),win(lt,.6,c[1]),3);hl(r,'st',R(r,'strip'),win(lt,1.8,c[1]),3);
+  hl(r,'c0',R(r,'cc0'),win(lt,c[1]+.2,c[1]+3.2),3);hl(r,'c1',R(r,'cc1'),win(lt,c[1]+3.2,c[2]),3);
+  hl(r,'c2',R(r,'cc2'),win(lt,c[2]+.2,c[3]),3);hl(r,'c3',R(r,'cc3'),win(lt,c[2]+.2,c[3]),3);
+  hl(r,'ct',R(r,'cart'),win(lt,tP1+.6,c[4]),4);
+  cursor(r,lt,[[R(r,'pick0'),tP0],[R(r,'pick1'),tP1],[R(r,'daftar'),tD],[R(r,'kirim'),tK]]);
+  sideCards(r,lt,c,[{n:'1',t:'Menu Semester Pendek',b:'Muncul di portal mahasiswa bila ada periode SP berstatus <b>PLANNED</b> atau sesudahnya.'},
+   {n:'2',t:'Kartu kelas',b:'Kode &amp; nama MK, SKS, kelas, dosen, jadwal, sisa kursi, biaya, dan label <b>Baru</b> / <b>Ulang</b>.'},
+   {n:'3',t:'Tidak layak? Tetap tampil',b:'Abu-abu + alasan dari pemeriksaan kelayakan.',x:'<div class="warn">Mahasiswa perlu tahu <b>kenapa</b>, bukan sekadar tidak melihat kelasnya.</div>'},
+   {n:'4',t:'Keranjang',b:'Total SKS vs batas, total biaya, dan bentrok antar pilihan — dicek cepat di browser.'},
+   {n:'5',t:'Kirim = atomik',b:'Semua kelas lolos, atau semua ditolak. Server selalu memvalidasi ulang.',x:'<div class="good">Status awal setiap KRS: <b>pending</b></div>'}]);
+ }};
+
+/* 11 · alur */
+const AN={n1:[30,120,160,76],n2:[225,120,170,76],n3:[440,120,220,76],n4:[730,120,180,76],n5:[990,120,240,76],r1:[445,330,210,76],t1:[715,330,210,76],p1:[990,330,240,76]};
+const nd=(k,cls,inner)=>{const [x,y,w,h]=AN[k];return `<div class="nd ${cls}" data-a="${k}" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">${inner}</div>`;};
+const TOKP=[[110,158],[310,158],[550,158],[820,158],[820,368],[1110,368],[1110,158]];
+S.alur={html:`${ttl('Alur <span>KRS</span> setelah dikirim')}
+ ${svg('alr',`${pth('alr','e1','M190 158 L223 158')}${pth('alr','e2','M395 158 L438 158')}${pth('alr','e3','M660 158 L728 158','s')}${txt('e3',694,148,'✓','s',{fs:16})}
+  ${pth('alr','e4','M910 158 L988 158','s')}${txt('e4',949,148,'biaya 0','s',{fs:12.5})}
+  ${pth('alr','e5','M550 196 L550 328','d')}${txt('e5',560,268,'ditolak','d',{a:'start'})}
+  ${pth('alr','e6','M820 196 L820 328')}${txt('e6',830,268,'biaya &gt; 0','k',{a:'start'})}
+  ${pth('alr','e7','M925 368 L988 368')}${txt('e7',957,358,'bayar','k',{fs:12.5})}
+  ${pth('alr','e8','M1110 330 L1110 198','s',{w:3})}${txt('e8',1120,268,'lunas','s',{a:'start'})}`)}
+ ${nd('n1','','<b>📨 Kirim KRS</b><small>mahasiswa</small>')}
+ ${nd('n2','','<b style="color:#b45309">PENDING</b><small>menunggu persetujuan / pembayaran</small>')}
+ ${nd('n3','q','<b>Alur persetujuan aktif?</b><small>per mata kuliah · mis. Kaprodi</small>')}
+ ${nd('n4','q','<b>Ada biaya?</b><small>SKS × tarif</small>')}
+ ${nd('n5','','<b style="color:#166534;font-size:20px">ENROLLED ✓</b><small>absensi · ujian · nilai</small>')}
+ ${nd('r1','','<b style="color:#b91c1c">REJECTED</b><small>kursi dilepas · tanpa tagihan</small>')}
+ ${nd('t1','','<b>🧾 Tagihan dibuat</b><small>unpaid · jatuh tempo +3 hari</small>')}
+ ${nd('p1','','<b>💰 Pelunasan dicatat</b><small>oleh Keuangan · tagihan → paid</small>')}
+ <div class="box" data-a="note" style="left:30px;top:330px;width:380px;height:150px;padding:14px 16px;opacity:0"><div class="bx-h" style="font-size:16px">ℹ️ Satu sumber kebenaran</div><p class="bx-p" style="font-size:14px;margin-top:6px">“Menunggu persetujuan” dan “menunggu pembayaran” <b>tidak</b> disimpan sebagai status terpisah — diturunkan dari permintaan persetujuan &amp; tagihan.</p></div>
+ <div data-a="tok" style="position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 5px rgba(245,158,11,.3);opacity:0;z-index:5"></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));
+  fade(A(r,'n1'),P(lt,.3,.4),10);sk(r,'e1',P(lt,.8,.3));fade(A(r,'n2'),P(lt,1,.4),10);fade(A(r,'note'),P(lt,c[0]+2.5,.45),10);
+  sk(r,'e2',P(lt,c[1],.3));fade(A(r,'n3'),P(lt,c[1]+.2,.4),10);
+  sk(r,'e5',P(lt,c[2]+.2,.3));fade(A(r,'r1'),P(lt,c[2]+.4,.4),10);sk(r,'e3',P(lt,c[2]+2.6,.3));
+  fade(A(r,'n4'),P(lt,c[3],.4),10);sk(r,'e4',P(lt,c[3]+.4,.3));fade(A(r,'n5'),P(lt,c[3]+.6,.4),10);
+  sk(r,'e6',P(lt,c[3]+2.4,.3));fade(A(r,'t1'),P(lt,c[3]+2.6,.4),10);
+  sk(r,'e7',P(lt,c[4]+.3,.3));fade(A(r,'p1'),P(lt,c[4]+.5,.4),10);sk(r,'e8',P(lt,c[4]+1.8,.3));
+  const a=cueIdx(lt,c);
+  glow(A(r,'n2'),a===0);glow(A(r,'n3'),a===1);glow(A(r,'r1'),a===2&&lt<c[2]+2.6);glow(A(r,'n4'),a===3&&lt<c[3]+2.4);glow(A(r,'t1'),a===3&&lt>=c[3]+2.4);glow(A(r,'p1'),a===4&&lt<c[4]+1.8);glow(A(r,'n5'),a===4&&lt>=c[4]+1.8);
+  // token: [time, segment index range]
+  const tk=A(r,'tok');const legs=[[.8,1.6,0,1],[c[1]+.2,c[1]+1,1,2],[c[2]+2.6,c[2]+3.4,2,3],[c[3]+2.4,c[3]+3.2,3,4],[c[4]+.3,c[4]+1.1,4,5],[c[4]+1.8,c[4]+2.6,5,6]];
+  let pos=null,op=0;for(const [t0,t1,i,j] of legs){if(lt>=t0&&lt<t1+.5){pos=lt<t1?along([TOKP[i],TOKP[j]],ease(clamp((lt-t0)/(t1-t0)))):TOKP[j];op=P(lt,t0,.15)*(1-P(lt,t1+.1,.35));}}
+  if(pos){tk.style.left=pos[0]+'px';tk.style.top=pos[1]+'px';}tk.style.opacity=op;}};
+
+/* 12 · status */
+const KS=[['pending','t-w','Menunggu persetujuan dan/atau pembayaran','✅ <small>(sampai kedaluwarsa)</small>','✅','❌'],['enrolled','t-s','Terdaftar penuh','✅','✅','✅'],
+ ['rejected','t-d','Ditolak penyetuju','❌','❌','❌'],['dropped','t-n','Dibatalkan mahasiswa / admin / sistem','❌','❌','❌']];
+S.status={html:`${ttl('Status <span>KRS</span> &amp; pembatalan')}
+ <div class="box" data-a="tb" style="left:50px;top:74px;width:1180px;height:250px;overflow:hidden;opacity:0"><table class="tt" style="font-size:15.5px"><tr><th style="width:160px">Status</th><th>Arti</th><th style="width:170px" data-a="h1">Menahan kursi?</th><th style="width:140px" data-a="h2">Dihitung SKS?</th><th style="width:220px" data-a="h3">Absen · ujian · nilai?</th></tr>
+  ${KS.map((k,i)=>`<tr data-a="k${i}"><td><span class="tag ${k[1]}" style="font-size:14px">${k[0]}</span></td><td>${k[2]}</td><td>${k[3]}</td><td>${k[4]}</td><td>${k[5]}</td></tr>`).join('')}</table></div>
+ <div class="box" data-a="ca" style="left:50px;top:340px;width:580px;height:168px;padding:14px 18px;opacity:0;border-color:#86efac"><div class="bx-h">✅ Mahasiswa boleh batal sendiri bila…</div><ul class="li" style="margin-top:8px"><li>Pendaftaran masih dibuka (dan di dalam jendela)</li><li>KRS masih <b>pending</b>, atau <b>enrolled</b> tanpa biaya</li><li>Belum ada absensi, nilai, atau percobaan ujian</li></ul></div>
+ <div class="box" data-a="cb" style="left:650px;top:340px;width:580px;height:168px;padding:14px 18px;opacity:0;border-color:#fca5a5"><div class="bx-h">✗ Sudah dibayar → lewat admin</div><ul class="li" style="margin-top:8px"><li>Menyangkut pengembalian dana (refund) oleh Keuangan</li><li>Batal saat tagihan belum dibayar → jumlah tagihan disesuaikan, atau tagihan dibatalkan bila kosong</li></ul></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'tb'),P(lt,.2,.4),10);
+  [0,1].forEach(i=>fade(A(r,'k'+i),P(lt,.6+i*.4,.35),6));[2,3].forEach(i=>fade(A(r,'k'+i),P(lt,c[1]+.2+(i-2)*.5,.35),6));
+  const a=cueIdx(lt,c);[0,1,2,3].forEach(i=>A(r,'k'+i).classList.toggle('hi',(a===0&&i<2)||(a===1&&(i===1&&lt>=c[1]+4.5||i>=2&&lt<c[1]+4.5))));
+  fade(A(r,'ca'),P(lt,c[2],.45),12);fade(A(r,'cb'),P(lt,c[3],.45),12);glow(A(r,'ca'),a===2);glow(A(r,'cb'),a===3);}};
+
+/* 13 · bayar */
+S.bayar={html:`${ttl('Tagihan &amp; <span>pembayaran</span>')}
+ <div class="box" data-a="inv" style="left:50px;top:74px;width:560px;height:434px;padding:18px 20px;opacity:0">
+  <div style="display:flex;align-items:center"><div class="bx-h">🧾 Tagihan Semester Pendek</div><span class="tag" data-a="ist" style="margin-left:auto;font-size:13px"></span></div>
+  <div style="font-size:13px;color:var(--ink3);margin-top:3px">INV-SP-2027-0142 · Budi Santoso · periode <b>2026/2027 Pendek</b></div>
+  <div style="margin-top:14px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:15px" data-a="ln">
+   <div style="display:flex;justify-content:space-between"><span>IF302 Basis Data</span><b data-a="fx"></b></div></div>
+  <div style="display:flex;justify-content:space-between;font-size:17px;margin-top:10px"><b>Total</b><b data-a="tot">Rp450.000</b></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:14px" data-a="dt"><div><span style="color:var(--ink3)">Terbit</span><br><b>21 Jun 2027</b> <small style="color:var(--ink3)">(setelah disetujui)</small></div><div><span style="color:var(--ink3)">Jatuh tempo</span><br><b>24 Jun 2027</b> <small style="color:var(--ink3)">(+3 hari)</small></div></div>
+  <div data-a="pay" style="margin-top:14px;opacity:0"><div style="font-size:13px;font-weight:700;color:var(--ink3)">PEMBAYARAN · dicatat Keuangan</div>
+   <div style="display:flex;justify-content:space-between;font-size:14.5px;margin-top:6px;background:#f0fdf4;border-radius:9px;padding:8px 10px"><span>23 Jun · Transfer bank · Ref. 88123</span><b>Rp450.000</b></div>
+   <div class="bar" style="margin-top:9px;height:11px"><i data-a="pb" style="width:0"></i></div>
+   <div data-a="ev" style="margin-top:9px;font-size:14px;opacity:0">⚡ Peristiwa <span class="k">InvoicePaid</span> → KRS <span class="tag t-w">pending</span> → <span class="tag t-s">enrolled</span></div></div></div>
+ <div class="box" data-a="r0" style="left:640px;top:74px;width:590px;height:112px;padding:14px 18px;opacity:0"><div class="bx-h" style="font-size:16px">🧮 Kapan &amp; berapa</div><p class="bx-p" style="font-size:14px;margin-top:4px">Biaya = SKS × tarif per SKS (pengaturan kampus). Tagihan terbit <b>setelah persetujuan</b> → tidak pernah menagih MK yang ditolak. Tarif 0 → tanpa tagihan.</p></div>
+ <div class="box" data-a="r1" style="left:640px;top:198px;width:590px;height:150px;padding:14px 18px;opacity:0;border-color:#fca5a5"><div class="bx-h" style="font-size:16px">⏰ Lewat jatuh tempo, belum bayar</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:8px;font-size:14px"><div>1. KRS → <span class="tag t-n">dropped</span></div><div>2. Tagihan → <span class="tag t-n">cancelled</span></div><div>3. Kursi dilepas</div><div>4. Notifikasi ke mahasiswa</div></div>
+  <p class="bx-p" style="font-size:12.5px;margin-top:8px">Dijalankan saat pendaftaran diproses <b>dan</b> lewat jadwal harian — kapasitas tetap benar walau cron tidak jalan.</p></div>
+ <div class="box" data-a="r2" style="left:640px;top:360px;width:590px;height:148px;padding:14px 18px;opacity:0;border-color:#fcd34d"><div class="bx-h" style="font-size:16px">⚠️ Bayar setelah kedaluwarsa</div><p class="bx-p" style="font-size:14px;margin-top:4px">Pencatatan ditolak (409) — sistem tidak menimpa kursi yang sudah dilepas. Keuangan memutuskan: <b>daftar ulang</b> lewat akademik, atau <b>refund</b> manual.</p>
+  <div style="margin-top:8px"><span class="tag t-n" style="font-size:13px">Payment gateway · VA · QRIS — di luar cakupan fase ini</span></div></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'inv'),P(lt,.2,.45),0,-20);
+  setHTML(A(r,'fx'),lt>=c[0]+1.6?`3 SKS × Rp150.000 = <span style="color:var(--primary)">Rp450.000</span>`:'3 SKS × …');
+  A(r,'ln').style.boxShadow=lt>=c[0]+1&&lt<c[1]?'0 0 0 3px #f59e0b':'none';
+  A(r,'dt').style.background=lt>=c[1]+1.5&&lt<c[2]?'#fffbeb':'transparent';
+  fade(A(r,'r0'),P(lt,c[1],.45),0,20);
+  const paid=lt>=c[2]+2.2;const ist=A(r,'ist');ist.className='tag '+(paid?'t-s':'t-w');setTxt(ist,paid?'LUNAS':'BELUM LUNAS');
+  fade(A(r,'pay'),P(lt,c[2]+.4,.4),8);A(r,'pb').style.width=(P(lt,c[2]+1.2,1)*100)+'%';fade(A(r,'ev'),P(lt,c[2]+2.6,.4),6);
+  fade(A(r,'r1'),P(lt,c[3],.45),0,20);fade(A(r,'r2'),P(lt,c[4],.45),0,20);
+  const a=cueIdx(lt,c);glow(A(r,'r1'),a===3);glow(A(r,'r2'),a===4);}};
+
+/* 14 · rebutan */
+const seatGrid=k=>`<div class="seats" data-a="${k}">${Array.from({length:30},(_,i)=>`<div class="seat"></div>`).join('')}</div>`;
+S.rebutan={html:`${ttl('Rebutan <span>kursi terakhir</span>')}
+ <div class="box" data-a="L" style="left:50px;top:74px;width:570px;height:330px;opacity:0">
+  <div style="padding:14px 18px" class="bx-h" data-a="lh">Tanpa penguncian <span class="no" style="margin-left:6px">✗</span></div>
+  <div style="position:absolute;left:30px;top:70px" class="stu"><div class="a">🧑</div>Andi</div><div style="position:absolute;right:30px;top:70px" class="stu"><div class="a" style="background:#fce7f3">👩</div>Budi</div>
+  <div class="bub n" data-a="lb0" style="left:96px;top:84px">baca: 29 &lt; 30 ✓</div><div class="bub n" data-a="lb1" style="right:96px;top:84px">baca: 29 &lt; 30 ✓</div>
+  <div style="position:absolute;left:120px;top:160px">${seatGrid('ls')}</div>
+  <div data-a="lx" class="seat x" style="position:absolute;left:446px;top:224px;opacity:0"></div>
+  <div style="position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:20px;font-weight:800" data-a="lc">29 / 30</div></div>
+ <div class="box" data-a="R" style="left:660px;top:74px;width:570px;height:330px;opacity:0">
+  <div style="padding:14px 18px" class="bx-h">Dengan penguncian <span class="ok" style="margin-left:6px">✓</span></div>
+  <div style="position:absolute;left:30px;top:70px" class="stu"><div class="a">🧑</div>Andi</div><div style="position:absolute;right:30px;top:70px" class="stu"><div class="a" style="background:#fce7f3">👩</div>Budi</div>
+  <div class="bub w" data-a="rb0" style="left:96px;top:84px">🔒 kunci mhs → 🔒 kunci kelas</div><div class="bub n" data-a="rb1" style="right:96px;top:84px">⏳ menunggu kunci…</div>
+  <div class="bub g" data-a="rb2" style="left:96px;top:84px">✓ kursi ke-30</div><div class="bub r" data-a="rb3" style="right:96px;top:84px">409 · Kelas sudah penuh.</div>
+  <div style="position:absolute;left:120px;top:160px">${seatGrid('rs')}</div>
+  <div style="position:absolute;left:0;right:0;bottom:16px;text-align:center;font-size:20px;font-weight:800" data-a="rc">29 / 30</div></div>
+ <div class="box" data-a="B" style="left:50px;top:420px;width:1180px;height:88px;padding:0 20px;display:flex;align-items:center;gap:12px;font-size:15.5px;opacity:0">
+  <span style="font-size:26px">🧑</span><span style="white-space:nowrap">1 mahasiswa · sisa kuota <b>3 SKS</b> · 2 permintaan sekaligus</span><span>→</span><span class="tag t-n" style="font-size:13.5px">Kelas X · 3 SKS</span><span class="tag t-n" style="font-size:13.5px">Kelas Y · 3 SKS</span><span style="white-space:nowrap">→ diproses berurutan →</span><span class="tag t-s" style="font-size:13.5px">X ✓</span><span class="tag t-d" style="font-size:13.5px">Y ✗ SKS_LIMIT_EXCEEDED</span></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'L'),P(lt,.4,.45),12);fade(A(r,'R'),P(lt,.8,.45),12);
+  const setSeats=(k,n,extra)=>{[...A(r,k).children].forEach((s,i)=>{s.className='seat'+(i>=n?' f':'')+(extra&&i===29?' n':'');});};
+  const lOver=lt>=c[1]+2.6;setSeats('ls',lOver?30:29,lOver);fade(A(r,'lx'),P(lt,c[1]+3.2,.3),0);
+  setTxt(A(r,'lc'),lt>=c[1]+3.2?'31 / 30 ✗':'29 / 30');A(r,'lc').style.color=lt>=c[1]+3.2?'#dc2626':'';
+  fade(A(r,'lb0'),P(lt,c[1]+.8,.3)*(lt<c[2]?1:.0),0);fade(A(r,'lb1'),P(lt,c[1]+.8,.3)*(lt<c[2]?1:0),0);
+  A(r,'L').style.opacity=lt>=c[2]?.5:P(lt,.4,.45);glow(A(r,'L'),lt>=c[1]&&lt<c[2]);
+  const got=lt>=c[3]+.3;setSeats('rs',got?30:29,got);setTxt(A(r,'rc'),got?'30 / 30 ✓':'29 / 30');A(r,'rc').style.color=got?'#166534':'';
+  const ph2=lt>=c[2]+.8&&lt<c[3];fade(A(r,'rb0'),ph2?P(lt,c[2]+.8,.3):0,0);fade(A(r,'rb1'),ph2?P(lt,c[2]+2.2,.3):0,0);
+  fade(A(r,'rb2'),P(lt,c[3]+.3,.3),0);fade(A(r,'rb3'),P(lt,c[3]+3.2,.3),0);glow(A(r,'R'),lt>=c[2]&&lt<c[4]);
+  fade(A(r,'B'),P(lt,c[4],.45),12);}};
+
+/* 15 · bentrok */
+const HX=h=>230+(h-8)*180;
+const tb=(k,h0,h1,y,col,label)=>`<div class="tbar" data-a="${k}" style="left:${HX(h0)}px;width:${(h1-h0)*180}px;top:${y}px;background:${col}">${label}</div>`;
+S.bentrok={html:`${ttl('Deteksi <span>bentrok jadwal</span>')}
+ <div class="box" data-a="ax" style="left:50px;top:70px;width:1180px;height:208px;opacity:0">
+  ${[8,9,10,11,12,13].map(h=>`<div style="position:absolute;left:${HX(h)-50}px;top:12px;width:100px;text-align:center;font-size:12.5px;color:var(--ink3);font-weight:700">${String(h).padStart(2,'0')}.00</div><div style="position:absolute;left:${HX(h)-50}px;top:32px;bottom:44px;width:1px;border-left:1px dashed #e2e8f0;margin-left:50px"></div>`).join('')}
+  <div style="position:absolute;left:20px;top:46px;font-size:14px;font-weight:700" data-a="l1">Senin · contoh 1</div><span class="tag t-s" data-a="r1" style="position:absolute;left:20px;top:70px;opacity:0">✓ tidak bentrok</span>
+  ${tb('b1',9,11,44,'#2563eb','Basis Data 09–11')}${tb('b2',11,12,74,'#7c3aed','Statistika 11–12')}
+  <div style="position:absolute;left:20px;top:110px;font-size:14px;font-weight:700" data-a="l2">Senin · contoh 2</div><span class="tag t-d" data-a="r2" style="position:absolute;left:20px;top:134px;opacity:0">✗ bentrok</span>
+  ${tb('b3',9,11,108,'#2563eb','Basis Data 09–11')}${tb('b4',10,12,138,'#db2777','Jaringan 10–12')}
+  <div data-a="ovl" style="position:absolute;left:${HX(10)}px;width:180px;top:104px;height:64px;border-radius:8px;background:repeating-linear-gradient(45deg,rgba(220,38,38,.18) 0 8px,rgba(220,38,38,.05) 8px 16px);border:2px solid #dc2626;opacity:0"></div>
+  <div class="mono" data-a="fm" style="position:absolute;left:20px;right:20px;bottom:10px;font-size:13.5px;color:#334155;opacity:0">bentrok ⇔ hari sama ∧ mulai₁ &lt; selesai₂ ∧ mulai₂ &lt; selesai₁ ∧ rentang tanggal efektif beririsan</div></div>
+ ${[['🧑‍🎓','Mahasiswa','Dicek saat mendaftar (pemeriksaan #11)','t-d','Selalu memblokir'],['👩‍🏫','Dosen','Dicek saat admin menugaskan dosen / ubah jadwal','t-w','Blokir · bisa dipaksa + alasan'],
+   ['🚪','Ruangan','Dicek saat jadwal disimpan; nama ruang dinormalisasi','t-w','Dilewati bila kosong / online'],['🔄','Jadwal berubah','Kelas sudah punya peserta','t-i','Tidak diblokir: peringatan + notifikasi']]
+  .map((x,i)=>`<div class="box" data-a="k${i}" style="left:${50+i*299}px;top:294px;width:283px;height:214px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;opacity:0"><div style="font-size:30px">${x[0]}</div><div class="bx-h">${x[1]}</div><p class="bx-p" style="font-size:14px">${x[2]}</p><span class="tag ${x[3]}" style="margin-top:auto;align-self:flex-start;font-size:13px">${x[4]}</span></div>`).join('')}`,
+ f(lt,c,r,e){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'ax'),P(lt,.2,.4),10);fade(A(r,'fm'),P(lt,c[0]+2.5,.4),0);
+  const m=c[1]+(e[1]-c[1])*.45;
+  fade(A(r,'b1'),P(lt,c[1]+.2,.35),0,-14);fade(A(r,'b2'),P(lt,c[1]+.8,.35),0,-14);fade(A(r,'r1'),P(lt,c[1]+1.8,.35),0);
+  fade(A(r,'b3'),P(lt,m,.35),0,-14);fade(A(r,'b4'),P(lt,m+.6,.35),0,-14);fade(A(r,'ovl'),P(lt,m+1.4,.35),0);fade(A(r,'r2'),P(lt,m+1.4,.35),0);
+  ['l1','l2'].forEach((k,i)=>A(r,k).style.opacity=i===0?P(lt,c[1],.3):P(lt,m,.3));
+  const a=cueIdx(lt,c);[0,1,2,3].forEach(i=>{const el=A(r,'k'+i);fade(el,P(lt,c[2+i]-(i===0?0:0)+.1,.4),14);glow(el,a===i+2);});}};
+
+/* 16 · sepi */
+const SEPI=[['IF302','Basis Data',28,30],['IF210','Statistika',12,30],['IF305','Algoritma',9,25],['IF415','Kecerdasan Buatan',3,30],['IF330','Grafika Komputer',2,25]];
+S.sepi={html:`${ttl('Pembatalan <span>kelas sepi</span>')}
+ <div class="box" data-a="L" style="left:50px;top:74px;width:620px;height:360px;padding:14px 18px;opacity:0">
+  <div style="display:flex;align-items:center"><div class="bx-h" style="font-size:16px">Kelas · 2026/2027 Pendek</div><span class="tag t-w" style="margin-left:auto">REGISTRATION_CLOSED</span></div>
+  <div style="display:flex;flex-direction:column;gap:9px;margin-top:12px">${SEPI.map((s,i)=>`<div data-a="s${i}" style="display:grid;grid-template-columns:200px 1fr 64px 128px;gap:10px;align-items:center;font-size:14px;padding:6px 8px;border-radius:9px"><span><span class="mono" style="font-size:12px;color:var(--ink3)">${s[0]}</span> <b>${s[1]}</b></span>
+   <div style="position:relative;height:12px;border-radius:999px;background:#e2e8f0"><i style="position:absolute;left:0;top:0;bottom:0;border-radius:999px;width:${s[2]/s[3]*100}%;background:${s[2]<5?'#f59e0b':'#166534'}"></i><span style="position:absolute;left:${5/s[3]*100}%;top:-5px;bottom:-5px;border-left:2px solid #0f172a"></span></div>
+   <b style="text-align:right">${s[2]}/${s[3]}</b><span data-a="sb${i}">${s[2]<5?'<span class="tag t-w">⚠ &lt; min 5</span>':'<span class="tag t-s">OK</span>'}</span></div>`).join('')}</div>
+  <div style="font-size:12.5px;color:var(--ink3);margin-top:10px">│ garis hitam = minimum peserta</div></div>
+ <div class="box" data-a="rule" style="left:50px;top:448px;width:620px;height:60px;display:flex;align-items:center;gap:10px;padding:0 18px;font-size:15px;opacity:0;border-color:#fca5a5"><span class="no">✗</span>Ditolak bila kelas sudah punya <b>nilai</b> atau <b>percobaan ujian</b></div>
+ <div class="box" data-a="M" style="left:700px;top:74px;width:530px;height:200px;padding:14px 18px;opacity:0">
+  <div class="bx-h" style="font-size:16px">Batalkan Kelas — IF415 Kecerdasan Buatan</div>
+  <div style="font-size:12.5px;color:var(--ink3);margin-top:8px;font-weight:600">Alasan (wajib)</div><div class="fr"><div class="in" data-a="why" style="border-color:#166534"></div></div>
+  <div style="font-size:13.5px;margin-top:8px;color:var(--ink2)">Terdampak: <b>3 KRS</b> · <b>2 tagihan</b> (1 belum bayar, 1 lunas)</div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px"><span class="b o">Batal</span><span class="b red" data-a="btn">Batalkan Kelas</span></div></div>
+ <div style="position:absolute;left:700px;top:286px;width:530px;display:flex;flex-direction:column;gap:6px">${[['📄','3 KRS → <b>dropped</b>'],['🧾','Tagihan belum dibayar → <b>dibatalkan</b> / dikurangi'],['↩️','Tagihan lunas → ditandai <b>refund</b> untuk Keuangan'],['🔔','Notifikasi ke peserta &amp; dosen'],['📜','Audit: <span class="k">CLASS_CANCELLED</span> + alasan']].map((x,i)=>`<div class="cons" data-a="q${i}"><span class="e">${x[0]}</span><span>${x[1]}</span></div>`).join('')}</div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'L'),P(lt,.2,.45),10);
+  [3,4].forEach(i=>{A(r,'s'+i).style.background=lt>=c[0]+2.5&&lt<c[1]?'#fffbeb':'';});
+  fade(A(r,'M'),P(lt,c[1],.45),0,24);setTxt(A(r,'why'),typed('Peserta 3 orang, di bawah minimum 5.',lt,c[1]+1,2));
+  const cut=lt>=c[2]+.2;A(r,'btn').style.boxShadow=lt>=c[1]+3.4&&lt<c[2]+.5?'0 0 0 3px #f59e0b':'none';
+  A(r,'s3').style.opacity=cut?.45:1;A(r,'s3').style.textDecoration=cut?'line-through':'none';setHTML(A(r,'sb3'),cut?'<span class="tag t-d">Dibatalkan</span>':'<span class="tag t-w">⚠ &lt; min 5</span>');
+  [c[2]+.4,c[2]+4,c[3]+.2,c[3]+4.2,c[3]+5.6].forEach((t,i)=>fade(A(r,'q'+i),P(lt,t,.35),0,-20));
+  fade(A(r,'rule'),P(lt,c[4],.45),10);glow(A(r,'rule'),lt>=c[4]);}};
+
+/* 17 · kuliah */
+const ATT=[['Budi','HHHIHSHA','87,5%',1],['Rina','HHAAHIAH','62,5%',0]];
+S.kuliah={html:`${ttl('Perkuliahan: <span>absensi &amp; ujian</span>')}
+ <div class="box" data-a="L" style="left:50px;top:74px;width:640px;height:434px;padding:16px 20px;opacity:0">
+  <div style="display:flex;align-items:center"><div class="bx-h">📋 Absensi · IF302 Basis Data SP-A</div><span class="tag t-s" style="margin-left:auto">modul yang ada</span></div>
+  <div class="att" style="margin-top:14px;color:var(--ink3);font-weight:700;font-size:12.5px"><span></span>${[1,2,3,4,5,6,7,8].map(i=>`<span style="text-align:center">P${i}</span>`).join('')}<span></span></div>
+  ${ATT.map((a,j)=>`<div class="att" data-a="a${j}" style="margin-top:7px"><b>${a[0]}</b>${[...a[1]].map(x=>`<i class="a-${x}">${x}</i>`).join('')}<b data-a="p${j}" style="padding-left:8px;font-size:17px;opacity:0;color:${a[3]?'#166534':'#dc2626'}">${a[2]}</b></div>`).join('')}
+  <div style="font-size:12.5px;color:var(--ink3);margin-top:8px">H hadir · I izin · S sakit · A alpa</div>
+  <div data-a="fm" class="mono" style="margin-top:12px;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:10px 14px;font-size:13.5px;line-height:1.6;opacity:0">kehadiran = hadir ÷ pertemuan tercatat × 100<br><span style="color:#86efac">izin &amp; sakit dihitung hadir (standar: ya)</span><br>Budi: 7 ÷ 8 = 87,5% · Rina: 5 ÷ 8 = 62,5%</div>
+  <div data-a="lim" style="margin-top:12px;font-size:14px;opacity:0;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:9px 12px;color:#991b1b"><b>Rina &lt; 75%</b> → bila kampus mengaktifkan: tidak boleh mulai ujian akhir<br><i>“Kehadiran Anda 62,5% di bawah batas 75%.”</i></div>
+  <div data-a="noe" style="margin-top:10px;font-size:14.5px;font-weight:700;opacity:0">✗ Tidak ada nilai E otomatis — tetap keputusan dosen &amp; akademik</div></div>
+ <div class="box" data-a="R" style="left:720px;top:74px;width:510px;height:434px;padding:16px 20px;opacity:0">
+  <div style="display:flex;align-items:center"><div class="bx-h">📝 Ujian kelas SP</div><span class="tag t-s" style="margin-left:auto">reuse 100%</span></div>
+  <div style="display:flex;gap:14px;margin-top:14px;align-items:center;background:#f8fafc;border-radius:12px;padding:12px">${qrSvg(92,11)}<div><div style="font-size:16px;font-weight:700">UAS · Basis Data SP-A</div><div style="font-size:13.5px;color:var(--ink2);margin-top:3px">Jum, 20 Ags 2027 · 08.00–09.40</div><div style="font-size:13px;color:var(--ink3);margin-top:3px">Masuk dengan link / QR + NIM</div></div></div>
+  <ul class="li" style="margin-top:16px">${['Bank soal, pengacakan soal &amp; opsi','Jadwal mulai–selesai ditegakkan','Peserta = KRS <b>enrolled</b> saja — <b>pending</b> tidak bisa ikut','UTS opsional; banyak SP hanya punya UAS','Tidak ada “ujian khusus SP”'].map((t,i)=>`<li data-a="u${i}" style="opacity:0"><span>${t}</span></li>`).join('')}</ul></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'L'),P(lt,.2,.45),10);fade(A(r,'R'),P(lt,.8,.45),10);
+  fade(A(r,'fm'),P(lt,c[1]+.3,.4),8);fade(A(r,'p0'),P(lt,c[1]+2,.3),0);fade(A(r,'p1'),P(lt,c[1]+3,.3),0);
+  fade(A(r,'lim'),P(lt,c[2]+.3,.4),8);A(r,'a1').style.background=lt>=c[2]&&lt<c[3]?'#fef2f2':'';
+  fade(A(r,'noe'),P(lt,c[3],.4),8);
+  const a=cueIdx(lt,c);glow(A(r,'L'),a>=1&&a<=3);glow(A(r,'R'),a===4);
+  [0,1,2,3,4].forEach(i=>fade(A(r,'u'+i),P(lt,a>=4?c[4]+.4+i*1.1:1.3+i*.25,.35),6));}};
+
+/* 18 · nilai */
+const GS=[['draft','DRAFT','Dosen pengampu','input nilai (berulang)'],['grading','SUBMITTED','Dosen','serahkan per kelas'],['completed','FINALIZED 🔒','Bagian Akademik','finalisasi per kelas']];
+S.nilai={html:`${ttl('Penilaian &amp; <span>finalisasi</span>')}
+ ${svg('nil',`${pth('nil','f1','M450 150 L536 150','g')}${pth('nil','f2','M840 150 L926 150','g')}${pth('nil','bk','M690 110 C670 74 320 74 300 108','w',{dash:1})}${txt('bk',495,76,'kembalikan + alasan','w')}`)}
+ ${GS.map((g,i)=>`<div class="sn st-${g[0]}" data-a="n${i}" style="left:${150+i*390}px;top:112px;width:300px;padding:0 12px;text-align:center"><b>${g[1]}</b><span style="font-size:13.5px"><b style="font-family:inherit;font-size:13.5px;color:var(--ink1)">${g[2]}</b> · ${g[3]}</span></div>`).join('')}
+ <div class="box" data-a="vt" style="left:150px;top:214px;width:1080px;height:110px;overflow:hidden;opacity:0"><table class="tt" style="font-size:15px;text-align:center"><tr><th style="width:220px;text-align:left"></th><th style="text-align:center" data-a="c0">Draft</th><th style="text-align:center" data-a="c1">Submitted</th><th style="text-align:center" data-a="c2">Finalized</th></tr>
+  <tr><td style="text-align:left">Dihitung ke IP / IPK</td><td>❌</td><td>✅</td><td>✅</td></tr><tr><td style="text-align:left">Terlihat mahasiswa (SP)</td><td>❌</td><td>❌</td><td>✅</td></tr></table></div>
+ <div class="bub w" data-a="rq" style="left:478px;top:192px;font-size:13.5px">Semua peserta enrolled wajib bernilai — kosong → ditolak</div>
+ <div class="box" data-a="lk" style="left:150px;top:344px;width:480px;height:164px;padding:14px 18px;opacity:0"><div class="bx-h">🔒 Nilai final terkunci</div><p class="bx-p" style="margin-top:6px">Ubah nilai langsung → ditolak:<br><i>“Nilai sudah difinalisasi; ajukan revisi nilai.”</i></p><p class="bx-p" style="margin-top:6px">Revisi lewat alur persetujuan (mis. Kaprodi → Akademik). Tanpa alur: pemegang izin <span class="k">grades.approve</span>.</p></div>
+ <div class="box" data-a="rv" style="left:650px;top:344px;width:580px;height:164px;padding:14px 18px;opacity:0"><div style="display:flex;align-items:center"><div class="bx-h">📜 Revisi Nilai #RV-031</div><span class="tag t-s" style="margin-left:auto">disetujui</span></div>
+  <div style="display:grid;grid-template-columns:110px 1fr;gap:4px 10px;font-size:14px;margin-top:8px"><span style="color:var(--ink3)">Mahasiswa</span><span>Budi Santoso · IF302 SP-A</span><span style="color:var(--ink3)">Nilai</span><span><s>62 (BC)</s> → <b>70 (B)</b></span><span style="color:var(--ink3)">Alasan</span><span>Nilai tugas 3 belum terinput</span><span style="color:var(--ink3)">Disetujui</span><span>Kaprodi · 2 Sep 2027 10.14</span></div></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));
+  [0,1,2].forEach(i=>fade(A(r,'n'+i),P(lt,.4+i*.6,.4),12));sk(r,'f1',P(lt,.8,.3));sk(r,'f2',P(lt,1.4,.3));
+  const a=cueIdx(lt,c);const act=a===1?0:a===2?1:a===3?(lt<c[3]+3?1:2):a>=4?2:-1;
+  [0,1,2].forEach(i=>A(r,'n'+i).classList.toggle('act',i===act));
+  fade(A(r,'vt'),P(lt,c[1],.4),8);[0,1,2].forEach(i=>{const th=A(r,'c'+i);th.style.background=(a===1&&i===0)||(a===4&&i===2)?'#fef3c7':'';});
+  fade(A(r,'rq'),a===2?P(lt,c[2]+.6,.3):0,0);
+  sk(r,'bk',a===3?P(lt,c[3]+.4,.3):0);
+  fade(A(r,'lk'),P(lt,c[4]+4,.45),12);fade(A(r,'rv'),P(lt,c[5],.45),12);glow(A(r,'rv'),a===5);}};
+
+/* 19 · ipk */
+S.ipk={html:`${ttl('<span>IPS, IPK</span> &amp; transkrip')}
+ <div class="box" data-a="T" style="left:50px;top:74px;width:640px;height:196px;overflow:hidden;opacity:0"><table class="tt" style="font-size:15px"><tr><th>Periode</th><th>Mata kuliah</th><th>SKS</th><th>Nilai</th><th>Bobot</th></tr>
+  <tr data-a="t0"><td>2026/2027 Ganjil</td><td>Basis Data</td><td>3</td><td><b class="no">D</b></td><td>1,00</td></tr>
+  <tr data-a="t1"><td>2026/2027 Ganjil</td><td>Algoritma</td><td>3</td><td><b>B</b></td><td>3,00</td></tr>
+  <tr data-a="t2"><td>2026/2027 <b>Pendek</b></td><td>Basis Data <span class="tag t-w">U</span></td><td>3</td><td><b class="ok">B</b></td><td>3,00</td></tr></table></div>
+ <div class="box" data-a="ips" style="left:710px;top:74px;width:520px;height:90px;padding:12px 18px;opacity:0"><div class="bx-h" style="font-size:16px">IPS Pendek — semua nilai di periode itu</div><div class="mono" style="font-size:16px;margin-top:6px">(3 × 3,00) ÷ 3 = <b style="color:var(--primary)">3,00</b> <span style="font-size:13px;color:var(--ink3)">· MK ulang ikut</span></div></div>
+ <div class="box" data-a="pol" style="left:710px;top:176px;width:520px;height:94px;padding:12px 18px;opacity:0"><div class="bx-h" style="font-size:16px">IPK — 1 percobaan per mata kuliah</div><div style="display:flex;gap:10px;margin-top:8px;font-size:14.5px"><span class="tag t-s" style="font-size:14px">● Nilai tertinggi (standar)</span><span class="tag t-n" style="font-size:14px">○ Nilai terakhir</span></div></div>
+ <div class="box" data-a="w" style="left:50px;top:288px;width:360px;height:220px;padding:14px 18px;opacity:0;border-color:#fca5a5"><div class="bx-h" style="font-size:16px">✗ Dijumlah semua</div><div class="mono" style="font-size:14.5px;margin-top:10px">(3×1 + 3×3 + 3×3) ÷ 9</div><div style="font-size:44px;font-weight:800;color:#dc2626;margin-top:4px">2,33</div><div class="bx-p" style="font-size:14px">Total SKS <b>9</b> — Basis Data terhitung <b>dua kali</b></div></div>
+ <div class="box" data-a="g" style="left:430px;top:288px;width:360px;height:220px;padding:14px 18px;opacity:0;border-color:#86efac"><div class="bx-h" style="font-size:16px">✓ Kebijakan nilai tertinggi</div><div class="mono" style="font-size:14.5px;margin-top:10px">(3×3 + 3×3) ÷ 6</div><div style="font-size:44px;font-weight:800;color:#166534;margin-top:4px">3,00</div><div class="bx-p" style="font-size:14px">Total SKS <b>6</b> — percobaan D tidak dihitung</div></div>
+ <div class="box" data-a="tr" style="left:810px;top:288px;width:420px;height:220px;padding:14px 16px;opacity:0"><div class="bx-h" style="font-size:16px">📄 Transkrip</div>
+  <div class="mono" style="font-size:13px;line-height:1.65;margin-top:8px;white-space:pre">2026/2027 Ganjil
+  IF302 Basis Data      3  <span style="color:var(--ink3)">(D)</span> <span style="color:var(--ink3);font-size:11px">← diganti SP</span>
+  IF305 Algoritma       3   B
+2026/2027 Pendek
+  IF302 Basis Data <span style="color:#a16207;font-weight:700">[U]</span>  3   B
+<b>Total SKS 6 · IPK 3,00</b></div></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'T'),P(lt,.2,.4),10);
+  const a=cueIdx(lt,c);[0,1,2].forEach(i=>A(r,'t'+i).classList.toggle('hi',(a===0&&i===2)||(a===2&&(lt<c[2]+5?i<2:i===2))));
+  fade(A(r,'ips'),P(lt,.8,.4),0,20);fade(A(r,'pol'),P(lt,c[1],.4),0,20);
+  fade(A(r,'w'),P(lt,c[3],.45),14);fade(A(r,'g'),P(lt,c[4],.45),14);fade(A(r,'tr'),P(lt,c[5],.45),14);
+  glow(A(r,'ips'),a===0);glow(A(r,'pol'),a===1);glow(A(r,'w'),a===3);glow(A(r,'g'),a===4);glow(A(r,'tr'),a===5);}};
+
+/* 20 · notif */
+const NT=[['📢','Pendaftaran SP 2026/2027 dibuka','Daftar sebelum 30 Jun 2027',0],['✅','KRS Basis Data disetujui','Silakan lanjut ke pembayaran',0],['🧾','Tagihan Rp450.000 terbit','Jatuh tempo 24 Jun 2027',1],['💰','Pembayaran dikonfirmasi','KRS Basis Data kini terdaftar',1],
+ ['🗓️','Jadwal Statistika berubah','Selasa 10.00 → 13.00',0],['❌','Kelas Grafika Komputer dibatalkan','Peserta di bawah minimum',1],['📝','Nilai Semester Pendek dirilis','IPS Pendek 3,00',0]];
+const EVS=[['Mahasiswa',['Pendaftaran dibuka','KRS disetujui / ditolak',['Tagihan terbit',1],['Pembayaran dikonfirmasi',1],'Terdaftar',['Pembayaran kedaluwarsa',1],'Jadwal berubah',['Kelas dibatalkan',1],'Ujian dipublish','Nilai dirilis','Nilai direvisi']],
+ ['Dosen',['Ditugaskan mengajar','Ringkasan peserta baru','Pengingat absensi','Tenggat nilai']],
+ ['Akademik & Keuangan',['Nilai diserahkan dosen','Ringkasan pendaftaran harian','Nilai belum final','Perlu refund']]];
+S.notif={html:`${ttl('<span>Notifikasi</span>')}
+ <div data-a="ph" style="position:absolute;left:60px;top:70px;width:330px;height:446px;border-radius:30px;background:#0f172a;padding:12px;opacity:0"><div style="width:100%;height:100%;border-radius:20px;background:#f1f5f9;overflow:hidden;position:relative">
+  <div style="height:34px;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:var(--ink2);border-bottom:1px solid var(--border);background:#fff">🔔 Notifikasi · Budi</div>
+  <div data-a="lst" style="position:absolute;left:8px;right:8px;top:42px;display:flex;flex-direction:column;gap:7px"></div></div></div>
+ <div class="row g8" data-a="chn" style="position:absolute;left:430px;top:72px;opacity:0"><span class="tag t-n" style="font-size:14px">📱 In-app</span><span class="tag t-n" style="font-size:14px">✉️ Email</span><span class="tag t-n" style="font-size:14px">🔔 Push</span><span style="font-size:13px;color:var(--ink3);margin-left:6px">+ WhatsApp / SMS bila diaktifkan kampus · template per kampus</span></div>
+ ${EVS.map((g,j)=>`<div class="box" data-a="g${j}" style="left:430px;top:${[112,330,422][j]}px;width:800px;height:${[206,82,86][j]}px;padding:12px 16px;opacity:0"><div class="bx-h" style="font-size:15.5px;margin-bottom:8px">${['🧑‍🎓','👩‍🏫','🏛️'][j]} ${g[0]}</div><div>${g[1].map((e,i)=>{const w=Array.isArray(e);return `<span class="ev" data-a="e${j}_${i}">${w?e[0]:e}${w?' <span class="w">WAJIB</span>':''}</span>`;}).join('')}</div></div>`).join('')}`,
+ f(lt,c,r,e){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'ph'),P(lt,.2,.45),14);fade(A(r,'chn'),P(lt,c[0]+2,.4),0);
+  const ts=[c[1]+.3,c[1]+1.6,c[1]+3,c[1]+4.4,c[2]+.3,c[2]+1.8,c[2]+3.2];let n=0;ts.forEach(t=>{if(lt>=t)n++;});
+  const vis=NT.slice(0,n).reverse().slice(0,6);
+  setHTML(A(r,'lst'),vis.map((x,i)=>`<div class="ntf" ${i===0?'data-a="new"':''}><span class="e">${x[0]}</span><div><b>${x[1]}</b><small>${x[2]}</small></div></div>`).join(''));
+  const nw=A(r,'new');if(nw){const p=P(lt,ts[n-1],.35);nw.style.opacity=p;nw.style.transform=`translateY(${(1-p)*-14}px)`;}
+  EVS.forEach((g,j)=>{fade(A(r,'g'+j),P(lt,j===0?c[1]:c[3]+(j-1)*1.2,.4),12);
+   g[1].forEach((ev,i)=>{const el=A(r,`e${j}_${i}`);let t=j===0?(i<5?c[1]+.4+i*.8:c[2]+.3+(i-5)*.6):c[3]+.4+(j-1)*1.2+i*.35;fade(el,P(lt,t,.3),6);
+    el.style.boxShadow=(Array.isArray(ev)&&lt>=c[4])?'0 0 0 2px #dc2626':'none';});});}};
+
+/* 21 · aman */
+S.aman={html:`${ttl('Keamanan &amp; <span>audit</span>')}
+ <div class="box" data-a="q0" style="left:50px;top:74px;width:580px;height:210px;padding:14px 18px;opacity:0"><div class="bx-h">🛡️ Dua lapis pemeriksaan di server</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:13.5px;text-align:center">
+   <div style="flex:1;background:#f1f5f9;border-radius:10px;padding:10px 6px"><b>Permintaan</b><br>ubah nilai</div><span>→</span>
+   <div style="flex:1.3;background:#dbeafe;border-radius:10px;padding:10px 6px"><b>1 · Izin peran</b><br><span class="k" style="font-size:11px">grades.update</span></div><span>→</span>
+   <div style="flex:1.3;background:#dcfce7;border-radius:10px;padding:10px 6px"><b>2 · Kepemilikan</b><br>pengampu kelas ini?</div><span>→</span>
+   <div style="flex:.8;background:#f0fdf4;border-radius:10px;padding:10px 6px"><b class="ok">✓</b><br>data</div></div>
+  <p class="bx-p" style="margin-top:14px;font-size:14px">Tombol yang disembunyikan di tampilan <b>bukan</b> pengaman — server selalu memeriksa.</p></div>
+ <div class="box" data-a="q1" style="left:650px;top:74px;width:580px;height:210px;padding:14px 18px;opacity:0"><div class="bx-h">🔑 Kepemilikan data</div>
+  <ul class="li" style="margin-top:12px"><li><span>👩‍🏫 Dosen → hanya kelas yang <b>diampu</b>; kelas lain dijawab “tidak ditemukan” (404)</span></li><li><span>🧑‍🎓 Mahasiswa → identitas diambil dari <b>sesi login</b>, tidak pernah dari isian</span></li><li><span>📄 KRS, nilai &amp; tagihan orang lain tidak bisa diakses</span></li></ul></div>
+ <div class="box" data-a="q2" style="left:50px;top:298px;width:580px;height:210px;padding:14px 18px;opacity:0"><div class="bx-h">🏫 Isolasi kampus &amp; status terlindungi</div>
+  <div style="display:flex;gap:10px;margin-top:12px;align-items:center"><div style="flex:1;border:2px solid #86efac;border-radius:10px;padding:10px;text-align:center;font-size:14px"><b>Kampus A</b><br>periode · KRS · nilai</div><div style="width:8px;align-self:stretch;background:repeating-linear-gradient(0deg,#dc2626 0 8px,transparent 8px 14px);border-radius:4px"></div><div style="flex:1;border:2px solid #93c5fd;border-radius:10px;padding:10px;text-align:center;font-size:14px"><b>Kampus B</b><br>periode · KRS · nilai</div></div>
+  <p class="bx-p" style="margin-top:12px;font-size:14px">Status <b>lunas</b>, <b>final</b>, status periode &amp; KRS diset oleh sistem — <b>tidak pernah</b> diterima langsung dari input.</p></div>
+ <div class="box" data-a="q3" style="left:650px;top:298px;width:580px;height:210px;padding:14px 18px;opacity:0"><div class="bx-h">📜 Audit log</div>
+  <table class="tt" style="font-size:12.5px;margin-top:8px"><tr><th>Waktu</th><th>Siapa</th><th>Aksi</th><th>Sebelum → sesudah</th><th>Alasan</th></tr>
+   <tr><td>25 Ags 14.02</td><td>akademik</td><td class="mono">GRADE_FINALIZED</td><td>submitted → finalized</td><td>—</td></tr>
+   <tr><td>26 Ags 09.10</td><td>akademik</td><td class="mono">STATUS_CHANGED</td><td>grading → completed</td><td>Semua nilai final</td></tr>
+   <tr><td>2 Sep 10.14</td><td>kaprodi</td><td class="mono">GRADE_CHANGED</td><td>62 → 70</td><td>Nilai tugas 3…</td></tr></table></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));const a=cueIdx(lt,c);[0,1,2,3].forEach(i=>{const el=A(r,'q'+i);fade(el,P(lt,c[i]+.1,.45),14);glow(el,a===i);});}};
+
+/* 22 · dashboard */
+S.dashboard={html:`${ttl('Dashboard &amp; <span>laporan</span>')}
+ <div class="box" data-a="D" style="left:40px;top:70px;width:830px;height:440px;padding:16px 18px;opacity:0;background:#f8fafc">
+  <div style="display:flex;align-items:center;gap:10px"><div style="font-size:20px;font-weight:800">2026/2027 Pendek</div><span class="tag t-s">REGISTRATION_OPEN ▾ Ubah Status</span><span class="tag t-w" style="margin-left:auto">ILUSTRASI RANCANGAN</span></div>
+  <div style="font-size:13px;color:var(--ink2);margin-top:3px">Pendaftaran 21–30 Jun 2027 · Kuliah 5 Jul – 20 Ags 2027 · Maks 9 SKS</div>
+  <div data-a="st" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px;border-radius:12px">${[['Mahasiswa terdaftar','142'],['KRS enrolled','118'],['Menunggu persetujuan / bayar','24'],['Tagihan lunas / belum','101 / 17'],['Kelas / dosen','18 / 12']].map(s=>`<div class="stat2"><span>${s[0]}</span><b>${s[1]}</b></div>`).join('')}</div>
+  <div style="background:#fff;border:1px solid #fcd34d;border-radius:12px;margin-top:12px;padding:8px 10px"><div style="font-weight:700;font-size:14.5px;padding:4px 6px">⚠️ Perlu tindakan</div>
+   ${[['3 kelas di bawah minimum peserta',''],['2 kelas hampir penuh (≥ 90%)',''],['4 kelas belum punya dosen / jadwal',''],['7 mahasiswa kehadiran &lt; 75%','ONGOING'],['5 kelas nilai belum diserahkan · 2 belum final','GRADING']].map((x,i)=>`<div class="act" data-a="x${i}">• ${x[0]}${x[1]?` <span class="tag t-n" style="font-size:11px">saat ${x[1]}</span>`:''}<span class="lnk">lihat →</span></div>`).join('')}</div>
+  <div style="display:flex;gap:6px;margin-top:10px">${['Kelas','Pendaftaran','Pembayaran','Nilai','Riwayat Status'].map((t,i)=>`<span class="tag ${i?'t-n':'t-s'}" style="font-size:12.5px">${t}</span>`).join('')}</div></div>
+ <div class="box" data-a="RP" style="left:890px;top:70px;width:340px;height:440px;padding:16px 18px;opacity:0"><div class="bx-h">📊 5 laporan SP</div>
+  <div style="display:flex;flex-direction:column;gap:9px;margin-top:12px">${['Pendaftaran','Kelas','Nilai','Keuangan','Ringkasan'].map((t,i)=>`<div data-a="rp${i}" style="display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14.5px;opacity:0"><b>${t}</b><span class="tag t-n" style="margin-left:auto;font-size:11.5px">CSV</span><span class="tag t-n" style="font-size:11.5px">PDF</span></div>`).join('')}</div>
+  <p class="bx-p" style="font-size:13px;margin-top:12px">Filter periode wajib, prodi opsional. Setiap ekspor tercatat di audit log.</p></div>`,
+ f(lt,c,r,e){fade(A(r,'ttl'),P(lt,0,.4));fade(A(r,'D'),P(lt,.2,.45),12);
+  A(r,'st').style.boxShadow=lt>=c[1]&&lt<c[2]?'0 0 0 3px #f59e0b':'none';
+  const L=Math.max(4,e[2]-c[2]-.5);[0,1,2,3,4].forEach(i=>A(r,'x'+i).style.background=lt>=c[2]+i*L/5&&lt<c[2]+(i+1)*L/5?'#fef3c7':'');
+  fade(A(r,'RP'),P(lt,c[3],.45),0,24);[0,1,2,3,4].forEach(i=>fade(A(r,'rp'+i),P(lt,c[3]+.5+i*.6,.35),0,12));}};
+
+/* 23 · rencana */
+const PH=[['0','Prasyarat umum','akun dosen · dosen↔kelas · label periode',50,80],['1','Periode & penawaran','status · kelas · jadwal · pengaturan',50,170],['2','Penilaian & transkrip','status nilai · revisi · IPK efektif',50,260],
+ ['3','KRS mandiri & persetujuan','kelayakan · approval · portal',400,170],['4','Pembayaran','tagihan · catat bayar · kedaluwarsa',700,170],['6','Dashboard · laporan · notifikasi','',980,110],['7','Mobile (opsional)','',980,230],['5','Prasyarat MK (opsional)','kapan saja setelah Fase 1',400,280]];
+S.rencana={html:`${ttl('Rencana <span>implementasi</span>')}
+ ${svg('ren',`${pth('ren','a0','M310 117 C350 117 360 200 398 205','g')}${pth('ren','a1','M310 207 L398 207','g')}${pth('ren','a2','M310 297 C350 297 360 214 398 209','g')}
+  ${pth('ren','a3','M660 207 L698 207','g')}${pth('ren','a4','M960 200 C970 180 960 150 978 147','g')}${pth('ren','a5','M960 214 C970 234 960 262 978 267','g')}`)}
+ ${PH.map((p,i)=>`<div class="box ph" data-a="p${i}" style="left:${p[3]}px;top:${p[4]}px;${p[0]==='5'?'border-style:dashed;':''}"><div class="t"><span class="num" style="min-width:24px;height:24px;font-size:12.5px">${p[0]}</span>${p[1]}</div>${p[2]?`<small>${p[2]}</small>`:''}</div>`).join('')}
+ <div class="box" data-a="NB" style="left:50px;top:380px;width:1180px;height:128px;padding:14px 18px;opacity:0"><div class="bx-h" style="font-size:16px">🚫 Sengaja tidak dibangun</div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">${['Tabel khusus SP (short_*)','Tabel tahun akademik','Tabel penawaran kelas','Payment gateway · VA · QRIS','Daftar tunggu kelas penuh','Lebih dari 1 SP per tahun','LMS khusus SP','Komponen nilai berbobot khusus SP','WebSocket'].map((t,i)=>`<span class="tag t-n strike" data-a="nb${i}" style="font-size:14px;padding:5px 12px;opacity:0">${t}</span>`).join('')}</div></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));
+  PH.forEach((_,i)=>fade(A(r,'p'+i),P(lt,.3+i*.25,.4),12));for(let i=0;i<6;i++)sk(r,'a'+i,P(lt,1+i*.25,.3));
+  const a=cueIdx(lt,c);const L=[[],[0],[1,2,3,4],[7,5,6],[]][Math.max(0,a)]||[];
+  let on=L;if(a===2){const k=Math.max(0,Math.min(3,Math.floor((lt-c[2])/2)));on=[[1],[2],[3],[4]][k];}
+  PH.forEach((_,i)=>glow(A(r,'p'+i),on.includes(i)));
+  fade(A(r,'NB'),P(lt,c[4],.45),12);for(let i=0;i<9;i++)fade(A(r,'nb'+i),P(lt,c[4]+.5+i*.45,.3),6);}};
+
+/* 24 · ringkasan */
+const SUM=[['📅','<b>Periode</b> berjenis pendek · 8 status · dikendalikan Bagian Akademik · aturan dari pengaturan kampus'],
+ ['✅','<b>Pendaftaran</b>: 12 pemeriksaan → pending → persetujuan → tagihan → enrolled'],
+ ['📝','<b>Perkuliahan &amp; nilai</b>: absensi &amp; ujian reuse · draft → submitted → finalized · IPK satu percobaan per MK']];
+S.ringkasan={html:`${ttl('Ringkasan')}
+ <div style="position:absolute;left:90px;right:90px;top:90px;display:flex;flex-direction:column;gap:16px">${SUM.map((s,i)=>`<div class="check" data-a="s${i}"><span class="b2">${i+1}</span><span class="e">${s[0]}</span><span>${s[1]}</span></div>`).join('')}</div>
+ <div data-a="fin" style="position:absolute;inset:0;background:linear-gradient(135deg,#166534,#14532d);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:14px;opacity:0">
+  <img src="logo-atmajaya.gif" style="width:84px;height:84px;object-fit:contain;background:#fff;border-radius:50%;padding:8px">
+  <div style="font-size:42px;font-weight:800">Terima kasih</div>
+  <div style="font-size:19px;opacity:.92">Rincian lengkap: <span class="mono" style="background:rgba(255,255,255,.15);padding:3px 10px;border-radius:7px">docs/semester-pendek/</span></div>
+  <div style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;max-width:980px;margin-top:6px">${['README','aturan-bisnis','peran-dan-izin','desain-database','desain-api','penilaian-dan-transkrip','pembayaran-dan-notifikasi','frontend-dan-mobile','keamanan-audit-integritas','pengujian-dan-penerimaan','rencana-implementasi'].map(t=>`<span class="mono" style="font-size:13px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:4px 11px">${t}.md</span>`).join('')}</div>
+  <div style="font-size:14px;opacity:.75;margin-top:6px">Rancangan — fitur belum diterapkan</div></div>`,
+ f(lt,c,r){fade(A(r,'ttl'),P(lt,0,.4));[1,2,3].forEach((k,i)=>fade(A(r,'s'+i),P(lt,c[k]-.1,.45),0,-30));A(r,'fin').style.opacity=P(lt,c[4]-.2,.6);}};
+
+// ---------- engine ----------
+const roots={};
+TL.scenes.forEach(s=>{const d=document.createElement('section');d.className='scene';d.innerHTML=S[s.id].html;STAGE.appendChild(d);roots[s.id]=d;});
+const CAP=document.getElementById('capText'),CHIP=document.getElementById('chip'),PROG=document.querySelector('#prog i');
+let cur=null;
+window.render=function(t){
+  const n=TL.scenes.length;let k=TL.scenes.findIndex(s=>t>=s.start&&t<s.start+s.dur);if(k<0)k=n-1;
+  const sc=TL.scenes[k],lt=t-sc.start,root=roots[sc.id];
+  if(cur!==root){if(cur){cur.style.visibility='hidden';cur.style.opacity=0;}root.style.visibility='visible';cur=root;}
+  root.style.opacity=k===0?P(lt,0,.6):P(lt,0,.45);
+  CUR.style.opacity=0;
+  const c=sc.lines.map(l=>l.start-sc.start),e=sc.lines.map(l=>l.end-sc.start);
+  S[sc.id].f(lt,c,root,e);
+  let li=-1;sc.lines.forEach((l,i)=>{if(t>=l.start-.12)li=i});
+  const txt=li>=0?sc.lines[li].cap:'';if(CAP.textContent!==txt)CAP.textContent=txt;
+  CAP.style.opacity=li>=0?P(t,sc.lines[li].start-.12,.2):0;
+  CHIP.textContent=k===0?'Rancangan Fitur':`Bagian ${k}/${n-1} · ${sc.title}`;
+  PROG.style.width=(t/TL.total*100)+'%';
+};
+window.ready=Promise.all([...document.images].map(i=>i.complete?1:new Promise(r=>{i.onload=i.onerror=r})));
+const q=new URLSearchParams(location.search);
+if(q.has('t'))ready.then(()=>render(+q.get('t')));
+else if(q.has('play')){const t0=performance.now()-(+q.get('play')||0)*1000;const loop=()=>{render((performance.now()-t0)/1000%TL.total);requestAnimationFrame(loop)};ready.then(loop);}
+</script>
+</body>
+</html>
