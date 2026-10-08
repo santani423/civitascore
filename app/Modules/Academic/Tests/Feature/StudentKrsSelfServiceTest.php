@@ -181,7 +181,11 @@ test('a class whose schedule overlaps an existing KRS class is rejected', functi
     $this->withHeaders(portalHeaders($world))
         ->postJson('/api/v1/student/krs/items', ['class_section_id' => $clashing->id])
         ->assertApiError(409)
-        ->assertJsonPath('message', 'Jadwal bentrok dengan mata kuliah Pemrograman Web (Senin 08:00–10:30 (Lab 1)).');
+        ->assertJsonPath('message', 'Jadwal bentrok dengan mata kuliah Pemrograman Web (Senin 08:00–10:30 (Lab 1)).')
+        ->assertJsonPath('errors.code', 'SCHEDULE_CONFLICT')
+        ->assertJsonPath('errors.conflicts.0.type', 'student')
+        ->assertJsonPath('errors.conflicts.0.class_section_id', $first->id)
+        ->assertJsonPath('errors.conflicts.0.start_time', '08:00');
 
     // Bersentuhan di ujung (10:30) bukan bentrok.
     $this->withHeaders(portalHeaders($world))->postJson('/api/v1/student/krs/items', ['class_section_id' => $adjacent->id])->assertApiSuccess(201);

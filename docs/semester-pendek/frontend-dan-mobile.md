@@ -86,7 +86,7 @@ Kartu "Perlu tindakan" muncul sesuai status term (mis. nilai hanya relevan di GR
 
 - `ClassSectionsPage` mendapat tombol "Buka Kelas" (modal: pilih MK — difilter prodi —, kode kelas, kapasitas, minimum peserta).
 - Kolom tambahan saat melihat term SP: Peserta (enrolled/pending/kapasitas, bar), Dosen, Jadwal ringkas, Status (Aktif/Batal/Di bawah minimum).
-- `ClassSectionDetailPage`: panel **Dosen Pengampu** (pilih dari `LecturersPage` data, peran koordinator/anggota) dan panel **Jadwal** (baris hari + jam + ruang, tambah/hapus). Simpan menampilkan konflik dari 409 secara inline per baris; checkbox "Paksa" + alasan hanya untuk bentrok dosen. Peringatan `student_conflicts` tampil sebagai `Alert` warning setelah simpan.
+- `ClassSectionDetailPage`: ✅ modal **Dosen & Jadwal** (`ClassTeachingModal`, R-01/R-02) — satu dosen pengampu dan baris hari + jam + ruang (tambah/hapus). Simpan menampilkan konflik dari 409 secara inline per baris (`errors.conflicts[].row`); checkbox "Paksa" + alasan hanya untuk bentrok dosen. Peringatan `student_conflicts` tampil sebagai `Alert` warning setelah simpan.
 - Aksi "Batalkan Kelas" (modal, alasan wajib, menampilkan jumlah peserta & tagihan terdampak sebelum konfirmasi).
 
 ### 2.6 Pendaftaran

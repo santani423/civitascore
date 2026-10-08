@@ -11,6 +11,7 @@
             <directory>app/Modules/FileManagement/Tests/Unit</directory>
             <directory>app/Modules/Notification/Tests/Unit</directory>
             <directory>app/Modules/ApprovalWorkflow/Tests/Unit</directory>
+            <directory>app/Modules/Academic/Tests/Unit</directory>
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>

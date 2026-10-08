@@ -5,6 +5,7 @@ namespace Modules\Academic\Services;
 use App\Support\Http\Exceptions\ConflictException;
 use Illuminate\Support\Facades\DB;
 use Modules\Academic\Enums\KrsItemStatus;
+use Modules\Academic\Models\AcademicTerm;
 use Modules\Academic\Models\ClassSchedule;
 use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Models\KrsItem;
@@ -15,26 +16,25 @@ use Modules\AuditLog\Services\AuditLogService;
 
 /**
  * Dosen pengampu & jadwal mingguan kelas (PUT class-sections/{id}/teaching,
- * Tahap 2.2). Bentrok dihitung terhadap kelas lain di periode yang sama:
+ * Tahap 2.2). Bentrok dihitung terhadap kelas aktif lain di periode yang
+ * sama, tanpa tanggal efektif: tanggal term dilarang beririsan, jadi slot
+ * dua periode berbeda tidak mungkin bentrok (rekonsiliasi R-02).
  *
  * - bentrok antarjadwal kelas ini sendiri dan bentrok ruangan selalu
  *   ditolak;
  * - bentrok dosen (dosen sama, jam beririsan) boleh dipaksa dengan
  *   `force` + alasan — dicatat di audit log (`forced_override`, kolom
  *   reason) dan activity log;
- * - ditolak = 409 `errors.code = SCHEDULE_CONFLICT` + `errors.conflicts[]`.
+ * - ditolak = 409 `errors.code = SCHEDULE_CONFLICT` + `errors.conflicts[]`;
+ *   setiap konflik menunjuk baris jadwal kiriman (`row`, mulai 0) supaya UI
+ *   bisa menandainya per baris.
  *
- * Ruangan dinormalkan (trim, spasi tunggal) dan dibandingkan tanpa
- * membedakan huruf besar/kecil; ruangan kosong atau daring tidak pernah
- * bentrok.
+ * Ruangan disimpan dalam bentuk normal (ClassSchedule::normalizeRoom()) dan
+ * dibandingkan tanpa membedakan huruf besar/kecil; ruangan kosong atau
+ * daring tidak pernah bentrok (ClassSchedule::roomKey()).
  */
 class ClassTeachingService
 {
-    public const CONFLICT_CODE = 'SCHEDULE_CONFLICT';
-
-    /** Ruangan yang tidak menempati ruang fisik. */
-    private const VIRTUAL_ROOMS = ['online', 'daring'];
-
     public function __construct(private readonly AuditLogService $audit) {}
 
     /**
@@ -43,28 +43,26 @@ class ClassTeachingService
      */
     public function update(ClassSection $classSection, ?Lecturer $lecturer, array $rows, bool $force = false, ?string $reason = null): array
     {
-        $rows = array_map(fn (array $row): array => [
+        $rows = array_values(array_map(fn (array $row): array => [
             'day_of_week' => (int) $row['day_of_week'],
             'start_time' => $row['start_time'],
             'end_time' => $row['end_time'],
-            'room' => self::normalizeRoom($row['room'] ?? null),
-        ], $rows);
+            'room' => ClassSchedule::normalizeRoom($row['room'] ?? null),
+        ], $rows));
 
         return DB::transaction(function () use ($classSection, $lecturer, $rows, $force, $reason): array {
-            // Mengunci dosen menyerialkan penugasan paralel untuk dosen yang
-            // sama, supaya dua permintaan tidak sama-sama lolos cek bentrok.
-            ClassSection::query()->whereKey($classSection->id)->lockForUpdate()->first();
-
-            if ($lecturer !== null) {
-                Lecturer::query()->whereKey($lecturer->id)->lockForUpdate()->first();
-            }
+            // Bentrok hanya dihitung di dalam satu periode, jadi mengunci
+            // periode menyerialkan semua penyimpanan jadwal/dosen yang bisa
+            // saling bentrok — dua permintaan paralel untuk dosen atau ruangan
+            // yang sama tidak bisa sama-sama lolos cek bentrok.
+            AcademicTerm::query()->whereKey($classSection->academic_term_id)->lockForUpdate()->first();
 
             $before = $this->snapshot($classSection->load(['lecturer', 'schedules']));
             $conflicts = $this->conflicts($classSection, $lecturer, array_map(fn (array $row) => new ClassSchedule($row), $rows));
             $blocking = array_values(array_filter($conflicts, fn (array $conflict): bool => ! ($force && $conflict['forceable'])));
 
             if ($blocking !== []) {
-                throw new ConflictException($blocking[0]['message'], self::CONFLICT_CODE, ['conflicts' => $conflicts]);
+                throw new ConflictException($blocking[0]['message'], ClassSchedule::CONFLICT_CODE, ['conflicts' => $conflicts]);
             }
 
             $classSection->update(['lecturer_id' => $lecturer?->id]);
@@ -75,46 +73,45 @@ class ClassTeachingService
             }
 
             $classSection->refresh()->load(['course', 'lecturer', 'schedules']);
-            $this->recordHistory($classSection, $before, $this->snapshot($classSection), $conflicts, $reason);
+            $after = $this->snapshot($classSection);
+            $this->recordHistory($classSection, $before, $after, $conflicts, $reason);
 
             return [
                 'overridden_conflicts' => $conflicts,
-                'student_conflicts' => $this->studentConflicts($classSection),
+                // aturan-bisnis §8.4: hanya saat jadwal berubah.
+                'student_conflicts' => $before['schedules'] !== $after['schedules'] ? $this->studentConflicts($classSection) : [],
             ];
         });
     }
 
-    public static function normalizeRoom(?string $room): ?string
-    {
-        $room = trim((string) preg_replace('/\s+/u', ' ', (string) $room));
-
-        return $room === '' ? null : $room;
-    }
-
     /**
-     * @param  array<int, ClassSchedule>  $schedules
+     * @param  list<ClassSchedule>  $schedules
      * @return list<array<string, mixed>>
      */
     private function conflicts(ClassSection $classSection, ?Lecturer $lecturer, array $schedules): array
     {
         $conflicts = [];
 
-        foreach ($schedules as $index => $schedule) {
-            foreach (array_slice($schedules, $index + 1) as $other) {
+        foreach ($schedules as $row => $schedule) {
+            foreach (array_slice($schedules, $row + 1, preserve_keys: true) as $otherRow => $other) {
                 if ($schedule->overlaps($other)) {
-                    $conflicts[] = $this->conflict('internal', 'Dua jadwal pada kelas ini saling bentrok.', $other);
+                    $conflicts[] = $this->conflict('internal', $row, sprintf('Jadwal ke-%d dan ke-%d pada kelas ini saling bentrok (%s).', $row + 1, $otherRow + 1, PortalFormatter::scheduleText($other)), $other, otherRow: $otherRow);
                 }
             }
         }
 
+        // Kelas nonaktif/batal tidak ditawarkan, jadi tidak memakai dosen
+        // maupun ruangan.
         $others = ClassSchedule::query()
+            ->whereIn('day_of_week', array_unique(array_map(fn (ClassSchedule $schedule) => $schedule->day_of_week, $schedules)))
             ->whereHas('classSection', fn ($query) => $query
                 ->where('academic_term_id', $classSection->academic_term_id)
+                ->where('is_active', true)
                 ->whereKeyNot($classSection->id))
-            ->with('classSection.course', 'classSection.lecturer')
+            ->with('classSection.course')
             ->get();
 
-        foreach ($schedules as $schedule) {
+        foreach ($schedules as $row => $schedule) {
             foreach ($others as $other) {
                 if (! $schedule->overlaps($other)) {
                     continue;
@@ -124,11 +121,11 @@ class ClassTeachingService
                 $when = PortalFormatter::scheduleText($other);
 
                 if ($lecturer !== null && $other->classSection->lecturer_id === $lecturer->id) {
-                    $conflicts[] = $this->conflict('lecturer', "Jadwal bentrok dengan kelas {$label} yang juga diampu {$lecturer->name} ({$when}).", $other);
+                    $conflicts[] = $this->conflict('lecturer', $row, "Jadwal bentrok dengan kelas {$label} yang juga diampu {$lecturer->name} ({$when}).", $other, $other->classSection);
                 }
 
-                if ($this->sameRoom($schedule->room, $other->room)) {
-                    $conflicts[] = $this->conflict('room', "Ruangan {$other->room} sudah dipakai kelas {$label} ({$when}).", $other);
+                if ($schedule->sameRoomAs($other)) {
+                    $conflicts[] = $this->conflict('room', $row, "Ruangan {$other->room} sudah dipakai kelas {$label} ({$when}).", $other, $other->classSection);
                 }
             }
         }
@@ -139,10 +136,8 @@ class ClassTeachingService
     /**
      * @return array<string, mixed>
      */
-    private function conflict(string $type, string $message, ClassSchedule $other): array
+    private function conflict(string $type, int $row, string $message, ClassSchedule $other, ?ClassSection $otherClass = null, ?int $otherRow = null): array
     {
-        $isOtherClass = $type !== 'internal';
-
         return [
             'type' => $type,
             // Hanya bentrok dosen yang boleh dipaksa: dosen bisa saja
@@ -150,19 +145,12 @@ class ClassTeachingService
             // dipakai dua kelas sekaligus.
             'forceable' => $type === 'lecturer',
             'message' => $message,
-            'class_section_id' => $isOtherClass ? $other->classSection->id : null,
-            'course_name' => $isOtherClass ? $other->classSection->course->name : null,
-            'class_code' => $isOtherClass ? $other->classSection->class_code : null,
-            'schedule' => PortalFormatter::scheduleText($other),
+            // Baris kiriman yang bentrok; pada bentrok antarjadwal,
+            // `other_row` adalah baris pasangannya.
+            'row' => $row,
+            'other_row' => $otherRow,
+            ...PortalFormatter::conflictSlot($other, $otherClass),
         ];
-    }
-
-    private function sameRoom(?string $room, ?string $other): bool
-    {
-        $room = mb_strtolower((string) self::normalizeRoom($room));
-        $other = mb_strtolower((string) self::normalizeRoom($other));
-
-        return $room !== '' && $room === $other && ! in_array($room, self::VIRTUAL_ROOMS, true);
     }
 
     /**
@@ -213,7 +201,7 @@ class ClassTeachingService
 
         if ($overridden !== []) {
             $this->audit->recordAction($classSection, AuditAction::ForcedOverride, [
-                'rule' => self::CONFLICT_CODE,
+                'rule' => ClassSchedule::CONFLICT_CODE,
                 'conflicts' => $overridden,
             ], $reason);
             $this->audit->log('academic', "Bentrok jadwal dosen pada kelas {$classSection->class_code} dipaksa: {$reason}", $classSection, [
@@ -226,7 +214,8 @@ class ClassTeachingService
 
     /**
      * Peringatan (bukan penolakan): peserta kelas ini yang jadwal barunya
-     * beririsan dengan kelas lain yang ia ambil di periode yang sama.
+     * beririsan dengan kelas lain yang ia ambil di periode yang sama — satu
+     * baris per mahasiswa per slot kelas lain.
      *
      * @return list<array<string, mixed>>
      */
@@ -257,18 +246,13 @@ class ClassTeachingService
 
         foreach ($otherItems as $item) {
             foreach ($item->classSection->schedules as $other) {
-                foreach ($classSection->schedules as $schedule) {
-                    if ($schedule->overlaps($other)) {
-                        $warnings[] = [
-                            'student_id' => $item->student_id,
-                            'nim' => $item->student->nim,
-                            'name' => $item->student->name,
-                            'class_section_id' => $item->class_section_id,
-                            'course_name' => $item->classSection->course->name,
-                            'class_code' => $item->classSection->class_code,
-                            'schedule' => PortalFormatter::scheduleText($other),
-                        ];
-                    }
+                if ($classSection->schedules->contains(fn (ClassSchedule $schedule) => $schedule->overlaps($other))) {
+                    $warnings[] = [
+                        'student_id' => $item->student_id,
+                        'nim' => $item->student->nim,
+                        'name' => $item->student->name,
+                        ...PortalFormatter::conflictSlot($other, $item->classSection),
+                    ];
                 }
             }
         }

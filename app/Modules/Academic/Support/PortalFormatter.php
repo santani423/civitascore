@@ -87,6 +87,28 @@ final class PortalFormatter
         ];
     }
 
+    /**
+     * Slot pembanding di `errors.conflicts[]` (409 SCHEDULE_CONFLICT) dan
+     * peringatan bentrok: kelas pemiliknya — null bila slot belum tersimpan,
+     * mis. baris lain di kiriman yang sama — beserta jadwalnya. Relasi
+     * `course` milik $classSection harus sudah di-eager-load pemanggil.
+     *
+     * @return array<string, mixed>
+     */
+    public static function conflictSlot(ClassSchedule $schedule, ?ClassSection $classSection): array
+    {
+        return [
+            'class_section_id' => $classSection?->id,
+            'course_name' => $classSection?->course->name,
+            'class_code' => $classSection?->class_code,
+            'day_of_week' => $schedule->day_of_week,
+            'start_time' => $schedule->startLabel(),
+            'end_time' => $schedule->endLabel(),
+            'room' => $schedule->room,
+            'schedule' => self::scheduleText($schedule),
+        ];
+    }
+
     /** "Senin 08:00–09:40 (R.201)" — untuk pesan bentrok jadwal & PDF. */
     public static function scheduleText(ClassSchedule $schedule): string
     {

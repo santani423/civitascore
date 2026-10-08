@@ -35,7 +35,7 @@ Fase 5  Prasyarat MK (opsional, bisa kapan saja setelah Fase 1)
 | `AcademicTermStatus` + `AcademicTermService::transition()` |
 | Endpoint `academic-terms` (CRUD + status + summary dasar) + permission `academic_terms.*` |
 | Endpoint tulis `class-sections` (+ `min_participants`, `cancel`) + permission `classes.create/update` |
-| `class_section_schedules` + deteksi bentrok dosen/ruang |
+| ~~`class_section_schedules`~~ ✅ `class_schedules` + deteksi bentrok dosen/ruang sudah ada (R-02) |
 | `university_settings` kunci `academic.*` + helper `AcademicPolicySettings` |
 | Frontend: Daftar/Form Periode, tab Kelas, panel Dosen & Jadwal, halaman Pengaturan Akademik |
 
@@ -99,8 +99,8 @@ Periode & penawaran
 [ ] Konfigurasi SP per tenant (university_settings academic.*)
 [ ] Penawaran mata kuliah (class_sections tulis, min_participants, cancel)
 [ ] Manajemen kelas
-[ ] Penugasan dosen (+ bentrok dosen)
-[ ] Jadwal (+ bentrok ruang)
+[x] Penugasan dosen (+ bentrok dosen)
+[x] Jadwal (+ bentrok ruang)
 
 Pendaftaran
 [ ] Kelayakan mahasiswa (pipeline + mode evaluasi)

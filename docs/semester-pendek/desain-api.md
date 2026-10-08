@@ -90,8 +90,7 @@ Daftar kode: [aturan-bisnis.md §4.1](./aturan-bisnis.md#41-pipeline).
 | POST | `/class-sections` | `classes.create` | term harus DRAFT/PLANNED/REGISTRATION_OPEN/REGISTRATION_CLOSED |
 | PUT | `/class-sections/{id}` | `classes.update` | `capacity`, `min_participants`, `class_code`, `is_active`; tidak boleh pindah term bila ada peserta |
 | PATCH | `/class-sections/{id}/cancel` | `classes.update` | body `{reason}`; [aturan-bisnis.md §5.3](./aturan-bisnis.md#53-pembatalan-kelas-sepi) |
-| PUT | `/class-sections/{id}/lecturers` | `classes.update` | sync dosen; cek bentrok dosen; `force` + `reason` |
-| PUT | `/class-sections/{id}/schedules` | `classes.update` | sync jadwal; cek bentrok dosen & ruang; respons memuat `warnings.student_conflicts` |
+| PUT | `/class-sections/{id}/teaching` | `classes.update` | ✅ ada (R-01/R-02): dosen pengampu + sync jadwal sekaligus; cek bentrok dosen & ruang; `force` + `reason` hanya untuk bentrok dosen; respons memuat `meta.warnings.student_conflicts` |
 
 **`POST /class-sections`**
 
@@ -109,30 +108,27 @@ Daftar kode: [aturan-bisnis.md §4.1](./aturan-bisnis.md#41-pipeline).
 - `course_id` harus milik `study_program_id` yang sama (dicek di service).
 - 201 · 404 ID tenant lain · 409 term tidak menerima kelas baru.
 
-**`PUT /class-sections/{id}/schedules`**
+**`PUT /class-sections/{id}/teaching`** ✅
+
+> **Rekonsiliasi R-01/R-02:** menggantikan usulan `PUT …/lecturers` dan `PUT …/schedules`. Satu dosen pengampu (`class_sections.lecturer_id`), jadwal diganti utuh.
 
 ```json
 {
+  "lecturer_id": "01J...",
   "schedules": [
-    { "day_of_week": 1, "starts_at": "08:00", "ends_at": "10:30", "room": "R.301" },
-    { "day_of_week": 3, "starts_at": "08:00", "ends_at": "10:30", "room": "R.301" }
+    { "day_of_week": 1, "start_time": "08:00", "end_time": "10:30", "room": "R.301" },
+    { "day_of_week": 3, "start_time": "08:00", "end_time": "10:30", "room": "R.301" }
   ],
   "force": false,
   "reason": null
 }
 ```
 
-- 200 `{data: ClassSectionResource, meta: {warnings: {student_conflicts: [{student_id, nim, name, conflicting_class_code}]}}}`
-- 409 `SCHEDULE_CONFLICT` dengan `errors.conflicts: [{type: "room"|"lecturer", class_section_id, class_code, day_of_week, starts_at, ends_at}]`.
-
-**`PUT /class-sections/{id}/lecturers`**
-
-```json
-{ "lecturers": [ { "lecturer_id": "01J...", "role": "coordinator" } ], "force": false, "reason": null }
-```
-
-- 409 dosen tidak aktif (`lecturers.is_active = false`) · 409 bentrok jadwal dosen (kecuali `force`).
-- Audit: `activity_logs` `LECTURER_ASSIGNED`. Notifikasi `short_term.teaching_assigned` ke dosen yang punya `user_id`.
+- 200 `{data: ClassSection, meta: {overridden_conflicts: [...], warnings: {student_conflicts: [{student_id, nim, name, class_section_id, course_name, class_code, day_of_week, start_time, end_time, room, schedule}]}}}` — `student_conflicts` hanya terisi bila jadwal berubah.
+- 409 `SCHEDULE_CONFLICT` dengan `errors.conflicts: [{type: "lecturer"|"room"|"internal", forceable, message, row, other_row, class_section_id, course_name, class_code, day_of_week, start_time, end_time, room, schedule}]`. `row` = indeks baris `schedules[]` kiriman; `other_row` = baris pasangan untuk `internal`. Hanya `lecturer` yang `forceable`.
+- 422 dosen tidak ditemukan/tidak aktif · `end_time` ≤ `start_time` · `force` tanpa `reason` (min. 10 karakter).
+- Penyimpanan diserialkan per term (`lockForUpdate` pada `academic_terms`) agar dua penyimpanan paralel tidak sama-sama lolos cek bentrok.
+- Audit: `audit_logs` `updated` (+ `forced_override` bila dipaksa); `activity_logs` `LECTURER_ASSIGNED` / `CLASS_SCHEDULE_CHANGED` / `SCHEDULE_CONFLICT_OVERRIDDEN`. Notifikasi `short_term.teaching_assigned` ke dosen yang punya `user_id` menyusul di Tahap 6.4.
 
 ### 2.3 Prasyarat 🆕 (opsional)
 
@@ -244,7 +240,7 @@ Endpoint `student/schedule`, `student/attendances`, `student/transcript`, `stude
         "class_code": "SP-A",
         "course": { "id": "01J...", "code": "IF302", "name": "Basis Data", "credits": 3 },
         "lecturers": [ { "name": "Dr. Siti Nurhaliza", "role": "coordinator" } ],
-        "schedules": [ { "day_of_week": 1, "starts_at": "08:00", "ends_at": "10:30", "room": "R.301" } ],
+        "schedules": [ { "day_of_week": 1, "start_time": "08:00", "end_time": "10:30", "room": "R.301" } ],
         "capacity": 30,
         "remaining_seats": 4,
         "fee": 450000,

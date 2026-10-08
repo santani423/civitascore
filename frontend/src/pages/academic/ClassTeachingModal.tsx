@@ -58,6 +58,11 @@ function conflictDetails(error: NormalizedApiError): ScheduleConflict[] | null {
   return error.status === 409 && details?.code === 'SCHEDULE_CONFLICT' ? (details.conflicts ?? []) : null
 }
 
+/** Konflik yang menyangkut baris jadwal ke-`row` (termasuk sebagai pasangan bentrok antarjadwal). */
+function conflictsForRow(conflicts: ScheduleConflict[] | null, row: number): ScheduleConflict[] {
+  return (conflicts ?? []).filter((conflict) => conflict.row === row || conflict.other_row === row)
+}
+
 type TeachingFormValues = z.infer<typeof teachingSchema>
 
 const EMPTY_SCHEDULE: TeachingFormValues['schedules'][number] = { day_of_week: '1', start_time: '', end_time: '', room: '' }
@@ -70,8 +75,9 @@ function lecturerLabel(lecturer: Lecturer): string {
  * Panel "Dosen & Jadwal" (Bagian Akademik, classes.update): menetapkan dosen
  * pengampu dan mengganti seluruh jadwal mingguan kelas sekaligus. Bentrok
  * dengan kelas lain di periode yang sama ditolak backend (409
- * SCHEDULE_CONFLICT) dan dirinci per kelas; bila semuanya bentrok dosen,
- * penyimpanan bisa dipaksa dengan alasan yang dicatat di audit log.
+ * SCHEDULE_CONFLICT) dan ditandai pada baris jadwal yang bentrok; bila
+ * semuanya bentrok dosen, penyimpanan bisa dipaksa dengan alasan yang
+ * dicatat di audit log.
  */
 export function ClassTeachingModal({
   classSection,
@@ -174,7 +180,13 @@ export function ClassTeachingModal({
       const scheduleConflicts = conflictDetails(apiError)
 
       setConflicts(scheduleConflicts)
-      setFormError(scheduleConflicts ? apiError.message : applyServerErrors(apiError, setError))
+      setFormError(
+        scheduleConflicts && scheduleConflicts.length > 1
+          ? `${apiError.message} Seluruh bentrok (${scheduleConflicts.length}) ditandai pada baris jadwal di bawah.`
+          : scheduleConflicts
+            ? apiError.message
+            : applyServerErrors(apiError, setError),
+      )
     }
   }
 
@@ -184,23 +196,6 @@ export function ClassTeachingModal({
         <Alert variant="danger" className="mb-4" onDismiss={() => setFormError(null)}>
           {formError}
         </Alert>
-      )}
-
-      {conflicts && conflicts.length > 0 && (
-        <div className="mb-4 flex flex-col gap-2 rounded-lg border border-border p-3 text-sm">
-          <p className="font-medium text-ink-primary">Jadwal yang bentrok</p>
-          <ul className="flex flex-col gap-1">
-            {conflicts.map((conflict, index) => (
-              <li key={`${conflict.type}-${conflict.class_section_id ?? 'self'}-${index}`} className="flex flex-wrap items-center gap-2">
-                <Badge variant={conflict.forceable ? 'warning' : 'danger'}>{CONFLICT_LABEL[conflict.type]}</Badge>
-                <span className="text-ink-secondary">{conflict.message}</span>
-              </li>
-            ))}
-          </ul>
-          {!canForce && (
-            <p className="text-xs text-ink-tertiary">Bentrok ruangan dan antarjadwal tidak dapat dipaksa — ubah hari, jam, atau ruangan.</p>
-          )}
-        </div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5" noValidate>
@@ -239,47 +234,69 @@ export function ClassTeachingModal({
 
           {fields.length === 0 && <p className="text-sm text-ink-tertiary">Belum ada jadwal.</p>}
 
-          {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="grid grid-cols-2 items-start gap-2 rounded-lg border border-border p-3 sm:grid-cols-[8rem_1fr_1fr_1fr_auto] sm:border-0 sm:p-0"
-            >
-              <Select
-                aria-label={`Hari jadwal ${index + 1}`}
-                options={DAY_OPTIONS}
-                error={errors.schedules?.[index]?.day_of_week?.message}
-                {...register(`schedules.${index}.day_of_week`)}
-              />
-              <Input
-                type="time"
-                aria-label={`Jam mulai jadwal ${index + 1}`}
-                error={errors.schedules?.[index]?.start_time?.message}
-                {...register(`schedules.${index}.start_time`)}
-              />
-              <Input
-                type="time"
-                aria-label={`Jam selesai jadwal ${index + 1}`}
-                error={errors.schedules?.[index]?.end_time?.message}
-                {...register(`schedules.${index}.end_time`)}
-              />
-              <Input
-                placeholder="Ruangan"
-                aria-label={`Ruangan jadwal ${index + 1}`}
-                error={errors.schedules?.[index]?.room?.message}
-                {...register(`schedules.${index}.room`)}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-10 justify-self-end"
-                aria-label={`Hapus jadwal ${index + 1}`}
-                onClick={() => remove(index)}
-              >
-                <Trash2 className="size-4 text-danger" />
-              </Button>
-            </div>
-          ))}
+          {fields.map((field, index) => {
+            const rowConflicts = conflictsForRow(conflicts, index)
+
+            return (
+              <div key={field.id} className="flex flex-col gap-2 rounded-lg border border-border p-3 sm:border-0 sm:p-0">
+                <div className="grid grid-cols-2 items-start gap-2 sm:grid-cols-[8rem_1fr_1fr_1fr_auto]">
+                  <Select
+                    aria-label={`Hari jadwal ${index + 1}`}
+                    options={DAY_OPTIONS}
+                    error={errors.schedules?.[index]?.day_of_week?.message}
+                    {...register(`schedules.${index}.day_of_week`)}
+                  />
+                  <Input
+                    type="time"
+                    aria-label={`Jam mulai jadwal ${index + 1}`}
+                    error={errors.schedules?.[index]?.start_time?.message}
+                    {...register(`schedules.${index}.start_time`)}
+                  />
+                  <Input
+                    type="time"
+                    aria-label={`Jam selesai jadwal ${index + 1}`}
+                    error={errors.schedules?.[index]?.end_time?.message}
+                    {...register(`schedules.${index}.end_time`)}
+                  />
+                  <Input
+                    placeholder="Ruangan"
+                    aria-label={`Ruangan jadwal ${index + 1}`}
+                    error={errors.schedules?.[index]?.room?.message}
+                    {...register(`schedules.${index}.room`)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-10 justify-self-end"
+                    aria-label={`Hapus jadwal ${index + 1}`}
+                    onClick={() => {
+                      // Indeks baris bergeser, jadi penanda bentrok sudah tidak
+                      // menunjuk baris yang benar — simpan ulang untuk mengecek.
+                      setConflicts(null)
+                      remove(index)
+                    }}
+                  >
+                    <Trash2 className="size-4 text-danger" />
+                  </Button>
+                </div>
+                {rowConflicts.length > 0 && (
+                  <ul className="flex flex-col gap-1 text-sm" aria-label={`Bentrok jadwal ${index + 1}`}>
+                    {rowConflicts.map((conflict, conflictIndex) => (
+                      <li key={`${conflict.type}-${conflict.class_section_id ?? conflict.other_row}-${conflictIndex}`} className="flex flex-wrap items-center gap-2">
+                        <Badge variant={conflict.forceable ? 'warning' : 'danger'}>{CONFLICT_LABEL[conflict.type]}</Badge>
+                        <span className="text-ink-secondary">{conflict.message}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )
+          })}
+
+          {conflicts && conflicts.length > 0 && !canForce && (
+            <p className="text-xs text-ink-tertiary">Bentrok ruangan dan antarjadwal tidak dapat dipaksa — ubah hari, jam, atau ruangan.</p>
+          )}
 
           {fields.length < 7 && (
             <Button

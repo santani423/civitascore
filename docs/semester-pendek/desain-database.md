@@ -20,7 +20,7 @@
    + min_participants, cancelled_at, cancellation_reason
          │ 1
          ├── N class_section_lecturers ⛔🆕 ── N:1 ── lecturers
-         ├── N class_section_schedules 🆕
+         ├── N class_schedules ✅
          ├── N exams ✅ ── exam_questions ✅ / exam_attempts ✅ / exam_grade_ranges ✅
          │ 1
          │ N
@@ -86,7 +86,9 @@ Model: `$fillable` **tanpa** `status` untuk jalur `PUT`; status diubah oleh `Aca
 Index tambahan: tidak perlu (index `(university_id, is_active, academic_term_id)` yang ada sudah mencakup daftar penawaran).
 Audit: `Auditable`.
 
-### 3.3 `class_section_schedules` 🆕 (umum)
+### 3.3 `class_schedules` ✅ (umum)
+
+> **Rekonsiliasi R-02:** tabel ini sudah ada (migrasi `2026_10_06_200001`) dan menggantikan usulan `class_section_schedules`. Tidak ada `effective_from`/`effective_until`: bentrok hanya dibandingkan di dalam satu term, dan tanggal term dilarang beririsan ([aturan-bisnis.md §8.2](./aturan-bisnis.md#82-logika)). Tidak perlu migrasi untuk SP.
 
 | Kolom | Tipe | Null | FK / Keterangan |
 |---|---|---|---|
@@ -94,17 +96,15 @@ Audit: `Auditable`.
 | `university_id` | ulid | tidak | → `universities` cascade |
 | `class_section_id` | ulid | tidak | → `class_sections` cascade |
 | `day_of_week` | unsignedTinyInteger | tidak | 1=Senin … 7=Minggu (ISO-8601) |
-| `starts_at` | time | tidak | |
-| `ends_at` | time | tidak | > `starts_at` (divalidasi di request) |
-| `room` | string(50) | ya | Dinormalisasi saat dibandingkan, disimpan apa adanya |
-| `effective_from` | date | ya | `null` = `term.start_date` |
-| `effective_until` | date | ya | `null` = `term.end_date` |
+| `start_time` | time | tidak | |
+| `end_time` | time | tidak | > `start_time` (divalidasi di request) |
+| `room` | string(100) | ya | Disimpan setelah trim + spasi tunggal (huruf dipertahankan); dibandingkan tanpa membedakan huruf besar/kecil |
 | `created_at`, `updated_at` | timestampTz | | |
 
-Index: `(university_id, class_section_id)`, `(university_id, day_of_week, room)` (bentrok ruangan).
+Index: `(university_id, class_section_id)`, `(university_id, day_of_week)` (kandidat bentrok per hari).
 Unique: tidak (satu kelas bisa punya dua slot di hari yang sama, mis. teori & praktikum).
-Soft delete: tidak — jadwal diganti utuh lewat endpoint *sync*; riwayat lewat audit.
-Audit: perubahan dicatat sebagai satu `activity_logs` `CLASS_SCHEDULE_CHANGED` dengan properti before/after (bukan `Auditable` per baris, karena sync menghapus+membuat ulang).
+Soft delete: tidak — jadwal diganti utuh lewat `PUT class-sections/{id}/teaching`; riwayat lewat audit.
+Audit: satu `audit_logs` `updated` pada kelas (snapshot dosen + jadwal sebelum/sesudah; alasan paksa di kolom `reason`) + `activity_logs` `CLASS_SCHEDULE_CHANGED` — bukan `Auditable` per baris, karena sync menghapus+membuat ulang.
 
 ### 3.4 `class_section_lecturers` ⛔🆕 (umum)
 

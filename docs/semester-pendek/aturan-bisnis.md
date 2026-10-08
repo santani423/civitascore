@@ -234,7 +234,7 @@ courses (✅ master MK: code, name, credits, curriculum_id)
    │
    └── class_sections (✅, academic_term_id = term SP)  ← "penawaran SP" = kelas di term SP
           ├── class_section_lecturers   (🆕 umum)  dosen pengampu
-          ├── class_section_schedules   (🆕 umum)  hari/jam/ruang
+          ├── class_schedules           (✅ umum)  hari/jam/ruang
           └── krs_items                 (✅)        peserta
 ```
 
@@ -252,7 +252,7 @@ Tidak ada tabel `course_offerings`: dalam skema ini, satu `class_section` sudah 
 | Ketersediaan pendaftaran | Turunan: `term.status` + jendela + `is_active` + `cancelled_at` + sisa kursi |
 | Biaya | Turunan: `credits × setting('academic.short_term.fee_per_credit')`. Tidak per kelas di fase ini. |
 | Dosen | 🆕 `class_section_lecturers` |
-| Jadwal & ruang | 🆕 `class_section_schedules` |
+| Jadwal & ruang | ✅ `class_schedules` |
 | Status | ✅ `is_active` + 🆕 `cancelled_at`/`cancellation_reason` |
 
 ### 5.3 Pembatalan kelas sepi
@@ -408,37 +408,40 @@ Item `enrolled` yang sudah dibayar **tidak** bisa dibatalkan mandiri — harus l
 
 ### 8.1 Data
 
-`class_section_schedules` (🆕, lihat [desain-database.md §3.3](./desain-database.md#33-class_section_schedules--umum)): `day_of_week` (1=Senin…7=Minggu, ISO-8601), `starts_at` (TIME), `ends_at` (TIME), `room` (string nullable), opsional `effective_from`/`effective_until` (DATE) untuk SP yang intensif hanya di minggu tertentu.
+✅ `class_schedules` (lihat [desain-database.md §3.3](./desain-database.md#33-class_schedules--umum)): `day_of_week` (1=Senin…7=Minggu, ISO-8601), `start_time` (TIME), `end_time` (TIME), `room` (string nullable). **Tanpa** `effective_from`/`effective_until` — lihat §8.2 ([rekonsiliasi R-02](./tahapan-pengembangan.md#1-rekonsiliasi-rancangan-vs-kode-saat-ini)).
 
 ### 8.2 Logika
 
-Dua slot `a`, `b` bentrok bila **semua** benar:
+Dua slot `a`, `b` bentrok bila **semua** benar (`ClassSchedule::overlaps()`):
 
 ```
 a.day_of_week == b.day_of_week
-AND a.starts_at < b.ends_at          ← interval setengah-terbuka [start, end)
-AND b.starts_at < a.ends_at
-AND rentang tanggal efektif a dan b beririsan
-    (rentang efektif = [effective_from ?? term.start_date, effective_until ?? term.end_date])
+AND a.start_time < b.end_time        ← interval setengah-terbuka [start, end)
+AND b.start_time < a.end_time
+AND kelas a dan b berada di term yang sama
 ```
 
 Setengah-terbuka berarti 09:00–11:00 dan 11:00–12:00 **tidak** bentrok; 09:00–11:00 dan 10:00–12:00 **bentrok**.
 
-Karena tanggal efektif ikut dibandingkan, slot SP dan slot reguler tidak pernah bentrok selama term-nya tidak beririsan (dan §2.3 melarang irisan) — pemeriksaan tetap generik tanpa cabang khusus SP.
+Bentrok hanya dibandingkan di dalam satu term. Karena §2.3 melarang tanggal term beririsan, slot SP dan slot reguler tidak mungkin bentrok — tanpa tanggal efektif dan tanpa cabang khusus SP. Kelas nonaktif/batal tidak ikut dibandingkan.
 
 ### 8.3 Tiga jenis bentrok
 
+Ketiganya menolak dengan 409 `errors.code = SCHEDULE_CONFLICT` + `errors.conflicts[]` (setiap konflik memuat `type` dan slot pembanding: kelas, hari, jam, ruang).
+
 | Jenis | Dibandingkan dengan | Kapan dicek | Sifat |
 |---|---|---|---|
-| **Mahasiswa** | Slot semua kelas tempat mahasiswa `pending`/`enrolled` | Saat mendaftar (§4.1 #11) | **Blokir** (409) |
-| **Dosen** | Slot semua kelas yang diampu dosen itu (`class_section_lecturers`) | Saat admin menugaskan dosen atau mengubah jadwal | **Blokir** (409), admin bisa memaksa dengan `force: true` + `reason` (dosen kadang memang mengajar gabungan) |
-| **Ruangan** | Slot lain dengan `room` sama (dinormalisasi: trim + lowercase + spasi tunggal) | Saat admin menyimpan jadwal | **Blokir** (409); dilewati bila `room` kosong atau bernilai `online` |
+| **Mahasiswa** (`student`) | Slot kelas lain di rencana KRS mahasiswa (`draft`/`pending`/`enrolled`) | Saat menambah kelas dan saat mengajukan KRS (§4.1 #11, `KrsPlanService`) | **Blokir** (409) |
+| **Dosen** (`lecturer`) | Slot kelas aktif lain yang diampu dosen itu (`class_sections.lecturer_id`, R-01) | `PUT class-sections/{id}/teaching` | **Blokir** (409), admin bisa memaksa dengan `force: true` + `reason` (dosen kadang memang mengajar gabungan) |
+| **Ruangan** (`room`) | Slot kelas aktif lain dengan `room` sama (dinormalisasi: trim + lowercase + spasi tunggal) | `PUT class-sections/{id}/teaching` | **Blokir** (409), tidak bisa dipaksa; dilewati bila `room` kosong, `online`, atau `daring` |
+
+Dua baris pada kiriman jadwal yang sama yang saling beririsan (`internal`) juga ditolak dan tidak bisa dipaksa. Konflik dari endpoint `teaching` menunjuk baris kiriman (`row`, mulai 0) supaya UI menandainya per baris.
 
 Ruangan adalah string bebas karena modul Sarana & Prasarana (blueprint §4.27) belum ada. Bila modul itu dibuat, kolom diganti `room_id` dan aturan perbandingan tetap.
 
 ### 8.4 Perubahan jadwal setelah pendaftaran
 
-Admin mengubah jadwal kelas yang sudah punya peserta → sistem **tidak** memblokir, tetapi mengembalikan daftar mahasiswa yang menjadi bentrok (`warnings.student_conflicts[]`) dan mengirim notifikasi `short_term.schedule_changed` ke semua peserta. Alasan: mahasiswa tidak bisa dibatalkan otomatis atas keputusan admin; admin menyelesaikannya secara manual.
+Admin mengubah jadwal kelas yang sudah punya peserta → sistem **tidak** memblokir, tetapi mengembalikan daftar mahasiswa yang menjadi bentrok (`meta.warnings.student_conflicts[]`, satu baris per mahasiswa per slot kelas lain; kosong bila jadwal tidak berubah) dan mengirim notifikasi `short_term.schedule_changed` ke semua peserta (notifikasi menyusul di Tahap 6.4). Alasan: mahasiswa tidak bisa dibatalkan otomatis atas keputusan admin; admin menyelesaikannya secara manual.
 
 ---
 
@@ -499,7 +502,7 @@ Bila `attendance_blocks_exam = true`, `ExamService::resolveEligibleKrsItem()` me
 | E2 | Mahasiswa membatalkan pendaftaran | §7.4. Kursi langsung dilepas (karena dihitung dari status). |
 | E3 | Pendaftaran ditutup saat mahasiswa sedang mengisi | Submit ditolak `TERM_NOT_OPEN` (pemeriksaan di server, bukan UI). Item yang sudah `pending` tetap diproses. |
 | E4 | Kelas dibatalkan | §5.3. |
-| E5 | Dosen berhalangan | Admin mengganti dosen lewat `PUT /class-sections/{id}/lecturers` (cek bentrok dosen baru). Nilai/absensi yang sudah ada tetap (terikat `krs_item`, bukan dosen). Notifikasi ke peserta. |
+| E5 | Dosen berhalangan | Admin mengganti dosen lewat `PUT /class-sections/{id}/teaching` (cek bentrok dosen baru). Nilai/absensi yang sudah ada tetap (terikat `krs_item`, bukan dosen). Notifikasi ke peserta. |
 | E6 | Jadwal berubah setelah pendaftaran | §8.4. |
 | E7 | Mahasiswa menjadi nonaktif setelah terdaftar | Item yang ada **tidak** dibatalkan otomatis (status mahasiswa bisa dikoreksi). Pendaftaran baru ditolak. Dashboard admin menandai peserta non-aktif. |
 | E8 | Pembayaran kedaluwarsa | Item `pending` → `dropped`, invoice → `cancelled`, kursi dilepas. Dijalankan *lazy* (di dalam `enroll()` untuk kelas yang dikunci, dan saat membaca daftar) **dan** oleh command terjadwal. [pembayaran-dan-notifikasi.md §2.4](./pembayaran-dan-notifikasi.md#24-kedaluwarsa) |
@@ -534,7 +537,7 @@ Bila `attendance_blocks_exam = true`, `ExamService::resolveEligibleKrsItem()` me
 | `StoreAcademicTermRequest` | `academic_year` regex `^\d{4}/\d{4}$` dan tahun kedua = pertama + 1; `semester` `Rule::enum(AcademicSemester)`; `start_date`/`end_date` date, `end_date` after `start_date`; `registration_starts_at`/`registration_ends_at` nullable date, berurutan; `max_credits` nullable integer 1–24 |
 | `UpdateAcademicTermStatusRequest` | `status` `Rule::enum(AcademicTermStatus)`; `reason` nullable string max 255 (wajib untuk transisi paksa) |
 | `StoreClassSectionRequest` | `course_id`, `academic_term_id`, `study_program_id` required string (keberadaan dicek di service via `findOrFail` ter-scope — konvensi `StoreKrsItemRequest`); `class_code` required max 10; `capacity` integer 1–500; `min_participants` nullable integer ≤ `capacity` |
-| `SyncClassSectionSchedulesRequest` | `schedules` array min 1; tiap item `day_of_week` integer 1–7, `starts_at`/`ends_at` `date_format:H:i`, `ends_at` after `starts_at`; `room` nullable max 50; `force` boolean; `reason` required_if force |
+| ✅ `PUT class-sections/{id}/teaching` (validasi di `AcademicAdministrationController::updateTeaching()`) | `lecturer_id` nullable, dosen aktif (422); `schedules` array (boleh kosong) maks. 7; tiap item `day_of_week` integer 1–7, `start_time`/`end_time` `date_format:H:i`, `end_time` after `start_time`; `room` nullable max 100; `force` boolean; `reason` wajib bila `force`, 10–500 karakter |
 | `SyncClassSectionLecturersRequest` | `lecturers` array min 1; tiap item `lecturer_id` string, `role` in `coordinator,member`; tepat satu `coordinator` |
 | `StoreStudentKrsRequest` | `class_section_ids` array min 1 max 10, distinct, tiap item string. **Tidak** menerima `student_id` — diambil dari `auth()->user()->student` |
 | `StoreKrsItemRequest` (admin, diperluas) | + `override` nullable array in `prerequisite,sks_limit,schedule_conflict,capacity`; `reason` required_with override, min 10 |

@@ -14,7 +14,7 @@
 | `EnrollmentEligibility` (per aturan, dengan data in-memory/factory) | Status mahasiswa (5 nilai `StudentStatus`); jendela pendaftaran (sebelum, di dalam, sesudah, null); duplikat MK lintas kelas; baru vs ulang × `allow_new_courses` × `retake_max_letter_grade`; MK masih berjalan di term lain; prasyarat (tanpa data → lolos, lulus, tidak lulus, `min_letter_grade` custom) |
 | `maxSks()` | SP memakai `max_credits` term → setting → 9; reguler mengabaikan SP sebagai "term sebelumnya" (kasus mahasiswa A/B/C di [aturan-bisnis.md §4.5](./aturan-bisnis.md#45-batas-sks)); setting `counts_toward_next_term_sks_quota = true` |
 | Penghitung SKS | `pending` + `enrolled` dihitung; `dropped`/`rejected` tidak; hold kedaluwarsa tidak dihitung kapasitas |
-| Deteksi bentrok | Irisan penuh, sebagian, bersinggungan tepat (11:00/11:00 → tidak bentrok), hari berbeda, rentang tanggal efektif tidak beririsan, normalisasi ruang (`"R.301 "` vs `"r.301"`), ruang kosong/`online` dilewati |
+| Deteksi bentrok | Irisan penuh, sebagian, bersinggungan tepat (11:00/11:00 → tidak bentrok), hari berbeda, format TIME MySQL (`08:00:00`), normalisasi ruang (`"R.301 "` vs `"r.301"`), ruang kosong/`online`/`daring` dilewati (✅ `ClassScheduleTest`). Kelas nonaktif dan term lain tidak dibandingkan (feature) |
 | `RepeatGradePolicy` | `highest`: pilih bobot tertinggi, seri → terbaru; `latest`: terbaru non-draft; satu percobaan; percobaan dengan nilai null diabaikan |
 | `transcript()` | IPS SP termasuk MK ulang; IPK & `total_sks` hanya percobaan efektif; contoh tabel [penilaian-dan-transkrip.md §5.2](./penilaian-dan-transkrip.md#52-contoh); `dropped` tidak pernah dihitung; `draft` tidak dihitung |
 | Konversi skor | `LetterGrade::fromScore` (✅ sudah dites) — tidak berubah |
@@ -147,7 +147,7 @@ Then   409 dan status tetap draft
 
 ```
 Given  pengguna berperan Dosen atau Mahasiswa
-When   ia memanggil POST /academic-terms, POST /class-sections, atau PUT /class-sections/{id}/schedules
+When   ia memanggil POST /academic-terms, POST /class-sections, atau PUT /class-sections/{id}/teaching
 Then   403
 ```
 
@@ -157,8 +157,8 @@ Then   403
 Given  SP berstatus planned
 When   Bagian Akademik membuka kelas Basis Data SP-A kapasitas 30, menugaskan Dosen X, jadwal Senin 08:00–10:30 R.301
 Then   kelas, penugasan, dan jadwal tersimpan
-And    bila R.301 Senin 09:00–11:00 sudah dipakai kelas lain pada rentang tanggal yang sama → 409 bentrok ruangan
-And    bila Dosen X mengajar kelas lain Senin 09:00 pada rentang tanggal yang sama → 409 kecuali force + reason
+And    bila R.301 Senin 09:00–11:00 sudah dipakai kelas aktif lain di term yang sama → 409 SCHEDULE_CONFLICT bentrok ruangan (tidak bisa dipaksa)
+And    bila Dosen X mengajar kelas aktif lain Senin 09:00 di term yang sama → 409 SCHEDULE_CONFLICT kecuali force + reason
 ```
 
 ### AC-06 Pendaftaran mandiri berhasil

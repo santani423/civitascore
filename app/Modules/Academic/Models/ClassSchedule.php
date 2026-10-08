@@ -34,6 +34,15 @@ class ClassSchedule extends Model implements ScopesToInstitution
         1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu',
     ];
 
+    /**
+     * `errors.code` 409 untuk ketiga jenis bentrok jadwal — mahasiswa (KRS),
+     * dosen, dan ruangan (aturan-bisnis §8.3) — dengan `errors.conflicts[]`.
+     */
+    public const CONFLICT_CODE = 'SCHEDULE_CONFLICT';
+
+    /** Ruangan yang tidak menempati ruang fisik, sehingga tidak pernah bentrok. */
+    public const VIRTUAL_ROOMS = ['online', 'daring'];
+
     protected $fillable = ['university_id', 'class_section_id', 'day_of_week', 'start_time', 'end_time', 'room'];
 
     protected function casts(): array
@@ -89,6 +98,36 @@ class ClassSchedule extends Model implements ScopesToInstitution
         return $this->day_of_week === $other->day_of_week
             && $this->startMinutes() < $other->endMinutes()
             && $other->startMinutes() < $this->endMinutes();
+    }
+
+    /**
+     * Bentrok ruangan = ruang fisik sama (lihat roomKey()); irisan jam dicek
+     * terpisah dengan overlaps().
+     */
+    public function sameRoomAs(self $other): bool
+    {
+        $key = $this->roomKey();
+
+        return $key !== null && $key === $other->roomKey();
+    }
+
+    /**
+     * Kunci pembanding ruangan: bentuk normal dalam huruf kecil ("  R.301 "
+     * dan "r.301" sama), atau null bila kosong/daring.
+     */
+    public function roomKey(): ?string
+    {
+        $key = mb_strtolower((string) self::normalizeRoom($this->room));
+
+        return $key === '' || in_array($key, self::VIRTUAL_ROOMS, true) ? null : $key;
+    }
+
+    /** Bentuk simpan ruangan: trim + spasi tunggal, huruf dipertahankan; kosong → null. */
+    public static function normalizeRoom(?string $room): ?string
+    {
+        $room = trim((string) preg_replace('/\s+/u', ' ', (string) $room));
+
+        return $room === '' ? null : $room;
     }
 
     public static function toMinutes(string $time): int

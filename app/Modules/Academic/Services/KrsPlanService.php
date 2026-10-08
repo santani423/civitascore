@@ -198,7 +198,7 @@ class KrsPlanService
                             'is_full' => ! $isSelected && $seatsTaken >= $classSection->capacity,
                             'is_selected' => $isSelected,
                             'conflicts' => $this->scheduleConflicts($classSection, $otherItems)
-                                ->map(fn (array $conflict) => "{$conflict['course']} ({$conflict['schedule']})")
+                                ->map(fn (array $conflict) => "{$conflict['course_name']} ({$conflict['schedule']})")
                                 ->values()
                                 ->all(),
                         ];
@@ -280,10 +280,14 @@ class KrsPlanService
                 throw new ConflictException("SKS yang dipilih melebihi batas maksimum semester ini ({$maxCredits} SKS). Saat ini Anda mengambil {$currentCredits} SKS, sedangkan mata kuliah ini {$course->credits} SKS.");
             }
 
-            $conflict = $this->scheduleConflicts($classSection, $planItems)->first();
+            $conflicts = $this->scheduleConflicts($classSection, $planItems);
 
-            if ($conflict !== null) {
-                throw new ConflictException("Jadwal bentrok dengan mata kuliah {$conflict['course']} ({$conflict['schedule']}).");
+            if ($conflicts->isNotEmpty()) {
+                throw new ConflictException(
+                    "Jadwal bentrok dengan mata kuliah {$conflicts->first()['course_name']} ({$conflicts->first()['schedule']}).",
+                    ClassSchedule::CONFLICT_CODE,
+                    ['conflicts' => $conflicts->values()->all()],
+                );
             }
 
             // Unique (student_id, class_section_id): baris lama yang pernah
@@ -362,10 +366,14 @@ class KrsPlanService
             // Pemeriksaan ulang bentrok di seluruh rencana (defensif — setiap
             // penambahan sudah dicek, tapi jadwal kelas bisa berubah setelahnya).
             foreach ($items as $index => $item) {
-                $conflict = $this->scheduleConflicts($item->classSection, $items->slice($index + 1))->first();
+                $conflicts = $this->scheduleConflicts($item->classSection, $items->slice($index + 1));
 
-                if ($conflict !== null) {
-                    throw new ConflictException("Jadwal {$item->classSection->course->name} bentrok dengan {$conflict['course']} ({$conflict['schedule']}). Perbaiki KRS sebelum mengajukan.");
+                if ($conflicts->isNotEmpty()) {
+                    throw new ConflictException(
+                        "Jadwal {$item->classSection->course->name} bentrok dengan {$conflicts->first()['course_name']} ({$conflicts->first()['schedule']}). Perbaiki KRS sebelum mengajukan.",
+                        ClassSchedule::CONFLICT_CODE,
+                        ['conflicts' => $conflicts->values()->all()],
+                    );
                 }
             }
 
@@ -798,10 +806,12 @@ class KrsPlanService
     }
 
     /**
-     * Jadwal `$classSection` yang beririsan dengan jadwal kelas-kelas lain di `$items`.
+     * Jadwal `$classSection` yang beririsan dengan jadwal kelas-kelas lain di
+     * `$items` — bentuk `errors.conflicts[]` 409 SCHEDULE_CONFLICT (bentrok
+     * mahasiswa, `type = student`).
      *
      * @param  Collection<int, KrsItem>  $items
-     * @return Collection<int, array{course: string, schedule: string}>
+     * @return Collection<int, array<string, mixed>>
      */
     private function scheduleConflicts(ClassSection $classSection, Collection $items): Collection
     {
@@ -816,8 +826,8 @@ class KrsPlanService
                 $item->classSection->schedules
                     ->filter(fn (ClassSchedule $other) => $schedule->overlaps($other))
                     ->each(fn (ClassSchedule $other) => $conflicts->push([
-                        'course' => $item->classSection->course->name,
-                        'schedule' => PortalFormatter::scheduleText($other),
+                        'type' => 'student',
+                        ...PortalFormatter::conflictSlot($other, $item->classSection),
                     ]));
             }
         }

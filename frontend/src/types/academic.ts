@@ -169,27 +169,40 @@ export interface UpdateClassTeachingPayload {
   reason?: string
 }
 
-/** Isi `errors.conflicts[]` pada 409 `errors.code = SCHEDULE_CONFLICT`. */
-export interface ScheduleConflict {
+/** Slot pembanding pada konflik/peringatan bentrok jadwal. */
+interface ConflictSlot {
+  day_of_week: number
+  start_time: string
+  end_time: string
+  room: string | null
+  /** "Senin 08:00–10:00 (R.201)" */
+  schedule: string
+}
+
+/** Isi `errors.conflicts[]` pada 409 `errors.code = SCHEDULE_CONFLICT` dari PUT class-sections/{id}/teaching. */
+export interface ScheduleConflict extends ConflictSlot {
   type: 'lecturer' | 'room' | 'internal'
   /** Hanya bentrok dosen yang boleh dipaksa. */
   forceable: boolean
   message: string
+  /** Indeks baris `schedules[]` kiriman yang bentrok. */
+  row: number
+  /** Bentrok antarjadwal: indeks baris pasangannya. */
+  other_row: number | null
+  /** Kelas lain pemilik slot; null untuk bentrok antarjadwal. */
   class_section_id: string | null
   course_name: string | null
   class_code: string | null
-  schedule: string
 }
 
 /** Peserta kelas yang jadwal barunya beririsan dengan kelas lain yang ia ambil. */
-export interface StudentScheduleConflict {
+export interface StudentScheduleConflict extends ConflictSlot {
   student_id: string
   nim: string
   name: string
   class_section_id: string
   course_name: string
   class_code: string
-  schedule: string
 }
 
 export interface UpdateClassTeachingResult {

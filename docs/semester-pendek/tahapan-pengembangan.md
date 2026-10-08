@@ -24,7 +24,7 @@ Paket rancangan disusun dari kode per 2026-10-06. Migrasi bertanggal `2026_10_06
 | # | Topik | Rancangan menyebut | Kode sekarang | Keputusan untuk SP |
 |---|---|---|---|---|
 | R-01 | Dosen pengampu | Tabel `class_section_lecturers` (koordinator/anggota) ⛔ | Kolom `class_sections.lecturer_id` (satu dosen penanggung jawab) + `PUT class-sections/{id}/teaching` | **Pakai yang ada.** Tim pengajar (pivot) adalah fitur umum terpisah dan tidak memblokir SP. |
-| R-02 | Jadwal & bentrok | `class_section_schedules` (+ `effective_from/until`) 🆕 | `class_schedules` (`day_of_week`, `start_time`, `end_time`, `room`) + `ClassSchedule::overlaps()`; bentrok dosen/ruang dicek per term di `AcademicAdministrationController::assertNoClash()`; bentrok mahasiswa di `KrsPlanService` | **Pakai yang ada.** Tanggal efektif tidak dibuat: bentrok hanya dibandingkan dalam term yang sama dan tanggal term dilarang beririsan ([aturan-bisnis.md §2.3](./aturan-bisnis.md#23-validasi-tanggal-term-sp)), jadi slot SP dan reguler tidak mungkin bentrok. Hanya disempurnakan (Tahap 2.2). |
+| R-02 | Jadwal & bentrok | `class_section_schedules` (+ `effective_from/until`) 🆕 | `class_schedules` (`day_of_week`, `start_time`, `end_time`, `room`) + `ClassSchedule::overlaps()`; bentrok dosen/ruang dicek per term di `ClassTeachingService` (sebelumnya `AcademicAdministrationController::assertNoClash()`); bentrok mahasiswa di `KrsPlanService` | **Pakai yang ada.** Tanggal efektif tidak dibuat: bentrok hanya dibandingkan dalam term yang sama dan tanggal term dilarang beririsan ([aturan-bisnis.md §2.3](./aturan-bisnis.md#23-validasi-tanggal-term-sp)), jadi slot SP dan reguler tidak mungkin bentrok. Hanya disempurnakan (Tahap 2.2). ✅ Selesai; rancangan sudah disinkronkan. |
 | R-03 | Identitas dosen | `lecturers.user_id` ⛔ | ✅ Ada (`LecturerAccountService`, `LecturerUserAccountSeeder`), **tetapi** `ClassSectionAccess::lecturerFor()` mencari lewat `employees.user_id → lecturers.employee_id`, sedangkan `LecturerProfileController` lewat `lecturers.user_id` | Satukan ke satu jalur sebelum kepemilikan ditegakkan (Tahap 0.4). |
 | R-04 | KRS mandiri & persetujuan | `POST student/krs-items` batch atomik; persetujuan **per item** via ApprovalWorkflow `krs_item.short_term`; tabel header `krs_submissions` **ditolak** | `KrsPlanService` + `krs_submissions` (satu kartu KRS per mahasiswa per term: `draft → submitted → approved/rejected`), diputuskan dosen wali (`students.academic_advisor_id`) atau Bagian Akademik; endpoint `student/krs/*`; status item `draft/pending/enrolled/dropped` | **Pakai alur yang ada**, diperluas agar menerima term SP (Tahap 3.1–3.3). Persetujuan SP diatur setting `academic.short_term.approval_mode` = `advisor` (alur yang ada) atau `auto`. ApprovalWorkflow per item, status item `rejected`, dan endpoint `student/krs-items` **tidak** dibuat. ⚠️ Membalik keputusan rancangan — wajib dikonfirmasi tech lead sebelum Fase 3. |
 | R-05 | Jendela pendaftaran | `registration_starts_at/ends_at` (timestamp) 🆕 | `academic_terms.krs_start_date/krs_end_date` (date) + `AcademicTerm::isKrsOpen()`, yang **mensyaratkan `is_current`** | **Pakai kolom yang ada.** `isKrsOpen()` diperluas: term pendek terbuka bila `status = registration_open` dan hari ini di dalam rentang, tanpa syarat `is_current` (SP tidak pernah `is_current`, [aturan-bisnis.md §2.2](./aturan-bisnis.md#22-is_current-dan-sp)). |
@@ -188,6 +188,7 @@ Bergantung pada: 1.3, 1.4.
   - `activity_logs` `CLASS_SCHEDULE_CHANGED` / `LECTURER_ASSIGNED`; tolak bila term `archived`.
   - Panel UI dari 0.7: checkbox "Paksa" + alasan, peringatan konflik mahasiswa.
 - **Tes / AC:** **AC-05**.
+- **Status:** ✅ selesai (R-01 + R-02), kecuali penolakan term `archived` yang menunggu `assertWritable()` di Tahap 1.3. Tambahan R-02: konflik menunjuk baris kiriman (`row`/`other_row`) dan ditandai per baris di UI; kelas nonaktif tidak ikut bentrok; penyimpanan diserialkan per term (kunci `academic_terms`) agar bentrok ruang tidak lolos lewat permintaan paralel; `student_conflicts` hanya bila jadwal berubah dan tanpa duplikat; bentrok mahasiswa di KRS kini juga 409 `SCHEDULE_CONFLICT` + `errors.conflicts[]`; unit test `ClassScheduleTest` (didaftarkan di `phpunit.xml`).
 
 #### 2.3 Pembatalan kelas · M
 - **Kerjakan:** `PATCH class-sections/{id}/cancel {reason}` — kunci kelas; tolak bila sudah ada nilai atau `exam_attempts`; isi `cancelled_at`, `is_active = false`; item `draft/pending/enrolled` → `dropped`; hitung ulang total `krs_submissions` terkait; `activity_logs` `CLASS_CANCELLED`. Penanganan tagihan ditambahkan di 4.3, notifikasi di 6.4.
@@ -355,8 +356,8 @@ Setiap butir [checklist kesiapan](./rencana-implementasi.md#3-checklist-kesiapan
 | Academic Period (enum, status, jendela, `max_credits`) | jendela ✅ (`krs_*`) | 1.1, 1.3, 1.4 |
 | Konfigurasi SP per tenant | tabel ✅, pembaca belum | 0.6, 1.5 |
 | Penawaran mata kuliah / manajemen kelas | baca saja | 2.1, 2.3, 2.4 |
-| Penugasan dosen (+ bentrok dosen) | ✅ ada | 2.2 |
-| Jadwal (+ bentrok ruang) | ✅ ada | 2.2 |
+| Penugasan dosen (+ bentrok dosen) | ✅ ada | 2.2 ✅ |
+| Jadwal (+ bentrok ruang) | ✅ ada | 2.2 ✅ |
 | Kelayakan mahasiswa | ✅ sebagian (reguler) | 3.2 |
 | KRS mandiri | ✅ ada (term berjalan saja) | 3.1, 3.4 |
 | Alur persetujuan | ✅ ada (dosen wali) | 3.3 |
