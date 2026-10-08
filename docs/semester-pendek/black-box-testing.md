@@ -96,8 +96,9 @@ Sebagian data belum bisa dibuat dari halaman mana pun. Kolom **Cara** menunjukka
 | Akun login dosen | `DSN-Y` punya akun login | ✅ `Dosen` › detail dosen (fitur akun dosen) |
 | Prasyarat MK | MK `MK-PRQ` mensyaratkan Algoritma minimal C | 🧩 belum ada halaman — **developer** |
 | Dosen wali | `M1` dibimbing `WALI` | 🧩 belum ada halaman — **developer** |
-| Riwayat nilai | `M1` Basis Data **D**, `M2` Basis Data **B** di periode lampau | ✅ `Akademik › KRS` › **Tambah KRS** lalu `Akademik › Penilaian` › **Input Nilai** |
-| Status mahasiswa | `M3` berstatus **Cuti** | **Developer** |
+| Mahasiswa uji | `M1`…`M4` baru, tanpa KRS di periode berjalan (mahasiswa demo sudah punya KRS hasil seeder sehingga halaman KRS-nya terkunci) | ✅ `Mahasiswa` › **Tambah Mahasiswa**, lalu **developer** membuatkan akun login |
+| Riwayat nilai | `M1` Basis Data **D**, `M2` Basis Data **B** di periode lampau | **Developer** (kelas demo hanya ada di periode berjalan) |
+| Status mahasiswa | `M3` berstatus **Cuti** | ✅ pilih Status "Cuti" saat **Tambah Mahasiswa** |
 | Tunggakan | `M4` punya tagihan lain belum lunas yang lewat jatuh tempo | **Developer** (belum ada halaman buat tagihan) |
 | IP untuk batas SKS | `M5` IP Genap 1,80 tidak ikut SP; `M6` IP Genap 1,80 ikut SP (IP SP 3,50); `M7` IP Genap 3,20 | ✅ lewat Input Nilai, atau developer |
 | Pengaturan SP | Biaya Rp150.000/SKS, maks 9 SKS, batas ulang C, MK baru boleh, minimum peserta 5, kehadiran minimum 75%, mode persetujuan "dosen wali", jatuh tempo 3 hari | ⏳ 1.5 halaman Pengaturan Akademik |
@@ -268,11 +269,11 @@ Halaman `Akademik › Kelas dan Jadwal`.
 
 ## 8. KRS Mahasiswa (Portal)
 
-Halaman `Akademik › KRS` di portal mahasiswa ("Kartu Rencana Studi (KRS)"). Tahap 3.4 menambah **pilihan periode** di halaman ini (atau menu "Semester Pendek" yang membukanya untuk periode SP). Kasus ✅ diuji di periode Genap yang periode KRS-nya sedang dibuka (lihat Persiapan Data).
+Halaman `Akademik › KRS` di portal mahasiswa ("Kartu Rencana Studi (KRS)"). Tahap 3.4 menambah **pilihan periode** di halaman ini (atau menu "Semester Pendek" yang membukanya untuk periode SP). Kasus ✅ diuji di periode berjalan (data demo: Ganjil 2026/2027) yang periode KRS-nya sudah dibuka developer (lihat Persiapan Data).
 
 | ID | Status | Skenario | Prasyarat | Langkah di halaman | Input | Hasil yang diharapkan | Prioritas |
 |---|---|---|---|---|---|---|---|
-| KRS-01 | ✅ | Ringkasan halaman | Login `M1` | Buka KRS | — | Subjudul "Semester 2026/2027 Genap"; kartu Status KRS, Beban SKS ("0 / 24 SKS"), Periode KRS (tanggal + badge "Dibuka") dan "Dosen wali: …" | Sedang |
+| KRS-01 | ✅ | Ringkasan halaman | Login `M1` | Buka KRS | — | Subjudul "Semester {periode berjalan}"; kartu Status KRS, Beban SKS ("0 / {batas} SKS"), Periode KRS (tanggal + badge "Dibuka") dan "Dosen wali: …" | Sedang |
 | KRS-02 | ✅ | Daftar mata kuliah ditawarkan | — | Gulir ke "Mata Kuliah Ditawarkan" | — | Per mata kuliah: daftar kelas berisi "Kelas X", dosen (atau "Dosen belum ditetapkan"), jadwal (atau "Jadwal belum ditetapkan"), "Sisa n dari m kursi", tombol **Pilih Kelas** | Sedang |
 | KRS-03 | ✅ | Pilih kelas | Kelas layak & masih ada kursi | **Pilih Kelas** | — | Alert hijau "Mata kuliah ditambahkan ke KRS."; muncul di "Mata Kuliah Dipilih" dengan badge "Draft"; kartu MK berbadge "Dipilih", kelas berbadge "Kelas dipilih"; Beban SKS bertambah; sisa kursi berkurang 1 | Tinggi |
 | KRS-04 | ✅ | Hapus pilihan | Ada item Draft | **Hapus** pada item | — | "Mata kuliah dihapus dari KRS."; sisa kursi kembali | Sedang |
@@ -281,7 +282,7 @@ Halaman `Akademik › KRS` di portal mahasiswa ("Kartu Rencana Studi (KRS)"). Ta
 | KRS-07 | ✅ | Tarik pengajuan | Lanjutan KRS-06, periode KRS masih buka | **Tarik Pengajuan** | — | "Pengajuan KRS ditarik kembali. KRS dapat diubah lagi."; item kembali bisa dihapus/ditambah | Sedang |
 | KRS-08 | ✅ | KRS disetujui | Dosen wali menyetujui (sementara lewat developer, T-1) | Muat ulang KRS | — | Item "Terdaftar"; Alert hijau "KRS semester ini sudah disetujui dan dikunci. Hubungi Bagian Akademik untuk perubahan KRS." | Tinggi |
 | KRS-09 | ✅ | KRS ditolak | Dosen wali menolak dengan alasan (sementara lewat developer, T-1) | Muat ulang KRS | — | Alert merah "KRS ditolak dosen wali" berisi alasan + "— perbaiki KRS Anda lalu ajukan kembali."; item kembali "Draft" dan kursi tetap dipegang; bisa diubah & diajukan ulang | Tinggi |
-| KRS-10 | ✅ | Cetak KRS | Ada item | **Cetak KRS** | — | Berkas PDF `KRS-2026-2027-Genap.pdf` terunduh berisi daftar MK | Rendah |
+| KRS-10 | ✅ | Cetak KRS | Ada item | **Cetak KRS** | — | Berkas PDF `KRS-{periode}.pdf` (mis. `KRS-2026-2027-Ganjil.pdf`) terunduh berisi daftar MK | Rendah |
 | KRS-11 | ✅ | Riwayat KRS | Ada KRS semester lalu | Riwayat KRS → **Tampilkan** | — | Daftar KRS sebelumnya beserta status; **Sembunyikan** menutupnya | Rendah |
 | KRS-12 | ✅ | Periode KRS belum dibuka | Tanggal buka di masa depan | Buka KRS | — | Alert info "Periode KRS belum dibuka. KRS dapat diisi mulai … sampai …"; badge "Ditutup"; **Pilih Kelas** nonaktif | Tinggi |
 | KRS-13 | ✅ | Periode KRS sudah lewat | Tanggal tutup di masa lalu | Buka KRS | — | "Periode KRS sudah ditutup pada …"; **Pilih Kelas** nonaktif | Tinggi |
@@ -311,7 +312,7 @@ Mahasiswa harus tahu **mengapa** sebuah kelas tidak bisa dipilih. Kelas yang tid
 | ELG-01 | ✅ | Kelas penuh (E1) | Kursi kelas habis | Teks merah "Kelas penuh"; **Pilih Kelas** nonaktif | Tinggi |
 | ELG-02 | ✅ | Bentrok jadwal dengan pilihan sendiri | Sudah memilih kelas Senin 08:00–10:30 | Kelas lain di Senin 09:00: teks merah "Bentrok dengan: …"; **Pilih Kelas** nonaktif | Tinggi |
 | ELG-03 | ✅ | Prasyarat belum lulus (E14) | `M1` belum lulus Algoritma; `MK-PRQ` mensyaratkannya | Kartu `MK-PRQ`: bagian "Prasyarat" dengan badge merah Algoritma; badge "Tidak dapat diambil"; Alert kuning "Prasyarat belum terpenuhi: IF305 Algoritma."; tombol nonaktif | Tinggi |
-| ELG-04 | ✅ | Sudah lulus — periode **reguler** | `M2` lulus Basis Data B, isi KRS Genap | Badge "Tidak dapat diambil"; Alert kuning "Sudah lulus dengan nilai B." (aturan reguler tidak berubah karena SP) | Tinggi |
+| ELG-04 | ✅ | Sudah lulus — periode **reguler** | `M2` lulus Basis Data B, isi KRS periode reguler berjalan | Badge "Tidak dapat diambil"; Alert kuning "Sudah lulus dengan nilai B." (aturan reguler tidak berubah karena SP) | Tinggi |
 | ELG-05 | ✅ | Mengulang nilai D — periode reguler | `M1` Basis Data D | Badge kuning "Mengulang (nilai D)"; kelas bisa dipilih | Sedang |
 | ELG-06 | ✅ | Melebihi batas SKS | SKS terpilih hampir mencapai batas | **Pilih Kelas** kelas 3 SKS → Alert merah "SKS yang dipilih melebihi batas maksimum semester ini (…)."; bar Beban SKS tidak melewati batas | Tinggi |
 | ELG-07 | ✅ | Mahasiswa cuti | Login `M3` | Alert "Status akademik Anda saat ini Cuti. Pengisian KRS hanya untuk mahasiswa berstatus Aktif."; tidak bisa memilih | Tinggi |
@@ -500,7 +501,7 @@ Halaman `Akademik › Penilaian`.
 
 | ID | Status | Skenario | Prasyarat | Langkah di halaman | Input | Hasil yang diharapkan | Prioritas |
 |---|---|---|---|---|---|---|---|
-| RPT-01 | ✅ | Dashboard default tidak berubah | SP ada | Login `AKD` → Dashboard | — | Angka tetap untuk periode berjalan (Genap), bukan SP | Sedang |
+| RPT-01 | ✅ | Dashboard default tidak berubah | SP ada | Login `AKD` → Dashboard | — | Angka tetap untuk periode reguler berjalan, bukan SP | Sedang |
 | RPT-02 | ⏳ 6.2 | Ringkasan SP | Data SP campuran | Periode Akademik › SP (tab ringkasan) | — | Kartu: mahasiswa terdaftar, disetujui/terdaftar, menunggu (persetujuan/bayar), lunas/belum lunas, kelas/dosen — angka cocok dengan hitungan manual di tab Kelas, Pendaftaran, Pembayaran | Tinggi |
 | RPT-03 | ⏳ 6.2 | Kartu "Perlu tindakan" | SP Pendaftaran Ditutup, lalu Penilaian | Lihat ringkasan | — | Ditutup: kelas di bawah minimum, kelas hampir penuh, kelas tanpa dosen/jadwal. Penilaian: kelas belum submit/belum final. Tautan **lihat** membuka daftar terkait | Sedang |
 | RPT-04 | ⏳ 6.3 | Laporan SP | Login akun dengan izin laporan | `Laporan` › pilih jenis laporan SP (pendaftaran, mata kuliah, nilai, keuangan, ringkasan) + periode SP | — | Tabel dengan kolom sesuai [frontend-dan-mobile.md §4](./frontend-dan-mobile.md#4-laporan) | Sedang |

@@ -23,6 +23,7 @@
 | 11 | [rencana-implementasi.md](./rencana-implementasi.md) | Urutan fase, checklist, apa yang sengaja **tidak** dibangun |
 | 12 | [tahapan-pengembangan.md](./tahapan-pengembangan.md) | Rekonsiliasi rancangan dengan kode per 2026-10-08, tahapan kerja per PR, gerbang rilis, keterlacakan, estimasi |
 | 13 | [black-box-testing.md](./black-box-testing.md) | Checklist uji black box dari halaman frontend (QA/UAT): langkah per menu & tombol, status bisa-diuji-sekarang / halaman belum ada / menunggu tahap, temuan menu tanpa halaman |
+| 14 | [langkah-pengujian-frontend.md](./langkah-pengujian-frontend.md) | Urutan langkah pengujian dari halaman web per sesi & peran: persiapan data, Bagian A (bisa dijalankan sekarang), Bagian B (siklus SP penuh), bantuan developer |
 
 ---
 
