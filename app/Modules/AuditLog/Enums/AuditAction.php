@@ -20,4 +20,6 @@ enum AuditAction: string
     case Downloaded = 'downloaded';
     case ViewedSensitive = 'viewed_sensitive';
     case LinkedAccount = 'linked_account';
+    // Aturan bisnis sengaja dilewati dengan alasan (mis. bentrok jadwal dosen dipaksa).
+    case ForcedOverride = 'forced_override';
 }

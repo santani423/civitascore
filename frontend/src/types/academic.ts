@@ -1,3 +1,5 @@
+import type { PortalLecturer, PortalSchedule } from '@/types/studentPortal'
+
 export type StudentStatus = 'active' | 'leave' | 'graduated' | 'inactive' | 'dropped_out'
 
 export interface Student {
@@ -139,11 +141,60 @@ export interface ClassSection {
   course_name: string | null
   course_code: string | null
   credits: number | null
+  /** Dosen pengampu (penanggung jawab) — diatur lewat PUT class-sections/{id}/teaching. */
+  lecturer_id: string | null
+  lecturer: PortalLecturer | null
+  schedules: PortalSchedule[]
   class_code: string
   capacity: number
   enrolled_count: number | null
   is_active: boolean
   created_at: string
+}
+
+export interface ClassScheduleInput {
+  /** ISO-8601: 1 = Senin … 7 = Minggu. */
+  day_of_week: number
+  start_time: string
+  end_time: string
+  room: string | null
+}
+
+export interface UpdateClassTeachingPayload {
+  lecturer_id: string | null
+  schedules: ClassScheduleInput[]
+  /** Paksa simpan meski bentrok jadwal dosen (bentrok ruangan tetap ditolak). */
+  force?: boolean
+  /** Wajib (min. 10 karakter) bila force — dicatat di audit log. */
+  reason?: string
+}
+
+/** Isi `errors.conflicts[]` pada 409 `errors.code = SCHEDULE_CONFLICT`. */
+export interface ScheduleConflict {
+  type: 'lecturer' | 'room' | 'internal'
+  /** Hanya bentrok dosen yang boleh dipaksa. */
+  forceable: boolean
+  message: string
+  class_section_id: string | null
+  course_name: string | null
+  class_code: string | null
+  schedule: string
+}
+
+/** Peserta kelas yang jadwal barunya beririsan dengan kelas lain yang ia ambil. */
+export interface StudentScheduleConflict {
+  student_id: string
+  nim: string
+  name: string
+  class_section_id: string
+  course_name: string
+  class_code: string
+  schedule: string
+}
+
+export interface UpdateClassTeachingResult {
+  overridden_conflicts: ScheduleConflict[]
+  warnings: { student_conflicts: StudentScheduleConflict[] }
 }
 
 export interface Curriculum {

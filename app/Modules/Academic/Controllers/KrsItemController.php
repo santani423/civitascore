@@ -11,18 +11,27 @@ use Modules\Academic\Models\KrsItem;
 use Modules\Academic\Requests\StoreKrsItemRequest;
 use Modules\Academic\Resources\KrsItemResource;
 use Modules\Academic\Services\AcademicRecordService;
+use Modules\Academic\Support\ClassSectionAccess;
 
 /** No `show`/detail route — a KRS entry's detail is fully represented by its row. */
 class KrsItemController extends Controller
 {
-    public function __construct(private readonly AcademicRecordService $records) {}
+    public function __construct(
+        private readonly AcademicRecordService $records,
+        private readonly ClassSectionAccess $access,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', KrsItem::class);
 
+        // Baris KRS memuat nilai — dosen hanya melihat peserta kelasnya
+        // sendiri bila kepemilikan ditegakkan (sama dengan GET grades).
+        $query = KrsItem::query()->with(['student', 'classSection.course', 'academicTerm', 'grade'])->latest();
+        $this->access->restrictToOwnClasses($query, $request->user());
+
         $paginator = ListQuery::paginate(
-            query: KrsItem::query()->with(['student', 'classSection.course', 'academicTerm', 'grade'])->latest(),
+            query: $query,
             request: $request,
             filterable: ['student_id', 'class_section_id', 'academic_term_id', 'status'],
             sortable: ['created_at'],

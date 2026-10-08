@@ -5,6 +5,8 @@ import { DataTable, type DataTableColumn } from '@/components/ui/DataTable'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { Input } from '@/components/ui/Input'
 import { Alert } from '@/components/ui/Alert'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { usePermission } from '@/hooks/usePermission'
 import { featureFlagService } from '@/services/systemSettingService'
@@ -18,12 +20,16 @@ export function FeatureFlagsPage() {
   const [togglingId, setTogglingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleToggle = async (flag: FeatureFlag) => {
+  // Di konteks universitas, perubahan hanya berlaku untuk universitas itu
+  // (override); di konteks platform (Super Admin), nilai global yang diubah.
+  const isUniversityScope = list.data[0]?.scope === 'university'
+
+  const runChange = async (flag: FeatureFlag, change: () => Promise<FeatureFlag>) => {
     setError(null)
     setTogglingId(flag.id)
 
     try {
-      await featureFlagService.update(flag.id, !flag.is_enabled)
+      await change()
       list.refetch()
     } catch (toggleError) {
       setError((toggleError as NormalizedApiError).message ?? 'Gagal mengubah feature flag.')
@@ -31,6 +37,9 @@ export function FeatureFlagsPage() {
       setTogglingId(null)
     }
   }
+
+  const handleToggle = (flag: FeatureFlag) => runChange(flag, () => featureFlagService.update(flag.id, !flag.is_enabled))
+  const handleReset = (flag: FeatureFlag) => runChange(flag, () => featureFlagService.clearOverride(flag.id))
 
   const columns: DataTableColumn<FeatureFlag>[] = [
     {
@@ -53,12 +62,44 @@ export function FeatureFlagsPage() {
         />
       ),
     },
+    ...(isUniversityScope
+      ? [
+          {
+            header: 'Sumber',
+            cell: (row: FeatureFlag) =>
+              row.university_override === null ? (
+                <span className="text-xs text-ink-tertiary">
+                  Mengikuti global ({row.default_enabled ? 'aktif' : 'nonaktif'})
+                </span>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="info">Diatur universitas</Badge>
+                  {canUpdate && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={togglingId === row.id}
+                      onClick={() => handleReset(row)}
+                    >
+                      Ikuti global
+                    </Button>
+                  )}
+                </div>
+              ),
+          } satisfies DataTableColumn<FeatureFlag>,
+        ]
+      : []),
   ]
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
         title="Feature Flag"
+        description={
+          isUniversityScope
+            ? 'Perubahan hanya berlaku untuk universitas Anda.'
+            : 'Nilai global — default untuk semua universitas yang tidak mengaturnya sendiri.'
+        }
         breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Pengaturan' }, { label: 'Feature Flag' }]}
       />
 

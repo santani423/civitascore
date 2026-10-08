@@ -35,6 +35,8 @@ import type {
   StudentExamResult,
   StudyProgram,
   Transcript,
+  UpdateClassTeachingPayload,
+  UpdateClassTeachingResult,
   UpdateExamPayload,
   UpdateExamQuestionPayload,
   UpdateLecturerPayload,
@@ -180,6 +182,16 @@ export const classSectionService = {
   async show(id: string): Promise<ClassSection> {
     const response = await apiClient.get<ApiSuccessResponse<ClassSection>>(`/class-sections/${id}`)
     return response.data.data
+  },
+
+  /**
+   * Ganti dosen pengampu & seluruh jadwal kelas sekaligus. Bentrok → 409
+   * `errors.code = SCHEDULE_CONFLICT` + `errors.conflicts[]`; bentrok dosen
+   * bisa dipaksa dengan `force` + `reason`.
+   */
+  async updateTeaching(id: string, payload: UpdateClassTeachingPayload): Promise<UpdateClassTeachingResult> {
+    const response = await apiClient.put<{ meta: UpdateClassTeachingResult }>(`/class-sections/${id}/teaching`, payload)
+    return response.data.meta
   },
 }
 

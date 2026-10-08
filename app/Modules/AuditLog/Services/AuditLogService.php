@@ -17,11 +17,13 @@ class AuditLogService
 
     /**
      * Write a before/after ledger entry for a sensitive model mutation.
+     * $reason defaults to the request's `reason` input / X-Change-Reason
+     * header; pass it explicitly when the caller already validated it.
      *
      * @param  array<string, mixed>  $oldValues
      * @param  array<string, mixed>  $newValues
      */
-    public function record(Model $model, AuditAction $action, array $oldValues, array $newValues): AuditLog
+    public function record(Model $model, AuditAction $action, array $oldValues, array $newValues, ?string $reason = null): AuditLog
     {
         // Atribut "masked" dicatat tersamar (****1234) — perubahannya tetap
         // terlacak tanpa audit log menjadi jalur kebocoran. Selain itu,
@@ -38,7 +40,7 @@ class AuditLogService
             'action' => $action,
             'old_values' => $oldValues === [] ? null : $oldValues,
             'new_values' => $newValues === [] ? null : $newValues,
-            'reason' => $this->request->input('reason') ?? $this->request->header('X-Change-Reason'),
+            'reason' => $reason ?? $this->request->input('reason') ?? $this->request->header('X-Change-Reason'),
             'ip_address' => $this->request->ip(),
             'user_agent' => $this->request->userAgent(),
         ]);
@@ -51,9 +53,9 @@ class AuditLogService
      *
      * @param  array<string, mixed>  $context
      */
-    public function recordAction(Model $model, AuditAction $action, array $context = []): AuditLog
+    public function recordAction(Model $model, AuditAction $action, array $context = [], ?string $reason = null): AuditLog
     {
-        return $this->record($model, $action, [], $context);
+        return $this->record($model, $action, [], $context, $reason);
     }
 
     public static function maskValue(mixed $value): ?string

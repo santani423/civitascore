@@ -16,6 +16,13 @@ export interface FeatureFlag {
   key: string
   name: string
   description: string | null
+  /** Yang diubah oleh update(): override universitas aktif, atau nilai global (konteks platform). */
+  scope: 'university' | 'global'
+  /** Nilai efektif: override universitas aktif bila ada, selain itu nilai global. */
   is_enabled: boolean
+  /** Nilai global (default semua universitas). */
+  default_enabled: boolean
+  /** null = universitas mengikuti nilai global (selalu null di konteks platform). */
+  university_override: boolean | null
   updated_at: string | null
 }

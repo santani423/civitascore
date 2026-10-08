@@ -13,6 +13,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Modules\Academic\Enums\ExamAttemptStatus;
+use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Models\Exam;
 use Modules\Academic\Models\ExamAttempt;
 use Modules\Academic\Models\KrsItem;
@@ -22,17 +23,22 @@ use Modules\Academic\Resources\ExamParticipantResource;
 use Modules\Academic\Resources\ExamResource;
 use Modules\Academic\Resources\ExamViolationResource;
 use Modules\Academic\Services\ExamService;
+use Modules\Academic\Support\ClassSectionAccess;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ExamController extends Controller
 {
-    public function __construct(private readonly ExamService $exams) {}
+    public function __construct(
+        private readonly ExamService $exams,
+        private readonly ClassSectionAccess $access,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Exam::class);
 
         $query = Exam::query()->with('classSection.course')->withCount('questions');
+        $this->access->restrictToOwnClasses($query, $request->user());
 
         $paginator = ListQuery::paginate(
             query: $query->latest(),
@@ -46,7 +52,9 @@ class ExamController extends Controller
 
     public function store(StoreExamRequest $request): JsonResponse
     {
-        $this->authorize('manage', Exam::class);
+        // Scoped findOrFail: kelas universitas lain = 404, bukan 403.
+        $classSection = ClassSection::query()->findOrFail((string) $request->validated('class_section_id'));
+        $this->authorize('manage', [Exam::class, $classSection]);
 
         $exam = $this->exams->createExam($request->validated());
 
@@ -59,14 +67,14 @@ class ExamController extends Controller
 
     public function show(Exam $exam): JsonResponse
     {
-        $this->authorize('viewAny', Exam::class);
+        $this->authorize('view', $exam);
 
         return ApiResponse::success(new ExamResource($exam->load('classSection.course')->loadCount('questions')));
     }
 
     public function update(UpdateExamRequest $request, Exam $exam): JsonResponse
     {
-        $this->authorize('manage', Exam::class);
+        $this->authorize('manage', [Exam::class, $exam->classSection]);
 
         $exam = $this->exams->updateExam($exam, $request->validated());
 
@@ -78,7 +86,7 @@ class ExamController extends Controller
 
     public function destroy(Exam $exam): JsonResponse
     {
-        $this->authorize('delete', Exam::class);
+        $this->authorize('delete', $exam);
 
         $this->exams->deleteExam($exam);
 
@@ -87,7 +95,7 @@ class ExamController extends Controller
 
     public function publish(Exam $exam): JsonResponse
     {
-        $this->authorize('publish', Exam::class);
+        $this->authorize('publish', $exam);
 
         $exam = $this->exams->publish($exam);
 
@@ -103,7 +111,7 @@ class ExamController extends Controller
      */
     public function generateAccessLink(Exam $exam): JsonResponse
     {
-        $this->authorize('manage', Exam::class);
+        $this->authorize('manage', [Exam::class, $exam->classSection]);
 
         $exam = $this->exams->generateAccessToken($exam);
 
@@ -121,7 +129,7 @@ class ExamController extends Controller
      */
     public function recentViolations(Request $request, Exam $exam): JsonResponse
     {
-        $this->authorize('viewAny', ExamAttempt::class);
+        $this->authorize('viewAny', [ExamAttempt::class, $exam]);
 
         $since = $request->query('since') ? Carbon::parse((string) $request->query('since')) : null;
         $violations = $this->exams->recentViolationsForExam($exam, $since);
@@ -132,7 +140,7 @@ class ExamController extends Controller
     /** Ringkasan + tabel nilai seluruh peserta ujian ini (spec §7). */
     public function recap(Exam $exam): JsonResponse
     {
-        $this->authorize('viewAny', Exam::class);
+        $this->authorize('view', $exam);
 
         $exam->loadMissing(['classSection.course', 'classSection.academicTerm']);
         $participants = $this->exams->participantsQuery($exam)->oldest()->get();
@@ -145,7 +153,7 @@ class ExamController extends Controller
 
     public function exportRecap(Request $request, Exam $exam): StreamedResponse|Response
     {
-        $this->authorize('viewAny', Exam::class);
+        $this->authorize('view', $exam);
 
         $exam->loadMissing(['classSection.course']);
         $participants = $this->exams->participantsQuery($exam)->oldest()->get();
@@ -164,9 +172,9 @@ class ExamController extends Controller
      */
     public function downloadPdf(Request $request, Exam $exam): Response
     {
-        $this->authorize('viewAny', Exam::class);
+        $this->authorize('view', $exam);
 
-        $withAnswers = $request->boolean('with_answers') && $request->user()->can('manage', Exam::class);
+        $withAnswers = $request->boolean('with_answers') && $request->user()->can('manage', [Exam::class, $exam->classSection]);
 
         $exam->loadMissing(['classSection.course', 'classSection.academicTerm', 'creator', 'questions.options']);
         $filename = 'naskah-ujian-'.Str::slug($exam->title).'.pdf';

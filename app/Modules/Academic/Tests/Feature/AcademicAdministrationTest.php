@@ -1,6 +1,15 @@
 <?php
 
+use App\Models\User;
 use Modules\Academic\Models\CoursePrerequisite;
+use Modules\AuditLog\Enums\AuditAction;
+use Modules\AuditLog\Models\ActivityLog;
+use Modules\AuditLog\Models\AuditLog;
+use Modules\Tenancy\Enums\MembershipType;
+use Modules\UserManagement\Database\Seeders\OrganizationalRoleSeeder;
+use Modules\UserManagement\Database\Seeders\RolePermissionSeeder;
+use Modules\UserManagement\Models\Role;
+use Modules\UserManagement\Models\UserRole;
 
 /*
 | Pengaturan data akademik oleh Bagian Akademik yang dikonsumsi Portal
@@ -39,6 +48,150 @@ test('the academic office sets a class schedule and lecturer, with lecturer and 
     ])->assertApiError(422);
 
     expect($busyClass)->not->toBeNull();
+});
+
+test('a lecturer clash returns SCHEDULE_CONFLICT and can be forced with a reason that is audited', function () {
+    $world = portalWorld();
+    $lecturer = portalLecturer($world)['lecturer'];
+    portalClass($world, portalCourse($world, ['name' => 'Statistika']), [[1, '08:00', '10:00', 'R.201']], ['lecturer_id' => $lecturer->id, 'class_code' => 'A']);
+    $classSection = portalClass($world, portalCourse($world, ['name' => 'Basis Data']));
+    actingAsUserWithUniversityPermissions($world['university'], ['classes.update']);
+
+    $url = "/api/v1/class-sections/{$classSection->id}/teaching";
+    $payload = ['lecturer_id' => $lecturer->id, 'schedules' => [['day_of_week' => 1, 'start_time' => '09:00', 'end_time' => '11:00', 'room' => 'R.305']]];
+
+    $this->withHeaders(portalHeaders($world))->putJson($url, $payload)
+        ->assertApiError(409)
+        ->assertJsonPath('errors.code', 'SCHEDULE_CONFLICT')
+        ->assertJsonPath('errors.conflicts.0.type', 'lecturer')
+        ->assertJsonPath('errors.conflicts.0.forceable', true)
+        ->assertJsonPath('errors.conflicts.0.class_code', 'A');
+
+    $this->withHeaders(portalHeaders($world))->putJson($url, [...$payload, 'force' => true])
+        ->assertApiError(422)
+        ->assertJsonPath('errors.reason.0', 'Alasan wajib diisi untuk memaksa jadwal yang bentrok.');
+    $this->withHeaders(portalHeaders($world))->putJson($url, [...$payload, 'force' => true, 'reason' => 'singkat'])
+        ->assertApiError(422)
+        ->assertJsonPath('errors.reason.0', 'Alasan minimal 10 karakter.');
+
+    $reason = 'Team teaching bergantian dengan dosen tamu.';
+    $this->withHeaders(portalHeaders($world))->putJson($url, [...$payload, 'force' => true, 'reason' => $reason])
+        ->assertApiSuccess()
+        ->assertJsonPath('data.lecturer.id', $lecturer->id)
+        ->assertJsonPath('meta.overridden_conflicts.0.type', 'lecturer');
+
+    $audit = AuditLog::query()->where('auditable_id', $classSection->id)->where('action', AuditAction::ForcedOverride)->first();
+    expect($audit)->not->toBeNull()
+        ->and($audit->reason)->toBe($reason)
+        ->and($audit->new_values['conflicts'][0]['class_code'])->toBe('A')
+        ->and(AuditLog::query()->where('auditable_id', $classSection->id)->where('action', AuditAction::Updated)->value('reason'))->toBe($reason)
+        ->and(ActivityLog::query()->where('subject_id', $classSection->id)->pluck('properties')->pluck('event')->all())
+        ->toEqualCanonicalizing(['LECTURER_ASSIGNED', 'CLASS_SCHEDULE_CHANGED', 'SCHEDULE_CONFLICT_OVERRIDDEN']);
+});
+
+test('a room clash can never be forced, while empty and online rooms never clash', function () {
+    $world = portalWorld();
+    portalClass($world, portalCourse($world, ['name' => 'Statistika']), [[1, '08:00', '10:00', 'R.201'], [2, '08:00', '10:00', 'Online']], ['class_code' => 'A']);
+    $classSection = portalClass($world, portalCourse($world, ['name' => 'Basis Data']));
+    actingAsUserWithUniversityPermissions($world['university'], ['classes.update']);
+    $url = "/api/v1/class-sections/{$classSection->id}/teaching";
+
+    // Ruangan dinormalkan: spasi & huruf besar/kecil tidak membuatnya lolos.
+    $this->withHeaders(portalHeaders($world))->putJson($url, [
+        'schedules' => [['day_of_week' => 1, 'start_time' => '09:00', 'end_time' => '11:00', 'room' => '  r.201 ']],
+        'force' => true,
+        'reason' => 'Mencoba memaksa ruangan yang sama.',
+    ])->assertApiError(409)
+        ->assertJsonPath('errors.code', 'SCHEDULE_CONFLICT')
+        ->assertJsonPath('errors.conflicts.0.type', 'room')
+        ->assertJsonPath('errors.conflicts.0.forceable', false);
+
+    $this->withHeaders(portalHeaders($world))->putJson($url, [
+        'schedules' => [
+            ['day_of_week' => 2, 'start_time' => '09:00', 'end_time' => '11:00', 'room' => 'online'],
+            ['day_of_week' => 3, 'start_time' => '09:00', 'end_time' => '11:00', 'room' => '  Lab   Komputer '],
+        ],
+    ])->assertApiSuccess()
+        ->assertJsonPath('data.schedules.1.room', 'Lab Komputer')
+        ->assertJsonPath('meta.overridden_conflicts', []);
+
+    $this->withHeaders(portalHeaders($world))->putJson($url, [
+        'schedules' => [
+            ['day_of_week' => 4, 'start_time' => '09:00', 'end_time' => '11:00'],
+            ['day_of_week' => 4, 'start_time' => '10:00', 'end_time' => '12:00'],
+        ],
+        'force' => true,
+        'reason' => 'Dua jadwal di hari yang sama.',
+    ])->assertApiError(409)
+        ->assertJsonPath('errors.conflicts.0.type', 'internal');
+});
+
+test('changing the schedule of a class with participants warns about their clashing classes', function () {
+    $world = portalWorld();
+    $other = portalClass($world, portalCourse($world, ['name' => 'Statistika']), [[3, '08:00', '10:00', 'R.201']], ['class_code' => 'A']);
+    $classSection = portalClass($world, portalCourse($world, ['name' => 'Basis Data']), [], ['class_code' => 'B']);
+    portalEnroll($world, $world['student'], $other);
+    portalEnroll($world, $world['student'], $classSection);
+    actingAsUserWithUniversityPermissions($world['university'], ['classes.update']);
+
+    $this->withHeaders(portalHeaders($world))->putJson("/api/v1/class-sections/{$classSection->id}/teaching", [
+        'schedules' => [['day_of_week' => 3, 'start_time' => '09:00', 'end_time' => '11:00', 'room' => 'R.305']],
+    ])->assertApiSuccess()
+        ->assertJsonPath('meta.warnings.student_conflicts.0.nim', $world['student']->nim)
+        ->assertJsonPath('meta.warnings.student_conflicts.0.class_code', 'A');
+});
+
+test('the academic office finds classes without a lecturer and assigns one, using the real role', function () {
+    $this->seed([RolePermissionSeeder::class, OrganizationalRoleSeeder::class]);
+
+    $world = portalWorld();
+    $lecturer = portalLecturer($world)['lecturer'];
+    $assigned = portalClass($world, portalCourse($world, ['name' => 'Statistika']), [[1, '08:00', '10:00', 'R.201']], ['lecturer_id' => $lecturer->id, 'class_code' => 'A']);
+    $unassigned = portalClass($world, portalCourse($world, ['name' => 'Basis Data']), [], ['class_code' => 'B']);
+
+    $officer = User::factory()->create();
+    portalGrant($world, $officer, [], MembershipType::Staff);
+    UserRole::query()->create([
+        'user_id' => $officer->id,
+        'role_id' => Role::query()->where('slug', 'academic_administrator')->whereNull('university_id')->value('id'),
+        'university_id' => $world['university']->id,
+        'assigned_at' => now(),
+    ]);
+    $this->actingAs($officer);
+
+    // Pilihan dosen pengampu di panel "Dosen & Jadwal".
+    $this->withHeaders(portalHeaders($world))->getJson('/api/v1/lecturers')
+        ->assertApiSuccess()
+        ->assertJsonPath('data.0.id', $lecturer->id);
+
+    $this->withHeaders(portalHeaders($world))->getJson('/api/v1/class-sections?filter[has_lecturer]=0')
+        ->assertApiSuccess()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.id', $unassigned->id)
+        ->assertJsonPath('data.0.lecturer', null)
+        ->assertJsonPath('data.0.schedules', []);
+
+    $this->withHeaders(portalHeaders($world))->getJson('/api/v1/class-sections?filter[has_lecturer]=1')
+        ->assertApiSuccess()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.id', $assigned->id)
+        ->assertJsonPath('data.0.lecturer.name', $lecturer->name)
+        ->assertJsonPath('data.0.schedules.0.day_label', 'Senin');
+
+    $this->withHeaders(portalHeaders($world))->putJson("/api/v1/class-sections/{$unassigned->id}/teaching", [
+        'lecturer_id' => $lecturer->id,
+        'schedules' => [['day_of_week' => 2, 'start_time' => '13:00', 'end_time' => '15:30', 'room' => 'Lab 1']],
+    ])->assertApiSuccess();
+
+    $this->withHeaders(portalHeaders($world))->getJson('/api/v1/class-sections?filter[has_lecturer]=0')
+        ->assertJsonPath('meta.total', 0);
+
+    $this->withHeaders(portalHeaders($world))->getJson("/api/v1/class-sections/{$unassigned->id}")
+        ->assertApiSuccess()
+        ->assertJsonPath('data.lecturer_id', $lecturer->id)
+        ->assertJsonPath('data.lecturer.id', $lecturer->id)
+        ->assertJsonPath('data.schedules.0.start_time', '13:00')
+        ->assertJsonPath('data.schedules.0.room', 'Lab 1');
 });
 
 test('students cannot use academic administration endpoints', function () {

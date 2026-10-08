@@ -24,7 +24,7 @@ class ExamQuestionController extends Controller
 
     public function index(Exam $exam): JsonResponse
     {
-        $this->authorize('viewAny', Exam::class);
+        $this->authorize('view', $exam);
 
         $questions = $exam->questions()->with('options')->orderBy('order_index')->get();
 
@@ -33,7 +33,7 @@ class ExamQuestionController extends Controller
 
     public function store(StoreExamQuestionRequest $request, Exam $exam): JsonResponse
     {
-        $this->authorize('manage', Exam::class);
+        $this->authorize('manage', [Exam::class, $exam->classSection]);
 
         $question = $this->exams->addQuestion($exam, $request->validated());
 
@@ -42,7 +42,7 @@ class ExamQuestionController extends Controller
 
     public function update(UpdateExamQuestionRequest $request, ExamQuestion $examQuestion): JsonResponse
     {
-        $this->authorize('manage', Exam::class);
+        $this->authorize('manage', [Exam::class, $examQuestion->exam->classSection]);
 
         $question = $this->exams->updateQuestion($examQuestion, $request->validated());
 
@@ -51,7 +51,7 @@ class ExamQuestionController extends Controller
 
     public function destroy(ExamQuestion $examQuestion): JsonResponse
     {
-        $this->authorize('manage', Exam::class);
+        $this->authorize('manage', [Exam::class, $examQuestion->exam->classSection]);
 
         $this->exams->deleteQuestion($examQuestion);
 
@@ -61,7 +61,7 @@ class ExamQuestionController extends Controller
     /** Menyalin soal terpilih dari bank soal ke pool ujian ini (spec §7). */
     public function applyBank(ApplyQuestionBankToExamRequest $request, Exam $exam): JsonResponse
     {
-        $this->authorize('manage', Exam::class);
+        $this->authorize('manage', [Exam::class, $exam->classSection]);
 
         $questions = $this->questionBank->applyToExam($exam, $request->validated('question_bank_item_ids'));
 

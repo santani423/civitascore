@@ -12,15 +12,19 @@ use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Requests\RecordAttendanceBatchRequest;
 use Modules\Academic\Resources\AttendanceResource;
 use Modules\Academic\Services\AcademicRecordService;
+use Modules\Academic\Support\ClassSectionAccess;
 
 /** No `show`/detail route — an attendance entry's detail is fully represented by its row. */
 class AttendanceController extends Controller
 {
-    public function __construct(private readonly AcademicRecordService $records) {}
+    public function __construct(
+        private readonly AcademicRecordService $records,
+        private readonly ClassSectionAccess $access,
+    ) {}
 
     public function batchStore(RecordAttendanceBatchRequest $request, ClassSection $classSection): JsonResponse
     {
-        $this->authorize('record', Attendance::class);
+        $this->authorize('record', [Attendance::class, $classSection]);
 
         $attendances = $this->records->recordAttendanceBatch($classSection, $request->validated());
 
@@ -36,6 +40,7 @@ class AttendanceController extends Controller
         $this->authorize('viewAny', Attendance::class);
 
         $query = Attendance::query()->with(['krsItem.student', 'krsItem.classSection.course']);
+        $this->access->restrictToOwnClasses($query, $request->user(), through: 'krsItem');
 
         // student_id/class_section_id aren't columns on `attendances` itself —
         // they live on the related krs_item, so they can't go through

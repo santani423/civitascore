@@ -21,6 +21,7 @@
 | 9 | [keamanan-audit-integritas.md](./keamanan-audit-integritas.md) | Otorisasi, isolasi tenant, race condition kapasitas, audit log |
 | 10 | [pengujian-dan-penerimaan.md](./pengujian-dan-penerimaan.md) | Strategi uji & kriteria penerimaan Given/When/Then |
 | 11 | [rencana-implementasi.md](./rencana-implementasi.md) | Urutan fase, checklist, apa yang sengaja **tidak** dibangun |
+| 12 | [tahapan-pengembangan.md](./tahapan-pengembangan.md) | Rekonsiliasi rancangan dengan kode per 2026-10-08, tahapan kerja per PR, gerbang rilis, keterlacakan, estimasi |
 
 ---
 

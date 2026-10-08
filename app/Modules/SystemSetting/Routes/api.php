@@ -11,4 +11,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('feature-flags', [FeatureFlagController::class, 'index'])->middleware('permission:feature_flags.read');
     Route::put('feature-flags/{featureFlag}', [FeatureFlagController::class, 'update'])->middleware('permission:feature_flags.update');
+    Route::delete('feature-flags/{featureFlag}/override', [FeatureFlagController::class, 'clearOverride'])->middleware('permission:feature_flags.update');
 });

@@ -4,7 +4,6 @@ namespace Modules\Academic\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Support\Http\ApiResponse;
-use App\Support\Http\Exceptions\ConflictException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,12 +11,12 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Modules\Academic\Enums\LetterGrade;
 use Modules\Academic\Models\AcademicTerm;
-use Modules\Academic\Models\ClassSchedule;
 use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Models\Course;
 use Modules\Academic\Models\CoursePrerequisite;
 use Modules\Academic\Models\Lecturer;
 use Modules\Academic\Models\Student;
+use Modules\Academic\Services\ClassTeachingService;
 use Modules\Academic\Support\PortalFormatter;
 
 /**
@@ -29,6 +28,8 @@ use Modules\Academic\Support\PortalFormatter;
  */
 class AcademicAdministrationController extends Controller
 {
+    public function __construct(private readonly ClassTeachingService $teaching) {}
+
     public function terms(): JsonResponse
     {
         return ApiResponse::success(AcademicTerm::query()
@@ -52,6 +53,10 @@ class AcademicAdministrationController extends Controller
         return ApiResponse::success(PortalFormatter::term($academicTerm->refresh()), 'Periode KRS disimpan.');
     }
 
+    /**
+     * Bentrok dosen bisa dipaksa dengan `force` + `reason`; bentrok ruangan
+     * tidak — lihat ClassTeachingService.
+     */
     public function updateTeaching(Request $request, ClassSection $classSection): JsonResponse
     {
         $this->authorize('update', $classSection);
@@ -63,38 +68,38 @@ class AcademicAdministrationController extends Controller
             'schedules.*.start_time' => ['required', 'date_format:H:i'],
             'schedules.*.end_time' => ['required', 'date_format:H:i', 'after:schedules.*.start_time'],
             'schedules.*.room' => ['nullable', 'string', 'max:100'],
+            'force' => ['sometimes', 'boolean'],
+            'reason' => ['required_if_accepted:force', 'nullable', 'string', 'min:10', 'max:500'],
         ], [
             'schedules.*.end_time.after' => 'Jam selesai harus setelah jam mulai.',
+            'reason.required_if_accepted' => 'Alasan wajib diisi untuk memaksa jadwal yang bentrok.',
+            'reason.min' => 'Alasan minimal 10 karakter.',
         ]);
 
         $lecturer = null;
 
         if (! empty($data['lecturer_id'])) {
-            $lecturer = Lecturer::query()->where('is_active', true)->find($data['lecturer_id'])
+            $lecturer = Lecturer::query()->where('is_active', true)->whereKey($data['lecturer_id'])->first()
                 ?? throw ValidationException::withMessages(['lecturer_id' => 'Dosen tidak ditemukan atau tidak aktif.']);
         }
 
-        $schedules = collect($data['schedules'])->map(fn (array $row) => new ClassSchedule($row));
-        $this->assertNoClash($classSection, $lecturer, $schedules->all());
-
-        DB::transaction(function () use ($classSection, $lecturer, $data): void {
-            $classSection->update(['lecturer_id' => $lecturer?->id]);
-            $classSection->schedules()->delete();
-
-            foreach ($data['schedules'] as $row) {
-                $classSection->schedules()->create([
-                    'university_id' => $classSection->university_id,
-                    'day_of_week' => $row['day_of_week'],
-                    'start_time' => $row['start_time'],
-                    'end_time' => $row['end_time'],
-                    'room' => $row['room'] ?? null,
-                ]);
-            }
-        });
+        $result = $this->teaching->update(
+            $classSection,
+            $lecturer,
+            $data['schedules'],
+            force: (bool) ($data['force'] ?? false),
+            reason: $data['reason'] ?? null,
+        );
 
         return ApiResponse::success(
-            PortalFormatter::classSection($classSection->refresh()->load(['course', 'lecturer', 'schedules'])),
-            'Jadwal & dosen pengampu kelas disimpan.',
+            PortalFormatter::classSection($classSection),
+            $result['overridden_conflicts'] === []
+                ? 'Jadwal & dosen pengampu kelas disimpan.'
+                : 'Jadwal & dosen pengampu kelas disimpan. Bentrok jadwal dosen dipaksa dan dicatat di audit log.',
+            meta: [
+                'overridden_conflicts' => $result['overridden_conflicts'],
+                'warnings' => ['student_conflicts' => $result['student_conflicts']],
+            ],
         );
     }
 
@@ -183,45 +188,5 @@ class AcademicAdministrationController extends Controller
             'student_id' => $student->id,
             'academic_advisor' => PortalFormatter::lecturer($lecturer),
         ], $lecturer ? 'Dosen wali ditetapkan.' : 'Dosen wali dilepas.');
-    }
-
-    /**
-     * Bentrok dosen (dosen sama, jam beririsan) atau ruangan (ruangan sama,
-     * jam beririsan) dengan kelas lain di semester yang sama.
-     *
-     * @param  array<int, ClassSchedule>  $schedules
-     */
-    private function assertNoClash(ClassSection $classSection, ?Lecturer $lecturer, array $schedules): void
-    {
-        foreach ($schedules as $index => $schedule) {
-            foreach (array_slice($schedules, $index + 1) as $other) {
-                if ($schedule->overlaps($other)) {
-                    throw new ConflictException('Dua jadwal pada kelas ini saling bentrok.');
-                }
-            }
-        }
-
-        $others = ClassSchedule::query()
-            ->whereHas('classSection', fn ($query) => $query
-                ->where('academic_term_id', $classSection->academic_term_id)
-                ->whereKeyNot($classSection->id))
-            ->with('classSection.course', 'classSection.lecturer')
-            ->get();
-
-        foreach ($schedules as $schedule) {
-            foreach ($others as $other) {
-                if (! $schedule->overlaps($other)) {
-                    continue;
-                }
-
-                if ($lecturer !== null && $other->classSection->lecturer_id === $lecturer->id) {
-                    throw new ConflictException("Jadwal bentrok dengan kelas {$other->classSection->course->name} {$other->classSection->class_code} yang juga diampu {$lecturer->name} (".PortalFormatter::scheduleText($other).').');
-                }
-
-                if ($schedule->room !== null && $other->room !== null && strcasecmp($schedule->room, $other->room) === 0) {
-                    throw new ConflictException("Ruangan {$other->room} sudah dipakai kelas {$other->classSection->course->name} {$other->classSection->class_code} (".PortalFormatter::scheduleText($other).').');
-                }
-            }
-        }
     }
 }

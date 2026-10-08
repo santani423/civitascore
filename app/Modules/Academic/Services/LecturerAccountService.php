@@ -58,6 +58,9 @@ class LecturerAccountService
      *
      * $existing links that specific account instead of looking one up by
      * the lecturer's email (SDM choosing "tautkan akun" on the employee form).
+     * Without it, an account already tied to the dosen's employee row
+     * (employees.user_id) is linked — the same person must never end up
+     * with a second, email-based account.
      *
      * @return array{user: User, password: string|null, created: bool}
      */
@@ -66,6 +69,8 @@ class LecturerAccountService
         if ($lecturer->user_id !== null) {
             throw new ConflictException('Dosen ini sudah memiliki akun login.');
         }
+
+        $existing ??= $this->employeeOf($lecturer)?->user;
 
         if ($existing === null && ! $lecturer->email) {
             throw ValidationException::withMessages([

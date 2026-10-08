@@ -17,14 +17,14 @@ class ExamGradeRangeController extends Controller
 
     public function index(Exam $exam): JsonResponse
     {
-        $this->authorize('viewAny', Exam::class);
+        $this->authorize('view', $exam);
 
         return ApiResponse::success(ExamGradeRangeResource::collection($exam->gradeRanges()->orderBy('min_score')->get()));
     }
 
     public function update(UpsertExamGradeRangesRequest $request, Exam $exam): JsonResponse
     {
-        $this->authorize('manage', Exam::class);
+        $this->authorize('manage', [Exam::class, $exam->classSection]);
 
         $ranges = $this->exams->upsertGradeRanges($exam, $request->validated('ranges'));
 

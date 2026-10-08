@@ -12,15 +12,21 @@ use Modules\Academic\Models\KrsItem;
 use Modules\Academic\Requests\UpsertGradeRequest;
 use Modules\Academic\Resources\GradeResource;
 use Modules\Academic\Services\AcademicRecordService;
+use Modules\Academic\Support\ClassSectionAccess;
 
 /** No `show`/detail route — a grade's detail is fully represented by its row. */
 class GradeController extends Controller
 {
-    public function __construct(private readonly AcademicRecordService $records) {}
+    public function __construct(
+        private readonly AcademicRecordService $records,
+        private readonly ClassSectionAccess $access,
+    ) {}
 
     public function upsert(UpsertGradeRequest $request, KrsItem $krsItem): JsonResponse
     {
-        $this->authorize('manage', Grade::class);
+        // Kelas diambil dari KrsItem (route binding ter-scope tenant), bukan
+        // dari input klien — id KRS kelas lain tetap ditolak policy.
+        $this->authorize('manage', [Grade::class, $krsItem->classSection]);
 
         $grade = $this->records->recordGrade($krsItem, $request->validated());
 
@@ -35,6 +41,7 @@ class GradeController extends Controller
         $this->authorize('viewAny', Grade::class);
 
         $query = Grade::query()->with(['krsItem.student', 'krsItem.classSection.course', 'krsItem.academicTerm']);
+        $this->access->restrictToOwnClasses($query, $request->user(), through: 'krsItem');
 
         // student_id/class_section_id aren't columns on `grades` itself — they
         // live on the related krs_item, so they can't go through ListQuery's

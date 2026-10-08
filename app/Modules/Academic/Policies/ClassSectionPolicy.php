@@ -16,9 +16,16 @@ class ClassSectionPolicy
         return $user->hasPermissionTo('classes.read');
     }
 
-    public function view(User $user): bool
+    /** Bila kepemilikan dosen ditegakkan, dosen hanya membuka kelas yang diampunya. */
+    public function view(User $user, ClassSection $classSection): Response
     {
-        return $user->hasPermissionTo('classes.read');
+        if (! $user->hasPermissionTo('classes.read')) {
+            return Response::deny();
+        }
+
+        return $this->access->canViewTeaching($user, $classSection)
+            ? Response::allow()
+            : Response::deny('Anda bukan dosen pengampu kelas ini.');
     }
 
     /** Bagian Akademik mengatur jadwal & dosen pengampu kelas. */

@@ -9,15 +9,19 @@ use Illuminate\Http\Request;
 use Modules\Academic\Models\Lecturer;
 use Modules\Academic\Requests\UpdateLecturerProfileRequest;
 use Modules\Academic\Resources\LecturerResource;
+use Modules\Academic\Support\LecturerIdentity;
 
 /**
  * Self-service "Profil Saya" for the logged-in dosen. The lecturer is
- * always resolved from auth()->user() via lecturers.user_id (TenantScoped
- * to the current university) — never from a client-supplied id — so a dosen
- * can only ever see/edit their own record.
+ * always resolved from auth()->user() via LecturerIdentity (lecturers.user_id,
+ * falling back to the SDM employee link; TenantScoped to the current
+ * university) — never from a client-supplied id — so a dosen can only ever
+ * see/edit their own record.
  */
 class LecturerProfileController extends Controller
 {
+    public function __construct(private readonly LecturerIdentity $identity) {}
+
     public function show(Request $request): JsonResponse
     {
         $lecturer = $this->currentLecturer($request);
@@ -44,10 +48,7 @@ class LecturerProfileController extends Controller
 
     private function currentLecturer(Request $request): ?Lecturer
     {
-        return Lecturer::query()
-            ->with(['faculty', 'user'])
-            ->where('user_id', $request->user()->id)
-            ->first();
+        return $this->identity->lecturerFor($request->user())?->load(['faculty', 'user']);
     }
 
     private function notLinked(): JsonResponse

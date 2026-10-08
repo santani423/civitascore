@@ -25,6 +25,7 @@ use Modules\Academic\Models\KrsSubmission;
 use Modules\Academic\Models\Student;
 use Modules\Academic\Support\AcademicClock;
 use Modules\Academic\Support\ClassSectionAccess;
+use Modules\Academic\Support\LecturerIdentity;
 use Modules\Academic\Support\PortalFormatter;
 
 /**
@@ -55,6 +56,7 @@ class KrsPlanService
         private readonly StudentNotificationService $notifications,
         private readonly ClassSectionAccess $access,
         private readonly AcademicClock $clock,
+        private readonly LecturerIdentity $identity,
     ) {}
 
     /**
@@ -839,7 +841,8 @@ class KrsPlanService
             'term' => $submission->academicTerm->label(),
         ];
 
-        $advisorUser = $student->academicAdvisor?->employee?->user;
+        $advisor = $student->academicAdvisor;
+        $advisorUser = $advisor === null ? null : $this->identity->accountOf($advisor);
 
         if ($advisorUser !== null && $advisorUser->is_active) {
             $this->notifications->notifyUser($advisorUser, 'student.krs_review_requested', $placeholders, '/akademik/persetujuan-krs');

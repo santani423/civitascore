@@ -4,7 +4,9 @@ namespace Modules\Academic\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\Academic\Models\ClassSchedule;
 use Modules\Academic\Models\ClassSection;
+use Modules\Academic\Support\PortalFormatter;
 
 /**
  * @mixin ClassSection
@@ -26,6 +28,12 @@ class ClassSectionResource extends JsonResource
             'course_name' => $this->whenLoaded('course', fn () => $this->course?->name),
             'course_code' => $this->whenLoaded('course', fn () => $this->course?->code),
             'credits' => $this->whenLoaded('course', fn () => $this->course?->credits),
+            'lecturer_id' => $this->lecturer_id,
+            'lecturer' => $this->whenLoaded('lecturer', fn () => PortalFormatter::lecturer($this->lecturer)),
+            'schedules' => $this->whenLoaded('schedules', fn () => $this->schedules
+                ->map(fn (ClassSchedule $schedule) => PortalFormatter::schedule($schedule))
+                ->values()
+                ->all()),
             'class_code' => $this->class_code,
             'capacity' => $this->capacity,
             'enrolled_count' => $this->whenCounted('krsItems'),

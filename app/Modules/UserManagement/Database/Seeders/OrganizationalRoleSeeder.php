@@ -129,7 +129,8 @@ class OrganizationalRoleSeeder extends Seeder
             'notification_templates.create', 'notification_templates.read', 'notification_templates.update',
             'file_uploads.read',
             'users.read',
-            'students.read', 'students.create', 'students.update', 'study_programs.read', 'classes.read', 'classes.update',
+            // lecturers.read: memilih dosen pengampu kelas (Dosen & Jadwal).
+            'students.read', 'students.create', 'students.update', 'lecturers.read', 'study_programs.read', 'classes.read', 'classes.update',
             'curriculums.read', 'courses.read', 'courses.update', 'krs.read', 'krs.create', 'krs.update', 'krs.approve',
             'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'course_materials.read', 'course_materials.create', 'course_materials.update', 'course_materials.delete',

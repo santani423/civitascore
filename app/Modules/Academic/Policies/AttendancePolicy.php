@@ -3,17 +3,32 @@
 namespace Modules\Academic\Policies;
 
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
+use Modules\Academic\Models\ClassSection;
+use Modules\Academic\Support\ClassSectionAccess;
 
 class AttendancePolicy
 {
+    public function __construct(private readonly ClassSectionAccess $access) {}
+
     public function viewAny(User $user): bool
     {
         return $user->hasPermissionTo('attendance.read');
     }
 
-    /** Satu ability untuk rekam kehadiran batch — create dan update (koreksi) memakai endpoint yang sama. */
-    public function record(User $user): bool
+    /**
+     * Satu ability untuk rekam kehadiran batch — create dan update (koreksi)
+     * memakai endpoint yang sama. Bila kepemilikan dosen ditegakkan, hanya
+     * dosen pengampu kelas itu (atau Bagian Akademik) yang boleh.
+     */
+    public function record(User $user, ClassSection $classSection): Response
     {
-        return $user->hasPermissionTo('attendance.create') || $user->hasPermissionTo('attendance.update');
+        if (! $user->hasPermissionTo('attendance.create') && ! $user->hasPermissionTo('attendance.update')) {
+            return Response::deny();
+        }
+
+        return $this->access->canWriteTeaching($user, $classSection)
+            ? Response::allow()
+            : Response::deny('Anda bukan dosen pengampu kelas ini.');
     }
 }

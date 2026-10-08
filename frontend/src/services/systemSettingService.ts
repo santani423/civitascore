@@ -31,4 +31,10 @@ export const featureFlagService = {
     })
     return response.data.data
   },
+
+  /** Universitas aktif kembali mengikuti nilai global. */
+  async clearOverride(id: string): Promise<FeatureFlag> {
+    const response = await apiClient.delete<ApiSuccessResponse<FeatureFlag>>(`/feature-flags/${id}/override`)
+    return response.data.data
+  },
 }

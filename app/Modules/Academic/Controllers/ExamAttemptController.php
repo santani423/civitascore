@@ -28,7 +28,7 @@ class ExamAttemptController extends Controller
     /** Status keikutsertaan (belum/sedang/sudah mengerjakan) tiap peserta terdaftar di kelas ujian ini. */
     public function index(Request $request, Exam $exam): JsonResponse
     {
-        $this->authorize('viewAny', ExamAttempt::class);
+        $this->authorize('viewAny', [ExamAttempt::class, $exam]);
 
         $query = $this->exams->participantsQuery($exam)->oldest();
 
@@ -39,7 +39,7 @@ class ExamAttemptController extends Controller
 
     public function start(KrsItem $krsItem, Exam $exam): JsonResponse
     {
-        $this->authorize('record', ExamAttempt::class);
+        $this->authorize('record', [ExamAttempt::class, $exam]);
 
         $attempt = $this->exams->startAttempt($exam, $krsItem);
 
@@ -48,7 +48,7 @@ class ExamAttemptController extends Controller
 
     public function answer(AnswerExamAttemptRequest $request, ExamAttempt $examAttempt): JsonResponse
     {
-        $this->authorize('record', ExamAttempt::class);
+        $this->authorize('record', [ExamAttempt::class, $examAttempt->exam]);
 
         $this->exams->answerAttempt(
             $examAttempt,
@@ -61,7 +61,7 @@ class ExamAttemptController extends Controller
 
     public function submit(ExamAttempt $examAttempt): JsonResponse
     {
-        $this->authorize('record', ExamAttempt::class);
+        $this->authorize('record', [ExamAttempt::class, $examAttempt->exam]);
 
         $attempt = $this->exams->submitAttempt($examAttempt);
 
@@ -71,7 +71,7 @@ class ExamAttemptController extends Controller
     /** Linimasa pelanggaran + ringkasan skor satu percobaan, dilihat dosen (spec §5). */
     public function violations(ExamAttempt $examAttempt): JsonResponse
     {
-        $this->authorize('viewAny', ExamAttempt::class);
+        $this->authorize('viewAny', [ExamAttempt::class, $examAttempt->exam]);
 
         $examAttempt->loadMissing('krsItem.student');
         $violations = $this->exams->violationsForAttempt($examAttempt);

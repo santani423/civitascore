@@ -1,6 +1,8 @@
 # Semester Pendek — Rencana Implementasi
 
 > Bagian dari [paket rancangan Semester Pendek](./README.md).
+>
+> **Catatan 2026-10-08:** sebagian prasyarat di bawah sudah dibangun dalam bentuk lain sejak dokumen ini ditulis. Urutan kerja yang berlaku, berikut penyesuaiannya dengan kode terbaru, ada di [tahapan-pengembangan.md](./tahapan-pengembangan.md).
 
 ## 1. Urutan Fase
 
