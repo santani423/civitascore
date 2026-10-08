@@ -22,6 +22,7 @@
 | 10 | [pengujian-dan-penerimaan.md](./pengujian-dan-penerimaan.md) | Strategi uji & kriteria penerimaan Given/When/Then |
 | 11 | [rencana-implementasi.md](./rencana-implementasi.md) | Urutan fase, checklist, apa yang sengaja **tidak** dibangun |
 | 12 | [tahapan-pengembangan.md](./tahapan-pengembangan.md) | Rekonsiliasi rancangan dengan kode per 2026-10-08, tahapan kerja per PR, gerbang rilis, keterlacakan, estimasi |
+| 13 | [black-box-testing.md](./black-box-testing.md) | Checklist uji black box dari halaman frontend (QA/UAT): langkah per menu & tombol, status bisa-diuji-sekarang / halaman belum ada / menunggu tahap, temuan menu tanpa halaman |
 
 ---
 
