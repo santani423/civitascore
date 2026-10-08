@@ -10,12 +10,13 @@ export interface SelectOption {
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string
   error?: string
+  hint?: string
   options: SelectOption[]
   placeholder?: string
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { className, label, error, options, placeholder, id, ...props },
+  { className, label, error, hint, options, placeholder, id, ...props },
   ref,
 ) {
   const selectId = id ?? props.name
@@ -55,7 +56,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
         <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-ink-tertiary" />
       </div>
 
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error ? (
+        <p className="text-xs text-danger">{error}</p>
+      ) : hint ? (
+        <p className="text-xs text-ink-tertiary">{hint}</p>
+      ) : null}
     </div>
   )
 })

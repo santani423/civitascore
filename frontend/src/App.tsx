@@ -23,6 +23,8 @@ import { LecturerDetailPage } from '@/pages/academic/LecturerDetailPage'
 import { LecturerProfilePage } from '@/pages/lecturer/LecturerProfilePage'
 import { EmployeesPage } from '@/pages/academic/EmployeesPage'
 import { EmployeeDetailPage } from '@/pages/academic/EmployeeDetailPage'
+import { EducationStaffPage } from '@/pages/hr/EducationStaffPage'
+import { EducationStaffDetailPage } from '@/pages/hr/EducationStaffDetailPage'
 import { StudyProgramsPage } from '@/pages/academic/StudyProgramsPage'
 import { StudyProgramDetailPage } from '@/pages/academic/StudyProgramDetailPage'
 import { ClassSectionsPage } from '@/pages/academic/ClassSectionsPage'
@@ -120,6 +122,8 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.profilDosen, element: <LecturerProfilePage /> },
   { path: ROUTES.pegawai, element: <EmployeesPage /> },
   { path: ROUTES.pegawaiDetail, element: <EmployeeDetailPage /> },
+  { path: ROUTES.sdm.tendik, element: <EducationStaffPage /> },
+  { path: ROUTES.sdm.tendikDetail, element: <EducationStaffDetailPage /> },
   { path: ROUTES.akademik.programStudi, element: <StudyProgramsPage /> },
   { path: ROUTES.akademik.programStudiDetail, element: <StudyProgramDetailPage /> },
   { path: ROUTES.akademik.kelasJadwal, element: <ClassSectionsPage /> },

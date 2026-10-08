@@ -61,6 +61,7 @@ class HrEmployeeDetailResource extends HrEmployeeResource
                 'grade' => $this->rank->grade,
             ]),
             'work_unit_name' => $this->whenLoaded('workUnit', fn () => $this->workUnit?->name),
+            'competency_summary' => $this->competency_summary,
             'supervisor_employee_id' => $this->supervisor_employee_id,
             'supervisor' => $this->whenLoaded('supervisor', fn () => $this->supervisor === null ? null : [
                 'id' => $this->supervisor->id,

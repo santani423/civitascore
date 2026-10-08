@@ -82,6 +82,8 @@ use Modules\Tenancy\Models\University;
  * @property string|null $study_program_id
  * @property EducationLevel|null $highest_education
  * @property StaffCategory|null $staff_category
+ * @property string|null $assigned_facility
+ * @property string|null $competency_summary
  * @property CarbonImmutable|null $joined_at
  * @property string|null $inactive_reason
  * @property CarbonImmutable|null $inactive_at
@@ -106,7 +108,7 @@ class Employee extends Model implements ScopesToInstitution
         'university_id', 'user_id', 'employee_type', 'nik', 'nip', 'unit_kerja', 'name', 'email', 'position',
         'gender', 'birth_place', 'birth_date', 'phone', 'address', 'employment_status',
         'work_unit_id', 'position_id', 'rank_id', 'faculty_id', 'study_program_id',
-        'highest_education', 'staff_category', 'joined_at', 'inactive_reason', 'inactive_at', 'is_active',
+        'highest_education', 'staff_category', 'assigned_facility', 'competency_summary', 'joined_at', 'inactive_reason', 'inactive_at', 'is_active',
         'supervisor_employee_id', 'front_title', 'back_title', 'religion', 'marital_status',
         'emergency_contact_name', 'emergency_contact_phone', 'npwp', 'bank_name', 'bank_account_number', 'bank_account_name',
     ];

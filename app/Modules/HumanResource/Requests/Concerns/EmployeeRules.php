@@ -40,7 +40,6 @@ trait EmployeeRules
             'faculty_id' => ['nullable', 'string'],
             'study_program_id' => ['nullable', 'string'],
             'highest_education' => ['nullable', Rule::enum(EducationLevel::class)],
-            'staff_category' => ['nullable', Rule::enum(StaffCategory::class)],
             'joined_at' => ['nullable', 'date'],
             'user_id' => ['nullable', 'string'],
             'supervisor_employee_id' => ['nullable', 'string', Rule::notIn(array_filter([$ignoreEmployeeId]))],
@@ -80,6 +79,30 @@ trait EmployeeRules
     }
 
     /**
+     * Profil tenaga kependidikan (§5.4). Kategori wajib saat tendik
+     * ditambahkan dan tidak bisa dikosongkan lagi saat diubah — tanpa
+     * kategori, rekap tendik per kategori tidak bisa dihitung.
+     *
+     * @return array<string, mixed>
+     */
+    protected function staffRules(bool $isStaff, bool $creating): array
+    {
+        if (! $isStaff) {
+            return [
+                'staff_category' => ['prohibited'],
+                'assigned_facility' => ['prohibited'],
+                'competency_summary' => ['prohibited'],
+            ];
+        }
+
+        return [
+            'staff_category' => [...($creating ? ['required'] : ['sometimes', 'required']), Rule::enum(StaffCategory::class)],
+            'assigned_facility' => ['nullable', 'string', 'max:255'],
+            'competency_summary' => ['nullable', 'string', 'max:2000'],
+        ];
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function employeeMessages(): array
@@ -95,6 +118,10 @@ trait EmployeeRules
             'supervisor_employee_id.not_in' => 'Pegawai tidak dapat menjadi atasan dirinya sendiri.',
             'npwp.regex' => 'Format NPWP tidak valid (15–16 digit, boleh dengan titik/strip).',
             'bank_account_number.regex' => 'Nomor rekening hanya boleh berisi angka dan strip.',
+            'staff_category.required' => 'Kategori tenaga kependidikan wajib dipilih.',
+            'staff_category.prohibited' => 'Kategori tenaga kependidikan tidak berlaku untuk dosen.',
+            'assigned_facility.prohibited' => 'Penugasan laboratorium/fasilitas hanya untuk tenaga kependidikan.',
+            'competency_summary.prohibited' => 'Ringkasan kompetensi tendik tidak berlaku untuk dosen.',
         ];
     }
 }

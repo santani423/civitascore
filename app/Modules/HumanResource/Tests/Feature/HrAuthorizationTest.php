@@ -124,6 +124,6 @@ test('a custom role with staff-only rights cannot create a lecturer', function (
         ->assertApiError(403);
 
     $this->actingAs($staffAdmin)->withHeaders(hrHeaders($this->university))
-        ->postJson('/api/v1/hr/employees', ['employee_type' => 'staff', 'name' => 'Staf Baru', 'employment_status' => 'permanent'])
+        ->postJson('/api/v1/hr/employees', ['employee_type' => 'staff', 'name' => 'Staf Baru', 'employment_status' => 'permanent', 'staff_category' => 'administration'])
         ->assertApiSuccess(201);
 });

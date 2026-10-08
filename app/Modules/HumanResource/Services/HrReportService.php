@@ -39,7 +39,7 @@ class HrReportService
     ];
 
     /**
-     * @param  array<string, mixed>  $filters  employee_type, is_active, work_unit_id, employment_status, search, date_from, date_to
+     * @param  array<string, mixed>  $filters  employee_type, is_active, work_unit_id, employment_status, staff_category, search, date_from, date_to
      * @return Report
      */
     public function build(string $type, array $filters = []): array
@@ -74,6 +74,7 @@ class HrReportService
             ->when(isset($filters['is_active']) && $filters['is_active'] !== '', fn (Builder $query) => $query->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN)))
             ->when(! empty($filters['work_unit_id']), fn (Builder $query) => $query->where('work_unit_id', $filters['work_unit_id']))
             ->when(! empty($filters['employment_status']), fn (Builder $query) => $query->where('employment_status', $filters['employment_status']))
+            ->when(! empty($filters['staff_category']), fn (Builder $query) => $query->where('staff_category', $filters['staff_category']))
             ->when(! empty($filters['search']), function (Builder $query) use ($filters): void {
                 $term = '%'.$filters['search'].'%';
                 $query->where(fn (Builder $inner) => $inner->where('name', 'like', $term)->orWhere('nip', 'like', $term)->orWhere('email', 'like', $term));
@@ -162,7 +163,8 @@ class HrReportService
         return [
             'columns' => $this->columns([
                 'nip' => 'NIP', 'nama' => 'Nama', 'kategori' => 'Kategori', 'unit_kerja' => 'Unit Kerja', 'jabatan' => 'Jabatan',
-                'status_kepegawaian' => 'Status Kepegawaian', 'pendidikan' => 'Pendidikan', 'status' => 'Status',
+                'penugasan' => 'Penugasan Lab/Fasilitas', 'status_kepegawaian' => 'Status Kepegawaian', 'pendidikan' => 'Pendidikan',
+                'status' => 'Status',
             ]),
             'rows' => $employees->map(fn (Employee $employee): array => [
                 'nip' => $employee->nip ?? '-',
@@ -170,6 +172,7 @@ class HrReportService
                 'kategori' => $employee->staff_category?->label() ?? '-',
                 'unit_kerja' => $employee->unit_kerja,
                 'jabatan' => $employee->position ?? '-',
+                'penugasan' => $employee->assigned_facility ?? '-',
                 'status_kepegawaian' => $employee->employment_status->label(),
                 'pendidikan' => $employee->highest_education?->label() ?? '-',
                 'status' => $employee->is_active ? 'Aktif' : 'Nonaktif',

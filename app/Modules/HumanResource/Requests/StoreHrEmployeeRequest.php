@@ -53,6 +53,7 @@ class StoreHrEmployeeRequest extends FormRequest
             'position_id' => ['nullable', 'string'],
             'is_active' => ['sometimes', 'boolean'],
             ...$this->lecturerRules($isLecturer),
+            ...$this->staffRules($this->input('employee_type') === EmployeeType::Staff->value, creating: true),
             'academic_rank' => [$isLecturer ? 'nullable' : 'prohibited', Rule::enum(AcademicRank::class)],
         ];
     }

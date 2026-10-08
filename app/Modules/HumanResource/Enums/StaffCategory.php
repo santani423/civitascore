@@ -10,6 +10,9 @@ enum StaffCategory: string implements HasLabel
     case Librarian = 'librarian';
     case Archivist = 'archivist';
     case InformationTechnology = 'it';
+    case Finance = 'finance';
+    case Security = 'security';
+    case Driver = 'driver';
     case Other = 'other';
 
     public function label(): string
@@ -21,6 +24,9 @@ enum StaffCategory: string implements HasLabel
             self::Librarian => 'Pustakawan',
             self::Archivist => 'Arsiparis',
             self::InformationTechnology => 'Pranata Komputer/TI',
+            self::Finance => 'Keuangan',
+            self::Security => 'Keamanan',
+            self::Driver => 'Pengemudi',
             self::Other => 'Lainnya',
         };
     }

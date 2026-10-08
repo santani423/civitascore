@@ -36,6 +36,7 @@ class UpdateHrEmployeeRequest extends FormRequest
             'position_id' => ['prohibited'],
             'is_active' => ['prohibited'],
             ...$this->lecturerRules($employee->isLecturer(), $employee->lecturer?->id),
+            ...$this->staffRules(! $employee->isLecturer(), creating: false),
         ];
     }
 

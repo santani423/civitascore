@@ -99,7 +99,7 @@ Legenda status: **✅ Berjalan** · **🟡 Sebagian** (ada, tapi cakupan jauh di
 | 1 | **Dashboard SDM** | Ringkasan jumlah dosen, tendik, pegawai aktif, kontrak, cuti, statistik kepegawaian | 🟡 Kartu total dosen/pegawai + grafik staf per unit | `DashboardController`, `DashboardStatsService` | 1–3 |
 | 2 | **Data Pegawai** | Data induk seluruh pegawai (dosen + tendik): identitas, NIP/NIDN, jabatan, unit kerja, status, kontak | 📖 `employees` read-only, field minimal | `Employee` | 1 |
 | 3 | **Data Dosen** | NIDN/NIDK, pendidikan terakhir, jabatan akademik, bidang keahlian, status dosen, unit/prodi | ✅ CRUD, field minimal (NIDN, nama, email, fakultas) | `Lecturer`, `LecturerController` | 1 |
-| 4 | **Data Tenaga Kependidikan** | Staf administrasi, laboran, teknisi, pustakawan, dsb. | 🟡 Tersirat di `employees`, tanpa kategori tendik | `Employee` | 1 |
+| 4 | **Data Tenaga Kependidikan** | Staf administrasi, laboran, teknisi, pustakawan, dsb. | ✅ Kategori, penugasan, kompetensi, rekap & rasio per fakultas (2026-10-08) | `Employee` | 1 |
 | 5 | **Riwayat Pendidikan** | Pendidikan, institusi, tahun lulus, dokumen pendukung | ❌ | `file_uploads` | 2 |
 | 6 | **Riwayat Jabatan** | Jabatan struktural & fungsional + periode menjabat | ❌ | – | 2 |
 | 7 | **Riwayat Pekerjaan** | Riwayat pekerjaan/penempatan dari waktu ke waktu | ❌ | – | 2 |
@@ -394,7 +394,20 @@ Validasi aktual (`StoreLecturerRequest`/`UpdateLecturerRequest`): `nidn` wajib, 
 
 ### 5.4 Data Tenaga Kependidikan
 
-**Status: 🟡 Tersirat.** Tabel `employees` saat ini praktis berisi tendik, tapi tanpa kategori, tanpa nomor induk, dan dengan `position`/`unit_kerja` teks bebas.
+**Status: ✅ Berjalan (2026-10-08).** Dibangun di atas master `employees` (`employee_type = staff`), bukan tabel `education_staff_profiles` terpisah:
+
+| Aspek | Implementasi |
+|---|---|
+| Kategori tendik | `employees.staff_category` (enum `StaffCategory`: administrasi, laboran, teknisi, pustakawan, arsiparis, pranata komputer/TI, keuangan, keamanan, pengemudi, lainnya). **Wajib** saat tendik ditambahkan; dilarang untuk dosen. Masih enum, belum tabel per tenant. |
+| Jabatan fungsional | `employees.position_id` → master `positions` bertipe fungsional (mis. Pranata Laboratorium Pendidikan). Diubah lewat Riwayat Jabatan/Mutasi. |
+| Penugasan | `work_unit_id` + `employees.assigned_facility` (laboratorium/fasilitas yang menjadi tanggung jawab). |
+| Kompetensi | `employees.competency_summary` (ringkasan); detail sertifikat di Pelatihan & Sertifikasi. |
+| Endpoint | `GET /hr/staff` (daftar, filter `staff_category`/`work_unit_id`/`employment_status`/`is_active`), `GET /hr/staff/summary` (rekap), tulis lewat `POST/PUT /hr/employees`. Export `GET /hr/employees/export` ikut filter kategori. |
+| Rekap | Total/aktif/nonaktif/belum berkategori; per kategori, per unit kerja, per status kepegawaian; rasio tendik : mahasiswa aktif dan tendik : dosen aktif per fakultas + tingkat universitas. Fakultas tendik = `employees.faculty_id`, atau fakultas unit kerjanya. |
+| Frontend | Menu **SDM → Data Tenaga Kependidikan** (`/sdm/tenaga-kependidikan`): daftar + filter, rekap komposisi (klik untuk menyaring), tabel rasio, form tambah/ubah, detail dengan nonaktifkan/aktifkan/hapus. |
+| Test | `app/Modules/HumanResource/Tests/Feature/EducationStaffTest.php` |
+
+Rancangan awal (sebelum implementasi):
 
 **Rancangan** (`education_staff_profiles`, §4.2):
 

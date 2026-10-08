@@ -85,6 +85,7 @@ export interface HrEmployee {
   highest_education_label: string | null
   staff_category: string | null
   staff_category_label: string | null
+  assigned_facility: string | null
   faculty_id: string | null
   faculty_name?: string | null
   study_program_id: string | null
@@ -111,7 +112,13 @@ export interface HrLecturerDetail {
 }
 
 export interface HrEmployeeDetail extends HrEmployee {
+  full_name: string
+  front_title: string | null
+  back_title: string | null
+  /** Tersamar (****1234) kecuali untuk pemilik data sendiri — lihat `sensitive_masked`. */
   nik: string | null
+  sensitive_masked: boolean
+  competency_summary: string | null
   gender: Gender | null
   gender_label: string | null
   birth_place: string | null
@@ -145,6 +152,10 @@ export interface HrEmployeePayload {
   study_program_id?: string | null
   highest_education?: string | null
   staff_category?: string | null
+  assigned_facility?: string | null
+  competency_summary?: string | null
+  front_title?: string | null
+  back_title?: string | null
   joined_at?: string | null
   is_active?: boolean
   user_id?: string | null
@@ -169,6 +180,43 @@ export interface EmploymentStatusSummary {
   lecturers: number
   staff: number
   total: number
+}
+
+export interface StaffCountBucket {
+  value: string
+  label: string
+  total: number
+}
+
+export interface StaffRatio {
+  staff: number
+  lecturers: number
+  students: number
+  students_per_staff: number | null
+  lecturers_per_staff: number | null
+}
+
+/** GET /hr/staff/summary — rekap Data Tenaga Kependidikan (hanya tendik aktif, kecuali `totals`). */
+export interface EducationStaffSummary {
+  totals: {
+    total: number
+    active: number
+    inactive: number
+    uncategorized: number
+  }
+  by_category: StaffCountBucket[]
+  by_employment_status: StaffCountBucket[]
+  by_work_unit: Array<{
+    work_unit_id: string | null
+    name: string
+    total: number
+    /** Jumlah per kategori (`uncategorized` untuk yang belum berkategori). */
+    categories: Record<string, number>
+  }>
+  ratios: {
+    overall: StaffRatio & { staff_outside_faculty: number }
+    by_faculty: Array<StaffRatio & { faculty_id: string; faculty_name: string }>
+  }
 }
 
 export interface WorkUnit {

@@ -44,6 +44,7 @@ Route::prefix('hr')->middleware(['auth:sanctum', 'tenant.access'])->group(functi
     Route::get('employees', [HrEmployeeController::class, 'index'])->middleware('permission:hr_employees.read');
     Route::get('lecturers', [HrEmployeeController::class, 'lecturers'])->middleware('permission:hr_lecturers.read,hr_employees.read');
     Route::get('staff', [HrEmployeeController::class, 'staff'])->middleware('permission:hr_staff.read,hr_employees.read');
+    Route::get('staff/summary', [HrEmployeeController::class, 'staffSummary'])->middleware('permission:hr_staff.read,hr_employees.read');
     Route::get('employees/export', [HrEmployeeController::class, 'export'])->middleware('permission:hr_employees.export');
     Route::get('employees/user-options', [HrEmployeeController::class, 'userOptions'])->middleware('permission:hr_employees.create,hr_employees.update');
     Route::get('employment-statuses', [HrEmployeeController::class, 'statusSummary'])->middleware('permission:hr_employees.read');

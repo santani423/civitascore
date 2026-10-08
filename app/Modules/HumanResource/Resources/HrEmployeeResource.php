@@ -39,6 +39,7 @@ class HrEmployeeResource extends JsonResource
             'highest_education_label' => $this->highest_education?->label(),
             'staff_category' => $this->staff_category?->value,
             'staff_category_label' => $this->staff_category?->label(),
+            'assigned_facility' => $this->assigned_facility,
             'faculty_id' => $this->faculty_id,
             'faculty_name' => $this->whenLoaded('faculty', fn () => $this->faculty?->name),
             'study_program_id' => $this->study_program_id,

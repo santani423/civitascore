@@ -45,6 +45,7 @@ import type {
   UpsertGradePayload,
 } from '@/types/academic'
 import { toQueryParams } from '@/utils/listParams'
+import { triggerBlobDownload } from '@/utils/download'
 
 export const studentService = {
   async index(params: ListParams = {}): Promise<PaginatedResult<Student>> {
@@ -332,17 +333,6 @@ export const examService = {
     })
     return response.data.data
   },
-}
-
-function triggerBlobDownload(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = filename
-  document.body.appendChild(anchor)
-  anchor.click()
-  anchor.remove()
-  URL.revokeObjectURL(url)
 }
 
 export const examParticipantService = {

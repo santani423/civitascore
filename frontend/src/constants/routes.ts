@@ -38,6 +38,11 @@ export const ROUTES = {
   profilDosen: '/profil-dosen',
   pegawai: '/pegawai',
   pegawaiDetail: '/pegawai/:id',
+  // Modul SDM (docs/RANCANGAN-AKUN-SDM.md §3) — dikelola Bagian SDM.
+  sdm: {
+    tendik: '/sdm/tenaga-kependidikan',
+    tendikDetail: '/sdm/tenaga-kependidikan/:id',
+  },
   keuangan: {
     tagihan: '/keuangan/tagihan',
     tagihanDetail: '/keuangan/tagihan/:id',

@@ -18,6 +18,7 @@ use Modules\HumanResource\Requests\StoreHrEmployeeRequest;
 use Modules\HumanResource\Requests\UpdateHrEmployeeRequest;
 use Modules\HumanResource\Resources\HrEmployeeDetailResource;
 use Modules\HumanResource\Resources\HrEmployeeResource;
+use Modules\HumanResource\Services\EducationStaffService;
 use Modules\HumanResource\Services\EmployeeService;
 use Modules\HumanResource\Services\HrExportService;
 use Modules\HumanResource\Services\HrReportService;
@@ -54,6 +55,17 @@ class HrEmployeeController extends Controller
         $this->authorize('hr.employees.viewAny', EmployeeType::Staff);
 
         return $this->list($request, EmployeeType::Staff);
+    }
+
+    /**
+     * Rekap Data Tenaga Kependidikan: komposisi per kategori/unit/status
+     * dan rasio tendik terhadap mahasiswa & dosen per fakultas.
+     */
+    public function staffSummary(EducationStaffService $staff): JsonResponse
+    {
+        $this->authorize('hr.employees.viewAny', EmployeeType::Staff);
+
+        return ApiResponse::success($staff->summary());
     }
 
     public function show(Employee $employee): JsonResponse

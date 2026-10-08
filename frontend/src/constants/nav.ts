@@ -21,6 +21,7 @@ import {
   ClipboardCheck,
   CalendarDays,
   Bell,
+  IdCard,
 } from 'lucide-react'
 import type { NavItem } from '@/types/navigation'
 import { ROUTES } from '@/constants/routes'
@@ -89,6 +90,15 @@ export const TENANT_BUSINESS_NAV_ITEMS: NavItem[] = [
   { label: 'Mahasiswa', path: ROUTES.mahasiswa, icon: Users, permission: 'students.read' },
   { label: 'Dosen', path: ROUTES.dosen, icon: UserRound, permission: 'lecturers.read' },
   { label: 'Pegawai', path: ROUTES.pegawai, icon: Briefcase, permission: 'employees.read' },
+  {
+    label: 'SDM',
+    path: ROUTES.sdm.tendik,
+    icon: IdCard,
+    children: [
+      // GET /hr/staff: permission:hr_staff.read,hr_employees.read
+      { label: 'Data Tenaga Kependidikan', path: ROUTES.sdm.tendik, permission: ['hr_staff.read', 'hr_employees.read'] },
+    ],
+  },
   {
     label: 'Keuangan',
     path: ROUTES.keuangan.tagihan,

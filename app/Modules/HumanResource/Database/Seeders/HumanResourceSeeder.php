@@ -277,6 +277,12 @@ class HumanResourceSeeder extends Seeder
                 $employee->joined_at = CarbonImmutable::create(2005 + ($sequence % 18), ($sequence % 12) + 1, 1);
                 $employee->staff_category ??= $category;
 
+                // Laboran/pustakawan/pranata komputer bertanggung jawab atas
+                // fasilitas unitnya sendiri (lab, perpustakaan, ruang server).
+                if (in_array($category, [StaffCategory::Laboratory, StaffCategory::Librarian, StaffCategory::InformationTechnology], true)) {
+                    $employee->assigned_facility ??= $employee->unit_kerja;
+                }
+
                 if ($employee->employment_status === EmploymentStatus::Permanent && ! $isLecturer) {
                     $employee->employment_status = match (true) {
                         $sequence % 5 === 0 => EmploymentStatus::Contract,
