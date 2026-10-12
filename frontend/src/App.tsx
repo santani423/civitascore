@@ -97,9 +97,12 @@ import { ApprovalRequestsPage } from '@/pages/approvals/ApprovalRequestsPage'
 import { ApprovalRequestDetailPage } from '@/pages/approvals/ApprovalRequestDetailPage'
 import { ApprovalWorkflowsPage } from '@/pages/approvals/ApprovalWorkflowsPage'
 import { ROUTES } from '@/constants/routes'
+import { LANDING_PATHS } from '@/landing/paths'
 
 // Civitas One redesign (UI-only, mock data) — its own chunk, outside auth.
 const OneApp = lazy(() => import('@/one/OneApp'))
+// Civitas One Atma public landing page (UI-only, mock data) — its own chunk, outside auth.
+const LandingApp = lazy(() => import('@/landing/LandingApp'))
 
 /**
  * Satu tabel tunggal path -> halaman, dipakai sebagai daftar Route DAN
@@ -273,7 +276,20 @@ function App() {
           }
         />
 
-        <Route path="/" element={<Navigate to={ROUTES.dashboard} replace />} />
+        {/* Public landing page + its legal pages. Signed-in users reach the
+            app from its "Buka Dashboard" button (previously `/` redirected
+            straight to the dashboard). */}
+        {Object.values(LANDING_PATHS).map((path) => (
+          <Route
+            key={path}
+            path={path}
+            element={
+              <Suspense fallback={null}>
+                <LandingApp />
+              </Suspense>
+            }
+          />
+        ))}
         <Route path="*" element={<Navigate to={ROUTES.dashboard} replace />} />
       </Routes>
     </BrowserRouter>
