@@ -1,6 +1,6 @@
 # 29 — Glosarium dan Keputusan Bisnis
 
-> **Status:** rancangan. Disusun 2026-10-12.
+> **Status:** rancangan. Disusun 2026-10-12; diperbarui 2026-10-13 (KEU-KD-23…35, KEU-Q-28…37, KEU-A-16…18, istilah tambahan).
 > Kembali ke [README](README.md) · Skema acuan: [19](19-rancangan-database-dan-relasi.md)
 
 Dokumen ini menjadi rujukan tunggal untuk:
@@ -73,6 +73,16 @@ Dokumen ini menjadi rujukan tunggal untuk:
 | **Voucher** | Kode potongan yang dimasukkan pengguna, dengan kuota dan masa berlaku | `vouchers`, `voucher_redemptions` |
 | **Waterfall alokasi** | Aturan deterministik untuk menurunkan alokasi tingkat komponen dari alokasi tingkat tagihan, berdasarkan `allocation_priority` | [KEU-KD-19](#2-keputusan-desain-keu-kd) |
 | **Webhook / callback** | Pemberitahuan HTTP dari provider tentang perubahan status transaksi | `payment_webhook_events` |
+| **Bagian di luar jadwal (cicilan)** | Sisa tagihan bercicilan yang tidak termasuk termin aktif: komponen yang tidak dapat dicicil dan tambahan setelah rencana aktif. Diturunkan, tidak disimpan | Turunan ([10 §2](10-rancangan-cicilan-tagihan.md#2-konsep)) |
+| **Dana tak teridentifikasi** | Dana masuk ke rekening kampus yang belum diketahui pemiliknya | `payments.source = bank_import`, `student_id` kosong |
+| **Kunci layanan** | Kode layanan akademik yang dapat dibatasi cekal (`krs`, `exam`, `grade_view`, …) mengikuti SIAKAD | `finance_hold_policies.services`, `academic_blocks.service` |
+| **Paket SKS** | Jumlah SKS pertama yang sudah termasuk biaya paket sehingga tidak ditagih per SKS | `tariff_rules.free_units` |
+| **Pratinjau tagihan massal** | Perhitungan tagihan massal tanpa membuat tagihan, untuk ditinjau sebelum eksekusi | `billing_run_items` |
+| **Proyeksi cekal** | Salinan keputusan cekal KEU di SIAKAD yang dipakai untuk penegakan | `academic_blocks` (`block_type = finance`) |
+| **Reservasi voucher** | Penahanan kuota voucher tanpa mengubah tagihan terbit (draf, *checkout* PMB) | `voucher_redemptions.status = reserved` |
+| **Sesi kas** | Periode kerja petugas loket dari buka sampai tutup, dasar pencocokan uang fisik | `cashier_sessions` |
+| **Skor spesifisitas** | Bobot kriteria aturan tarif untuk memilih aturan bila beberapa cocok | `tariff_rules.specificity_score` |
+| **Tagihan denda terbuka** | Tagihan `late_fee` belum lunas milik satu tagihan dasar, tempat bucket denda baru ditambahkan | [KEU-KD-29](#2-keputusan-desain-keu-kd) |
 
 ---
 
@@ -102,6 +112,19 @@ Dokumen ini menjadi rujukan tunggal untuk:
 | **KEU-KD-20** | Setiap potongan adalah baris negatif yang menunjuk baris komponen sasaran (`applies_to_item_id`) | Batas potongan per komponen dapat ditegakkan dan ditelusuri | Potongan di tingkat total tagihan: tidak dapat membatasi per komponen |
 | **KEU-KD-21** | Pembayaran yang dikonfirmasi provider setelah transaksi kedaluwarsa/dibatalkan tetap dicatat sebagai penerimaan (`payments`). Dana dialokasikan bila tagihan masih terutang; bila tidak, menjadi dana belum diterapkan | Uang sudah benar-benar diterima kampus; menolaknya membuat selisih rekonsiliasi | Mengabaikan callback setelah kedaluwarsa: kehilangan dana tercatat |
 | **KEU-KD-22** | Integrasi lintas modul memakai outbox transaksional (`finance_outbox_events`) + worker idempoten | Konsisten dengan prinsip "event setelah commit" (`academic-learning` BR-SIA-INT-03) dan dapat di-retry | Event langsung dari listener sinkron: hilang bila worker gagal |
+| **KEU-KD-23** | Bagian tagihan di luar jadwal cicilan **diturunkan**: `outstanding_amount − Σ sisa termin aktif`. Alokasi mengisi bagian ini lebih dulu, lalu termin berurutan ([10 §2](10-rancangan-cicilan-tagihan.md#2-konsep)) | Tidak memerlukan kolom pelacak tambahan; tetap benar saat ada pembalikan alokasi pra-rencana atau koreksi; persamaan `outstanding = luar jadwal + Σ sisa termin` selalu berlaku | Menyimpan `excluded_paid_amount` terpisah: rawan tidak sinkron saat pembalikan alokasi |
+| **KEU-KD-24** | Perubahan nominal tagihan saat cicilan aktif menghasilkan **versi rencana baru otomatis** (penurunan diambil dari termin terakhir; kenaikan masuk termin terakhir atau bagian di luar jadwal) | Jadwal selalu cocok dengan sisa; tidak ada termin yang melebihi kewajiban | Mewajibkan penjadwalan ulang manual pada setiap perubahan: jadwal sempat tidak valid dan pekerjaan berulang |
+| **KEU-KD-25** | Pembayaran tunai di loket langsung `verified`; kontrol dilakukan pada penutupan dan verifikasi sesi kas oleh pengguna lain | Uang fisik sudah diterima; mahasiswa membutuhkan kuitansi seketika | Verifikasi kedua per transaksi: antrean panjang saat registrasi tanpa menambah kontrol berarti ([KEU-Q-28](#3-pertanyaan-terbuka-keu-q)) |
+| **KEU-KD-26** | Dana bank tak teridentifikasi dicatat `pending_verification` tanpa `student_id` sampai diidentifikasi dan diverifikasi | Menjaga aturan bahwa mahasiswa pada pembayaran terverifikasi tidak berubah; dana tetap tercatat | Mencatat `verified` tanpa mahasiswa lalu mengisinya kemudian: melanggar imutabilitas |
+| **KEU-KD-27** | Nominal dari provider yang berbeda dari total transaksi menghasilkan pembayaran `pending_verification` | Selisih menandakan anomali yang harus ditinjau | Alokasi otomatis sebesar nominal provider: kelebihan/kekurangan tidak terdeteksi |
+| **KEU-KD-28** | Tanggal efektif pembayaran untuk denda adalah `paid_at`; pembentukan ditunda bila ada pembayaran tepat waktu yang belum diverifikasi, dan bucket yang keliru dibalik otomatis | Mahasiswa tidak dirugikan oleh lamanya verifikasi | Tanggal verifikasi: denda bergantung pada kecepatan staf |
+| **KEU-KD-29** | Satu tagihan denda **terbuka** per tagihan dasar; bucket baru ditambahkan ke tagihan itu, atau tagihan denda baru bila yang lama sudah lunas/batal | Dokumen ringkas tanpa status bolak-balik | Satu tagihan per bucket: banyak dokumen kecil. Satu tagihan seumur hidup: status `paid → partial` berulang |
+| **KEU-KD-30** | Voucher pada tagihan terbit langsung `applied`; reservasi hanya untuk draf dan *checkout* PMB; pelepasan voucher memakai baris `adjustment` | Tagihan terbit sudah final; reservasi hanya berguna bila tagihan belum ada | Reservasi untuk semua penerapan: kuota tertahan tanpa manfaat |
+| **KEU-KD-31** | Penetapan beasiswa yang disetujui setelah tagihan terbit diterapkan lewat `invoice_correction` (`SCHOLARSHIP_LATE_APPLY`) yang disetujui otomatis, termasuk pembalikan kelebihan alokasi | Persetujuan sudah terjadi saat penetapan; hak mahasiswa tidak tertunda | Persetujuan kedua per tagihan: menunda hak; tetap dapat diwajibkan lewat ambang |
+| **KEU-KD-32** | Pembukaan cekal manual memerlukan `finance_holds.approve` dan hanya untuk cekal manual; cekal otomatis dibuka lewat pengecualian | Cekal otomatis yang "dilepas" akan dipasang lagi oleh evaluasi berikutnya | Melepas cekal otomatis: status bolak-balik dan audit membingungkan |
+| **KEU-KD-33** | Mata kuliah berbiaya per MK dipetakan di tabel KEU `fee_component_courses` | `courses` tidak memiliki penanda praktikum; KEU tidak perlu menunggu tim Akademik; satu MK dapat dikenai beberapa komponen | Kolom `courses.is_practicum`: bergantung modul lain dan hanya mendukung satu jenis biaya |
+| **KEU-KD-34** | Persetujuan dan publikasi tarif adalah dua langkah (status `approved`), dan konflik diperiksa ulang saat publikasi | Persetujuan (kontrol) dan pemberlakuan (waktu) adalah keputusan berbeda; jadwal lain dapat terbit di antara keduanya | Persetujuan langsung mempublikasikan: konflik yang muncul setelah persetujuan tidak terdeteksi |
+| **KEU-KD-35** | Rentang kriteria yang lebih sempit tidak otomatis menang; aturan berdimensi sama dengan rentang beririsan adalah konflik | Hasil pemilihan dapat dijelaskan tanpa aturan tersembunyi | Prioritas rentang tersempit: aturan implisit sulit diaudit dan rawan kejutan |
 
 ---
 
@@ -138,6 +161,16 @@ Prioritas: **P1** = harus dijawab sebelum fase terkait dimulai; **P2** = sebelum
 | KEU-Q-25 | Apakah biaya administrasi kanal ditanggung mahasiswa atau kampus, dan apakah berbeda per kanal? | P1 | Dikonfigurasi per kanal (`fee_bearer`); default kampus | [08](08-rancangan-pembayaran-online-dan-gateway.md) |
 | KEU-Q-26 | Apakah *write-off* (penghapusan piutang tak tertagih) termasuk lingkup KEU? | P3 | Tipe `write_off` disiapkan, tetapi nonaktif; keputusan akuntansi | [18](18-rancangan-rekonsiliasi-dan-penyesuaian.md) |
 | KEU-Q-27 | Kapan `posting_date` untuk pembayaran gateway: tanggal bayar menurut provider atau tanggal settlement? | P2 | Tanggal bayar menurut provider (`finance.posting_date_basis = paid_at`) | [07](07-rancangan-pembayaran.md), [18](18-rancangan-rekonsiliasi-dan-penyesuaian.md) |
+| KEU-Q-28 | Apakah pembayaran tunai di loket langsung terverifikasi, atau perlu verifikasi kedua per transaksi? | P2 | Langsung terverifikasi; kontrol lewat verifikasi sesi kas ([KEU-KD-25](#2-keputusan-desain-keu-kd)) | [09](09-rancangan-pembayaran-tunai-dan-manual.md) |
+| KEU-Q-29 | Apakah kode unik transfer manual dipakai, dan bagaimana perlakuan akuntansi nominal kodenya? | P3 | Nonaktif | [09](09-rancangan-pembayaran-tunai-dan-manual.md) |
+| KEU-Q-30 | Berapa hari jatuh tempo tagihan denda sejak bucket dibentuk? | P2 | 7 hari | [13](13-rancangan-denda.md) |
+| KEU-Q-31 | Apakah mahasiswa boleh memakai deposit sendiri, dan apakah deposit dipakai otomatis saat tagihan baru terbit? | P2 | Tidak dan tidak (pemakaian oleh staf) | [14](14-rancangan-deposit-mahasiswa.md) |
+| KEU-Q-32 | Apakah loket menerima pembayaran non-tunai (EDC debit)? | P3 | Tidak | [09](09-rancangan-pembayaran-tunai-dan-manual.md) |
+| KEU-Q-33 | Bila sinkronisasi cekal gagal, apakah SIAKAD memakai status terakhir atau membuka layanan? | P1 | Status terakhir; kegagalan pembukaan diprioritaskan ([KEU-BR-273](25-business-rules-dan-validasi.md)) | [17](17-rancangan-cekal-keuangan.md) |
+| KEU-Q-34 | Apakah Super Admin platform boleh melakukan tindakan finansial di tenant? | P2 | Hanya *break-glass* dengan alasan dan audit; SoD tetap berlaku | [03](03-role-dan-hak-akses.md), [24](24-keamanan-audit-dan-kontrol-internal.md) |
+| KEU-Q-35 | Apakah term cuti dihitung dalam "semester ke-" untuk kriteria tarif? | P3 | Ya | [05](05-rancangan-tarif-uang-kuliah.md) |
+| KEU-Q-36 | Tagihan per SKS satu tahap (setelah KRS) atau dua tahap (komponen tetap sebelum KRS, SKS sesudahnya)? | P1 | Dua tahap | [06](06-rancangan-tagihan-mahasiswa.md) |
+| KEU-Q-37 | Bila SKS berkurang setelah tagihan dibayar: dana dikembalikan, dijadikan deposit, atau tagihan tidak dikurangi? | P2 | Tagihan dikoreksi; kelebihan menjadi dana belum diterapkan dan diputuskan staf | [06](06-rancangan-tagihan-mahasiswa.md) |
 
 ---
 
@@ -160,6 +193,9 @@ Prioritas: **P1** = harus dijawab sebelum fase terkait dimulai; **P2** = sebelum
 | KEU-A-13 | Server produksi menjalankan `schedule:run` dan worker antrean | Diperlukan job denda, kedaluwarsa, polling, outbox | Bila tidak, mekanisme *lazy* (cek saat diakses) menjadi pengaman, tetapi notifikasi dan denda tertunda |
 | KEU-A-14 | Mahasiswa memiliki akun `users` yang tertaut (`students.user_id`) untuk layanan mandiri | Portal mahasiswa yang ada | Mahasiswa tanpa akun hanya dapat dilayani lewat loket |
 | KEU-A-15 | Biaya pendaftaran PMB ditagih dan dikelola di modul PMB; KEU hanya menerima posting biaya awal setelah konversi | `pmb/02` KD-03 | Bila PMB memakai KEU langsung, perlu `student_id` nullable atau entitas pendaftar |
+| KEU-A-16 | Provider yang dikontrak menyediakan API cek status transaksi | Praktik umum gateway | Kedaluwarsa hanya dicatat lokal; rekonsiliasi settlement harian menjadi pengaman utama ([08 §11](08-rancangan-pembayaran-online-dan-gateway.md#11-kemampuan-provider-cek-status-kedaluwarsa-refund)) |
+| KEU-A-17 | Modul Notification dapat ditambah penanda notifikasi wajib | `NotificationDispatcher` saat ini selalu menghormati preferensi pengguna | Notifikasi wajib hanya terjamin di kanal `database` ([23 §1](23-rancangan-notifikasi.md#1-mekanisme-yang-ada)) |
+| KEU-A-18 | Tersedia kunci HMAC khusus `FINANCE_HASH_KEY`, terpisah dari `APP_KEY` | Rotasi kunci enkripsi tidak boleh mengubah hash unik | Rotasi `APP_KEY` mengharuskan perhitungan ulang semua kolom `*_hash` |
 
 ---
 
@@ -183,6 +219,8 @@ Prioritas: **P1** = harus dijawab sebelum fase terkait dimulai; **P2** = sebelum
 | Gagal | `failed` |
 | Kedaluwarsa | `expired` |
 | Menunggu Persetujuan | `pending_approval` |
+| Disetujui (belum berlaku) | `approved` (jadwal tarif, refund, penyesuaian) |
+| Diterbitkan / Berlaku | `published` (jadwal tarif) |
 | Aktif | `active` |
 | Dicabut | `revoked` |
 | Digantikan | `superseded` |

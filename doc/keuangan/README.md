@@ -1,7 +1,7 @@
 # Rancangan Modul KEU — Administrasi Keuangan Mahasiswa (Civitas One)
 
 > **Status dokumen:** Rancangan sistem. Ini bukan dokumentasi fitur yang sudah jadi. Selama penyusunan dokumen ini, tidak ada kode aplikasi, migration, maupun skema database yang diubah.
-> **Disusun:** 2026-10-12, berdasarkan kondisi repository pada commit `bb54756`.
+> **Disusun:** 2026-10-12, berdasarkan kondisi repository pada commit `bb54756`. **Dilengkapi:** 2026-10-13 (commit `af6deed`): seluruh 30 dokumen tersedia; kanon diperbarui (tabel `fee_component_courses`, status `approved` tarif, `finance_holds.approve`, kode `ACTIVE_TRANSACTION_EXISTS`, INK-06…INK-09, KEU-KD-23…33).
 > **Referensi utama:** [SEVIMA_Penjelasan_Modul.md §12](../../docs/SEVIMA_Penjelasan_Modul.md), [SEVIMA_Platform_Proposal.md §1, §3.6](../../docs/SEVIMA_Platform_Proposal.md), [RANCANGAN-APLIKASI.md §3.10, §4.23, §4.24](../../docs/RANCANGAN-APLIKASI.md).
 > **Rancangan terkait yang sudah ada:** [academic-learning/](../../docs/academic-learning/README.md) (kontrak cekal SIAKAD), [pmb/](../../docs/RANCANGAN_SISTEM_PENERIMAAN_MAHASISWA_BARU_PMB.md) (pembayaran PMB dan posting ke Finance), [semester-pendek/](../../docs/semester-pendek/README.md) (tagihan SP per SKS).
 
@@ -161,6 +161,10 @@ Hasil pemeriksaan repository per 2026-10-12. Semua klaim di bawah ini sudah dive
 | INK-03 | PMB (`pmb/11` §B.2) memposting termin cicilan sebagai **invoice terpisah**; KEU memodelkan termin sebagai jadwal di atas satu tagihan | [KEU-KD-02](29-glossary-dan-keputusan-bisnis.md#2-keputusan-desain-keu-kd), [KEU-Q-11](29-glossary-dan-keputusan-bisnis.md#3-pertanyaan-terbuka-keu-q) |
 | INK-04 | `RANCANGAN-SUPER-ADMIN.md §8` dan `MULTI-TENANT-ARCHITECTURE.md §9` menyebut tagihan mahasiswa "belum ada", padahal `invoices` sudah ada | Dicatat. Tidak diubah oleh rancangan ini |
 | INK-05 | `RANCANGAN-APLIKASI.md §7` menamai tabel `student_bills`, `student_bill_details` | KEU mempertahankan `invoices` (+ `invoice_items`) — [KEU-KD-01](29-glossary-dan-keputusan-bisnis.md#2-keputusan-desain-keu-kd) |
+| INK-06 | `academic-learning` memakai kunci layanan `grade_view` dan daftar 6 layanan (07) tetapi `view_grades` dan daftar 12 layanan (01 A.8) | KEU memakai kunci 07 lewat `finance.hold.available_services`; kunci tambahan dipakai setelah SIAKAD menetapkan ([17 §2](17-rancangan-cekal-keuangan.md#2-konsep-keputusan-di-keu-penegakan-di-siakad)) |
+| INK-07 | `academic_block_exemptions` di 07 tidak memiliki kolom layanan, sedangkan 01 A.8 menyebut dispensasi per layanan | Tidak bertentangan bagi KEU: setiap `academic_blocks` sudah satu layanan, sehingga pengecualian KEU diproyeksikan ke baris blok layanan yang bersangkutan ([17 §7](17-rancangan-cekal-keuangan.md#7-sinkronisasi-ke-siakad)) |
+| INK-08 | Rancangan Semester Pendek mengusulkan `POST /invoices/{invoice}/payments` dan event `InvoicePaid` | KEU memakai `POST /payments` + alokasi dan event `PaymentVerified`/`InvoiceStatusChanged`; SP menyesuaikan ([20 §9](20-rancangan-api-dan-integrasi.md#9-integrasi-antarmodul)) |
+| INK-09 | `PortalInvoicesPage` (data statis) tidak terdaftar di `ROUTES.portal`; `PortalScholarshipPage` juga statis | Diganti halaman portal keuangan ([21 §5](21-rancangan-ui-ux-dan-menu.md#5-struktur-menu-dan-halaman-portal-mahasiswa)) |
 
 ---
 
@@ -225,7 +229,7 @@ Prinsip arsitektur:
 | Kelompok | Tabel |
 |---|---|
 | Referensi (modul lain) | `students` (Ada; kolom `admission_path_code`, `study_system_code` diusulkan PMB), `faculties`, `study_programs`, `academic_terms`, `krs_submissions`, `krs_items`, `courses`, `users`, `file_uploads`, `approval_requests`, `audit_logs`, `university_settings`, `university_feature_flags`, `subscription_plans`, `universities` (Ada) |
-| Master & konfigurasi | `fee_components`, `bank_accounts`, `finance_periods`, `finance_sequences`, `ukt_groups`, `tariff_schedules`, `tariff_rules` (Baru) |
+| Master & konfigurasi | `fee_components`, `fee_component_courses`, `bank_accounts`, `finance_periods`, `finance_sequences`, `ukt_groups`, `tariff_schedules`, `tariff_rules` (Baru) |
 | Tagihan | `invoices` (Ubah), `invoice_items`, `billing_runs`, `billing_run_items`, `installment_plans`, `installment_terms`, `invoice_disputes` (Baru) |
 | Pembayaran | `payments` (Ubah), `payment_gateway_accounts`, `payment_channels`, `payment_transactions`, `payment_transaction_items`, `payment_webhook_events`, `payment_allocations`, `payment_proofs`, `receipts`, `cashier_sessions` (Baru) |
 | Beasiswa & potongan | `scholarships`, `scholarship_applications` (Ada), `discount_schemes`, `discount_scheme_components`, `student_discounts` (Baru) |
@@ -261,7 +265,7 @@ Rumus rinci dan contoh angka ada di [06 §3](06-rancangan-tagihan-mahasiswa.md) 
 
 | Entitas | Kolom | Nilai |
 |---|---|---|
-| `tariff_schedules` | `status` | `draft`, `pending_approval`, `published`, `rejected`, `archived` |
+| `tariff_schedules` | `status` | `draft`, `pending_approval`, `approved`, `published`, `rejected`, `archived` |
 | `invoices` | `status` | `draft`, `unpaid`, `partial`, `paid`, `cancelled` (nilai lama `unpaid/partial/paid` dipertahankan) |
 | `invoices` | turunan (bukan status) | `is_overdue` = `due_date < hari ini (zona tenant) ∧ outstanding_amount > 0 ∧ status ∈ {unpaid, partial}`; `has_open_dispute` (boolean) |
 | `invoices` | `invoice_type` | `semester`, `additional`, `supplementary`, `short_term`, `admission`, `late_fee` |
@@ -345,7 +349,7 @@ Action wajib salah satu dari enum `PermissionAction`. Rincian per role ada di [0
 | `refunds` | read, create, update, approve, reject |
 | `reconciliations` | read, create, import, update, finalize |
 | `finance_hold_policies` | read, create, update |
-| `finance_holds` | read, create, update, export |
+| `finance_holds` | read, create, update, approve, export |
 | `finance_hold_exemptions` | read, create, approve, reject |
 | `finance_periods` | read, update, finalize |
 | `finance_reports` | read, export |
@@ -400,6 +404,7 @@ Makna action non-CRUD: `approve` = menyetujui/memverifikasi, `reject` = menolak,
 | `UKT_GROUP_MISSING` | 422 | Komponen UKT tanpa penetapan golongan aktif |
 | `ALREADY_BILLED` | 409 | Tagihan aktif dengan `billing_key` sama sudah ada |
 | `INVOICE_NOT_PAYABLE` | 409 | Tagihan `draft`/`cancelled`/`paid` |
+| `ACTIVE_TRANSACTION_EXISTS` | 409 | Tagihan sedang berada dalam transaksi online `created`/`pending` |
 | `INVOICE_HAS_ALLOCATIONS` | 409 | Pembatalan tagihan yang masih memiliki alokasi aktif |
 | `ALLOCATION_EXCEEDS_OUTSTANDING` | 422 | Alokasi > saldo terutang |
 | `ALLOCATION_EXCEEDS_AVAILABLE` | 422 | Alokasi > dana belum diterapkan |
@@ -435,7 +440,7 @@ Makna action non-CRUD: `approve` = menyetujui/memverifikasi, `reject` = menolak,
 
 ### 5.10 Kanon kunci pengaturan tenant
 
-Pengaturan disimpan di `university_settings` dengan `group = 'finance'`. Daftar lengkap dan nilai contoh ada di [04 §5](04-master-data-dan-konfigurasi.md). Kunci yang dirujuk lintas dokumen: `finance.calculation.sequence`, `finance.discount.percentage_base`, `finance.discount.stacking_policy`, `finance.rounding.mode`, `finance.allocation.strategy`, `finance.overpayment.default_action`, `finance.invoice.default_due_days`, `finance.installment.*`, `finance.late_fee.enabled`, `finance.aging.buckets`, `finance.hold.*`, `finance.sod.enabled`, `finance.approval.thresholds`, `finance.proof.max_size_mb`, `finance.manual_transfer.unique_code_enabled`, `finance.retention.*`.
+Pengaturan disimpan di `university_settings` dengan `group = 'finance'`. Daftar lengkap dan nilai contoh ada di [04 §5](04-master-data-dan-konfigurasi.md). Kunci yang dirujuk lintas dokumen: `finance.calculation.sequence`, `finance.discount.percentage_base`, `finance.discount.stacking_policy`, `finance.rounding.mode`, `finance.allocation.strategy`, `finance.overpayment.default_action`, `finance.invoice.default_due_days`, `finance.installment.*`, `finance.late_fee.enabled`, `finance.aging.buckets`, `finance.hold.*` (termasuk `finance.hold.available_services`, `finance.hold.enforcement_mode`), `finance.sod.enabled`, `finance.approval.thresholds`, `finance.proof.max_size_mb`, `finance.manual_transfer.unique_code_enabled`, `finance.deposit.*`, `finance.billing_run.preview_ttl_hours`, `finance.tariff.semester_level_excludes_leave`, `finance.retention.*`.
 
 ---
 
@@ -481,3 +486,16 @@ Rincian alasan dan alternatif yang ditolak ada di [29 §2](29-glossary-dan-keput
 | KEU-KD-20 | Potongan dicatat sebagai baris negatif yang menunjuk baris komponen sasaran |
 | KEU-KD-21 | Pembayaran yang diterima provider setelah transaksi kedaluwarsa tetap dicatat sebagai penerimaan |
 | KEU-KD-22 | Integrasi lintas modul memakai outbox transaksional |
+| KEU-KD-23 | Bagian tagihan di luar jadwal cicilan diturunkan (sisa tagihan − Σ sisa termin), diisi lebih dulu oleh alokasi |
+| KEU-KD-24 | Perubahan nominal tagihan saat cicilan aktif menghasilkan versi rencana baru secara otomatis |
+| KEU-KD-25 | Pembayaran tunai di loket langsung `verified`; kontrolnya adalah penutupan dan verifikasi sesi kas |
+| KEU-KD-26 | Dana bank tak teridentifikasi dicatat `pending_verification` tanpa mahasiswa sampai diidentifikasi |
+| KEU-KD-27 | Nominal dari provider yang tidak sesuai menghasilkan pembayaran `pending_verification` |
+| KEU-KD-28 | Tanggal efektif pembayaran untuk denda adalah tanggal bayar, bukan tanggal verifikasi |
+| KEU-KD-29 | Satu tagihan denda terbuka per tagihan dasar |
+| KEU-KD-30 | Voucher pada tagihan terbit langsung `applied`; reservasi hanya untuk draf dan PMB |
+| KEU-KD-31 | Beasiswa yang disetujui setelah tagihan terbit diterapkan lewat penyesuaian yang disetujui otomatis |
+| KEU-KD-32 | Pembukaan cekal manual memerlukan `finance_holds.approve`; cekal otomatis dibuka lewat pengecualian |
+| KEU-KD-33 | Mata kuliah berbiaya per MK dipetakan di tabel KEU `fee_component_courses` |
+| KEU-KD-34 | Persetujuan dan publikasi tarif adalah dua langkah (status `approved`) |
+| KEU-KD-35 | Rentang kriteria yang lebih sempit tidak otomatis menang; rentang beririsan berdimensi sama adalah konflik |

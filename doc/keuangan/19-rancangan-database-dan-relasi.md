@@ -2,6 +2,7 @@
 
 > **Status:** rancangan, belum dimigrasikan. Tabel atau kolom berlabel **Baru**/**Ubah** belum ada di repository.
 > **Disusun:** 2026-10-12, berdasarkan migration `app/Modules/Finance/Database/Migrations/2026_07_20_02000{0,1}_*`, `app/Modules/Academic`, `app/Modules/Scholarship`, `app/Modules/Tenancy`, `app/Modules/FileManagement`, `app/Modules/ApprovalWorkflow`, dan `app/Modules/AuditLog` pada commit `bb54756`.
+> **Diperbarui:** 2026-10-13 saat dokumen 01–18 dan 20–27 disusun: tabel `fee_component_courses` (§3.2.5), `tariff_rules.free_units`, status `approved` pada `tariff_schedules`, `invoice_items.reduction_key`, `refunds.beneficiary_account_hash`, kunci HMAC terpisah (§1.2), dan kunci layanan cekal mengikuti SIAKAD (§3.16.1).
 > Kembali ke [README](README.md) · Kanon: [README §5](README.md#5-kanon-wajib-diikuti-seluruh-dokumen)
 
 Dokumen ini adalah **skema acuan** modul KEU. Jika dokumen lain menyebut kolom, tipe, atau constraint yang berbeda, **dokumen inilah yang berlaku**. Aturan bisnis yang memakai kolom-kolom ini ada di [25](25-business-rules-dan-validasi.md). Konvensi umum (ULID, `timestampsTz`, `decimal(14,2)`, `string(20)` + PHP enum, `active_key`) mengikuti [README §5.1](README.md#51-konvensi-teknis) dan selaras dengan [academic-learning/07 §1](../../docs/academic-learning/07-database-erd.md).
@@ -44,7 +45,7 @@ Setiap tabel tenant baru memiliki kolom standar berikut. Di §3 kolom-kolom ini 
 | Nomor dokumen | `string(30)` | Format di §7.1 |
 | Kode | `string(20)`–`string(40)` | Disimpan huruf besar (kode voucher dinormalisasi) |
 | Status/kategori | `string(20)` (kategori panjang `string(30)`/`string(40)`) | PHP backed enum |
-| Data rahasia | `text` + cast `encrypted` | Disertai kolom `*_last4` dan/atau `*_hash` (`char(64)`, HMAC-SHA256 dengan kunci aplikasi) untuk tampilan dan pencarian/unik |
+| Data rahasia | `text` + cast `encrypted` | Disertai kolom `*_last4` dan/atau `*_hash` (`char(64)`, HMAC-SHA256 dengan kunci HMAC khusus `FINANCE_HASH_KEY`, terpisah dari `APP_KEY` agar rotasi kunci enkripsi tidak mengubah hash) untuk tampilan dan pencarian/unik |
 | JSON | `json` | Hanya untuk konfigurasi, snapshot, dan payload, sesuai kebijakan [academic-learning/07 §1.6](../../docs/academic-learning/07-database-erd.md) |
 
 ### 1.3 Aturan `on delete`
@@ -129,6 +130,7 @@ MySQL ≥ 8.0.16 menegakkan `CHECK`. Constraint nominal yang tidak bergantung st
 | 47 | `finance_outbox_events` | Baru | Lintas | Outbox integrasi | §3.17.2 |
 | 48 | `idempotency_keys` | Baru | Lintas | Idempotensi API | §3.17.3 |
 | 49 | `accounting_export_batches` | Baru | Lintas | Ekspor ke akuntansi | §3.17.4 |
+| 50 | `fee_component_courses` | Baru | Master | Mata kuliah yang dikenai komponen `per_course` ([KEU-KD-33](29-glossary-dan-keputusan-bisnis.md#2-keputusan-desain-keu-kd)) | §3.2.5 |
 
 ---
 
@@ -177,7 +179,7 @@ MySQL ≥ 8.0.16 menegakkan `CHECK`. Constraint nominal yang tidak bergantung st
 - **PK:** `id`. **Unique:** `(university_id, code)`.
 - **Indeks:** `(university_id, is_active, category)`.
 - **Integritas:** `category = late_fee` ⇒ `charge_basis = manual`. Komponen yang sudah dirujuk `tariff_rules` atau `invoice_items` tidak dapat dihapus, hanya dinonaktifkan. Perubahan atribut perilaku (`is_*`, `allocation_priority`) **tidak** mengubah tagihan yang sudah terbit, karena nilai tersebut disalin ke `invoice_items` ([KEU-KD-07](29-glossary-dan-keputusan-bisnis.md#2-keputusan-desain-keu-kd)).
-- **Relasi:** `1:N` `tariff_rules`, `invoice_items`, `discount_scheme_components`, `late_fee_rules`.
+- **Relasi:** `1:N` `tariff_rules`, `invoice_items`, `discount_scheme_components`, `late_fee_rules`, `fee_component_courses`.
 
 #### 3.2.2 `bank_accounts` — Baru
 
@@ -237,6 +239,24 @@ MySQL ≥ 8.0.16 menegakkan `CHECK`. Constraint nominal yang tidak bergantung st
 - **Unique:** `(university_id, sequence_key)`.
 - **Integritas:** nilai diambil dengan `SELECT … FOR UPDATE` di transaksi yang sama dengan pembuatan dokumen. Celah nomor dapat terjadi bila transaksi gagal setelah pengambilan, dan hal ini **diizinkan**: nomor tidak dipakai ulang. Untuk kuitansi, kebijakan "tanpa celah" bersifat [K] ([KEU-Q-15](29-glossary-dan-keputusan-bisnis.md#3-pertanyaan-terbuka-keu-q)).
 
+#### 3.2.5 `fee_component_courses` — Baru
+
+**Fungsi:** daftar mata kuliah yang dikenai komponen ber-`charge_basis = per_course` (mis. praktikum). Diperlukan karena `courses` tidak memiliki penanda praktikum ([04 §2.4](04-master-data-dan-konfigurasi.md#24-mata-kuliah-berbiaya-per-mk), [KEU-KD-33](29-glossary-dan-keputusan-bisnis.md#2-keputusan-desain-keu-kd)).
+
+| Kolom | Tipe | Null | Default | Keterangan |
+|---|---|---|---|---|
+| kolom standar | | | | |
+| `fee_component_id` | ulid | tidak | | FK → `fee_components` cascade (komponen `per_course`) |
+| `course_id` | ulid | tidak | | FK → `courses` restrict |
+| `units` | decimal(8,2) | tidak | 1 | Satuan tertagih per MK |
+| `is_active` | boolean | tidak | true | |
+| `created_by`, `updated_by` | ulid | ya | null | FK → `users` set null |
+
+- **Unique:** `(fee_component_id, course_id)`.
+- **Indeks:** `(university_id, course_id)`.
+- **Integritas:** komponen harus `charge_basis = per_course`; perubahan berlaku untuk penagihan berikutnya karena daftar MK yang dihitung disalin ke `invoice_items.snapshot.courses`.
+- **Relasi:** `N:1` `fee_components`, `courses`.
+
 ### 3.3 Tarif dan golongan UKT
 
 #### 3.3.1 `ukt_groups` — Baru
@@ -269,7 +289,7 @@ MySQL ≥ 8.0.16 menegakkan `CHECK`. Constraint nominal yang tidak bergantung st
 | `previous_schedule_id` | ulid | ya | null | FK → `tariff_schedules` set null (versi yang direvisi) |
 | `effective_from_term_id` | ulid | tidak | | FK → `academic_terms` restrict |
 | `effective_until_term_id` | ulid | ya | null | FK → `academic_terms` restrict. `null` = tanpa batas |
-| `status` | string(20) | tidak | `draft` | `draft`, `pending_approval`, `published`, `rejected`, `archived` |
+| `status` | string(20) | tidak | `draft` | `draft`, `pending_approval`, `approved`, `published`, `rejected`, `archived` (persetujuan dan publikasi adalah dua langkah, [05 §6](05-rancangan-tarif-uang-kuliah.md#6-siklus-versi-draf-persetujuan-publikasi-revisi)) |
 | `notes` | text | ya | null | |
 | `submitted_by` | ulid | ya | null | FK → `users` set null |
 | `submitted_at` | timestampTz | ya | null | |
@@ -308,6 +328,7 @@ MySQL ≥ 8.0.16 menegakkan `CHECK`. Constraint nominal yang tidak bergantung st
 | `semester_level_to` | unsignedTinyInteger | ya | null | |
 | `term_type` | string(20) | ya | null | `ganjil`, `genap`, `pendek` |
 | `amount` | decimal(14,2) | tidak | | Nominal tetap, atau tarif per satuan bila `charge_basis ∈ {per_credit, per_course}` |
+| `free_units` | decimal(8,2) | ya | null | Satuan pertama yang tidak ditagih karena sudah termasuk paket (mis. 20 SKS termasuk SPP) ([05 §3.2](05-rancangan-tarif-uang-kuliah.md#32-basis-perhitungan-nominal)) |
 | `min_units` | decimal(8,2) | ya | null | Batas bawah satuan yang ditagih (mis. minimal 12 SKS) |
 | `max_units` | decimal(8,2) | ya | null | Batas atas satuan yang ditagih (paket SKS) |
 | `is_mandatory` | boolean | tidak | true | Jika `true` dan tidak ditemukan saat penagihan → `TARIFF_NOT_FOUND` |
@@ -317,7 +338,7 @@ MySQL ≥ 8.0.16 menegakkan `CHECK`. Constraint nominal yang tidak bergantung st
 
 - **Unique:** `(tariff_schedule_id, criteria_hash)`. Mencegah dua baris identik dalam satu versi.
 - **Indeks:** `(university_id, fee_component_id, study_program_id)`, `(tariff_schedule_id, fee_component_id)`.
-- **Integritas:** `amount ≥ 0`. `admission_year_from ≤ admission_year_to`, `semester_level_from ≤ semester_level_to`, dan `min_units ≤ max_units` bila keduanya terisi. Jika `study_program_id` terisi, `faculty_id` harus `null` atau sama dengan fakultas prodi tersebut. Tumpang tindih antarbaris dengan skor sama diperiksa saat publikasi (`TARIFF_AMBIGUOUS`, [05 §5](05-rancangan-tarif-uang-kuliah.md)).
+- **Integritas:** `amount ≥ 0`, `free_units ≥ 0`. `admission_year_from ≤ admission_year_to`, `semester_level_from ≤ semester_level_to`, dan `min_units ≤ max_units` bila keduanya terisi. Seluruh aturan satu komponen dalam satu jadwal memiliki `is_mandatory` yang sama. Jika `study_program_id` terisi, `faculty_id` harus `null` atau sama dengan fakultas prodi tersebut. Tumpang tindih antarbaris dengan skor sama diperiksa saat publikasi (`TARIFF_AMBIGUOUS`, [05 §5](05-rancangan-tarif-uang-kuliah.md)).
 - **Relasi:** `N:1` `tariff_schedules`, `fee_components`, `ukt_groups`. Dirujuk `invoice_items.tariff_rule_id`.
 
 ### 3.4 Tagihan
@@ -396,8 +417,9 @@ MySQL ≥ 8.0.16 menegakkan `CHECK`. Constraint nominal yang tidak bergantung st
 | `affects_clearance` | boolean | tidak | | Disalin dari komponen |
 | `snapshot` | json | ya | null | Kriteria yang cocok, skor, parameter skema potongan, versi aturan denda |
 | `created_by` | ulid | ya | null | FK → `users` set null |
+| `reduction_key` | varchar(120) generated | ya | | `IF(item_type IN ('scholarship','discount','voucher','manual_discount','late_fee_waiver'), CONCAT(applies_to_item_id, ':', source_type, ':', source_id), NULL)` |
 
-- **Unique:** `(invoice_id, line_no)`.
+- **Unique:** `(invoice_id, line_no)`, `(invoice_id, reduction_key)` (sumber pengurang yang sama tidak dapat memotong baris yang sama dua kali, [11 §6](11-rancangan-beasiswa-dan-potongan.md#6-pencegahan-potongan-bermasalah)).
 - **Indeks:** `(university_id, fee_component_id)`, `(university_id, source_type, source_id)`, `(invoice_id, applies_to_item_id)`.
 - **Integritas:**
   - Untuk setiap baris `charge`, Σ `amount` baris pengurang yang menunjuknya ≥ −`amount` baris tersebut. Artinya, **potongan tidak membuat komponen bernilai negatif** ([KEU-BR-142](25-business-rules-dan-validasi.md)).
@@ -1160,6 +1182,7 @@ Tidak diubah strukturnya. `scholarships.amount` (nilai nominal program) tetap ad
 | `beneficiary_bank_code` | string(20) | ya | null | |
 | `beneficiary_account_number` | text | ya | null | Cast `encrypted` |
 | `beneficiary_account_last4` | string(4) | ya | null | |
+| `beneficiary_account_hash` | char(64) | ya | null | HMAC nomor rekening penerima (digit saja), untuk deteksi anomali ANM-02 ([24 §12](24-keamanan-audit-dan-kontrol-internal.md#12-pemantauan-aktivitas-mencurigakan)) |
 | `beneficiary_account_name` | string(150) | ya | null | |
 | `reason` | text | tidak | | |
 | `evidence_file_id` | ulid | ya | null | FK → `file_uploads` set null |
@@ -1178,7 +1201,7 @@ Tidak diubah strukturnya. `scholarships.amount` (nilai nominal program) tetap ad
 | `posting_date` | date | ya | null | |
 
 - **Unique:** `(university_id, refund_number)`.
-- **Indeks:** `(university_id, status)`, `(university_id, student_id)`.
+- **Indeks:** `(university_id, status)`, `(university_id, student_id)`, `(university_id, beneficiary_account_hash)`.
 - **Integritas:** saat diajukan, dana **ditahan**: untuk deposit lewat `deposit_accounts.held_amount`; untuk kelebihan bayar, nominal refund aktif dikurangkan dari dana yang dapat dialokasikan ([14 §7](14-rancangan-deposit-mahasiswa.md), [18 §5](18-rancangan-rekonsiliasi-dan-penyesuaian.md)). Ledger/`refunded_amount` baru berubah saat `completed`.
 
 ### 3.14 Rekonsiliasi
@@ -1281,7 +1304,7 @@ Tidak diubah strukturnya. `scholarships.amount` (nilai nominal program) tetap ad
 | `use_installment_due_dates` | boolean | tidak | true | Tagihan bercicilan dinilai per termin |
 | `min_outstanding_amount` | decimal(14,2) | tidak | 0 | Ambang tunggakan jatuh tempo |
 | `grace_days` | unsignedSmallInteger | tidak | 0 | Hari tenggang setelah jatuh tempo |
-| `services` | json | tidak | | Layanan yang dibatasi, subset kanon SIAKAD (`krs`, `krs_change`, `exam`, `exam_midterm`, `exam_final`, `view_grades`, `transcript`, `yudisium`, `graduation`, …) |
+| `services` | json | tidak | | Layanan yang dibatasi, subset `finance.hold.available_services` yang mengikuti kunci SIAKAD [academic-learning/07](../../docs/academic-learning/07-database-erd.md): `krs`, `exam`, `grade_view`, `transcript`, `yudisium`, `graduation`. Kunci tambahan dari `academic-learning/01` (`krs_change`, `exam_midterm`, `exam_final`, …) dipakai setelah ditetapkan SIAKAD (INK-06) |
 | `study_program_id` | ulid | ya | null | FK → `study_programs` restrict |
 | `admission_year_from`, `admission_year_to` | smallInteger | ya | null | |
 | `auto_release` | boolean | tidak | true | Cabut otomatis bila syarat tidak lagi terpenuhi |
@@ -1531,6 +1554,8 @@ erDiagram
     tariff_schedules |o--o{ tariff_schedules : "versi sebelumnya"
     academic_terms ||--o{ tariff_schedules : "berlaku mulai"
     fee_components ||--o{ tariff_rules : "komponen"
+    fee_components ||--o{ fee_component_courses : "MK berbiaya"
+    courses ||--o{ fee_component_courses : "dipetakan"
     study_programs |o--o{ tariff_rules : "kriteria prodi"
     faculties |o--o{ tariff_rules : "kriteria fakultas"
     ukt_groups |o--o{ tariff_rules : "kriteria golongan"
@@ -1751,7 +1776,7 @@ Petugas loket mencatat Rp2.500.000 pada mahasiswa yang salah. Setelah koreksi di
 
 | No | Migration | Isi | Catatan |
 |---|---|---|---|
-| F01 | `create_fee_components_table`, `create_bank_accounts_table`, `create_finance_periods_table`, `create_finance_sequences_table` | Master | Seeder komponen default + `LEGACY` |
+| F01 | `create_fee_components_table`, `create_fee_component_courses_table`, `create_bank_accounts_table`, `create_finance_periods_table`, `create_finance_sequences_table` | Master | Seeder komponen default + `LEGACY` ([04 §2.2](04-master-data-dan-konfigurasi.md#22-komponen-awal-yang-di-seed-contoh-dapat-diubah-tenant)) |
 | F02 | `create_ukt_groups_table`, `create_tariff_schedules_table`, `create_tariff_rules_table` | Tarif | |
 | F03 | `alter_invoices_add_keu_columns` | Kolom baru §3.4.1; `status` enum → `string(20)` (pola `2026_10_06_200006` di Academic) | Kolom generated ditambah setelah backfill |
 | F04 | `create_invoice_items_table`, `create_billing_runs_tables` | | |

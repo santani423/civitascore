@@ -1,6 +1,6 @@
 # 28 — Roadmap Implementasi
 
-> **Status:** rancangan. Disusun 2026-10-12.
+> **Status:** rancangan. Disusun 2026-10-12; diperbarui 2026-10-13 (dependensi tambahan §4).
 > Kembali ke [README](README.md) · Skema: [19](19-rancangan-database-dan-relasi.md) · Aturan: [25](25-business-rules-dan-validasi.md) · Penerimaan: [27](27-acceptance-criteria.md)
 
 Urutan implementasi di bawah ini disusun berdasarkan **dependensi teknis dan risiko**, bukan urutan menu. Prinsipnya ada tiga:
@@ -82,7 +82,7 @@ Fase 3 dan Fase 4 dapat berjalan paralel oleh dua tim setelah Fase 2 selesai, de
 | Aspek | Isi |
 |---|---|
 | **Prasyarat** | Fase 0. [KEU-Q-13](29-glossary-dan-keputusan-bisnis.md#3-pertanyaan-terbuka-keu-q) (UKT/SPP). Keputusan kolom `students.admission_path_code` & `study_system_code` dengan tim Akademik ([KEU-A-04](29-glossary-dan-keputusan-bisnis.md#4-asumsi-keu-a)) |
-| **Pekerjaan** | Migration F01–F02. Role baru (`finance_officer`, `cashier`, `finance_manager`, `integration_administrator`) + katalog permission ([03](03-role-dan-hak-akses.md)) di `RolePermissionSeeder`/`OrganizationalRoleSeeder`. CRUD komponen biaya, rekening, golongan UKT, pengaturan `finance.*` ([04](04-master-data-dan-konfigurasi.md)). Jadwal & aturan tarif: impor, validasi spesifisitas/konflik, workflow `finance_tariff_schedule`, publikasi, `GET /tariffs/resolve` ([05](05-rancangan-tarif-uang-kuliah.md)). Halaman `/keuangan/master/*` |
+| **Pekerjaan** | Migration F01–F02 (termasuk `fee_component_courses` dan `tariff_rules.free_units`). Role baru (`finance_officer`, `cashier`, `finance_manager`, `integration_administrator`) + katalog permission ([03](03-role-dan-hak-akses.md)) di `RolePermissionSeeder`/`OrganizationalRoleSeeder`. CRUD komponen biaya, rekening, golongan UKT, pengaturan `finance.*` ([04](04-master-data-dan-konfigurasi.md)). Jadwal & aturan tarif: impor, validasi spesifisitas/konflik, workflow `finance_tariff_schedule`, publikasi, `GET /tariffs/resolve` ([05](05-rancangan-tarif-uang-kuliah.md)). Halaman `/keuangan/master/*` |
 | **Hasil akhir** | Tarif dapat disusun, disetujui, dipublikasi, dan dipratinjau per mahasiswa |
 | **Dependensi** | Tim Akademik (kolom jalur/sistem kuliah — opsional; tarif tetap berjalan tanpa kriteria itu) |
 | **Risiko** | Konfigurasi tarif awal salah → wajib uji pratinjau `resolve` untuk sampel mahasiswa per prodi/angkatan sebelum publikasi |
@@ -151,6 +151,9 @@ Subfase: **4A** gateway online → **4B** rekonsiliasi → **4C** cekal keuangan
 | `plan_feature_entitlements` / pemetaan paket | Platform (Super Admin) | Fase 4A | Belum ada | Kuota kanal dibaca dari `university_settings` `entitlement.finance.payment_channels` sementara |
 | Perbaikan *self-approval* ApprovalWorkflow | Platform | Fase 0 (disarankan) | Belum ada | Guard SoD di KEU (sudah dirancang) |
 | Kanal notifikasi WhatsApp/SMS | Notification | Opsional | Belum ada | `database` + `mail` |
+| Penanda notifikasi wajib di `NotificationDispatcher` ([KEU-A-17](29-glossary-dan-keputusan-bisnis.md#4-asumsi-keu-a)) | Notification | Fase 2 | Belum ada | Notifikasi wajib dijamin di kanal `database` saja |
+| Kunci HMAC `FINANCE_HASH_KEY` di konfigurasi lingkungan ([KEU-A-18](29-glossary-dan-keputusan-bisnis.md#4-asumsi-keu-a)) | DevOps | Fase 0 | Belum ada | — (wajib sebelum tabel bernomor rekening dibuat) |
+| Penegakan cekal di service KRS/Ujian (`AcademicBlockGuard` atau `FinanceClearanceGuard`) | Akademik | Fase 4C | Belum ada | Mode `finance.hold.enforcement_mode = direct` ([17 §9](17-rancangan-cekal-keuangan.md#9-jalur-sementara-financeclearanceguard)) |
 | Kontrak & kredensial provider | Bisnis + provider | Fase 4A | Belum ada | Rilis Fase 2–3 tanpa gateway |
 
 ---
