@@ -2,6 +2,7 @@
 
 namespace Modules\ApprovalWorkflow\Services;
 
+use Modules\ApprovalWorkflow\Contracts\RequiresDistinctApprover;
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +34,7 @@ class ApprovalActionService
 
     public function approve(ApprovalRequestStep $step, User $actor, ?string $comment = null): ApprovalRequest
     {
-        $this->guardActionable($step);
+        $this->guardActionable($step, $actor);
 
         return DB::transaction(function () use ($step, $actor, $comment): ApprovalRequest {
             $step->actions()->create([
@@ -90,7 +91,7 @@ class ApprovalActionService
 
     public function reject(ApprovalRequestStep $step, User $actor, string $comment): ApprovalRequest
     {
-        $this->guardActionable($step);
+        $this->guardActionable($step, $actor);
 
         return DB::transaction(function () use ($step, $actor, $comment): ApprovalRequest {
             $step->actions()->create([
@@ -151,7 +152,7 @@ class ApprovalActionService
 
     public function delegate(ApprovalRequestStep $step, User $actor, User $delegateTo, ?string $comment = null): ApprovalRequest
     {
-        $this->guardActionable($step);
+        $this->guardActionable($step, $actor);
 
         return DB::transaction(function () use ($step, $actor, $delegateTo, $comment): ApprovalRequest {
             $step->actions()->create([
@@ -187,7 +188,7 @@ class ApprovalActionService
      */
     public function returnToRequester(ApprovalRequestStep $step, User $actor, string $comment): ApprovalRequest
     {
-        $this->guardActionable($step);
+        $this->guardActionable($step, $actor);
 
         return DB::transaction(function () use ($step, $actor, $comment): ApprovalRequest {
             $step->actions()->create([
@@ -282,10 +283,26 @@ class ApprovalActionService
         });
     }
 
-    private function guardActionable(ApprovalRequestStep $step): void
+    private function guardActionable(ApprovalRequestStep $step, User $actor): void
     {
         if ($step->status !== ApprovalRequestStepStatus::InReview) {
             throw new ConflictException('Langkah persetujuan ini sudah diproses atau belum menjadi giliran saat ini.');
+        }
+
+        $request = $step->request;
+
+        $requestable = $request?->requestable;
+
+        if ($requestable instanceof RequiresDistinctApprover) {
+            $actorId = (string) $actor->getKey();
+
+            if ((string) $request->requested_by === $actorId) {
+                throw new ConflictException('Pengaju tidak boleh memutuskan pengajuannya sendiri.', 'SELF_APPROVAL_FORBIDDEN');
+            }
+
+            if (in_array($actorId, array_map('strval', $requestable->excludedApproverIds()), true)) {
+                throw new ConflictException('Anda tidak boleh memutuskan pengajuan ini (pemisahan tugas).', 'SELF_APPROVAL_FORBIDDEN');
+            }
         }
     }
 }

@@ -12,6 +12,7 @@
             <directory>app/Modules/Notification/Tests/Unit</directory>
             <directory>app/Modules/ApprovalWorkflow/Tests/Unit</directory>
             <directory>app/Modules/Academic/Tests/Unit</directory>
+            <directory>app/Modules/Admission/Tests/Unit</directory>
         </testsuite>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
@@ -34,6 +35,7 @@
             <directory>app/Modules/Announcement/Tests/Feature</directory>
             <directory>app/Modules/Report/Tests/Feature</directory>
             <directory>app/Modules/HumanResource/Tests/Feature</directory>
+            <directory>app/Modules/Admission/Tests/Feature</directory>
         </testsuite>
     </testsuites>
     <source>

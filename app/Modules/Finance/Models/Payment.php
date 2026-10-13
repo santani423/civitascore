@@ -28,7 +28,7 @@ class Payment extends Model implements ScopesToInstitution
     /** @use HasFactory<PaymentFactory> */
     use HasFactory, HasUlids, TenantScoped;
 
-    protected $fillable = ['university_id', 'invoice_id', 'amount', 'paid_at', 'method'];
+    protected $fillable = ['university_id', 'invoice_id', 'amount', 'paid_at', 'method', 'reference', 'channel'];
 
     protected function casts(): array
     {

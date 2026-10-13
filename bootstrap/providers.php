@@ -4,6 +4,7 @@ use App\Providers\AppServiceProvider;
 use App\Providers\AuthServiceProvider;
 use App\Providers\ModuleServiceProvider;
 use Modules\Academic\Providers\AcademicServiceProvider;
+use Modules\Admission\Providers\AdmissionServiceProvider;
 use Modules\HumanResource\Providers\HumanResourceServiceProvider;
 
 return [
@@ -11,5 +12,6 @@ return [
     AuthServiceProvider::class,
     ModuleServiceProvider::class,
     AcademicServiceProvider::class,
+    AdmissionServiceProvider::class,
     HumanResourceServiceProvider::class,
 ];
