@@ -14,6 +14,10 @@ use Modules\Tenancy\Models\University;
  * §E.2), sistem kuliah dasar, dan alur persetujuan default (pengesahan hasil,
  * koreksi, refund, perpanjangan massal, percepatan pengumuman).
  *
+ * university_id selalu diisi eksplisit: DatabaseSeeder memakai
+ * WithoutModelEvents sehingga pengisian otomatis TenantScoped (event
+ * `creating`) tidak berjalan selama seeding (lihat UniversitySeeder).
+ *
  * Idempoten dan tidak menimpa data tenant: hanya membuat yang belum ada
  * (firstOrCreate berdasarkan kode). Periode, jalur, kuota, biaya, dan dokumen
  * legal sengaja TIDAK dibuat — semuanya keputusan kebijakan tenant.
@@ -59,6 +63,7 @@ class AdmissionSeeder
         try {
             foreach (self::DOCUMENT_TYPES as $code => [$name, $mimes, $maxKb, $multiple, $original, $sensitive]) {
                 $type = DocumentType::query()->firstOrCreate(['code' => $code], [
+                    'university_id' => $university->getKey(),
                     'name' => $name, 'allowed_mime_types' => $mimes, 'max_size_kb' => $maxKb, 'allows_multiple' => $multiple,
                     'requires_original_check' => $original, 'is_sensitive' => $sensitive, 'retention_class' => $sensitive ? 'sensitive' : 'standard',
                 ]);
@@ -66,7 +71,7 @@ class AdmissionSeeder
             }
 
             foreach (self::STUDY_SYSTEMS as $code => [$name, $note]) {
-                $system = StudySystem::query()->firstOrCreate(['code' => $code], ['name' => $name, 'schedule_note' => $note, 'is_active' => true]);
+                $system = StudySystem::query()->firstOrCreate(['code' => $code], ['university_id' => $university->getKey(), 'name' => $name, 'schedule_note' => $note, 'is_active' => true]);
                 $created['study_systems'] += (int) $system->wasRecentlyCreated;
             }
 

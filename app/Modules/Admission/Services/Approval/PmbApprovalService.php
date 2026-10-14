@@ -4,6 +4,7 @@ namespace Modules\Admission\Services\Approval;
 
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 use Modules\ApprovalWorkflow\Enums\ApprovalApproverType;
 use Modules\ApprovalWorkflow\Models\ApprovalRequest;
@@ -77,9 +78,11 @@ class PmbApprovalService
     {
         [$name, $steps] = self::DEFAULTS[$type] ?? throw new ConflictException("Alur persetujuan {$type} tidak dikenal.");
 
+        // university_id eksplisit: dipanggil juga dari seeder (WithoutModelEvents
+        // mematikan pengisian otomatis TenantScoped).
         $workflow = ApprovalWorkflow::query()->firstOrCreate(
             ['workflowable_type' => $type, 'name' => $name],
-            ['description' => 'Alur default modul PMB (dapat diubah di Alur Persetujuan).', 'is_active' => true],
+            ['university_id' => app(TenantContext::class)->universityId(), 'description' => 'Alur default modul PMB (dapat diubah di Alur Persetujuan).', 'is_active' => true],
         );
 
         if ($workflow->steps()->doesntExist()) {

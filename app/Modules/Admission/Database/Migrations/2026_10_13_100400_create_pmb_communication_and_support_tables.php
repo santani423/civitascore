@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Modules\Admission\Support\MigrationRecovery;
 
 /**
  * PMB — komunikasi & tabel lintas (docs/pmb/10 §4.10) + tabel pendukung
@@ -12,6 +13,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Bersihkan sisa percobaan gagal (DDL MySQL tidak transaksional) — hanya tabel kosong.
+        MigrationRecovery::clearFailedAttempt([
+            'pmb_broadcasts',
+            'pmb_chat_threads',
+            'pmb_chat_messages',
+            'pmb_export_logs',
+            'pmb_sensitive_access_logs',
+            'pmb_outbox_events',
+            'pmb_daily_stats',
+            'pmb_idempotency_keys',
+            'pmb_change_requests',
+        ]);
+
         Schema::create('pmb_broadcasts', function (Blueprint $table): void {
             $table->ulid('id')->primary();
             $table->foreignUlid('university_id')->constrained('universities')->cascadeOnDelete();

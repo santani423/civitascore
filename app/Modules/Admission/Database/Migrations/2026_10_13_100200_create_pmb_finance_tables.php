@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Modules\Admission\Support\MigrationRecovery;
 
 /**
  * PMB — tagihan & pembayaran (docs/pmb/10 §4.5; KD-03: tagihan PMB terpisah
@@ -12,6 +13,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Bersihkan sisa percobaan gagal (DDL MySQL tidak transaksional) — hanya tabel kosong.
+        MigrationRecovery::clearFailedAttempt([
+            'pmb_invoices',
+            'pmb_vouchers',
+            'pmb_invoice_items',
+            'pmb_payment_transactions',
+            'pmb_payment_callbacks',
+            'pmb_manual_payment_proofs',
+            'pmb_reconciliation_batches',
+            'pmb_reconciliation_items',
+            'pmb_refunds',
+        ]);
+
         Schema::create('pmb_invoices', function (Blueprint $table): void {
             $table->ulid('id')->primary();
             $table->foreignUlid('university_id')->constrained('universities')->cascadeOnDelete();
@@ -160,7 +174,7 @@ return new class extends Migration
             $table->foreignUlid('closed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestampTz('closed_at')->nullable();
             $table->timestampsTz();
-            $table->unique(['university_id', 'provider', 'statement_date']);
+            $table->unique(['university_id', 'provider', 'statement_date'], 'pmb_recon_batches_tenant_provider_date_unique');
         });
 
         Schema::create('pmb_reconciliation_items', function (Blueprint $table): void {

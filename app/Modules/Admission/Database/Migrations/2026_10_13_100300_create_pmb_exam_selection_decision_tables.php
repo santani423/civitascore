@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Modules\Admission\Support\MigrationRecovery;
 
 /**
  * PMB — ujian, CBT, seleksi, keputusan, daftar ulang & konversi
@@ -12,6 +13,31 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Bersihkan sisa percobaan gagal (DDL MySQL tidak transaksional) — hanya tabel kosong.
+        MigrationRecovery::clearFailedAttempt([
+            'pmb_exam_venues',
+            'pmb_exam_rooms',
+            'pmb_exam_schedules',
+            'pmb_exam_sessions',
+            'pmb_exam_session_examiners',
+            'pmb_exam_participants',
+            'pmb_exam_reschedule_requests',
+            'pmb_cbt_questions',
+            'pmb_cbt_attempts',
+            'pmb_selection_runs',
+            'pmb_selection_scores',
+            'pmb_score_revisions',
+            'pmb_score_imports',
+            'pmb_selection_run_results',
+            'pmb_announcement_batches',
+            'pmb_admission_decisions',
+            'pmb_acceptance_letters',
+            'pmb_re_registrations',
+            'pmb_re_registration_checks',
+            'pmb_sequences',
+            'pmb_student_conversions',
+        ]);
+
         Schema::create('pmb_exam_venues', function (Blueprint $table): void {
             $table->ulid('id')->primary();
             $table->foreignUlid('university_id')->constrained('universities')->cascadeOnDelete();
@@ -254,7 +280,7 @@ return new class extends Migration
             $table->foreignUlid('override_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestampTz('created_at')->nullable();
             $table->unique(['selection_run_id', 'application_id']);
-            $table->index(['selection_run_id', 'assigned_quota_id']);
+            $table->index(['selection_run_id', 'assigned_quota_id'], 'pmb_run_results_run_quota_index');
         });
 
         Schema::create('pmb_announcement_batches', function (Blueprint $table): void {
