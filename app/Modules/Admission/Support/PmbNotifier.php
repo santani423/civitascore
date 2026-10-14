@@ -3,6 +3,7 @@
 namespace Modules\Admission\Support;
 
 use App\Models\User;
+use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -162,7 +163,7 @@ class PmbNotifier
     public function inQuietHours(?CarbonImmutable $now = null): bool
     {
         $window = $this->settings->get('pmb.quiet_hours') ?: ['start' => '21:00', 'end' => '06:00'];
-        $timezone = University::query()->whereKey(app(\App\Support\Tenancy\TenantContext::class)->universityId())->value('timezone') ?: config('app.timezone');
+        $timezone = University::query()->whereKey(app(TenantContext::class)->universityId())->value('timezone') ?: config('app.timezone');
         $now = ($now ?? CarbonImmutable::now())->setTimezone($timezone);
         $time = $now->format('H:i');
         [$start, $end] = [$window['start'] ?? '21:00', $window['end'] ?? '06:00'];

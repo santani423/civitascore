@@ -1,0 +1,1 @@
+import{S as e,y as t}from"./cn-BGST-w6W.js";var n=e(t(),1),r=(0,n.createContext)(null);function i(){return(0,n.useContext)(r)}export{i as n,r as t};

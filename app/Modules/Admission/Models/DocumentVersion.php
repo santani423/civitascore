@@ -2,10 +2,26 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\FileManagement\Models\FileUpload;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $application_document_id
+ * @property int $version_no
+ * @property string $file_upload_id
+ * @property string $uploaded_by_type
+ * @property string $uploaded_by_id
+ * @property string $checksum
+ * @property CarbonImmutable|null $created_at
+ * @property-read ApplicationDocument $document
+ * @property-read FileUpload $fileUpload
+ * @property-read Collection<int, DocumentReview> $reviews
+ */
 class DocumentVersion extends PmbModel
 {
     protected $table = 'pmb_document_versions';

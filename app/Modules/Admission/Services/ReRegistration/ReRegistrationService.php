@@ -3,9 +3,10 @@
 namespace Modules\Admission\Services\ReRegistration;
 
 use App\Models\User;
-use App\Support\Http\Exceptions\ConflictException;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Admission\Enums\ChangeRequestStatus;
@@ -28,6 +29,7 @@ use Modules\Admission\Enums\TransactionStatus;
 use Modules\Admission\Exceptions\DomainRuleException;
 use Modules\Admission\Exceptions\InvalidTransitionException;
 use Modules\Admission\Models\AdmissionDecision;
+use Modules\Admission\Models\ApplicantProfile;
 use Modules\Admission\Models\Application;
 use Modules\Admission\Models\ApplicationAnswer;
 use Modules\Admission\Models\ApplicationDocument;
@@ -37,9 +39,9 @@ use Modules\Admission\Models\DuplicateFlag;
 use Modules\Admission\Models\FormField;
 use Modules\Admission\Models\ManualPaymentProof;
 use Modules\Admission\Models\PmbInvoice;
+use Modules\Admission\Models\Refund;
 use Modules\Admission\Models\ReRegistration;
 use Modules\Admission\Models\ReRegistrationCheck;
-use Modules\Admission\Models\Refund;
 use Modules\Admission\Models\StudentConversion;
 use Modules\Admission\Outbox\OutboxRecorder;
 use Modules\Admission\Services\Account\AccountService;
@@ -50,6 +52,7 @@ use Modules\Admission\Services\Application\ApplicationService;
 use Modules\Admission\Services\Application\DocumentService;
 use Modules\Admission\Services\Approval\PmbApprovalService;
 use Modules\Admission\Services\Payment\InvoiceService;
+use Modules\Admission\Services\Verification\VerificationService;
 use Modules\Admission\Support\Actor;
 use Modules\Admission\Support\HistoryRecorder;
 use Modules\Admission\Support\Money;
@@ -336,7 +339,7 @@ class ReRegistrationService
                 }
             }
 
-            app(\Modules\Admission\Services\Verification\VerificationService::class)->addNote($reRegistration->application, 'applicant', $note, $officer, 're_registration');
+            app(VerificationService::class)->addNote($reRegistration->application, 'applicant', $note, $officer, 're_registration');
             $this->history->record($reRegistration->application, Lifecycle::ReRegistration, $from, ReRegistrationStatus::RevisionRequested, Actor::user($officer), null, $note);
             $this->outbox->notifyApplicant($reRegistration->application->account, 'pmb.re_registration.revision_requested', [], aggregate: $reRegistration);
 
@@ -567,7 +570,7 @@ class ReRegistrationService
                 ->each(function (ReRegistration $r) use ($label, &$count): void {
                     $key = 'pmb:rereg-reminder:'.$r->getKey().':'.$label;
 
-                    if (\Illuminate\Support\Facades\Cache::add($key, true, now()->addDays(4))) {
+                    if (Cache::add($key, true, now()->addDays(4))) {
                         $this->outbox->notifyApplicant($r->application->account, 'pmb.re_registration.deadline_reminder', ['deadline' => $r->effectiveDeadline()->toDateTimeString()], aggregate: $r);
                         $count++;
                     }
@@ -602,7 +605,7 @@ class ReRegistrationService
     }
 
     /** @return array{0: CheckStatus, 1: ?string} */
-    private function pddiktiComplete(?\Modules\Admission\Models\ApplicantProfile $profile): array
+    private function pddiktiComplete(?ApplicantProfile $profile): array
     {
         if ($profile === null) {
             return [CheckStatus::Failed, 'Profil belum diisi'];
@@ -794,9 +797,9 @@ class ReRegistrationService
 
     /**
      * @param  array<string, mixed>  $filter
-     * @return \Illuminate\Database\Eloquent\Builder<ReRegistration>
+     * @return Builder<ReRegistration>
      */
-    private function bulkTargets(array $filter): \Illuminate\Database\Eloquent\Builder
+    private function bulkTargets(array $filter): Builder
     {
         return ReRegistration::query()->whereIn('status', ['awaiting_confirmation', 'confirmed', 'in_progress', 'revision_requested'])
             ->when($filter['wave_id'] ?? null, fn ($q, $v) => $q->whereHas('application', fn ($a) => $a->where('wave_id', $v)))

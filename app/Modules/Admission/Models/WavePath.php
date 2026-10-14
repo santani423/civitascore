@@ -2,11 +2,39 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Admission\Enums\PaymentTiming;
 use Modules\Admission\Enums\QuotaMode;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $wave_id
+ * @property string $admission_path_id
+ * @property string $registration_fee
+ * @property PaymentTiming $payment_timing
+ * @property int $max_choices
+ * @property bool $allow_cross_system_choice
+ * @property string $form_template_id
+ * @property string|null $selection_scheme_id
+ * @property QuotaMode $quota_mode
+ * @property bool $bulk_verifiable
+ * @property bool $is_open
+ * @property string|null $public_notes
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Wave $wave
+ * @property-read AdmissionPath $admissionPath
+ * @property-read FormTemplate $formTemplate
+ * @property-read SelectionScheme|null $selectionScheme
+ * @property-read Collection<int, DocumentRequirement> $documentRequirements
+ * @property-read Collection<int, Application> $applications
+ */
 class WavePath extends PmbModel
 {
     protected $table = 'pmb_wave_paths';

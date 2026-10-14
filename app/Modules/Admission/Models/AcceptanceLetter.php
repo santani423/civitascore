@@ -2,10 +2,28 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Admission\Enums\LetterStatus;
 use Modules\FileManagement\Models\FileUpload;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $decision_id
+ * @property string $letter_number
+ * @property string $verification_code
+ * @property string|null $file_upload_id
+ * @property LetterStatus $status
+ * @property CarbonImmutable|null $issued_at
+ * @property CarbonImmutable|null $revoked_at
+ * @property string|null $revoke_reason
+ * @property string|null $signature_reference
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read AdmissionDecision $decision
+ * @property-read FileUpload|null $fileUpload
+ */
 class AcceptanceLetter extends PmbModel
 {
     protected $table = 'pmb_acceptance_letters';

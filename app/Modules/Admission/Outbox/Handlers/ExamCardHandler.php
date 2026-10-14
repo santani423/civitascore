@@ -2,6 +2,7 @@
 
 namespace Modules\Admission\Outbox\Handlers;
 
+use Illuminate\Support\Facades\Storage;
 use Modules\Admission\Models\ExamParticipant;
 use Modules\Admission\Models\OutboxEvent;
 use Modules\Admission\Outbox\OutboxHandler;
@@ -27,7 +28,7 @@ class ExamCardHandler implements OutboxHandler
 
         if ($photo !== null) {
             $file = $photo->currentVersion->fileUpload;
-            $photoData = 'data:'.$file->mime_type.';base64,'.base64_encode((string) \Illuminate\Support\Facades\Storage::disk($file->disk)->get($file->path));
+            $photoData = 'data:'.$file->mime_type.';base64,'.base64_encode((string) Storage::disk($file->disk)->get($file->path));
         }
 
         $file = $this->pdf->render('admission::pdf.exam-card', [

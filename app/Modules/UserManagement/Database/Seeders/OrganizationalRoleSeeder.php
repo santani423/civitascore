@@ -52,6 +52,38 @@ class OrganizationalRoleSeeder extends Seeder
         'hr_administrator' => 'Bagian SDM',
         'library_administrator' => 'Pustakawan',
         'auditor' => 'Auditor',
+        'admission_administrator' => 'Administrator PMB',
+        'admission_approver' => 'Pejabat Pengesah PMB',
+        'admission_verifier' => 'Petugas Verifikasi PMB',
+        'admission_selection_committee' => 'Panitia Seleksi PMB',
+        'admission_registrar' => 'Petugas Daftar Ulang PMB',
+    ];
+
+    /**
+     * Matriks role × permission PMB (docs/pmb/08 §2). Kolom "S" (dean/kaprodi)
+     * dibatasi lewat user_roles.scope_type/scope_id saat penugasan; kolom "A"
+     * (penguji) hanya pmb_scores.create + presensi, dibatasi keanggotaan sesi
+     * di ExamService — penguji sengaja TIDAK diberi pmb_applications.read.
+     *
+     * @var array<int, string>
+     */
+    private const PMB_ADMIN = [
+        'pmb_config.read', 'pmb_config.update', 'pmb_config.publish', 'pmb_fees.update', 'pmb_content.update', 'pmb_program_profiles.update',
+        'pmb_applications.read', 'pmb_applications.update', 'pmb_applications.create', 'pmb_sensitive.read', 'pmb_documents.read',
+        'pmb_verification.approve', 'pmb_verification.update', 'pmb_verification.finalize', 'pmb_payments.read',
+        'pmb_exams.update', 'pmb_exam_attendance.update', 'pmb_selection.finalize', 'pmb_results.read', 'pmb_results.update',
+        'pmb_waitlist.update', 'pmb_reregistration.read', 'pmb_reregistration.update', 'pmb_conversion.read', 'pmb_conversion.update',
+        'pmb_nim.update', 'pmb_reports.read', 'pmb_reports.export', 'pmb_communication.publish', 'pmb_communication.update', 'pmb_audit.read',
+        'approval_requests.read',
+    ];
+
+    /** @var array<int, string> */
+    private const PMB_SCOPED_ADMIN = ['pmb_config.read', 'pmb_program_profiles.update', 'pmb_applications.read', 'pmb_documents.read', 'pmb_reregistration.read', 'pmb_reports.read', 'pmb_reports.export'];
+
+    /** @var array<int, string> */
+    private const PMB_FINANCE = [
+        'pmb_config.read', 'pmb_applications.read', 'pmb_payments.read', 'pmb_payments.approve', 'pmb_payments.finalize',
+        'pmb_refunds.create', 'pmb_refunds.approve', 'pmb_reregistration.read', 'pmb_reports.read', 'pmb_reports.export', 'pmb_communication.update',
     ];
 
     /**
@@ -107,22 +139,26 @@ class OrganizationalRoleSeeder extends Seeder
             'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
             'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
+            'pmb_config.read', 'pmb_reports.read',
         ],
         'vice_rector' => [
             'hr_dashboard.read', 'hr_reports.read',
             'approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read',
             'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
+            'pmb_config.read', 'pmb_reports.read',
         ],
         'dean' => [
             'approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read',
             'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
+            ...self::PMB_SCOPED_ADMIN,
         ],
         'head_of_study_program' => [
             'approval_requests.read', 'users.read', 'students.read', 'lecturers.read', 'study_programs.read', 'classes.read',
             'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
+            ...self::PMB_SCOPED_ADMIN,
         ],
         'academic_administrator' => [
             'approval_requests.read',
@@ -154,8 +190,10 @@ class OrganizationalRoleSeeder extends Seeder
             'assignment_submissions.read', 'assignment_submissions.update',
             'krs_advising.read', 'krs_advising.approve',
             'academic_calendar.read',
+            // Penguji/pengawas PMB: dibatasi sesi yang ditugaskan (ExamService::assertSessionStaff).
+            'pmb_scores.create', 'pmb_exam_attendance.update',
         ],
-        'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read'],
+        'finance_administrator' => ['approval_requests.read', 'file_uploads.read', 'invoices.read', 'scholarships.read', ...self::PMB_FINANCE],
         // Bagian SDM: seluruh Modul SDM, plus CRUD menu Dosen (lecturers.*)
         // — LecturerObserver menyinkronkan setiap perubahan dosen ke data
         // pegawainya di Modul SDM, jadi tetap satu identitas.
@@ -183,6 +221,8 @@ class OrganizationalRoleSeeder extends Seeder
             'students.read', 'lecturers.read', 'employees.read', 'study_programs.read', 'classes.read', 'invoices.read',
             'curriculums.read', 'courses.read', 'krs.read', 'grades.read', 'attendance.read', 'exams.read', 'question_bank.read',
             'scholarships.read', 'theses.read', 'internships.read', 'books.read', 'alumni.read', 'announcements.read', 'reports.read',
+            'pmb_config.read', 'pmb_applications.read', 'pmb_sensitive.read', 'pmb_documents.read', 'pmb_payments.read', 'pmb_results.read',
+            'pmb_reregistration.read', 'pmb_conversion.read', 'pmb_reports.read', 'pmb_reports.export', 'pmb_audit.read',
         ],
         'student' => [
             'exam_participation.read', 'exam_participation.create', 'exam_participation.update',
@@ -198,6 +238,21 @@ class OrganizationalRoleSeeder extends Seeder
         // students.academic_advisor_id lewat identity link dosen).
         'academic_advisor' => [...self::HR_SELF_SERVICE, 'krs_advising.read', 'krs_advising.approve'],
         'employee' => self::HR_SELF_SERVICE,
+        'admission_administrator' => self::PMB_ADMIN,
+        'admission_approver' => ['pmb_config.read', 'pmb_applications.read', 'pmb_results.approve', 'pmb_results.read', 'pmb_reports.read', 'approval_requests.read'],
+        'admission_verifier' => [
+            'pmb_config.read', 'pmb_applications.read', 'pmb_applications.create', 'pmb_sensitive.read', 'pmb_documents.read',
+            'pmb_verification.approve', 'pmb_payments.read', 'pmb_reports.read', 'pmb_communication.update',
+        ],
+        'admission_selection_committee' => [
+            'pmb_config.read', 'pmb_applications.read', 'pmb_documents.read', 'pmb_exams.update', 'pmb_exam_attendance.update',
+            'pmb_scores.import', 'pmb_scores.finalize', 'pmb_selection.update', 'pmb_selection.finalize', 'pmb_selection.publish',
+            'pmb_results.read', 'pmb_results.update', 'pmb_reports.read', 'pmb_reports.export', 'approval_requests.read',
+        ],
+        'admission_registrar' => [
+            'pmb_config.read', 'pmb_applications.read', 'pmb_sensitive.read', 'pmb_documents.read', 'pmb_payments.read',
+            'pmb_reregistration.read', 'pmb_reregistration.approve', 'pmb_conversion.read', 'pmb_reports.read', 'pmb_communication.update',
+        ],
     ];
 
     public function run(): void

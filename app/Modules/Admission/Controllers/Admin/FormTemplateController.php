@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Modules\Admission\Models\FormField;
 use Modules\Admission\Models\FormTemplate;
+use Modules\Admission\Models\WavePath;
 use Modules\Admission\Services\Configuration\FormTemplateService;
 use Modules\Admission\Support\CoreFormFields;
-use Modules\Admission\Support\PmbFileStorage;
 
 /** Template formulir dinamis (FR-CFG-08, ADM-14). */
 class FormTemplateController extends AdminController
@@ -31,7 +31,7 @@ class FormTemplateController extends AdminController
             'fields' => $formTemplate->fields()->orderBy('stage')->orderBy('section')->orderBy('sort_order')->get(),
             'core_fields' => CoreFormFields::FIELDS,
             'field_types' => FormTemplateService::FIELD_TYPES,
-            'in_use' => \Modules\Admission\Models\WavePath::query()->where('form_template_id', $formTemplate->getKey())->exists(),
+            'in_use' => WavePath::query()->where('form_template_id', $formTemplate->getKey())->exists(),
         ]);
     }
 

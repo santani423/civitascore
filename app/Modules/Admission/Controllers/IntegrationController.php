@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Support\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Modules\Admission\Models\ApplicantAccount;
 use Modules\Admission\Services\Account\AccountService;
 
@@ -36,7 +37,8 @@ class IntegrationController extends Controller
             $account->forceFill(['crm_lead_reference' => $data['reference'], 'info_source' => $account->info_source ?? ($data['source'] ?? 'maukuliah')])->save();
         }
 
-        \Illuminate\Support\Facades\Cache::put('pmb:lead:'.sha1($accounts->normalizeEmail($data['email'])), $data, now()->addDays(180));
+        // Hanya referensi (bukan data pribadi) disimpan; dicocokkan saat akun dibuat (AccountService::register).
+        Cache::put('pmb:lead:'.sha1($accounts->normalizeEmail($data['email'])), ['reference' => $data['reference'], 'source' => $data['source'] ?? null], now()->addDays(180));
 
         return ApiResponse::success(['matched_account' => $account !== null], 'Lead diterima.', status: 202);
     }

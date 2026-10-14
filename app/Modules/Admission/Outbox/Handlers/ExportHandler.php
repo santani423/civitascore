@@ -2,6 +2,7 @@
 
 namespace Modules\Admission\Outbox\Handlers;
 
+use App\Models\User;
 use Modules\Admission\Enums\ExportStatus;
 use Modules\Admission\Models\ExportLog;
 use Modules\Admission\Models\OutboxEvent;
@@ -22,7 +23,7 @@ class ExportHandler implements OutboxHandler
         }
 
         // Ekspor berjalan dalam konteks izin pembuatnya (scope & kolom, BR-42).
-        $user = \App\Models\User::query()->find($log->user_id);
+        $user = User::query()->find($log->user_id);
         auth()->setUser($user);
 
         try {

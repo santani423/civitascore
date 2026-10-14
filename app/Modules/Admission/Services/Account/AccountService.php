@@ -5,6 +5,7 @@ namespace Modules\Admission\Services\Account;
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
 use App\Support\Tenancy\TenantContext;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -29,6 +30,7 @@ use Modules\Admission\Support\IdentityHasher;
 use Modules\Admission\Support\PmbSettings;
 use Modules\AuditLog\Enums\AuditAction;
 use Modules\AuditLog\Services\AuditLogService;
+use Modules\Tenancy\Models\University;
 
 /**
  * Registrasi & akun calon mahasiswa (docs/pmb/04 §C, SM-01, 11 §A.3).
@@ -88,6 +90,11 @@ class AccountService
 
         $privacy = ContentService::activeVersion(ContentType::PrivacyPolicy);
         $terms = ContentService::activeVersion(ContentType::Terms);
+
+        // Lead CRM yang masuk sebelum akun dibuat (IntegrationController::lead).
+        $lead = (array) Cache::pull('pmb:lead:'.sha1($email), []);
+        $data['crm_lead_reference'] ??= $lead['reference'] ?? null;
+        $data['info_source'] ??= $lead['source'] ?? null;
 
         return DB::transaction(function () use ($data, $email, $phone, $ip, $userAgent, $assistedBy, $privacy, $terms): ApplicantAccount {
             $account = ApplicantAccount::query()->create([
@@ -731,6 +738,6 @@ class AccountService
 
     private function timezone(): string
     {
-        return (string) (\Modules\Tenancy\Models\University::query()->whereKey($this->tenant->universityId())->value('timezone') ?: config('app.timezone'));
+        return (string) (University::query()->whereKey($this->tenant->universityId())->value('timezone') ?: config('app.timezone'));
     }
 }

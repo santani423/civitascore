@@ -6,6 +6,7 @@ use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\Admission\Enums\FormStatus;
 use Modules\Admission\Models\Application;
 use Modules\Admission\Models\IdempotencyKey;
@@ -19,8 +20,8 @@ use Modules\Admission\Services\Exam\ExamService;
 use Modules\Admission\Services\Payment\InvoiceService;
 use Modules\Admission\Services\Payment\ReconciliationService;
 use Modules\Admission\Services\Privacy\RetentionService;
-use Modules\Admission\Services\ReRegistration\ReRegistrationService;
 use Modules\Admission\Services\Reporting\ReportService;
+use Modules\Admission\Services\ReRegistration\ReRegistrationService;
 use Modules\Admission\Services\Verification\VerificationService;
 use Modules\Admission\Support\Actor;
 use Modules\Tenancy\Models\University;
@@ -137,7 +138,7 @@ class PmbDailyCommand extends Command
 
             if ($actual !== (int) $quota->accepted_count) {
                 DB::table('pmb_quotas')->where('id', $quota->id)->update(['accepted_count' => $actual, 'lock_version' => $quota->lock_version + 1]);
-                \Illuminate\Support\Facades\Log::warning('[pmb-quota] accepted_count direkonsiliasi', ['quota' => $quota->id, 'from' => $quota->accepted_count, 'to' => $actual]);
+                Log::warning('[pmb-quota] accepted_count direkonsiliasi', ['quota' => $quota->id, 'from' => $quota->accepted_count, 'to' => $actual]);
                 $fixed++;
             }
         }

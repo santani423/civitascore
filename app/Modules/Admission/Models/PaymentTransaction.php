@@ -3,11 +3,44 @@
 namespace Modules\Admission\Models;
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Modules\Admission\Enums\TransactionStatus;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $invoice_id
+ * @property string $channel
+ * @property string $provider
+ * @property string $amount
+ * @property string $currency
+ * @property TransactionStatus $status
+ * @property string $idempotency_key
+ * @property string|null $provider_reference
+ * @property string|null $va_number
+ * @property string|null $qr_string
+ * @property string|null $redirect_url
+ * @property array<mixed>|null $instructions
+ * @property int|null $unique_code
+ * @property CarbonImmutable|null $expires_at
+ * @property CarbonImmutable|null $paid_at
+ * @property string|null $provider_status_raw
+ * @property string|null $receipt_number
+ * @property string|null $recorded_by
+ * @property string|null $failure_reason
+ * @property int $recheck_attempts
+ * @property CarbonImmutable|null $next_recheck_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read PmbInvoice $invoice
+ * @property-read ManualPaymentProof|null $manualProof
+ * @property-read Collection<int, PaymentCallback> $callbacks
+ * @property-read User|null $recorder
+ */
 class PaymentTransaction extends PmbModel
 {
     protected $table = 'pmb_payment_transactions';

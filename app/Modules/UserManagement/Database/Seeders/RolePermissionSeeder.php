@@ -291,6 +291,31 @@ class RolePermissionSeeder extends Seeder
         // dari izin admin di atas: memberikannya tidak pernah membuka data
         // pegawai lain.
         'hr_self_service' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update],
+
+        // Modul PMB (app/Modules/Admission) — pemetaan nama fungsional
+        // docs/pmb/08 §1 ke action standar ada di Modules\Admission\Support\PmbPermission.
+        'pmb_config' => [PermissionAction::Read, PermissionAction::Update, PermissionAction::Publish],
+        'pmb_fees' => [PermissionAction::Update],
+        'pmb_content' => [PermissionAction::Update],
+        'pmb_program_profiles' => [PermissionAction::Update],
+        'pmb_applications' => [PermissionAction::Read, PermissionAction::Update, PermissionAction::Create],
+        'pmb_sensitive' => [PermissionAction::Read],
+        'pmb_documents' => [PermissionAction::Read],
+        'pmb_verification' => [PermissionAction::Approve, PermissionAction::Update, PermissionAction::Finalize],
+        'pmb_payments' => [PermissionAction::Read, PermissionAction::Approve, PermissionAction::Finalize],
+        'pmb_refunds' => [PermissionAction::Create, PermissionAction::Approve],
+        'pmb_exams' => [PermissionAction::Update],
+        'pmb_exam_attendance' => [PermissionAction::Update],
+        'pmb_scores' => [PermissionAction::Create, PermissionAction::Import, PermissionAction::Finalize],
+        'pmb_selection' => [PermissionAction::Update, PermissionAction::Finalize, PermissionAction::Publish],
+        'pmb_results' => [PermissionAction::Approve, PermissionAction::Read, PermissionAction::Update],
+        'pmb_waitlist' => [PermissionAction::Update],
+        'pmb_reregistration' => [PermissionAction::Read, PermissionAction::Approve, PermissionAction::Update],
+        'pmb_conversion' => [PermissionAction::Read, PermissionAction::Update],
+        'pmb_nim' => [PermissionAction::Update],
+        'pmb_reports' => [PermissionAction::Read, PermissionAction::Export],
+        'pmb_communication' => [PermissionAction::Publish, PermissionAction::Update],
+        'pmb_audit' => [PermissionAction::Read],
     ];
 
     public function run(): void

@@ -2,9 +2,38 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Admission\Enums\Recommendation;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $selection_run_id
+ * @property string $application_id
+ * @property bool $eligible
+ * @property string|null $ineligible_reason
+ * @property array<mixed> $component_scores
+ * @property string|null $final_score
+ * @property string|null $final_score_rounded
+ * @property int|null $rank_global
+ * @property Recommendation $recommendation
+ * @property string|null $fail_reason
+ * @property string|null $assigned_choice_id
+ * @property string|null $assigned_quota_id
+ * @property array<mixed>|null $waitlist_entries
+ * @property array<mixed>|null $tie_break_values
+ * @property bool $tie_unresolved
+ * @property string|null $override_recommendation
+ * @property string|null $override_quota_id
+ * @property string|null $override_reason
+ * @property string|null $override_by
+ * @property CarbonImmutable|null $created_at
+ * @property-read SelectionRun $run
+ * @property-read Application $application
+ * @property-read Quota|null $assignedQuota
+ * @property-read ApplicationChoice|null $assignedChoice
+ */
 class SelectionRunResult extends PmbModel
 {
     protected $table = 'pmb_selection_run_results';

@@ -4,6 +4,7 @@ namespace Modules\Admission\Outbox;
 
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Modules\Admission\Enums\OutboxStatus;
 use Modules\Admission\Jobs\ProcessOutboxEvents;
@@ -38,11 +39,16 @@ class OutboxRecorder
 
     public const DOCUMENT_SCAN = 'document.scan';
 
+    /** Placeholder berisi rahasia sekali pakai — tidak pernah disimpan polos (08 §6). */
+    public const SECRET_PLACEHOLDERS = ['otp_code', 'reset_url', 'verification_url'];
+
     /**
      * @param  array<string, mixed>  $payload
      */
     public function record(string $type, Model $aggregate, array $payload, ?CarbonInterface $availableAt = null, ?string $universityId = null): OutboxEvent
     {
+        $payload = self::seal($payload);
+
         $event = OutboxEvent::query()->create([
             'university_id' => $universityId ?? $aggregate->getAttribute('university_id'),
             'event_type' => $type,
@@ -63,6 +69,44 @@ class OutboxRecorder
         }
 
         return $event;
+    }
+
+    /**
+     * Memindahkan placeholder rahasia ke `sealed` terenkripsi (APP_KEY).
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public static function seal(array $payload): array
+    {
+        $placeholders = (array) ($payload['placeholders'] ?? []);
+        $secrets = array_intersect_key($placeholders, array_flip(self::SECRET_PLACEHOLDERS));
+
+        if ($secrets === []) {
+            return $payload;
+        }
+
+        $payload['placeholders'] = array_diff_key($placeholders, $secrets);
+        $payload['sealed'] = Crypt::encryptString(json_encode($secrets, JSON_THROW_ON_ERROR));
+
+        return $payload;
+    }
+
+    /**
+     * Placeholder lengkap (termasuk rahasia yang didekripsi) untuk handler.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public static function placeholders(array $payload): array
+    {
+        $placeholders = (array) ($payload['placeholders'] ?? []);
+
+        if (! empty($payload['sealed'])) {
+            $placeholders = [...$placeholders, ...(array) json_decode(Crypt::decryptString((string) $payload['sealed']), true)];
+        }
+
+        return $placeholders;
     }
 
     /**

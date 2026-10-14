@@ -2,10 +2,23 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
-/** Kunci idempotensi request (11 §A.1). `scope` sudah memuat tenant & aktor. */
+/** Kunci idempotensi request (11 §A.1). `scope` sudah memuat tenant & aktor.
+ *
+ *
+ * @property string $id
+ * @property string $scope
+ * @property string $key
+ * @property string $request_hash
+ * @property int|null $response_status
+ * @property string|null $response_body
+ * @property CarbonImmutable $expires_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ */
 class IdempotencyKey extends Model
 {
     use HasUlids;

@@ -16,7 +16,6 @@ use Modules\Tenancy\Enums\MembershipType;
 use Modules\Tenancy\Models\UserUniversity;
 use Modules\UserManagement\Models\Role;
 use Modules\UserManagement\Models\UserRole;
-use RuntimeException;
 
 /**
  * Kontrak pembentukan mahasiswa dari PMB (docs/pmb/11 §B.1, K.6). Dipanggil

@@ -4,8 +4,10 @@ namespace Modules\Admission\Services\Application;
 
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
+use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -39,7 +41,9 @@ use Modules\Admission\Models\Quota;
 use Modules\Admission\Models\SelectionComponent;
 use Modules\Admission\Models\WavePath;
 use Modules\Admission\Outbox\OutboxRecorder;
+use Modules\Admission\Services\Account\AccountService;
 use Modules\Admission\Services\Account\ProfileService;
+use Modules\Admission\Services\Payment\InvoiceService;
 use Modules\Admission\Support\Actor;
 use Modules\Admission\Support\CoreFormFields;
 use Modules\Admission\Support\FormRuleEvaluator;
@@ -48,6 +52,7 @@ use Modules\Admission\Support\Money;
 use Modules\Admission\Support\PmbSettings;
 use Modules\Admission\Support\SequenceGenerator;
 use Modules\Admission\Support\StateTransition;
+use Modules\Tenancy\Models\University;
 
 /**
  * Formulir pendaftaran (docs/pmb/04 §D, SM-02): draft per gelombang-jalur
@@ -293,7 +298,7 @@ class ApplicationService
             throw ValidationException::withMessages(['choices' => 'Semua pilihan harus pada sistem kuliah yang sama.']);
         }
 
-        $mutator = function (Application $application) use ($rows, $byAdmin, $reason, $actor): void {
+        $mutator = function (Application $application) use ($rows, $byAdmin, $reason): void {
             $old = $application->choices()->get()->map(fn ($c) => $c->study_program_id.'/'.$c->study_system_id)->all();
             ApplicationChoice::query()->where('application_id', $application->getKey())->delete();
 
@@ -561,7 +566,7 @@ class ApplicationService
             $application->forceFill($attributes)->save();
 
             $account = $application->account;
-            app(\Modules\Admission\Services\Account\AccountService::class)->recordConsent($account, ConsentType::DataProcessingPmb, null, null, $ip, $userAgent, $application->getKey());
+            app(AccountService::class)->recordConsent($account, ConsentType::DataProcessingPmb, null, null, $ip, $userAgent, $application->getKey());
 
             foreach ($requiredDeclarations as $declaration) {
                 AccountConsent::query()->create([
@@ -755,8 +760,8 @@ class ApplicationService
         return [];
     }
 
-    /** @return \Illuminate\Support\Collection<int, Content> */
-    public function activeDeclarations(): \Illuminate\Support\Collection
+    /** @return Collection<int, Content> */
+    public function activeDeclarations(): Collection
     {
         return Content::query()->where('type', ContentType::Declaration->value)->where('status', ContentStatus::Published->value)
             ->orderBy('sort_order')->get()
@@ -956,11 +961,11 @@ class ApplicationService
     {
         PmbInvoice::query()->where('application_id', $application->getKey())
             ->whereIn('status', [PmbInvoiceStatus::Unpaid->value, PmbInvoiceStatus::Pending->value])->get()
-            ->each(fn (PmbInvoice $invoice) => app(\Modules\Admission\Services\Payment\InvoiceService::class)->cancel($invoice, 'Aplikasi '.$application->form_status->value));
+            ->each(fn (PmbInvoice $invoice) => app(InvoiceService::class)->cancel($invoice, 'Aplikasi '.$application->form_status->value));
     }
 
     private function timezone(): string
     {
-        return (string) (\Modules\Tenancy\Models\University::query()->whereKey(app(\App\Support\Tenancy\TenantContext::class)->universityId())->value('timezone') ?: config('app.timezone'));
+        return (string) (University::query()->whereKey(app(TenantContext::class)->universityId())->value('timezone') ?: config('app.timezone'));
     }
 }

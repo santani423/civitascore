@@ -2,9 +2,12 @@
 
 namespace Modules\Admission\Controllers\Admin;
 
+use App\Models\User;
 use App\Support\Http\ApiResponse;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Modules\Academic\Models\AcademicTerm;
 use Modules\Academic\Models\Faculty;
@@ -61,6 +64,26 @@ class ConfigurationController extends AdminController
                 'content_types' => ContentType::values(),
             ],
         ]);
+    }
+
+    /**
+     * Staf tenant yang memegang permission PMB tertentu (dropdown penugasan).
+     * Hanya slug PMB yang boleh ditanyakan agar endpoint tidak menjadi
+     * pemetaan RBAC umum.
+     */
+    public function staff(Request $request, TenantContext $tenant): JsonResponse
+    {
+        $data = $request->validate(['permission' => ['required', 'string', Rule::in(PmbPermission::all())]]);
+
+        $userIds = DB::table('user_roles')
+            ->join('role_permissions', 'role_permissions.role_id', '=', 'user_roles.role_id')
+            ->join('permissions', 'permissions.id', '=', 'role_permissions.permission_id')
+            ->where('permissions.slug', $data['permission'])
+            ->where('user_roles.university_id', $tenant->universityId())
+            ->where(fn ($q) => $q->whereNull('user_roles.expires_at')->orWhere('user_roles.expires_at', '>', now()))
+            ->distinct()->pluck('user_roles.user_id');
+
+        return ApiResponse::success(User::query()->whereIn('id', $userIds)->where('is_active', true)->orderBy('name')->get(['id', 'name', 'email']));
     }
 
     // ------------------------------------------------------------------ Periode
@@ -373,7 +396,7 @@ class ConfigurationController extends AdminController
         $req = $creating ? 'required' : 'sometimes';
 
         return $request->validate([
-            'entry_academic_term_id' => [$req, 'string', Rule::exists('academic_terms', 'id')->where('university_id', app(\App\Support\Tenancy\TenantContext::class)->universityId())],
+            'entry_academic_term_id' => [$req, 'string', Rule::exists('academic_terms', 'id')->where('university_id', app(TenantContext::class)->universityId())],
             'code' => [$req, 'string', 'max:30', 'regex:/^[A-Za-z0-9_-]+$/'],
             'name' => [$req, 'string', 'max:150'],
             'starts_on' => [$req, 'date'],
@@ -410,7 +433,7 @@ class ConfigurationController extends AdminController
     private function validateWavePath(Request $request, bool $creating): array
     {
         $req = $creating ? 'required' : 'sometimes';
-        $tenant = app(\App\Support\Tenancy\TenantContext::class)->universityId();
+        $tenant = app(TenantContext::class)->universityId();
 
         return $request->validate([
             'admission_path_id' => [$creating ? 'required' : 'prohibited', 'string', Rule::exists('pmb_admission_paths', 'id')->where('university_id', $tenant)],
@@ -434,7 +457,7 @@ class ConfigurationController extends AdminController
         $req = $current ? 'sometimes' : 'required';
 
         return $request->validate([
-            'code' => [$req, 'string', 'max:20', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('pmb_admission_paths', 'code')->where('university_id', app(\App\Support\Tenancy\TenantContext::class)->universityId())->ignore($current?->getKey())],
+            'code' => [$req, 'string', 'max:20', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('pmb_admission_paths', 'code')->where('university_id', app(TenantContext::class)->universityId())->ignore($current?->getKey())],
             'name' => [$req, 'string', 'max:150'],
             'category' => [$req, Rule::in(PathCategory::values())],
             'description' => ['nullable', 'string', 'max:5000'],
@@ -452,7 +475,7 @@ class ConfigurationController extends AdminController
         $req = $current ? 'sometimes' : 'required';
 
         return $request->validate([
-            'code' => [$req, 'string', 'max:20', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('pmb_study_systems', 'code')->where('university_id', app(\App\Support\Tenancy\TenantContext::class)->universityId())->ignore($current?->getKey())],
+            'code' => [$req, 'string', 'max:20', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('pmb_study_systems', 'code')->where('university_id', app(TenantContext::class)->universityId())->ignore($current?->getKey())],
             'name' => [$req, 'string', 'max:100'],
             'schedule_note' => ['nullable', 'string', 'max:255'],
             'is_active' => ['sometimes', 'boolean'],
@@ -465,7 +488,7 @@ class ConfigurationController extends AdminController
         $req = $current ? 'sometimes' : 'required';
 
         return $request->validate([
-            'code' => [$req, 'string', 'max:30', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('pmb_document_types', 'code')->where('university_id', app(\App\Support\Tenancy\TenantContext::class)->universityId())->ignore($current?->getKey())],
+            'code' => [$req, 'string', 'max:30', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('pmb_document_types', 'code')->where('university_id', app(TenantContext::class)->universityId())->ignore($current?->getKey())],
             'name' => [$req, 'string', 'max:150'],
             'description' => ['nullable', 'string', 'max:2000'],
             'allowed_mime_types' => [$req, 'array', 'min:1'],

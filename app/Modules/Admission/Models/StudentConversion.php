@@ -3,10 +3,35 @@
 namespace Modules\Admission\Models;
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Academic\Models\Student;
 use Modules\Admission\Enums\ConversionStatus;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $application_id
+ * @property string $re_registration_id
+ * @property ConversionStatus $status
+ * @property string|null $nim
+ * @property string|null $student_id
+ * @property string|null $user_id
+ * @property array<mixed> $steps_completed
+ * @property int $attempts
+ * @property CarbonImmutable|null $locked_until
+ * @property CarbonImmutable|null $next_attempt_at
+ * @property string|null $last_error_code
+ * @property string|null $last_error_message
+ * @property string|null $email_override
+ * @property CarbonImmutable|null $succeeded_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Application $application
+ * @property-read ReRegistration $reRegistration
+ * @property-read Student|null $student
+ * @property-read User|null $user
+ */
 class StudentConversion extends PmbModel
 {
     protected $table = 'pmb_student_conversions';

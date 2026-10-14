@@ -5,7 +5,9 @@ namespace Modules\Admission\Controllers\Applicant;
 use App\Support\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Admission\Enums\ContentType;
 use Modules\Admission\Exceptions\DomainRuleException;
+use Modules\Admission\Models\Content;
 use Modules\Admission\Models\PmbInvoice;
 use Modules\Admission\Models\ReRegistration;
 use Modules\Admission\Services\Configuration\ContentService;
@@ -24,7 +26,7 @@ class ReRegistrationController extends ApplicantController
         $checks = $reRegistration->status->isActive() || $reRegistration->status->value === 'enrolled' ? $this->reRegistrations->evaluateChecks($reRegistration) : [];
         $invoice = PmbInvoice::query()->where('application_id', $reRegistration->application_id)->where('type', 'initial_tuition')->whereNotIn('status', ['cancelled'])->with(['items', 'transactions.manualProof'])->latest()->first();
         $profile = $reRegistration->application->account->profile;
-        $orientation = ContentService::activeVersion(\Modules\Admission\Enums\ContentType::OrientationInfo);
+        $orientation = ContentService::activeVersion(ContentType::OrientationInfo);
 
         return ApiResponse::success([
             'id' => $reRegistration->getKey(),
@@ -117,7 +119,7 @@ class ReRegistrationController extends ApplicantController
     /** @return array<int, array<string, mixed>> */
     private function academicTerms(): array
     {
-        return \Modules\Admission\Models\Content::query()->where('type', 'declaration')->where('status', 'published')->where('slug', 'like', 'daftar-ulang%')
+        return Content::query()->where('type', 'declaration')->where('status', 'published')->where('slug', 'like', 'daftar-ulang%')
             ->get()->map->only(['id', 'title', 'body', 'version'])->values()->all();
     }
 }

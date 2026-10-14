@@ -3,6 +3,8 @@
 namespace Modules\Admission\Services\Reporting;
 
 use App\Models\User;
+use App\Support\Tenancy\TenantContext;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -19,15 +21,14 @@ use Modules\Admission\Models\AdmissionDecision;
 use Modules\Admission\Models\ApplicantAccount;
 use Modules\Admission\Models\Application;
 use Modules\Admission\Models\ApplicationDocument;
-use Modules\Admission\Models\ApplicationStatusHistory;
 use Modules\Admission\Models\DailyStat;
 use Modules\Admission\Models\ExportLog;
 use Modules\Admission\Models\PaymentTransaction;
 use Modules\Admission\Models\Period;
 use Modules\Admission\Models\PmbInvoice;
 use Modules\Admission\Models\Quota;
-use Modules\Admission\Models\ReRegistration;
 use Modules\Admission\Models\Refund;
+use Modules\Admission\Models\ReRegistration;
 use Modules\Admission\Models\SelectionRunResult;
 use Modules\Admission\Outbox\OutboxRecorder;
 use Modules\Admission\Support\Money;
@@ -35,6 +36,7 @@ use Modules\Admission\Support\PmbFileStorage;
 use Modules\Admission\Support\PmbPermission;
 use Modules\Admission\Support\ScopeResolver;
 use Modules\Admission\Support\SimpleXlsx;
+use Modules\Tenancy\Models\University;
 
 /**
  * Dashboard & pelaporan (docs/pmb/07 §M): KPI-01..19 dengan filter periode,
@@ -70,9 +72,20 @@ class ReportService
     public function summary(array $filters, User $user): array
     {
         $programIds = $this->scope->programIdsFor($user, PmbPermission::REPORTS_READ);
-        $key = 'pmb:kpi:'.md5(json_encode([$filters, $programIds, app(\App\Support\Tenancy\TenantContext::class)->universityId()]));
+        $key = 'pmb:kpi:'.md5(json_encode([$filters, $programIds, app(TenantContext::class)->universityId()], JSON_THROW_ON_ERROR));
 
-        return Cache::remember($key, 300, function () use ($filters, $programIds): array {
+        // Dinormalisasi ke array murni agar aman dibaca kembali dari Redis.
+        return Cache::remember($key, 300, fn (): array => json_decode(json_encode($this->computeSummary($filters, $programIds), JSON_THROW_ON_ERROR), true));
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @param  array<int, string>|null  $programIds
+     * @return array<string, mixed>
+     */
+    private function computeSummary(array $filters, ?array $programIds): array
+    {
+        return (function () use ($filters, $programIds): array {
             $applications = $this->applicationQuery($filters, $programIds);
             $submitted = (clone $applications)->whereNotNull('first_submitted_at')->count();
             $accountsQuery = ApplicantAccount::query()->where('status', '!=', 'deactivated')
@@ -104,7 +117,7 @@ class ReportService
                 'kpi_07_documents_pending' => ApplicationDocument::query()->whereIn('application_id', (clone $applications)->whereNotNull('submitted_at')->select('id'))
                     ->whereIn('status', ['uploaded', 'in_review'])->count(),
                 'kpi_08_registration_payment' => [
-                    'by_status' => $invoices->groupBy(fn ($i) => $i->status->value)->map->count(),
+                    'by_status' => $invoices->groupBy(fn ($i) => $i->status->value)->map->count()->all(),
                     'paid_percent' => $ratio($paidRegistration, $invoices->count()),
                 ],
                 'kpi_09_selection_participants' => (clone $applications)->where('selection_status', '!=', 'not_eligible')->count(),
@@ -114,7 +127,7 @@ class ReportService
                     'rejected' => $decisions->where('decision', Decision::Rejected)->count(),
                     'withdrawn' => $decisions->where('decision', Decision::Withdrawn)->count(),
                 ],
-                'kpi_11_re_registration' => $reRegistrations->groupBy(fn ($r) => $r->status->value)->map->count(),
+                'kpi_11_re_registration' => $reRegistrations->groupBy(fn ($r) => $r->status->value)->map->count()->all(),
                 'kpi_12_conversion' => [
                     'total' => $ratio($enrolled, $submitted),
                     'paid_per_account' => $ratio($paidRegistration, $accounts),
@@ -136,7 +149,7 @@ class ReportService
                 ],
                 'generated_at' => now()->toIso8601String(),
             ];
-        });
+        })();
     }
 
     /**
@@ -334,6 +347,11 @@ class ReportService
             $mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         } elseif ($log->format === 'csv') {
             $handle = fopen($tmp, 'wb');
+
+            if ($handle === false) {
+                throw new \RuntimeException('Berkas sementara ekspor tidak dapat dibuat.');
+            }
+
             fwrite($handle, "\xEF\xBB\xBF");
             fputcsv($handle, $headers);
 
@@ -345,7 +363,7 @@ class ReportService
             $mime = 'text/csv';
         } else {
             $html = view('admission::pdf.report', ['title' => $report['title'], 'headers' => $headers, 'rows' => $rows, 'user' => $user, 'filters' => $log->filters])->render();
-            file_put_contents($tmp, \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)->setPaper('a4', 'landscape')->output());
+            file_put_contents($tmp, Pdf::loadHTML($html)->setPaper('a4', 'landscape')->output());
             $mime = 'application/pdf';
         }
 
@@ -674,6 +692,6 @@ class ReportService
 
     private function timezone(): string
     {
-        return (string) (\Modules\Tenancy\Models\University::query()->whereKey(app(\App\Support\Tenancy\TenantContext::class)->universityId())->value('timezone') ?: config('app.timezone'));
+        return (string) (University::query()->whereKey(app(TenantContext::class)->universityId())->value('timezone') ?: config('app.timezone'));
     }
 }

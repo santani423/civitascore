@@ -5,10 +5,12 @@ namespace Modules\Admission\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\Http\ApiResponse;
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Admission\Models\Application;
 use Modules\Admission\Support\ScopeResolver;
+use Modules\ApprovalWorkflow\Models\ApprovalRequest;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -48,6 +50,51 @@ abstract class AdminController extends Controller
         if ($studyProgramId !== null && ! app(ScopeResolver::class)->canAccessProgram($this->user($request), $permission, $studyProgramId)) {
             throw new NotFoundHttpException;
         }
+    }
+
+    /** Aplikasi di luar scope prodi staf → 404 (bukan 403, agar keberadaan tidak bocor). */
+    protected function assertApplicationScope(Request $request, string $permission, Application|string $application): void
+    {
+        $id = is_string($application) ? $application : (string) $application->getKey();
+        $visible = app(ScopeResolver::class)->constrainApplications(Application::query()->whereKey($id), $this->user($request), $permission)->exists();
+
+        if (! $visible) {
+            throw new NotFoundHttpException;
+        }
+    }
+
+    /**
+     * Ringkasan approval (mesin ApprovalWorkflow) untuk ditampilkan; aksi
+     * approve/reject/return memakai endpoint /approval-request-steps yang ada.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function approvalSummary(?string $approvalRequestId): ?array
+    {
+        if ($approvalRequestId === null) {
+            return null;
+        }
+
+        $approval = ApprovalRequest::query()->with(['steps' => fn ($q) => $q->orderBy('sequence'), 'histories'])->find($approvalRequestId);
+
+        if ($approval === null) {
+            return null;
+        }
+
+        $approverNames = User::query()->whereIn('id', $approval->steps->pluck('assigned_approver_user_id')->filter())->pluck('name', 'id');
+
+        return [
+            'id' => $approval->getKey(),
+            'status' => $approval->status?->value ?? $approval->status,
+            'current_step_id' => $approval->current_step_id,
+            'submitted_at' => $approval->submitted_at?->toIso8601String(),
+            'completed_at' => $approval->completed_at?->toIso8601String(),
+            'steps' => $approval->steps->map(fn ($s) => [
+                'id' => $s->getKey(), 'sequence' => $s->sequence, 'status' => $s->status?->value ?? $s->status,
+                'approver' => $s->assigned_approver_user_id ? ($approverNames[$s->assigned_approver_user_id] ?? null) : null,
+                'acted_at' => $s->acted_at?->toIso8601String(),
+            ])->values(),
+        ];
     }
 
     /** @return array<int, string>|null */

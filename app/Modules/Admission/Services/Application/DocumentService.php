@@ -23,11 +23,13 @@ use Modules\Admission\Models\DocumentVersion;
 use Modules\Admission\Outbox\OutboxRecorder;
 use Modules\Admission\Support\Actor;
 use Modules\Admission\Support\DocumentReasonCodes;
+use Modules\Admission\Support\FormRuleEvaluator;
 use Modules\Admission\Support\HistoryRecorder;
 use Modules\Admission\Support\PmbFileStorage;
 use Modules\Admission\Support\PmbPermission;
 use Modules\Admission\Support\SensitiveAccessLogger;
 use Modules\Admission\Support\StateTransition;
+use Modules\AuditLog\Enums\AuditAction;
 use Modules\FileManagement\Enums\FileUploadStatus;
 
 /**
@@ -252,7 +254,7 @@ class DocumentService
         $unmet = [];
 
         foreach ($requirements as $typeId => $requirement) {
-            if (! $requirement->is_mandatory || ! \Modules\Admission\Support\FormRuleEvaluator::passes($requirement->condition, $context)) {
+            if (! $requirement->is_mandatory || ! FormRuleEvaluator::passes($requirement->condition, $context)) {
                 continue;
             }
 
@@ -297,7 +299,7 @@ class DocumentService
             $this->sensitiveLog->log($user, $document->application, 'document:'.$document->documentType?->code, $purpose, $ip);
         }
 
-        $this->history->action($document, \Modules\AuditLog\Enums\AuditAction::Downloaded, ['version_no' => $version->version_no, 'purpose' => $purpose]);
+        $this->history->action($document, AuditAction::Downloaded, ['version_no' => $version->version_no, 'purpose' => $purpose]);
 
         return $this->storage->temporaryUrl($version->fileUpload);
     }

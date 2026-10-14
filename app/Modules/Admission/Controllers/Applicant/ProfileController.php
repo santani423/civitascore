@@ -6,7 +6,6 @@ use App\Support\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules\Password;
-use Modules\Admission\Models\ApplicantAchievement;
 use Modules\Admission\Models\ApplicantEducation;
 use Modules\Admission\Models\ApplicantGuardian;
 use Modules\Admission\Services\Account\AccountService;

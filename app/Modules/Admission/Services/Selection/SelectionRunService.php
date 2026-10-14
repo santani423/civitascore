@@ -26,6 +26,7 @@ use Modules\Admission\Models\Application;
 use Modules\Admission\Models\ExamParticipant;
 use Modules\Admission\Models\ExamSession;
 use Modules\Admission\Models\Quota;
+use Modules\Admission\Models\SelectionComponent;
 use Modules\Admission\Models\SelectionRun;
 use Modules\Admission\Models\SelectionRunResult;
 use Modules\Admission\Models\SelectionScore;
@@ -501,7 +502,7 @@ class SelectionRunService
      * Nilai mentah per komponen untuk satu aplikasi: rata-rata antarpenguji,
      * status absent dari kehadiran sesi komponen.
      *
-     * @param  array<int, \Modules\Admission\Models\SelectionComponent>  $components
+     * @param  array<int, SelectionComponent>  $components
      * @param  array<string, array<string, bool>>  $absences
      * @return array<string, array<string, mixed>>
      */
@@ -546,7 +547,7 @@ class SelectionRunService
     /**
      * Statistik sesi untuk normalisasi z-score (H.4.3): hanya sesi ≥ 30 peserta & σ > 0.
      *
-     * @param  array<int, \Modules\Admission\Models\SelectionComponent>  $components
+     * @param  array<int, SelectionComponent>  $components
      * @param  array<int, string>  $applicationIds
      * @return array<string, array<string, array{mean: float, sd: float, n: int}>>
      */

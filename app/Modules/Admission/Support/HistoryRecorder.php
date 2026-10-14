@@ -2,6 +2,7 @@
 
 namespace Modules\Admission\Support;
 
+use App\Support\Tenancy\TenantContext;
 use BackedEnum;
 use Illuminate\Database\Eloquent\Model;
 use Modules\Admission\Enums\Lifecycle;
@@ -9,6 +10,7 @@ use Modules\Admission\Models\Application;
 use Modules\Admission\Models\ApplicationStatusHistory;
 use Modules\AuditLog\Enums\AuditAction;
 use Modules\AuditLog\Services\AuditLogService;
+use Modules\Tenancy\Models\UniversitySetting;
 
 /**
  * Menulis riwayat transisi status (`pmb_application_status_histories`) DAN
@@ -85,5 +87,25 @@ class HistoryRecorder
     public function action(Model $model, AuditAction $action, array $context = [], ?string $reason = null): void
     {
         $this->audit->recordAction($model, $action, $context, $reason);
+    }
+
+    /**
+     * Audit perubahan pengaturan tenant (FR-CFG-12): satu entri per kunci
+     * pada baris university_settings yang bersangkutan.
+     *
+     * @param  array<string, mixed>  $old
+     * @param  array<string, mixed>  $new
+     */
+    public function recordSettings(array $old, array $new): void
+    {
+        $universityId = app(TenantContext::class)->universityId();
+
+        foreach ($new as $key => $value) {
+            $row = UniversitySetting::query()->where('university_id', $universityId)->where('key', $key)->first();
+
+            if ($row !== null && ($old[$key] ?? null) !== $value) {
+                $this->audit->record($row, AuditAction::Updated, [$key => $old[$key] ?? null], [$key => $value]);
+            }
+        }
     }
 }

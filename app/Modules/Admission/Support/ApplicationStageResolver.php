@@ -4,8 +4,8 @@ namespace Modules\Admission\Support;
 
 use Modules\Admission\Enums\FormStatus;
 use Modules\Admission\Enums\PublicationStatus;
-use Modules\Admission\Enums\ReRegistrationStatus;
 use Modules\Admission\Enums\RegistrationPaymentStatus;
+use Modules\Admission\Enums\ReRegistrationStatus;
 use Modules\Admission\Enums\SelectionStatus;
 use Modules\Admission\Enums\VerificationStatus;
 use Modules\Admission\Models\Application;

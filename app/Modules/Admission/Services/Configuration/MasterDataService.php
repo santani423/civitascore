@@ -41,6 +41,10 @@ class MasterDataService
             $values['code'] = strtoupper($values['code']);
         }
 
+        if (array_key_exists('eligible_degree_levels', $values) || $path === null) {
+            $values['eligible_degree_levels'] = array_values((array) ($values['eligible_degree_levels'] ?? []));
+        }
+
         return $this->save($path ?? new AdmissionPath, [...$values, 'updated_by' => $userId] + ($path ? [] : ['created_by' => $userId]));
     }
 

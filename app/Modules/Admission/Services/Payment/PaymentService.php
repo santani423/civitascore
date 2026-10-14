@@ -4,6 +4,7 @@ namespace Modules\Admission\Services\Payment;
 
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
+use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -288,7 +289,7 @@ class PaymentService
             $transaction->invoice->application->config_snapshot['period_code'] ?? 'pmb', (string) $transaction->invoice->application_id, 'payment-proofs',
         ]);
 
-        return DB::transaction(function () use ($transaction, $upload, $data, $actor): ManualPaymentProof {
+        return DB::transaction(function () use ($transaction, $upload, $data): ManualPaymentProof {
             $duplicate = ManualPaymentProof::query()->whereHas('fileUpload', fn ($q) => $q->where('checksum', $upload->checksum))->exists();
 
             $proof = ManualPaymentProof::query()->create([
@@ -467,7 +468,7 @@ class PaymentService
         $count = 0;
 
         foreach (PaymentTransaction::query()->withoutGlobalScopes()->where('status', TransactionStatus::Pending->value)->where('expires_at', '<', now())->limit(500)->get() as $transaction) {
-            app(\App\Support\Tenancy\TenantContext::class)->setUniversityId((string) $transaction->university_id);
+            app(TenantContext::class)->setUniversityId((string) $transaction->university_id);
 
             if ($transaction->manualProof()->where('status', ManualProofStatus::Submitted->value)->exists()) {
                 continue;
@@ -513,7 +514,7 @@ class PaymentService
             ->limit(200)->get();
 
         foreach ($transactions as $transaction) {
-            app(\App\Support\Tenancy\TenantContext::class)->setUniversityId((string) $transaction->university_id);
+            app(TenantContext::class)->setUniversityId((string) $transaction->university_id);
 
             try {
                 if ($this->gateways->has($transaction->provider)) {

@@ -50,7 +50,7 @@ final class SelectionAllocator
                     continue;
                 }
 
-                if ($applicant['rounded'] + 1e-9 >= $quotas[$quotaId]['threshold'] && $remaining[$quotaId] > 0) {
+                if ($quotas[$quotaId]['threshold'] <= $applicant['rounded'] + 1e-9 && $remaining[$quotaId] > 0) {
                     $assigned = $choice;
                     $remaining[$quotaId]--;
                     break;
@@ -77,7 +77,7 @@ final class SelectionAllocator
                 foreach ($choices as $choice) {
                     $quotaId = $choice['quota_id'];
 
-                    if (! isset($quotas[$quotaId]) || $applicant['rounded'] + 1e-9 < $quotas[$quotaId]['threshold']) {
+                    if (! isset($quotas[$quotaId]) || $quotas[$quotaId]['threshold'] > $applicant['rounded'] + 1e-9) {
                         continue;
                     }
 
@@ -263,6 +263,6 @@ final class SelectionAllocator
             $row['override_quota_id'] ?? null,
         ], $rows);
 
-        return hash('sha256', json_encode($canonical, JSON_UNESCAPED_UNICODE));
+        return hash('sha256', json_encode($canonical, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
     }
 }

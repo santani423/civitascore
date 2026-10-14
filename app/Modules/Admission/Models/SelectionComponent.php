@@ -2,11 +2,34 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Admission\Enums\ComponentSource;
 use Modules\Admission\Enums\NormalizationMethod;
 use Modules\Admission\Enums\ScoreType;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $selection_scheme_id
+ * @property string $code
+ * @property string $name
+ * @property ComponentSource $source
+ * @property ScoreType $score_type
+ * @property string|null $raw_min
+ * @property string|null $raw_max
+ * @property string $weight
+ * @property string|null $minimum_normalized
+ * @property bool $is_mandatory
+ * @property int|null $tie_break_priority
+ * @property NormalizationMethod $normalization
+ * @property array<mixed>|null $rubric
+ * @property array<mixed>|null $config
+ * @property int $sort_order
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read SelectionScheme $scheme
+ */
 class SelectionComponent extends PmbModel
 {
     protected $table = 'pmb_selection_components';

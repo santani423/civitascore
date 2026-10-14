@@ -2,9 +2,34 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Academic\Models\StudyProgram;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $period_id
+ * @property string $study_program_id
+ * @property string $study_system_id
+ * @property string|null $admission_path_id
+ * @property string $component_code
+ * @property string $name
+ * @property string $amount
+ * @property bool $is_mandatory_for_enrollment
+ * @property bool $installable
+ * @property array<mixed>|null $installment_plan
+ * @property bool $is_published
+ * @property int $sort_order
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Period $period
+ * @property-read StudyProgram $studyProgram
+ * @property-read StudySystem $studySystem
+ * @property-read AdmissionPath|null $admissionPath
+ */
 class FeeComponent extends PmbModel
 {
     protected $table = 'pmb_fee_components';

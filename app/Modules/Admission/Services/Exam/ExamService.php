@@ -31,6 +31,7 @@ use Modules\Admission\Support\HistoryRecorder;
 use Modules\Admission\Support\PmbSettings;
 use Modules\Admission\Support\SequenceGenerator;
 use Modules\AuditLog\Enums\AuditAction;
+use Modules\Tenancy\Models\University;
 
 /**
  * Jadwal & pelaksanaan ujian (docs/pmb/06 §I): kapasitas dengan row lock,
@@ -277,6 +278,7 @@ class ExamService
                 try {
                     $this->placeParticipant($schedule, $session, $application);
                     $assigned++;
+
                     continue 2;
                 } catch (ConflictException) {
                     continue;
@@ -640,7 +642,7 @@ class ExamService
     {
         $session = $participant->session;
         $location = $session->room ? trim(($session->room->venue?->name ?? '').' — '.$session->room->name, ' —') : ($session->online_url ? 'Daring' : '-');
-        $timezone = (string) (\Modules\Tenancy\Models\University::query()->whereKey($participant->university_id)->value('timezone') ?: config('app.timezone'));
+        $timezone = (string) (University::query()->whereKey($participant->university_id)->value('timezone') ?: config('app.timezone'));
 
         $this->outbox->notifyApplicant($participant->application->account, $eventKey, [
             'exam_title' => $participant->schedule->title,

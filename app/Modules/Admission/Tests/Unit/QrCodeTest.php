@@ -15,7 +15,7 @@ it('produces module matrices identical to the frontend reference implementation'
         $matrix = QrCode::matrix((string) $text, 'M');
         $actual = implode("\n", array_map(fn ($row) => implode('', array_map(fn ($dark) => $dark ? '1' : '0', $row)), $matrix));
 
-        expect($actual)->toBe($expected, "QR untuk teks sepanjang ".strlen((string) $text).' karakter berbeda');
+        expect($actual)->toBe($expected, 'QR untuk teks sepanjang '.strlen((string) $text).' karakter berbeda');
     }
 });
 

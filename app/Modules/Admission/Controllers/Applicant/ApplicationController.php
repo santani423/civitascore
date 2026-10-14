@@ -7,6 +7,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Modules\Admission\Models\Application;
 use Modules\Admission\Models\ApplicationAnswer;
+use Modules\Admission\Models\DocumentReview;
+use Modules\Admission\Models\DocumentVersion;
+use Modules\Admission\Models\Quota;
 use Modules\Admission\Services\Application\ApplicationService;
 use Modules\Admission\Services\Configuration\FormTemplateService;
 use Modules\Admission\Support\ApplicationStageResolver;
@@ -130,8 +133,8 @@ class ApplicationController extends ApplicantController
     public function notes(Request $request, string $id): JsonResponse
     {
         $application = $this->application($request, $id);
-        $documentReasons = \Modules\Admission\Models\DocumentReview::query()
-            ->whereIn('document_version_id', \Modules\Admission\Models\DocumentVersion::query()->whereIn('application_document_id', $application->documents()->select('id'))->select('id'))
+        $documentReasons = DocumentReview::query()
+            ->whereIn('document_version_id', DocumentVersion::query()->whereIn('application_document_id', $application->documents()->select('id'))->select('id'))
             ->with('version.document.documentType')->latest('created_at')->get()
             ->map(fn ($r) => [
                 'document' => $r->version?->document?->documentType?->name,
@@ -184,7 +187,7 @@ class ApplicationController extends ApplicantController
     {
         $levels = (array) ($application->config_snapshot['eligible_degree_levels'] ?? []);
 
-        return \Modules\Admission\Models\Quota::query()->with(['studyProgram.faculty', 'studySystem'])
+        return Quota::query()->with(['studyProgram.faculty', 'studySystem'])
             ->where('period_id', $application->period_id)->where('admission_path_id', $application->admission_path_id)->where('is_offered', true)->get()
             ->filter(fn ($q) => $levels === [] || in_array($q->studyProgram?->degree_level, $levels, true))
             ->map(fn ($q) => [

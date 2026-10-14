@@ -4,6 +4,8 @@ namespace Modules\Admission\Services\Communication;
 
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -11,7 +13,6 @@ use Modules\Admission\Enums\BroadcastStatus;
 use Modules\Admission\Enums\ChatThreadStatus;
 use Modules\Admission\Enums\ConsentType;
 use Modules\Admission\Models\ApplicantAccount;
-use Modules\Admission\Models\Application;
 use Modules\Admission\Models\Broadcast;
 use Modules\Admission\Models\ChatMessage;
 use Modules\Admission\Models\ChatThread;
@@ -165,7 +166,7 @@ class CommunicationService
             throw new ConflictException('Broadcast sudah dijadwalkan.', 'INVALID_TRANSITION');
         }
 
-        $when = $at ? \Carbon\CarbonImmutable::parse($at) : now();
+        $when = $at ? CarbonImmutable::parse($at) : now();
         $broadcast->forceFill(['status' => BroadcastStatus::Scheduled, 'scheduled_at' => $when, 'recipients_count' => $this->audienceCount($broadcast)])->save();
         $this->outbox->record(OutboxRecorder::BROADCAST, $broadcast, ['broadcast_id' => $broadcast->getKey()], $when->isFuture() ? $when : null);
 
@@ -220,9 +221,9 @@ class CommunicationService
      * akun dengan consent pemasaran aktif (13 §A.4 preferensi).
      *
      * @param  array<string, mixed>  $filter
-     * @return \Illuminate\Database\Eloquent\Builder<ApplicantAccount>
+     * @return Builder<ApplicantAccount>
      */
-    public function audience(array $filter): \Illuminate\Database\Eloquent\Builder
+    public function audience(array $filter): Builder
     {
         $applicationFilter = fn ($q) => $q
             ->when($filter['period_id'] ?? null, fn ($a, $v) => $a->where('period_id', $v))

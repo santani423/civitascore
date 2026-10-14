@@ -2,13 +2,42 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Admission\Enums\InvoiceType;
 use Modules\Admission\Enums\PmbInvoiceStatus;
 use Modules\Admission\Support\Money;
 
-/** Tagihan PMB (KD-03). Nominal final disalin dari konfigurasi saat dibuat. */
+/** Tagihan PMB (KD-03). Nominal final disalin dari konfigurasi saat dibuat.
+ *
+ *
+ * @property string $id
+ * @property string $university_id
+ * @property string $application_id
+ * @property InvoiceType $type
+ * @property string $invoice_number
+ * @property string $currency
+ * @property string $amount_gross
+ * @property string $amount_discount
+ * @property string $amount_net
+ * @property string $amount_paid
+ * @property string|null $minimum_for_enrollment
+ * @property PmbInvoiceStatus $status
+ * @property CarbonImmutable $due_at
+ * @property CarbonImmutable|null $paid_at
+ * @property bool $needs_resolution
+ * @property string|null $resolution_note
+ * @property string|null $finance_invoice_id
+ * @property string|null $active_key
+ * @property int $lock_version
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Application $application
+ * @property-read Collection<int, InvoiceItem> $items
+ * @property-read Collection<int, PaymentTransaction> $transactions
+ */
 class PmbInvoice extends PmbModel
 {
     protected $table = 'pmb_invoices';

@@ -4,11 +4,44 @@ namespace Modules\Admission\Models;
 
 use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Admission\Enums\ReRegistrationStatus;
 
-/** Daftar ulang (SM-10). Batas efektif = extended_until ?? deadline_at (BR-34). */
+/** Daftar ulang (SM-10). Batas efektif = extended_until ?? deadline_at (BR-34).
+ *
+ *
+ * @property string $id
+ * @property string $university_id
+ * @property string $application_id
+ * @property string $decision_id
+ * @property ReRegistrationStatus $status
+ * @property CarbonImmutable $deadline_at
+ * @property CarbonImmutable|null $extended_until
+ * @property string|null $extension_reason
+ * @property string|null $extended_by
+ * @property array<mixed>|null $revision_targets
+ * @property CarbonImmutable|null $revision_due_at
+ * @property array<mixed>|null $declarations
+ * @property string|null $almamater_size
+ * @property CarbonImmutable|null $confirmed_at
+ * @property CarbonImmutable|null $submitted_at
+ * @property CarbonImmutable|null $approved_at
+ * @property CarbonImmutable|null $enrolled_at
+ * @property CarbonImmutable|null $declined_at
+ * @property CarbonImmutable|null $expired_at
+ * @property CarbonImmutable|null $cancelled_at
+ * @property string|null $decline_reason
+ * @property string|null $approved_by
+ * @property int $lock_version
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Application $application
+ * @property-read AdmissionDecision $decision
+ * @property-read Collection<int, ReRegistrationCheck> $checks
+ * @property-read User|null $approver
+ */
 class ReRegistration extends PmbModel
 {
     protected $table = 'pmb_re_registrations';

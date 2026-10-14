@@ -5,6 +5,7 @@ namespace Modules\Admission\Controllers\Applicant;
 use App\Support\Http\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Modules\Admission\Models\PaymentTransaction;
 use Modules\Admission\Models\PmbInvoice;
 use Modules\Admission\Services\Payment\InvoiceService;
@@ -58,7 +59,7 @@ class PaymentController extends ApplicantController
 
         // Pengecekan ulang ke gateway bila pending > 2 menit, di-throttle per transaksi.
         if ($transaction->status->value === 'pending' && $transaction->created_at->lt(now()->subMinutes(2))
-            && \Illuminate\Support\Facades\Cache::add('pmb:recheck:'.$transaction->getKey(), true, 60)) {
+            && Cache::add('pmb:recheck:'.$transaction->getKey(), true, 60)) {
             rescue(fn () => $this->payments->recheck($transaction, $this->actor($request)), report: false);
             $transaction->refresh();
         }

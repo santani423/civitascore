@@ -4,6 +4,7 @@ namespace Modules\Admission\Services\Announcement;
 
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
+use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,7 @@ use Modules\Admission\Services\Selection\SelectionRunService;
 use Modules\Admission\Support\Actor;
 use Modules\Admission\Support\HistoryRecorder;
 use Modules\Admission\Support\PmbPermission;
+use Modules\Admission\Support\PmbSettings;
 use Modules\AuditLog\Enums\AuditAction;
 use Throwable;
 
@@ -66,7 +68,7 @@ class PublicationService
             $count = 0;
 
             foreach (AnnouncementBatch::query()->withoutGlobalScopes()->where('status', AnnouncementBatchStatus::Scheduled->value)->where('scheduled_publish_at', '<=', now())->get() as $batch) {
-                $tenant = app(\App\Support\Tenancy\TenantContext::class);
+                $tenant = app(TenantContext::class);
                 $previous = $tenant->universityId();
                 $tenant->setUniversityId((string) $batch->university_id);
 
@@ -193,7 +195,7 @@ class PublicationService
 
     public function ensureReRegistration(AdmissionDecision $decision, ?ReRegistration $existing, ?CarbonImmutable $deadline): ReRegistration
     {
-        $deadline ??= now()->addDays(max(1, (int) app(\Modules\Admission\Support\PmbSettings::class)->int('pmb.waitlist_deadline_days')))->endOfDay();
+        $deadline ??= now()->addDays(max(1, (int) app(PmbSettings::class)->int('pmb.waitlist_deadline_days')))->endOfDay();
 
         if ($existing !== null && $existing->status->isActive()) {
             $existing->forceFill(['decision_id' => $decision->getKey()])->save();

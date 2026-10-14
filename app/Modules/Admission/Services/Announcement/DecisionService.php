@@ -5,13 +5,13 @@ namespace Modules\Admission\Services\Announcement;
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Admission\Enums\ChangeRequestStatus;
 use Modules\Admission\Enums\ChangeRequestType;
 use Modules\Admission\Enums\Decision;
 use Modules\Admission\Enums\DecisionSource;
-use Modules\Admission\Enums\Lifecycle;
 use Modules\Admission\Enums\PublicationStatus;
 use Modules\Admission\Enums\ReRegistrationStatus;
 use Modules\Admission\Exceptions\DomainRuleException;
@@ -20,14 +20,13 @@ use Modules\Admission\Models\Application;
 use Modules\Admission\Models\ChangeRequest;
 use Modules\Admission\Models\Quota;
 use Modules\Admission\Models\ReRegistration;
-use Modules\Admission\Models\SelectionRun;
 use Modules\Admission\Outbox\OutboxRecorder;
 use Modules\Admission\Services\Approval\PmbApprovalService;
 use Modules\Admission\Services\Selection\SelectionRunService;
-use Modules\Admission\Support\Actor;
 use Modules\Admission\Support\HistoryRecorder;
 use Modules\Admission\Support\PmbSettings;
 use Modules\AuditLog\Enums\AuditAction;
+use Modules\Scholarship\Models\Scholarship;
 
 /**
  * Keputusan setelah publikasi: promosi cadangan (J.4, BR-32), koreksi hasil
@@ -155,7 +154,7 @@ class DecisionService
             throw ValidationException::withMessages(['percent' => 'Persentase 0–100.']);
         }
 
-        if ($scholarshipId !== null && ! \Modules\Scholarship\Models\Scholarship::query()->whereKey($scholarshipId)->exists()) {
+        if ($scholarshipId !== null && ! Scholarship::query()->whereKey($scholarshipId)->exists()) {
             throw ValidationException::withMessages(['scholarship_id' => 'Program beasiswa tidak ditemukan.']);
         }
 
@@ -371,8 +370,8 @@ class DecisionService
             ->first();
     }
 
-    /** @return \Illuminate\Database\Eloquent\Builder<AdmissionDecision> */
-    private function waitlistQuery(Quota $quota): \Illuminate\Database\Eloquent\Builder
+    /** @return Builder<AdmissionDecision> */
+    private function waitlistQuery(Quota $quota): Builder
     {
         return AdmissionDecision::query()->with('application.account')
             ->where('decision', Decision::Waitlisted->value)->where('is_current', true)

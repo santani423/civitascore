@@ -2,7 +2,9 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -15,6 +17,67 @@ use Modules\Admission\Enums\VerificationStatus;
  * Satu pendaftaran oleh satu akun pada satu gelombang-jalur. Status per
  * siklus hidup disimpan di kolom terpisah (KD-02); `current_stage` untuk
  * pendaftar diturunkan oleh ApplicationStageResolver.
+ *
+ *
+ * @property string $id
+ * @property string $university_id
+ * @property string $applicant_account_id
+ * @property string $period_id
+ * @property string $wave_id
+ * @property string $wave_path_id
+ * @property string $admission_path_id
+ * @property string $form_template_id
+ * @property string|null $registration_number
+ * @property FormStatus $form_status
+ * @property VerificationStatus $verification_status
+ * @property SelectionStatus $selection_status
+ * @property RegistrationPaymentStatus $registration_payment_status
+ * @property string|null $primary_education_id
+ * @property array<mixed> $config_snapshot
+ * @property array<mixed>|null $profile_snapshot
+ * @property array<mixed>|null $declarations
+ * @property array<mixed>|null $revision_targets
+ * @property CarbonImmutable|null $revision_due_at
+ * @property string|null $info_source
+ * @property string|null $info_source_detail
+ * @property string|null $referral_code
+ * @property string|null $kip_number
+ * @property string|null $kip_registration_number
+ * @property string|null $kip_status
+ * @property bool $scholarship_interest
+ * @property string|null $scholarship_program_code
+ * @property string|null $rejection_reason_code
+ * @property CarbonImmutable|null $submitted_at
+ * @property CarbonImmutable|null $first_submitted_at
+ * @property CarbonImmutable|null $verified_at
+ * @property CarbonImmutable|null $withdrawn_at
+ * @property string|null $withdraw_reason
+ * @property string|null $active_key
+ * @property int $lock_version
+ * @property string|null $created_by_user_id
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read ApplicantAccount $account
+ * @property-read Period $period
+ * @property-read Wave $wave
+ * @property-read WavePath $wavePath
+ * @property-read AdmissionPath $admissionPath
+ * @property-read FormTemplate $formTemplate
+ * @property-read ApplicantEducation|null $primaryEducation
+ * @property-read Collection<int, ApplicationChoice> $choices
+ * @property-read Collection<int, ApplicationAnswer> $answers
+ * @property-read Collection<int, ApplicationDocument> $documents
+ * @property-read Collection<int, PmbInvoice> $invoices
+ * @property-read Collection<int, ApplicationStatusHistory> $histories
+ * @property-read Collection<int, SelectionScore> $scores
+ * @property-read Collection<int, AdmissionDecision> $decisions
+ * @property-read AdmissionDecision|null $currentDecision
+ * @property-read ReRegistration|null $reRegistration
+ * @property-read StudentConversion|null $conversion
+ * @property-read VerificationAssignment|null $activeAssignment
+ * @property-read Collection<int, ReviewNote> $notes
+ * @property-read Collection<int, ExamParticipant> $examParticipations
+ * @property-read Collection<int, DuplicateFlag> $duplicateFlags
  */
 class Application extends PmbModel
 {

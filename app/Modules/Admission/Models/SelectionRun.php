@@ -2,13 +2,44 @@
 
 namespace Modules\Admission\Models;
 
-use Modules\ApprovalWorkflow\Contracts\RequiresDistinctApprover;
-
 use App\Models\User;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Admission\Enums\RunStatus;
+use Modules\ApprovalWorkflow\Contracts\RequiresDistinctApprover;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $wave_path_id
+ * @property string $selection_scheme_id
+ * @property string $run_type
+ * @property array<mixed>|null $scope_application_ids
+ * @property RunStatus $status
+ * @property array<mixed>|null $quota_snapshot
+ * @property array<mixed>|null $summary
+ * @property string|null $result_hash
+ * @property bool $has_unresolved_ties
+ * @property CarbonImmutable|null $computed_at
+ * @property string|null $approval_request_id
+ * @property string|null $submitted_by
+ * @property CarbonImmutable|null $approved_at
+ * @property string|null $review_note
+ * @property string|null $superseded_by_id
+ * @property string|null $correction_request_id
+ * @property string|null $failure_reason
+ * @property string|null $created_by
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read WavePath $wavePath
+ * @property-read SelectionScheme $scheme
+ * @property-read Collection<int, SelectionRunResult> $results
+ * @property-read User|null $creator
+ * @property-read User|null $submitter
+ * @property-read Collection<int, AnnouncementBatch> $batches
+ */
 class SelectionRun extends PmbModel implements RequiresDistinctApprover
 {
     protected $table = 'pmb_selection_runs';

@@ -3,6 +3,7 @@
 namespace Modules\Admission\Services\Exam;
 
 use App\Support\Http\Exceptions\ConflictException;
+use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -58,6 +59,15 @@ class CbtService
         ])->save();
 
         return $question->refresh();
+    }
+
+    public function deleteQuestion(CbtQuestion $question): void
+    {
+        if (CbtAttempt::query()->whereHas('participant', fn ($q) => $q->where('schedule_id', $question->schedule_id))->exists()) {
+            throw new ConflictException('Soal tidak dapat dihapus setelah ujian dimulai.', 'IN_USE');
+        }
+
+        $question->delete();
     }
 
     /**
@@ -248,7 +258,7 @@ class CbtService
         }
 
         $schedule = ExamSchedule::query()->withoutGlobalScopes()->where('external_reference', (string) $request->input('schedule_reference'))->firstOrFail();
-        app(\App\Support\Tenancy\TenantContext::class)->setUniversityId((string) $schedule->university_id);
+        app(TenantContext::class)->setUniversityId((string) $schedule->university_id);
         $applied = 0;
         $skipped = 0;
 

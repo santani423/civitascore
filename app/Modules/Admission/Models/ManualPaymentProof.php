@@ -3,10 +3,32 @@
 namespace Modules\Admission\Models;
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Admission\Enums\ManualProofStatus;
 use Modules\FileManagement\Models\FileUpload;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $transaction_id
+ * @property string $file_upload_id
+ * @property string $sender_bank
+ * @property string $sender_name
+ * @property CarbonImmutable $transfer_date
+ * @property string $transferred_amount
+ * @property ManualProofStatus $status
+ * @property string|null $reason_code
+ * @property string|null $note
+ * @property bool $duplicate_warning
+ * @property string|null $reviewed_by
+ * @property CarbonImmutable|null $reviewed_at
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read PaymentTransaction $transaction
+ * @property-read FileUpload $fileUpload
+ * @property-read User|null $reviewer
+ */
 class ManualPaymentProof extends PmbModel
 {
     protected $table = 'pmb_manual_payment_proofs';

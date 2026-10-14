@@ -9,8 +9,8 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Modules\Academic\Models\StudyProgram;
 use Modules\Admission\Contracts\CaptchaVerifier;
 use Modules\Admission\Enums\ContentStatus;
 use Modules\Admission\Enums\ContentType;
@@ -28,9 +28,11 @@ use Modules\Admission\Models\WavePath;
 use Modules\Admission\Services\Announcement\AcceptanceLetterService;
 use Modules\Admission\Services\Announcement\PublicationService;
 use Modules\Admission\Services\Application\ApplicationService;
+use Modules\Admission\Services\Configuration\ContentService;
 use Modules\Admission\Support\ApplicationStageResolver;
 use Modules\Admission\Support\PmbFileStorage;
 use Modules\Admission\Support\PmbSettings;
+use Modules\FileManagement\Models\FileUpload;
 use Modules\Tenancy\Models\University;
 
 /**
@@ -45,8 +47,8 @@ class PublicSiteController extends Controller
     {
         return $this->cached('site', function () use ($storage): array {
             $university = University::query()->findOrFail($this->tenant->universityId());
-            $logo = $university->logo_file_id ? \Modules\FileManagement\Models\FileUpload::query()->withoutGlobalScopes()->find($university->logo_file_id) : null;
-            $legal = fn (ContentType $type) => \Modules\Admission\Services\Configuration\ContentService::activeVersion($type)?->only(['id', 'title', 'slug', 'version', 'publish_at']);
+            $logo = $university->logo_file_id ? FileUpload::query()->withoutGlobalScopes()->find($university->logo_file_id) : null;
+            $legal = fn (ContentType $type) => ContentService::activeVersion($type)?->only(['id', 'title', 'slug', 'version', 'publish_at']);
 
             return [
                 'university' => [
@@ -284,8 +286,8 @@ class PublicSiteController extends Controller
         return $result === null ? ApiResponse::error('Data tidak ditemukan.', status: 404) : ApiResponse::success($result);
     }
 
-    /** @return \Illuminate\Support\Collection<int, Content> */
-    private function publishedContents(ContentType $type): \Illuminate\Support\Collection
+    /** @return Collection<int, Content> */
+    private function publishedContents(ContentType $type): Collection
     {
         return Content::query()->where('type', $type->value)->where('status', ContentStatus::Published->value)
             ->where(fn ($q) => $q->whereNull('publish_at')->orWhere('publish_at', '<=', now()))
@@ -307,7 +309,9 @@ class PublicSiteController extends Controller
 
     private function cached(string $key, callable $resolver, int $seconds = 300): JsonResponse
     {
-        $data = Cache::remember('pmb:public:'.$this->tenant->universityId().':'.$key, $seconds, $resolver);
+        // Payload dinormalisasi ke array murni sebelum di-cache: Collection
+        // bersarang rusak saat dibaca kembali dari Redis (hit cache).
+        $data = Cache::remember('pmb:public:'.$this->tenant->universityId().':'.$key, $seconds, fn () => json_decode(json_encode($resolver(), JSON_THROW_ON_ERROR), true));
 
         return ApiResponse::success($data)->header('Cache-Control', 'public, max-age=60');
     }

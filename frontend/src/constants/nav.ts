@@ -25,6 +25,7 @@ import {
 } from 'lucide-react'
 import type { NavItem } from '@/types/navigation'
 import { ROUTES } from '@/constants/routes'
+import { PMB_NAV_ITEMS } from '@/pmb/adminNav'
 
 const DASHBOARD_ITEM: NavItem = { label: 'Dashboard', path: ROUTES.dashboard, icon: LayoutDashboard }
 
@@ -87,6 +88,8 @@ export const TENANT_BUSINESS_NAV_ITEMS: NavItem[] = [
       { label: 'Pengajuan Mahasiswa', path: ROUTES.akademik.pengajuanMahasiswa, permission: 'approval_requests.read' },
     ],
   },
+  // Penerimaan Mahasiswa Baru (app/Modules/Admission)
+  ...PMB_NAV_ITEMS,
   { label: 'Mahasiswa', path: ROUTES.mahasiswa, icon: Users, permission: 'students.read' },
   { label: 'Dosen', path: ROUTES.dosen, icon: UserRound, permission: 'lecturers.read' },
   { label: 'Pegawai', path: ROUTES.pegawai, icon: Briefcase, permission: 'employees.read' },

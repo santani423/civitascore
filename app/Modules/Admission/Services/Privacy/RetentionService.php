@@ -111,7 +111,7 @@ class RetentionService
                     'form_status' => $a->form_status->value,
                     'submitted_at' => $a->submitted_at?->toIso8601String(),
                     'choices' => $a->choices->map(fn ($c) => $c->studyProgram?->name)->all(),
-                    'answers' => $a->answers->map(fn ($x) => ['field' => $x->field?->label, 'value' => $x->value_json ?? $x->value_text])->all(),
+                    'answers' => $a->answers->map(fn ($x) => ['field' => $x->field?->label, 'value' => $x->value_json ?? ($x->field?->is_sensitive && $x->value_text !== null ? rescue(fn () => decrypt($x->value_text), '', false) : $x->value_text)])->all(),
                     'decision' => $a->currentDecision?->publication_status?->value === 'published' ? $a->currentDecision->decision->value : null,
                 ])->all(),
         ];

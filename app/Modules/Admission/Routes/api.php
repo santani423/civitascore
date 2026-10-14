@@ -57,6 +57,9 @@ Route::prefix('pmb')->group(function (): void {
 
     Route::prefix('applicant')->middleware(['auth:sanctum', 'pmb.applicant', 'throttle:pmb-applicant'])->group(function (): void {
         Route::post('auth/email/resend', [Applicant\AuthController::class, 'resendVerification'])->middleware('throttle:pmb-otp');
+        // Verifikasi nomor HP (OTP) memerlukan akun yang login; rute publik otp/* untuk reset sandi.
+        Route::post('auth/phone/otp', [Applicant\AuthController::class, 'sendOtp'])->middleware('throttle:pmb-otp');
+        Route::post('auth/phone/verify', [Applicant\AuthController::class, 'verifyOtp'])->middleware('throttle:pmb-login');
         Route::post('auth/logout', [Applicant\AuthController::class, 'logout']);
         Route::post('auth/logout-all', [Applicant\AuthController::class, 'logoutAll']);
         Route::get('auth/sessions', [Applicant\AuthController::class, 'sessions']);
@@ -140,6 +143,9 @@ Route::prefix('pmb')->group(function (): void {
 
     // ------------------------------------------------------------------ Admin
     Route::prefix('admin')->middleware(['auth:sanctum', 'pmb.staff', 'tenant.access', 'throttle:pmb-admin'])->group(function (): void {
+        // Pemilih petugas (penugasan verifikasi, penguji, penanggung jawab chat).
+        Route::get('staff', [Admin\ConfigurationController::class, 'staff'])->middleware('permission:'.P::CONFIG_READ.','.P::VERIFICATION_ASSIGN.','.P::EXAMS_MANAGE.','.P::COMMUNICATION_CHAT);
+
         // Konfigurasi (11 §A.9)
         Route::middleware('permission:'.P::CONFIG_READ)->group(function (): void {
             Route::get('periods', [Admin\ConfigurationController::class, 'periods']);
@@ -275,6 +281,7 @@ Route::prefix('pmb')->group(function (): void {
             Route::post('applications/{application}/reject', [Admin\VerificationController::class, 'reject']);
             Route::post('applications/{application}/conflict-declarations', [Admin\VerificationController::class, 'declareConflict']);
             Route::post('verification/bulk-verify', [Admin\VerificationController::class, 'bulkVerify'])->middleware('pmb.idempotent');
+            Route::get('verification/photos', [Admin\VerificationController::class, 'photoQueue']);
             Route::post('verification/bulk-photos', [Admin\VerificationController::class, 'bulkPhotos']);
             Route::get('duplicate-flags', [Admin\VerificationController::class, 'duplicateFlags']);
             Route::get('verification/stats', [Admin\VerificationController::class, 'stats']);

@@ -3,11 +3,37 @@
 namespace Modules\Admission\Models;
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Modules\Admission\Enums\ScoreSource;
 
-/** Nilai komponen seleksi per aplikasi (per penguji untuk komponen multi-penguji). */
+/** Nilai komponen seleksi per aplikasi (per penguji untuk komponen multi-penguji).
+ *
+ *
+ * @property string $id
+ * @property string $university_id
+ * @property string $application_id
+ * @property string $selection_component_id
+ * @property string|null $examiner_user_id
+ * @property string|null $raw_score
+ * @property bool|null $passed
+ * @property array<mixed>|null $rubric_scores
+ * @property string|null $note
+ * @property ScoreSource $source
+ * @property string|null $exam_session_id
+ * @property CarbonImmutable|null $locked_at
+ * @property string|null $locked_by_run_id
+ * @property string|null $entered_by
+ * @property string $unique_key
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Application $application
+ * @property-read SelectionComponent $component
+ * @property-read User|null $examiner
+ * @property-read Collection<int, ScoreRevision> $revisions
+ */
 class SelectionScore extends PmbModel
 {
     protected $table = 'pmb_selection_scores';

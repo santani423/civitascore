@@ -357,6 +357,8 @@ Fitur:
 
 ### 4.2 Modul Penerimaan Mahasiswa Baru
 
+> **Status implementasi (GAP-09):** diimplementasikan sebagai modul `app/Modules/Admission` (backend) dan `frontend/src/pmb` (website publik, portal pendaftar, admin). Spesifikasi rinci: `docs/pmb/01–15`; keputusan implementasi, operasional, dan ketergantungan eksternal: `docs/pmb/16-catatan-implementasi.md`.
+
 Fitur:
 
 * Pembuatan periode penerimaan

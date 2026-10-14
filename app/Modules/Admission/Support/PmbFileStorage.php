@@ -181,7 +181,7 @@ class PmbFileStorage
         if ((isset($rules['min_width']) && $width < $rules['min_width']) || (isset($rules['min_height']) && $height < $rules['min_height'])) {
             imagedestroy($image);
 
-            throw new DomainRuleException("Resolusi gambar minimal {$rules['min_width']}×{$rules['min_height']} piksel.", 'IMAGE_TOO_SMALL');
+            throw new DomainRuleException('Resolusi gambar minimal '.($rules['min_width'] ?? 0).'×'.($rules['min_height'] ?? 0).' piksel.', 'IMAGE_TOO_SMALL');
         }
 
         if (isset($rules['aspect']) && $height > 0 && abs(($width / $height) - $rules['aspect']) / $rules['aspect'] > 0.10) {

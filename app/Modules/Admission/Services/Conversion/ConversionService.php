@@ -32,8 +32,8 @@ use Modules\Admission\Support\NimFormatter;
 use Modules\Admission\Support\PmbPermission;
 use Modules\Admission\Support\PmbSettings;
 use Modules\Admission\Support\SequenceGenerator;
-use Modules\Finance\Services\AdmissionPostingService;
 use Modules\FileManagement\Models\FileUpload;
+use Modules\Finance\Services\AdmissionPostingService;
 use Modules\Scholarship\Enums\ScholarshipApplicationStatus;
 use Modules\Scholarship\Models\ScholarshipApplication;
 use Throwable;
@@ -334,11 +334,8 @@ class ConversionService
     /** Langkah 4: beasiswa jalur masuk diteruskan ke modul Scholarship (FR-SPC-06). */
     private function forwardScholarship(StudentConversion $conversion, Student $student): void
     {
-        $award = (array) (AdmissionDecision::query()->where('application_id', $conversion->application_id)->where('is_current', true)->value('scholarship_award') ?? []);
-
-        if (is_string($award)) {
-            $award = (array) json_decode($award, true);
-        }
+        // Model di-load agar cast `scholarship_award` (array) berlaku — ->value() mengembalikan JSON mentah.
+        $award = (array) (AdmissionDecision::query()->where('application_id', $conversion->application_id)->where('is_current', true)->first()?->scholarship_award ?? []);
 
         if (empty($award['scholarship_id'])) {
             return;

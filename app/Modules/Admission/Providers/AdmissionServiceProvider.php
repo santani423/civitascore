@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Admission\Channels\HttpSmsGateway;
 use Modules\Admission\Channels\LogSmsGateway;
 use Modules\Admission\Console\PmbDailyCommand;
+use Modules\Admission\Console\PmbInstallCommand;
 use Modules\Admission\Console\PmbTickCommand;
 use Modules\Admission\Contracts\CaptchaVerifier;
 use Modules\Admission\Contracts\SmsGateway;
@@ -30,6 +31,7 @@ use Modules\Admission\Payments\MidtransGateway;
 use Modules\Admission\Payments\PaymentGatewayManager;
 use Modules\Admission\Support\PmbSettings;
 use Modules\Admission\Support\ScopeResolver;
+use Modules\FileManagement\Models\FileUpload;
 use RuntimeException;
 
 /**
@@ -102,7 +104,7 @@ class AdmissionServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PmbTickCommand::class, PmbDailyCommand::class]);
+            $this->commands([PmbTickCommand::class, PmbDailyCommand::class, PmbInstallCommand::class]);
         }
 
         $this->callAfterResolving(Schedule::class, function (Schedule $schedule): void {
@@ -110,7 +112,7 @@ class AdmissionServiceProvider extends ServiceProvider
             $schedule->command('pmb:daily')->dailyAt('00:15')->withoutOverlapping(120);
         });
 
-        Route::bind('pmbFile', fn (string $value) => \Modules\FileManagement\Models\FileUpload::query()->withoutGlobalScopes()->findOrFail($value));
+        Route::bind('pmbFile', fn (string $value) => FileUpload::query()->withoutGlobalScopes()->findOrFail($value));
     }
 
     /** Batas laju per grup endpoint (docs/pmb/11 §A.2). */

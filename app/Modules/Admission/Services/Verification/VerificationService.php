@@ -4,10 +4,12 @@ namespace Modules\Admission\Services\Verification;
 
 use App\Models\User;
 use App\Support\Http\Exceptions\ConflictException;
+use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Modules\Admission\Enums\AccountStatus;
 use Modules\Admission\Enums\AssignmentStatus;
@@ -41,6 +43,8 @@ use Modules\Admission\Support\PmbPermission;
 use Modules\Admission\Support\PmbSettings;
 use Modules\Admission\Support\ScopeResolver;
 use Modules\Admission\Support\StateTransition;
+use Modules\AuditLog\Enums\AuditAction;
+use Modules\Tenancy\Models\University;
 
 /**
  * Verifikasi administrasi (docs/pmb/05 §G, SM-06). Status hanya berubah
@@ -475,7 +479,7 @@ class VerificationService
 
         $succeeded = [];
         $failed = [];
-        $batchId = (string) \Illuminate\Support\Str::ulid();
+        $batchId = (string) Str::ulid();
 
         foreach (Application::query()->with('wavePath')->whereIn('id', $ids)->get() as $application) {
             try {
@@ -587,7 +591,7 @@ class VerificationService
             }
 
             $flag->forceFill(['status' => $target, 'resolution_note' => $note, 'resolved_by' => $user->getKey(), 'resolved_at' => now()])->save();
-            $this->history->action($flag, \Modules\AuditLog\Enums\AuditAction::Updated, ['status' => $target->value], $note);
+            $this->history->action($flag, AuditAction::Updated, ['status' => $target->value], $note);
 
             return $flag->refresh();
         });
@@ -743,6 +747,6 @@ class VerificationService
 
     private function timezone(): string
     {
-        return (string) (\Modules\Tenancy\Models\University::query()->whereKey(app(\App\Support\Tenancy\TenantContext::class)->universityId())->value('timezone') ?: config('app.timezone'));
+        return (string) (University::query()->whereKey(app(TenantContext::class)->universityId())->value('timezone') ?: config('app.timezone'));
     }
 }

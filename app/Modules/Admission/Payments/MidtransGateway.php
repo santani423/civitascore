@@ -4,6 +4,7 @@ namespace Modules\Admission\Payments;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Modules\Admission\Models\PaymentTransaction;
@@ -160,9 +161,9 @@ class MidtransGateway implements PaymentGatewayContract
     }
 
     /**
-     * @param  callable(PendingRequest): \Illuminate\Http\Client\Response  $call
+     * @param  callable(PendingRequest): Response  $call
      */
-    private function send(callable $call): \Illuminate\Http\Client\Response
+    private function send(callable $call): Response
     {
         try {
             $response = $call(Http::withBasicAuth($this->serverKey, '')->acceptJson()->asJson()->timeout((int) config('pmb.payment.gateway_timeout_seconds', 10)));

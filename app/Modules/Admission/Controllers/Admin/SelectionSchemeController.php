@@ -12,6 +12,7 @@ use Modules\Admission\Enums\NormalizationMethod;
 use Modules\Admission\Enums\ScoreType;
 use Modules\Admission\Models\SelectionComponent;
 use Modules\Admission\Models\SelectionScheme;
+use Modules\Admission\Models\WavePath;
 use Modules\Admission\Services\Configuration\SelectionSchemeService;
 
 /** Skema seleksi, komponen, kunci, simulasi (FR-SEL-01, ADM-17). */
@@ -34,7 +35,7 @@ class SelectionSchemeController extends AdminController
             ...$selectionScheme->toArray(),
             'components' => $components,
             'lock_errors' => $selectionScheme->status->value === 'draft' ? $this->schemes->lockErrors($selectionScheme, $components->all()) : [],
-            'in_use' => \Modules\Admission\Models\WavePath::query()->where('selection_scheme_id', $selectionScheme->getKey())->exists(),
+            'in_use' => WavePath::query()->where('selection_scheme_id', $selectionScheme->getKey())->exists(),
             'enums' => ['sources' => ComponentSource::values(), 'score_types' => ScoreType::values(), 'normalizations' => NormalizationMethod::values(), 'allocation_methods' => AllocationMethod::values()],
         ]);
     }

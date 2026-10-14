@@ -30,8 +30,8 @@ use Modules\Admission\Services\Approval\PmbApprovalService;
 use Modules\Admission\Support\Actor;
 use Modules\Admission\Support\HistoryRecorder;
 use Modules\Admission\Support\PmbFileStorage;
-use Modules\Admission\Support\StateTransition;
 use Modules\Admission\Support\SimpleXlsx;
+use Modules\AuditLog\Enums\AuditAction;
 
 /**
  * Nilai seleksi (06 §H.8, FR-SEL-02, FR-EXM-07): input penguji (rubrik,
@@ -310,7 +310,7 @@ class ScoreService
         }
 
         $session->forceFill(['scores_locked_at' => now(), 'scores_locked_by' => $actor->getKey()])->save();
-        $this->history->action($session, \Modules\AuditLog\Enums\AuditAction::Updated, ['scores_locked' => true]);
+        $this->history->action($session, AuditAction::Updated, ['scores_locked' => true]);
 
         return $session->refresh();
     }

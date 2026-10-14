@@ -12,6 +12,7 @@ use Modules\Admission\Models\ExamParticipant;
 use Modules\Admission\Services\Exam\CbtService;
 use Modules\Admission\Services\Exam\ExamService;
 use Modules\Admission\Support\PmbFileStorage;
+use Modules\FileManagement\Models\FileUpload;
 
 /** Jadwal, kartu, jadwal ulang, dan CBT pendaftar (docs/pmb/11 §A.10, POR-07). */
 class ExamController extends ApplicantController
@@ -49,7 +50,7 @@ class ExamController extends ApplicantController
             throw new DomainRuleException('Kartu peserta belum terbit.', 'CARD_NOT_READY', 409);
         }
 
-        return ApiResponse::success(['url' => $storage->temporaryUrl(\Modules\FileManagement\Models\FileUpload::query()->findOrFail($participant->card_file_id))]);
+        return ApiResponse::success(['url' => $storage->temporaryUrl(FileUpload::query()->findOrFail($participant->card_file_id))]);
     }
 
     public function reschedule(Request $request, string $participantId, ExamService $exams, PmbFileStorage $storage): JsonResponse

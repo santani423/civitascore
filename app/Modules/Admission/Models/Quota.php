@@ -2,9 +2,33 @@
 
 namespace Modules\Admission\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Academic\Models\StudyProgram;
 
+/**
+ * @property string $id
+ * @property string $university_id
+ * @property string $period_id
+ * @property string $admission_path_id
+ * @property string $study_program_id
+ * @property string $study_system_id
+ * @property int $capacity
+ * @property int $waitlist_capacity
+ * @property string|null $min_final_score
+ * @property array<mixed>|null $wave_caps
+ * @property int $accepted_count
+ * @property bool $is_offered
+ * @property int $lock_version
+ * @property string|null $created_by
+ * @property string|null $updated_by
+ * @property CarbonImmutable|null $created_at
+ * @property CarbonImmutable|null $updated_at
+ * @property-read Period $period
+ * @property-read AdmissionPath $admissionPath
+ * @property-read StudyProgram $studyProgram
+ * @property-read StudySystem $studySystem
+ */
 class Quota extends PmbModel
 {
     protected $table = 'pmb_quotas';
