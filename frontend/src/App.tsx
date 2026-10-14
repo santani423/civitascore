@@ -97,7 +97,12 @@ import { ApprovalRequestsPage } from '@/pages/approvals/ApprovalRequestsPage'
 import { ApprovalRequestDetailPage } from '@/pages/approvals/ApprovalRequestDetailPage'
 import { ApprovalWorkflowsPage } from '@/pages/approvals/ApprovalWorkflowsPage'
 import { ROUTES } from '@/constants/routes'
+<<<<<<< HEAD
 import { LANDING_PATHS } from '@/landing/paths'
+=======
+import { pmbPublicRoutes } from '@/pmb/PmbRoutes'
+import { PMB_ADMIN_ROUTES } from '@/pmb/AdminRoutes'
+>>>>>>> origin/feature/pmb-admission
 
 // Civitas One redesign (UI-only, mock data) — its own chunk, outside auth.
 const OneApp = lazy(() => import('@/one/OneApp'))
@@ -114,6 +119,8 @@ const LandingApp = lazy(() => import('@/landing/LandingApp'))
  */
 const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.dashboard, element: <DashboardRoute /> },
+
+  ...PMB_ADMIN_ROUTES,
 
   { path: ROUTES.platform.universities, element: <UniversitiesPage /> },
   { path: ROUTES.platform.security, element: <SupportSessionsPage /> },
@@ -266,6 +273,10 @@ function App() {
           <Route path={ROUTES.examPublic.attempt} element={<ExamPublicAttemptPage />} />
           <Route path={ROUTES.examPublic.result} element={<ExamPublicResultPage />} />
         </Route>
+
+        {/* PMB: website publik, autentikasi & portal pendaftar — sesi pendaftar
+            terpisah dari sesi staf, sehingga di luar ProtectedRoute. */}
+        {pmbPublicRoutes()}
 
         <Route
           path="/one/*"

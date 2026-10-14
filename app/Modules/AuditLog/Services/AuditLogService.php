@@ -3,6 +3,7 @@
 namespace Modules\AuditLog\Services;
 
 use Illuminate\Contracts\Encryption\DecryptException;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class AuditLogService
         $newValues = $this->mask($model, $this->withoutHidden($newValues, $hidden), $masked);
 
         return AuditLog::create([
-            'user_id' => Auth::id(),
+            'user_id' => $this->actorUserId(),
             'auditable_type' => $model::class,
             'auditable_id' => $model->getKey(),
             'action' => $action,
@@ -58,6 +59,18 @@ class AuditLogService
         return $this->record($model, $action, [], $context, $reason);
     }
 
+    /**
+     * Hanya staf (`users`) yang dicatat sebagai aktor: audit_logs.user_id
+     * ber-FK ke `users`, sedangkan token Sanctum lain (mis. akun pendaftar
+     * PMB, tabel terpisah) juga dapat terautentikasi — ID-nya bukan user.
+     */
+    private function actorUserId(): ?string
+    {
+        $actor = Auth::user();
+
+        return $actor instanceof User ? (string) $actor->getKey() : null;
+    }
+
     public static function maskValue(mixed $value): ?string
     {
         if ($value === null || $value === '') {
@@ -79,7 +92,7 @@ class AuditLogService
     public function log(string $logName, string $description, ?Model $subject = null, array $properties = []): ActivityLog
     {
         return ActivityLog::create([
-            'user_id' => Auth::id(),
+            'user_id' => $this->actorUserId(),
             'subject_type' => $subject?->getMorphClass(),
             'subject_id' => $subject?->getKey(),
             'log_name' => $logName,

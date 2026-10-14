@@ -7,6 +7,7 @@ use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
 use Modules\Academic\Database\Seeders\AcademicSeeder;
 use Modules\Alumni\Database\Seeders\AlumniSeeder;
+use Modules\Admission\Database\Seeders\AdmissionSeeder;
 use Modules\Announcement\Database\Seeders\AnnouncementSeeder;
 use Modules\ApprovalWorkflow\Enums\ApprovalApproverType;
 use Modules\ApprovalWorkflow\Enums\ApprovalHistoryEvent;
@@ -108,6 +109,7 @@ class UniversitySeeder extends Seeder
         (new LibrarySeeder())->run($university, $academic['students']);
         (new AlumniSeeder())->run($university, $academic['students']);
         (new AnnouncementSeeder())->run($university, $admins[0] ?? null);
+        (new AdmissionSeeder())->run($university);
 
         app(TenantContext::class)->setUniversityId(null);
     }

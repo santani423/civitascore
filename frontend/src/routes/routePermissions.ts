@@ -1,6 +1,7 @@
 import { NAV_ITEMS, PLATFORM_NAV_ITEMS, PORTAL_NAV_ITEMS } from '@/constants/nav'
 import { ROUTES } from '@/constants/routes'
 import type { NavItem } from '@/types/navigation'
+import { PMB_DETAIL_ROUTE_PERMISSIONS } from '@/pmb/adminNav'
 
 /**
  * `path -> permission` derived straight from the nav items that already
@@ -60,7 +61,7 @@ const DETAIL_ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   [ROUTES.pengumumanDetail]: 'announcements.read',
 }
 
-for (const [path, permission] of Object.entries(DETAIL_ROUTE_PERMISSIONS)) {
+for (const [path, permission] of Object.entries({ ...DETAIL_ROUTE_PERMISSIONS, ...PMB_DETAIL_ROUTE_PERMISSIONS })) {
   routePermissions.set(path, permission)
 }
 

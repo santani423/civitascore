@@ -33,7 +33,7 @@ class Invoice extends Model implements ScopesToInstitution
     /** @use HasFactory<InvoiceFactory> */
     use HasFactory, HasUlids, TenantScoped;
 
-    protected $fillable = ['university_id', 'student_id', 'period', 'amount', 'paid_amount', 'status', 'due_date'];
+    protected $fillable = ['university_id', 'student_id', 'period', 'amount', 'paid_amount', 'status', 'due_date', 'source_type', 'source_id'];
 
     protected function casts(): array
     {

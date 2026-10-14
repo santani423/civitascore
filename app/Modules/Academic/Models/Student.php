@@ -59,6 +59,7 @@ class Student extends Model implements RestrictsFileAccess, ScopesToInstitution
         'university_id', 'study_program_id', 'academic_advisor_id', 'user_id', 'nim', 'name', 'email',
         'phone', 'address', 'photo_file_id', 'tanggal_lahir', 'birth_place', 'gender',
         'admission_year', 'status', 'enrolled_at', 'graduated_at',
+        'admission_application_id', 'admission_path_code', 'study_system_code',
     ];
 
     protected function casts(): array
