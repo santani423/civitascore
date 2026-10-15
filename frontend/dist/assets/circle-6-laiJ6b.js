@@ -1,0 +1,1 @@
+import{r as e}from"./cn-IS2M60qI.js";var t=e(`circle`,[[`circle`,{cx:`12`,cy:`12`,r:`10`,key:`1mglay`}]]);export{t};

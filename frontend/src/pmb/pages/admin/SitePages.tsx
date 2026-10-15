@@ -134,7 +134,7 @@ export function ProgramProfilesPage() {
         ]} />
       </Card>
       <FormDialog open={editing !== null} wide title={`Profil ${editing?.name ?? ''}`} fields={[
-        { name: 'slug', label: 'Slug URL' }, { name: 'summary', label: 'Ringkasan (maks 300 karakter)', type: 'textarea' }, { name: 'description', label: 'Deskripsi (HTML)', type: 'textarea' },
+        { name: 'slug', label: 'Slug URL' }, { name: 'summary', label: 'Ringkasan (maks 300 karakter)', type: 'textarea' }, { name: 'description', label: 'Deskripsi', type: 'richtext' },
         { name: 'accreditation_label', label: 'Akreditasi' }, { name: 'accreditation_valid_until', label: 'Akreditasi berlaku s.d.', type: 'date' },
         { name: 'degree_title', label: 'Gelar' }, { name: 'study_duration', label: 'Lama studi' }, { name: 'career_prospects', label: 'Prospek karier', type: 'textarea' },
         { name: 'cover', label: 'Gambar sampul (JPG/PNG)', type: 'file', accept: 'image/jpeg,image/png' }, { name: 'brochure', label: 'Brosur (PDF)', type: 'file', accept: 'application/pdf' },
