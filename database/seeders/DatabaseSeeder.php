@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 use Modules\Academic\Database\Seeders\AtmaJayaAccountSeeder;
 use Modules\Academic\Database\Seeders\LecturerUserAccountSeeder;
 use Modules\Academic\Database\Seeders\StudentUserAccountSeeder;
+use Modules\Admission\Database\Seeders\AtmaJayaAdmissionSeeder;
 use Modules\HumanResource\Database\Seeders\HumanResourceSeeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
@@ -90,5 +91,9 @@ class DatabaseSeeder extends Seeder
         // lecturer record. Runs last so lecturers created by the SDM and
         // Atma Jaya seeders above are linked too (matched by email).
         $this->call(LecturerUserAccountSeeder::class);
+
+        // PMB Atma Jaya siap pakai: periode terpublikasi, jalur, kuota,
+        // biaya, ujian CBT, konten website, staf PMB, dan pendaftar demo.
+        $this->call(AtmaJayaAdmissionSeeder::class);
     }
 }
