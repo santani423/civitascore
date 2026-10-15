@@ -97,12 +97,9 @@ import { ApprovalRequestsPage } from '@/pages/approvals/ApprovalRequestsPage'
 import { ApprovalRequestDetailPage } from '@/pages/approvals/ApprovalRequestDetailPage'
 import { ApprovalWorkflowsPage } from '@/pages/approvals/ApprovalWorkflowsPage'
 import { ROUTES } from '@/constants/routes'
-<<<<<<< HEAD
 import { LANDING_PATHS } from '@/landing/paths'
-=======
 import { pmbPublicRoutes } from '@/pmb/PmbRoutes'
 import { PMB_ADMIN_ROUTES } from '@/pmb/AdminRoutes'
->>>>>>> origin/feature/pmb-admission
 
 // Civitas One redesign (UI-only, mock data) — its own chunk, outside auth.
 const OneApp = lazy(() => import('@/one/OneApp'))
