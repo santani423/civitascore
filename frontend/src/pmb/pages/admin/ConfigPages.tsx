@@ -9,6 +9,8 @@ import { FormDialog, type FieldDef } from '@/pmb/components/FormDialog'
 import { ReasonDialog } from '@/pmb/components/ReasonDialog'
 import { StatusBadge } from '@/pmb/components/StatusBadge'
 import { Tabs } from '@/pmb/components/Tabs'
+import { TableFilters } from '@/pmb/components/TableFilters'
+import { textMatch, useTableFilters, type TableFilter } from '@/pmb/components/useTableFilters'
 import { AdminPage, Can, P, invalidateLookups, options, useLookups, type Lookups } from '@/pmb/components/admin'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -18,6 +20,7 @@ import { Select } from '@/components/ui/Select'
 import { Modal } from '@/components/ui/Modal'
 import { DataTable } from '@/components/ui/DataTable'
 import { date, dateTime, money } from '@/pmb/lib/format'
+import { statusLabel } from '@/pmb/lib/labels'
 import { PMB, to } from '@/pmb/routes'
 
 interface Period { id: string; code: string; name: string; status: string; starts_on: string; ends_on: string; description: string | null; entry_academic_term_id: string; waves_count?: number; entry_term?: { academic_year: string; semester: string } | null; has_submitted_applications?: boolean }
@@ -25,6 +28,19 @@ interface Wave { id: string; code: string; name: string; sequence: number; statu
 interface WavePath { id: string; admission_path_id: string; registration_fee: string; payment_timing: string; max_choices: number; allow_cross_system_choice: boolean; form_template_id: string; selection_scheme_id: string | null; quota_mode: string; bulk_verifiable: boolean; is_open: boolean; public_notes: string | null; admission_path: { name: string; code: string } | null; form_template: { code: string; version: number; status: string } | null; selection_scheme: { code: string; version: number; status: string } | null; applications_count?: number; document_requirements_count?: number }
 interface Quota { id: string; admission_path_id: string; study_program_id: string; study_system_id: string; capacity: number; waitlist_capacity: number; min_final_score: string | null; accepted_count: number; is_offered: boolean; lock_version: number; study_program: { name: string } | null; study_system: { name: string } | null; admission_path: { name: string } | null }
 interface Fee { id: string; study_program_id: string; study_system_id: string; admission_path_id: string | null; component_code: string; name: string; amount: string; is_mandatory_for_enrollment: boolean; installable: boolean; installment_plan: Array<{ percent: number; due_days: number }> | null; is_published: boolean; sort_order: number; study_program: { name: string } | null; study_system: { name: string } | null; admission_path: { name: string } | null }
+
+const YES_NO = [{ value: 'yes', label: 'Ya' }, { value: 'no', label: 'Tidak' }]
+
+/** Fakultas diturunkan dari prodi baris (lookups) — dipakai tab Kuota & Biaya. */
+const facultyFilter = <T extends { study_program_id?: string }>(l: Lookups | null): TableFilter<T> => {
+  const facultyOf = new Map((l?.study_programs ?? []).map((p) => [p.id, p.faculty_id]))
+
+  return { name: 'faculty', label: 'Fakultas', options: options(l?.faculties, (f) => f.name), match: (r, v) => facultyOf.get(r.study_program_id ?? '') === v }
+}
+
+const systemFilter = <T extends { study_system_id?: string }>(l: Lookups | null): TableFilter<T> => ({
+  name: 'system', label: 'Sistem', options: options(l?.study_systems, (s) => s.name), match: (r, v) => r.study_system_id === v,
+})
 
 const PERIOD_FIELDS = (l: Lookups | null): FieldDef[] => [
   { name: 'code', label: 'Kode', required: true, placeholder: 'PMB2027' },
@@ -135,12 +151,18 @@ function WavesTab({ periodId, lookups, locked }: { periodId: string; lookups: Lo
   const [extending, setExtending] = useState<Wave | null>(null)
   const [selected, setSelected] = useState<Wave | null>(null)
   const reasonField: FieldDef[] = locked ? [{ name: 'reason', label: 'Alasan perubahan', type: 'textarea', required: true }] : []
+  const filter = useTableFilters(waves.data ?? [], [
+    { name: 'search', label: 'Cari', match: (w, v) => textMatch(v, w.name, w.code) },
+    { name: 'status', label: 'Status', options: ['draft', 'scheduled', 'open', 'closed', 'announced', 'completed'].map((s) => ({ value: s, label: statusLabel(s) })), match: (w, v) => w.status === v },
+    { name: 'ods', label: 'Jenis', options: [{ value: 'regular', label: 'Reguler' }, { value: 'ods', label: 'ODS' }], match: (w, v) => w.is_ods === (v === 'ods') },
+  ])
 
   return (
     <div className="flex flex-col gap-4">
       <Feedback state={action} />
       <Card title="Gelombang" noPadding actions={<Can permission={P.CONFIG_MANAGE}><Button size="sm" leftIcon={<Plus className="size-4" />} onClick={() => setEditing('new')}>Gelombang</Button></Can>}>
-        <DataTable rowKey={(w) => w.id} data={waves.data ?? []} emptyMessage={waves.loading ? 'Memuat...' : 'Belum ada gelombang.'} columns={[
+        <TableFilters {...filter.filterProps} />
+        <DataTable rowKey={(w) => w.id} data={filter.shown} emptyMessage={waves.loading ? 'Memuat...' : filter.filterProps.total ? 'Tidak ada gelombang yang cocok dengan filter.' : 'Belum ada gelombang.'} columns={[
           { header: 'Gelombang', cell: (w) => <button type="button" className="text-left font-medium text-primary" onClick={() => setSelected(w)}>{w.name}<span className="block text-xs text-ink-tertiary">{w.code}{w.is_ods ? ' · ODS' : ''}</span></button> },
           { header: 'Pendaftaran', cell: (w) => `${dateTime(w.registration_opens_at)} – ${dateTime(w.registration_closes_at)}` },
           { header: 'Pengumuman', cell: (w) => dateTime(w.announcement_at) },
@@ -189,10 +211,17 @@ function WavePathsCard({ wave, lookups, locked }: { wave: Wave; lookups: Lookups
     ...(locked && editing !== 'new' ? [{ name: 'reason', label: 'Alasan perubahan', type: 'textarea', required: true } as FieldDef] : []),
   ]
 
+  const filter = useTableFilters(paths.data ?? [], [
+    { name: 'search', label: 'Cari jalur', match: (r, v) => textMatch(v, r.admission_path?.name, r.admission_path?.code) },
+    { name: 'status', label: 'Status', options: [{ value: 'open', label: 'Dibuka' }, { value: 'closed', label: 'Ditutup' }], match: (r, v) => r.is_open === (v === 'open') },
+    { name: 'scheme', label: 'Skema seleksi', options: [{ value: 'set', label: 'Sudah ada' }, { value: 'missing', label: 'Belum ada' }], match: (r, v) => Boolean(r.selection_scheme) === (v === 'set') },
+  ])
+
   return (
     <Card title={`Jalur pada ${wave.name}`} noPadding actions={<Can permission={P.CONFIG_MANAGE}><Button size="sm" leftIcon={<Plus className="size-4" />} onClick={() => setEditing('new')}>Buka jalur</Button></Can>}>
+      <TableFilters {...filter.filterProps} />
       <div className="px-4 pt-3"><Feedback state={action} /></div>
-      <DataTable rowKey={(r) => r.id} data={paths.data ?? []} emptyMessage="Belum ada jalur pada gelombang ini." columns={[
+      <DataTable rowKey={(r) => r.id} data={filter.shown} emptyMessage={filter.filterProps.total ? 'Tidak ada jalur yang cocok dengan filter.' : 'Belum ada jalur pada gelombang ini.'} columns={[
         { header: 'Jalur', cell: (r) => r.admission_path?.name },
         { header: 'Biaya', cell: (r) => `${money(r.registration_fee)} · ${r.payment_timing === 'before_submit' ? 'sebelum kirim' : 'setelah kirim'}` },
         { header: 'Template', cell: (r) => (r.form_template ? `${r.form_template.code} v${r.form_template.version}` : '—') },
@@ -281,38 +310,53 @@ function QuotasTab({ periodId, lookups, locked }: { periodId: string; lookups: L
   }), 'Kuota disimpan.').then(quotas.reload)
 
   const cell = 'w-20 rounded border border-border bg-surface px-1 py-0.5'
+  // "Ditawarkan" dicocokkan ke nilai tersimpan agar baris tidak hilang saat centangnya diubah.
+  const offered = new Map((quotas.data ?? []).map((q) => [q.id, q.is_offered]))
+  const filter = useTableFilters(rows.filter((r) => r.id), [
+    { name: 'search', label: 'Cari prodi', match: (r, v) => textMatch(v, r.study_program?.name) },
+    facultyFilter(lookups),
+    { name: 'path', label: 'Jalur', options: options(lookups?.admission_paths, (x) => x.name), match: (r, v) => r.admission_path_id === v },
+    systemFilter(lookups),
+    { name: 'offered', label: 'Ditawarkan', options: YES_NO, match: (r, v) => Boolean(offered.get(r.id ?? '')) === (v === 'yes') },
+  ])
+  // Baris baru (belum disimpan) selalu tampil di bawah, apa pun filternya.
+  const visible = [...filter.shown, ...rows.filter((r) => !r.id)]
 
   return (
-    <Card title="Kuota per prodi × jalur × sistem kuliah">
-      <Feedback state={action} />
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead><tr className="text-left text-xs text-ink-tertiary"><th className="p-1">Jalur</th><th className="p-1">Program studi</th><th className="p-1">Sistem</th><th className="p-1">Kapasitas</th><th className="p-1">Cadangan</th><th className="p-1">Ambang skor</th><th className="p-1">Diterima</th><th className="p-1">Ditawarkan</th></tr></thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.key} className="border-t border-border">
-                <td className="p-1">{r.id ? r.admission_path?.name : <Select options={options(lookups?.admission_paths, (x) => x.name)} placeholder="Jalur" value={r.admission_path_id ?? ''} onChange={(e) => update(r.key, { admission_path_id: e.target.value })} />}</td>
-                <td className="p-1">{r.id ? r.study_program?.name : <Select options={options(lookups?.study_programs, (x) => `${x.name} (${x.degree_level})`)} placeholder="Prodi" value={r.study_program_id ?? ''} onChange={(e) => update(r.key, { study_program_id: e.target.value })} />}</td>
-                <td className="p-1">{r.id ? r.study_system?.name : <Select options={options(lookups?.study_systems, (x) => x.name)} placeholder="Sistem" value={r.study_system_id ?? ''} onChange={(e) => update(r.key, { study_system_id: e.target.value })} />}</td>
-                <td className="p-1"><input type="number" min={0} className={cell} value={r.capacity ?? 0} onChange={(e) => update(r.key, { capacity: Number(e.target.value) })} /></td>
-                <td className="p-1"><input type="number" min={0} className={cell} value={r.waitlist_capacity ?? 0} onChange={(e) => update(r.key, { waitlist_capacity: Number(e.target.value) })} /></td>
-                <td className="p-1"><input type="number" min={0} max={100} step="0.01" className={cell} value={r.min_final_score ?? ''} onChange={(e) => update(r.key, { min_final_score: e.target.value })} /></td>
-                <td className="p-1">{r.accepted_count ?? 0}</td>
-                <td className="p-1"><input type="checkbox" checked={Boolean(r.is_offered)} onChange={(e) => update(r.key, { is_offered: e.target.checked })} /></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <Can permission={P.CONFIG_MANAGE}>
-        <div className="mt-3 flex flex-wrap items-end gap-2">
-          <Button size="sm" variant="outline" leftIcon={<Plus className="size-4" />} onClick={() => setRows([...rows, { key: `new-${rows.length}-${Date.now()}`, capacity: 0, waitlist_capacity: 0, is_offered: true }])}>Tambah baris</Button>
-          <Select options={options(lookups?.periods.filter((p) => p.id !== periodId), (p) => p.name)} placeholder="Salin dari periode..." value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)} />
-          <Button size="sm" variant="outline" disabled={!copyFrom} onClick={() => action.run(() => pmbAdmin.post<{ copied: number }>(`periods/${periodId}/quotas/copy-from/${copyFrom}`), (r) => `${r.copied} kuota disalin.`).then(quotas.reload)}>Salin</Button>
+    <Card title="Kuota per prodi × jalur × sistem kuliah" noPadding>
+      <TableFilters {...filter.filterProps} />
+      <div className="p-5">
+        <Feedback state={action} />
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="text-left text-xs text-ink-tertiary"><th className="p-1">Jalur</th><th className="p-1">Program studi</th><th className="p-1">Sistem</th><th className="p-1">Kapasitas</th><th className="p-1">Cadangan</th><th className="p-1">Ambang skor</th><th className="p-1">Diterima</th><th className="p-1">Ditawarkan</th></tr></thead>
+            <tbody>
+              {visible.length === 0 && <tr><td colSpan={8} className="p-3 text-center text-ink-tertiary">{quotas.loading ? 'Memuat...' : rows.length ? 'Tidak ada kuota yang cocok dengan filter.' : 'Belum ada kuota.'}</td></tr>}
+              {visible.map((r) => (
+                <tr key={r.key} className="border-t border-border">
+                  <td className="p-1">{r.id ? r.admission_path?.name : <Select options={options(lookups?.admission_paths, (x) => x.name)} placeholder="Jalur" value={r.admission_path_id ?? ''} onChange={(e) => update(r.key, { admission_path_id: e.target.value })} />}</td>
+                  <td className="p-1">{r.id ? r.study_program?.name : <Select options={options(lookups?.study_programs, (x) => `${x.name} (${x.degree_level})`)} placeholder="Prodi" value={r.study_program_id ?? ''} onChange={(e) => update(r.key, { study_program_id: e.target.value })} />}</td>
+                  <td className="p-1">{r.id ? r.study_system?.name : <Select options={options(lookups?.study_systems, (x) => x.name)} placeholder="Sistem" value={r.study_system_id ?? ''} onChange={(e) => update(r.key, { study_system_id: e.target.value })} />}</td>
+                  <td className="p-1"><input type="number" min={0} className={cell} value={r.capacity ?? 0} onChange={(e) => update(r.key, { capacity: Number(e.target.value) })} /></td>
+                  <td className="p-1"><input type="number" min={0} className={cell} value={r.waitlist_capacity ?? 0} onChange={(e) => update(r.key, { waitlist_capacity: Number(e.target.value) })} /></td>
+                  <td className="p-1"><input type="number" min={0} max={100} step="0.01" className={cell} value={r.min_final_score ?? ''} onChange={(e) => update(r.key, { min_final_score: e.target.value })} /></td>
+                  <td className="p-1">{r.accepted_count ?? 0}</td>
+                  <td className="p-1"><input type="checkbox" checked={Boolean(r.is_offered)} onChange={(e) => update(r.key, { is_offered: e.target.checked })} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        {locked && <textarea className="mt-3 w-full rounded border border-border bg-surface p-2 text-sm" placeholder="Alasan perubahan (wajib setelah gelombang dibuka)" value={reason} onChange={(e) => setReason(e.target.value)} />}
-        <Button className="mt-3" isLoading={action.busy} onClick={save}>Simpan kuota</Button>
-      </Can>
+        <Can permission={P.CONFIG_MANAGE}>
+          <div className="mt-3 flex flex-wrap items-end gap-2">
+            <Button size="sm" variant="outline" leftIcon={<Plus className="size-4" />} onClick={() => setRows([...rows, { key: `new-${rows.length}-${Date.now()}`, capacity: 0, waitlist_capacity: 0, is_offered: true }])}>Tambah baris</Button>
+            <Select options={options(lookups?.periods.filter((p) => p.id !== periodId), (p) => p.name)} placeholder="Salin dari periode..." value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)} />
+            <Button size="sm" variant="outline" disabled={!copyFrom} onClick={() => action.run(() => pmbAdmin.post<{ copied: number }>(`periods/${periodId}/quotas/copy-from/${copyFrom}`), (r) => `${r.copied} kuota disalin.`).then(quotas.reload)}>Salin</Button>
+          </div>
+          {locked && <textarea className="mt-3 w-full rounded border border-border bg-surface p-2 text-sm" placeholder="Alasan perubahan (wajib setelah gelombang dibuka)" value={reason} onChange={(e) => setReason(e.target.value)} />}
+          <Button className="mt-3" isLoading={action.busy} onClick={save}>Simpan kuota</Button>
+        </Can>
+      </div>
     </Card>
   )
 }
@@ -323,11 +367,19 @@ function FeesTab({ periodId, lookups, locked }: { periodId: string; lookups: Loo
   const action = useAction()
   const [editing, setEditing] = useState<Fee | 'new' | null>(null)
   const [copyFrom, setCopyFrom] = useState('')
+  const filter = useTableFilters(fees.data ?? [], [
+    { name: 'search', label: 'Cari prodi/komponen', match: (r, v) => textMatch(v, r.study_program?.name, r.name, r.component_code) },
+    facultyFilter(lookups),
+    { name: 'path', label: 'Jalur', options: [{ value: 'general', label: 'Semua jalur (umum)' }, ...options(lookups?.admission_paths, (x) => x.name)], match: (r, v) => (v === 'general' ? !r.admission_path_id : r.admission_path_id === v) },
+    systemFilter(lookups),
+    { name: 'published', label: 'Publik', options: YES_NO, match: (r, v) => r.is_published === (v === 'yes') },
+  ])
 
   return (
     <Card title="Komponen biaya" noPadding actions={<Can permission={P.FEES_MANAGE}><Button size="sm" leftIcon={<Plus className="size-4" />} onClick={() => setEditing('new')}>Komponen</Button></Can>}>
+      <TableFilters {...filter.filterProps} />
       <div className="px-4 pt-3"><Feedback state={action} /></div>
-      <DataTable rowKey={(r) => r.id} data={fees.data ?? []} emptyMessage="Belum ada komponen biaya." columns={[
+      <DataTable rowKey={(r) => r.id} data={filter.shown} emptyMessage={fees.loading ? 'Memuat...' : filter.filterProps.total ? 'Tidak ada komponen yang cocok dengan filter.' : 'Belum ada komponen biaya.'} columns={[
         { header: 'Prodi', cell: (r) => r.study_program?.name }, { header: 'Sistem', cell: (r) => r.study_system?.name }, { header: 'Jalur', cell: (r) => r.admission_path?.name ?? 'Semua' },
         { header: 'Komponen', cell: (r) => `${r.name} (${r.component_code})` }, { header: 'Nominal', cell: (r) => money(r.amount) },
         { header: 'Cicilan', cell: (r) => (r.installable && r.installment_plan ? r.installment_plan.map((t) => `${t.percent}%/${t.due_days}h`).join(' + ') : '—') },
