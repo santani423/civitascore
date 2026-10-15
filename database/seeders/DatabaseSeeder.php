@@ -8,6 +8,7 @@ use Illuminate\Database\Seeder;
 use Modules\Academic\Database\Seeders\AtmaJayaAccountSeeder;
 use Modules\Academic\Database\Seeders\LecturerUserAccountSeeder;
 use Modules\Academic\Database\Seeders\StudentUserAccountSeeder;
+use Modules\Admission\Database\Seeders\AdmissionDemoSeeder;
 use Modules\HumanResource\Database\Seeders\HumanResourceSeeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
@@ -84,6 +85,11 @@ class DatabaseSeeder extends Seeder
         // Seluruh akun @atmajaya.com (staf, dosen, mahasiswa sampel) tertaut
         // ke kampus Atma Jaya; akun ber-role dosen dibuatkan data dosennya.
         $this->call(AtmaJayaAccountSeeder::class);
+
+        // Data demo website PMB (periode, jalur, kuota, biaya, profil prodi,
+        // konten) untuk setiap kampus. Setelah DemoUniversitiesSeeder, yang
+        // membuat prodi — termasuk Teknik Informatika Atma Jaya.
+        $this->call(AdmissionDemoSeeder::class);
 
         // Same for lecturers.user_id — every dosen with an email gets a
         // login account, and the demo dosen@<domain> accounts get a linked
