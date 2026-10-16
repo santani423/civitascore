@@ -32,6 +32,9 @@ pest()->extend(TestCase::class)
 // Fixture bersama Portal Mahasiswa (portalWorld(), portalClass(), ...).
 require_once __DIR__.'/Helpers/StudentPortal.php';
 
+// Fixture Modul KEU (keuWorld(), keuStaff(), keuInvoice()).
+require_once __DIR__.'/Helpers/Keu.php';
+
 /*
 |--------------------------------------------------------------------------
 | Expectations

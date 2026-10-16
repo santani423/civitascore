@@ -43,6 +43,7 @@ export const ROUTES = {
     tendik: '/sdm/tenaga-kependidikan',
     tendikDetail: '/sdm/tenaga-kependidikan/:id',
   },
+  // Modul KEU — rute lengkap di src/keu/routes.ts; tiga path ini dipertahankan untuk tautan lama (Dashboard, detail mahasiswa).
   keuangan: {
     tagihan: '/keuangan/tagihan',
     tagihanDetail: '/keuangan/tagihan/:id',

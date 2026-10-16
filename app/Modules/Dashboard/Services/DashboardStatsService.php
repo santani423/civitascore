@@ -292,11 +292,9 @@ class DashboardStatsService
      */
     private function invoiceStatus(): array
     {
-        $labels = [
-            InvoiceStatus::Paid->value => 'Lunas',
-            InvoiceStatus::Partial->value => 'Dibayar Sebagian',
-            InvoiceStatus::Unpaid->value => 'Belum Dibayar',
-        ];
+        $labels = collect(InvoiceStatus::cases())
+            ->mapWithKeys(fn (InvoiceStatus $status) => [$status->value => $status->label()])
+            ->all();
 
         return Invoice::query()
             ->selectRaw('status, count(*) as total, sum(amount) as amount_total')

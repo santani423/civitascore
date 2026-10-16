@@ -1,1 +1,0 @@
-import{i as e}from"./cn-BGST-w6W.js";import{a as t}from"./index-CYEzB0Tf.js";import{n,r}from"./labels-BMiv97lE.js";var i=e();function a({status:e,label:a}){return(0,i.jsx)(t,{variant:r(e),children:a??n(e)})}export{a as t};

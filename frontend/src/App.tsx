@@ -40,9 +40,6 @@ import { ExamsPage } from '@/pages/academic/ExamsPage'
 import { ExamDetailPage } from '@/pages/academic/ExamDetailPage'
 import { ExamRecapPage } from '@/pages/academic/ExamRecapPage'
 import { QuestionBankPage } from '@/pages/academic/QuestionBankPage'
-import { InvoicesPage } from '@/pages/finance/InvoicesPage'
-import { InvoiceDetailPage } from '@/pages/finance/InvoiceDetailPage'
-import { PaymentsPage } from '@/pages/finance/PaymentsPage'
 import { ScholarshipsPage } from '@/pages/scholarship/ScholarshipsPage'
 import { ScholarshipDetailPage } from '@/pages/scholarship/ScholarshipDetailPage'
 import { ThesesPage } from '@/pages/thesis/ThesesPage'
@@ -99,6 +96,7 @@ import { ApprovalWorkflowsPage } from '@/pages/approvals/ApprovalWorkflowsPage'
 import { ROUTES } from '@/constants/routes'
 import { pmbPublicRoutes } from '@/pmb/PmbRoutes'
 import { PMB_ADMIN_ROUTES } from '@/pmb/AdminRoutes'
+import { KEU_ROUTES } from '@/keu/AdminRoutes'
 
 // Civitas One redesign (UI-only, mock data) — its own chunk, outside auth.
 const OneApp = lazy(() => import('@/one/OneApp'))
@@ -115,6 +113,8 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.dashboard, element: <DashboardRoute /> },
 
   ...PMB_ADMIN_ROUTES,
+  // Modul KEU: admin /keuangan/* (tagihan & pembayaran memakai path lama) + portal /portal/keuangan
+  ...KEU_ROUTES,
 
   { path: ROUTES.platform.universities, element: <UniversitiesPage /> },
   { path: ROUTES.platform.security, element: <SupportSessionsPage /> },
@@ -143,9 +143,6 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.akademik.ujianDetail, element: <ExamDetailPage /> },
   { path: ROUTES.akademik.ujianRekap, element: <ExamRecapPage /> },
   { path: ROUTES.akademik.bankSoal, element: <QuestionBankPage /> },
-  { path: ROUTES.keuangan.tagihan, element: <InvoicesPage /> },
-  { path: ROUTES.keuangan.tagihanDetail, element: <InvoiceDetailPage /> },
-  { path: ROUTES.keuangan.pembayaran, element: <PaymentsPage /> },
 
   { path: ROUTES.pengaturan.roles, element: <RolesPage /> },
   { path: ROUTES.pengaturan.permissions, element: <PermissionsPage /> },

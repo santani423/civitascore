@@ -15,6 +15,7 @@ use Modules\Academic\Enums\KrsItemStatus;
 use Modules\Academic\Enums\KrsSubmissionStatus;
 use Modules\Academic\Enums\LetterGrade;
 use Modules\Academic\Enums\StudentStatus;
+use Modules\Academic\Events\KrsSubmissionApproved;
 use Modules\Academic\Models\AcademicTerm;
 use Modules\Academic\Models\ClassSchedule;
 use Modules\Academic\Models\ClassSection;
@@ -57,6 +58,7 @@ class KrsPlanService
         private readonly ClassSectionAccess $access,
         private readonly AcademicClock $clock,
         private readonly LecturerIdentity $identity,
+        private readonly AcademicBlockService $blocks,
     ) {}
 
     /**
@@ -532,6 +534,9 @@ class KrsPlanService
                 throw new ConflictException('KRS ini sudah diputuskan sebelumnya atau belum diajukan.');
             }
 
+            // Cekal dapat terbit setelah KRS diajukan — diperiksa ulang saat persetujuan (A.8, BR-SIA-KRS-08).
+            $this->blocks->assertAllowed($locked->student, 'krs');
+
             $locked->items()->where('status', KrsItemStatus::Pending)->update(['status' => KrsItemStatus::Enrolled]);
             $locked->update([
                 'status' => KrsSubmissionStatus::Approved,
@@ -547,6 +552,8 @@ class KrsPlanService
         $this->notifications->notifyStudent($submission->student, 'student.krs_approved', [
             'term' => $submission->academicTerm->label(),
         ], '/portal/jadwal-kuliah');
+
+        KrsSubmissionApproved::dispatch($submission);
 
         return $submission;
     }
@@ -679,6 +686,12 @@ class KrsPlanService
             $notices[] = $this->periodMessage($term, $now);
         }
 
+        // Cekal (A.8, mis. cekal keuangan dari Modul KEU) — gerbang G3,
+        // diperiksa sebelum kapasitas agar mahasiswa tercekal tidak menahan kursi.
+        foreach ($this->blocks->blockers($student, 'krs') as $blocker) {
+            $notices[] = 'Pengisian KRS diblokir oleh cekal: '.$blocker['reason'];
+        }
+
         if ($status === KrsSubmissionStatus::Submitted->value) {
             $notices[] = 'KRS sudah diajukan dan sedang menunggu persetujuan dosen wali.';
         }
@@ -701,6 +714,8 @@ class KrsPlanService
         if (! $term->isKrsOpen($now)) {
             throw new ConflictException($this->periodMessage($term, $now));
         }
+
+        $this->blocks->assertAllowed($student, 'krs');
     }
 
     private function periodMessage(AcademicTerm $term, CarbonImmutable $now): string

@@ -141,6 +141,9 @@ class RolePermissionSeeder extends Seeder
         ],
         'invoices' => [
             PermissionAction::Read,
+            PermissionAction::Create,
+            PermissionAction::Update,
+            PermissionAction::Export,
         ],
         'curriculums' => [
             PermissionAction::Read,
@@ -316,6 +319,33 @@ class RolePermissionSeeder extends Seeder
         'pmb_reports' => [PermissionAction::Read, PermissionAction::Export],
         'pmb_communication' => [PermissionAction::Publish, PermissionAction::Update],
         'pmb_audit' => [PermissionAction::Read],
+
+        // Modul KEU — Administrasi Keuangan Mahasiswa (app/Modules/Finance,
+        // katalog lengkap Modules\Finance\Support\KeuPermission). `invoices`
+        // di atas sudah ada sejak sebelum KEU dan diperluas.
+        'finance_dashboard' => [PermissionAction::Read],
+        'fee_components' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'fee_rates' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Approve],
+        'billing_runs' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Approve],
+        'invoice_adjustments' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Approve],
+        'installments' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Approve],
+        'penalties' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Approve],
+        'financial_aid' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Approve],
+        'vouchers' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'ukt' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Approve],
+        'payment_channels' => [PermissionAction::Read, PermissionAction::Update],
+        'payment_transactions' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Approve],
+        'cashier_sessions' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Approve],
+        'reconciliations' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Finalize],
+        'refunds' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Approve, PermissionAction::Finalize],
+        'student_deposits' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update],
+        'finance_clearance' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Approve],
+        'finance_reports' => [PermissionAction::Read, PermissionAction::Export],
+        'finance_settings' => [PermissionAction::Read, PermissionAction::Update],
+        // Layanan mandiri keuangan mahasiswa — selalu di-resolve dari $user->student.
+        'student_finance' => [PermissionAction::Read, PermissionAction::Create],
+        // Cekal SIAKAD (A.8): baca status untuk BAAK.
+        'academic_blocks' => [PermissionAction::Read],
     ];
 
     public function run(): void

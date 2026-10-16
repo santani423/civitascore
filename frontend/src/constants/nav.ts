@@ -26,6 +26,8 @@ import {
 import type { NavItem } from '@/types/navigation'
 import { ROUTES } from '@/constants/routes'
 import { PMB_NAV_ITEMS } from '@/pmb/adminNav'
+import { KEU_NAV_ITEM } from '@/keu/adminNav'
+import { KEU } from '@/keu/routes'
 
 const DASHBOARD_ITEM: NavItem = { label: 'Dashboard', path: ROUTES.dashboard, icon: LayoutDashboard }
 
@@ -102,16 +104,8 @@ export const TENANT_BUSINESS_NAV_ITEMS: NavItem[] = [
       { label: 'Data Tenaga Kependidikan', path: ROUTES.sdm.tendik, permission: ['hr_staff.read', 'hr_employees.read'] },
     ],
   },
-  {
-    label: 'Keuangan',
-    path: ROUTES.keuangan.tagihan,
-    icon: Wallet,
-    children: [
-      { label: 'Tagihan', path: ROUTES.keuangan.tagihan, permission: 'invoices.read' },
-      { label: 'Pembayaran', path: ROUTES.keuangan.pembayaran, permission: 'invoices.read' },
-      { label: 'Beasiswa', path: ROUTES.keuangan.beasiswa, permission: 'scholarships.read' },
-    ],
-  },
+  // Administrasi Keuangan Mahasiswa (app/Modules/Finance, Modul KEU)
+  KEU_NAV_ITEM,
   { label: 'Skripsi', path: ROUTES.skripsi, icon: ScrollText, permission: 'theses.read' },
   { label: 'Magang dan MBKM', path: ROUTES.magangMbkm, icon: Handshake, permission: 'internships.read' },
   { label: 'Perpustakaan', path: ROUTES.perpustakaan, icon: Library, permission: 'books.read' },
@@ -193,6 +187,7 @@ export const PORTAL_NAV_ITEMS: NavItem[] = [
     ],
   },
   { label: 'Ujian', path: ROUTES.portal.ujian, icon: ClipboardCheck, permission: 'exam_participation.read' },
+  { label: 'Keuangan', path: KEU.portal.home, icon: Wallet, permission: 'student_finance.read' },
   { label: 'Kalender', path: ROUTES.portal.kalender, icon: CalendarDays, permission: 'student_portal.read' },
   { label: 'Pengajuan', path: ROUTES.portal.pengajuan, icon: FileText, permission: 'student_requests.read' },
   { label: 'Pengumuman', path: ROUTES.portal.pengumuman, icon: Megaphone, permission: 'student_portal.read' },

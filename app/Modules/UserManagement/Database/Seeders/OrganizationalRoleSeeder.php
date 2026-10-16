@@ -4,6 +4,7 @@ namespace Modules\UserManagement\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
+use Modules\Finance\Support\KeuPermission;
 use Modules\UserManagement\Models\Permission;
 use Modules\UserManagement\Models\Role;
 
@@ -49,6 +50,8 @@ class OrganizationalRoleSeeder extends Seeder
         'student' => 'Mahasiswa',
         'employee' => 'Pegawai',
         'finance_administrator' => 'Bagian Keuangan',
+        'finance_manager' => 'Kepala Bagian Keuangan',
+        'finance_cashier' => 'Kasir Keuangan',
         'hr_administrator' => 'Bagian SDM',
         'library_administrator' => 'Pustakawan',
         'auditor' => 'Auditor',
@@ -215,6 +218,9 @@ class OrganizationalRoleSeeder extends Seeder
             'hr_reports.export',
         ],
         'library_administrator' => ['file_uploads.read', 'file_uploads.delete', 'books.read'],
+        // Peran KEU baru; izin KEU seluruh peran ditambahkan dari KeuPermission::roles() di run().
+        'finance_manager' => ['approval_requests.read', 'file_uploads.read', 'scholarships.read', ...self::PMB_FINANCE],
+        'finance_cashier' => [],
         'auditor' => [
             ...self::HR_READ, 'hr_reports.export',
             'audit_logs.read', 'approval_requests.read',
@@ -264,7 +270,7 @@ class OrganizationalRoleSeeder extends Seeder
             );
 
             $permissionIds = Permission::query()
-                ->whereIn('slug', self::ROLE_PERMISSIONS[$slug])
+                ->whereIn('slug', array_values(array_unique([...self::ROLE_PERMISSIONS[$slug], ...(KeuPermission::roles()[$slug] ?? [])])))
                 ->pluck('id');
 
             $role->permissions()->sync($permissionIds);

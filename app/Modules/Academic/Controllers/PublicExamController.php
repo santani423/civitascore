@@ -17,6 +17,7 @@ use Modules\Academic\Requests\AnswerExamAttemptRequest;
 use Modules\Academic\Requests\RecordExamViolationRequest;
 use Modules\Academic\Resources\PublicExamResource;
 use Modules\Academic\Resources\StudentExamAttemptResource;
+use Modules\Academic\Services\AcademicBlockService;
 use Modules\Academic\Services\ExamService;
 
 /**
@@ -29,7 +30,7 @@ use Modules\Academic\Services\ExamService;
  */
 class PublicExamController extends Controller
 {
-    public function __construct(private readonly ExamService $exams) {}
+    public function __construct(private readonly ExamService $exams, private readonly AcademicBlockService $blocks) {}
 
     public function show(string $accessToken): JsonResponse
     {
@@ -44,6 +45,8 @@ class PublicExamController extends Controller
 
         $exam = $this->exams->findByAccessToken($accessToken);
         $student = $this->exams->resolveStudentByNim($data['nim']);
+        // Cekal ujian (A.8, mis. cekal keuangan KEU) juga berlaku pada jalur ujian publik berbasis NIM.
+        $this->blocks->assertAllowed($student, 'exam');
         $result = $this->exams->startPublicAttempt($exam, $student);
 
         return ApiResponse::success(

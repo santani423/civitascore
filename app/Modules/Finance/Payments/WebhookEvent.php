@@ -1,0 +1,13 @@
+<?php
+
+namespace Modules\Finance\Payments;
+
+final class WebhookEvent
+{
+    /** @param  array<string, mixed>  $payload */
+    public function __construct(
+        public readonly string $eventId,
+        public readonly string $providerReference,
+        public readonly array $payload,
+    ) {}
+}

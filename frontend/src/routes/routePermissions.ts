@@ -2,6 +2,7 @@ import { NAV_ITEMS, PLATFORM_NAV_ITEMS, PORTAL_NAV_ITEMS } from '@/constants/nav
 import { ROUTES } from '@/constants/routes'
 import type { NavItem } from '@/types/navigation'
 import { PMB_DETAIL_ROUTE_PERMISSIONS } from '@/pmb/adminNav'
+import { KEU_DETAIL_ROUTE_PERMISSIONS } from '@/keu/adminNav'
 
 /**
  * `path -> permission` derived straight from the nav items that already
@@ -52,7 +53,6 @@ const DETAIL_ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   [ROUTES.portal.mataKuliahDetail]: 'student_portal.read',
   [ROUTES.portal.tugasDetail]: 'student_portal.read',
   [ROUTES.akademik.kelasSayaDetail]: ['course_materials.read', 'assignments.read'],
-  [ROUTES.keuangan.tagihanDetail]: 'invoices.read',
   [ROUTES.keuangan.beasiswaDetail]: 'scholarships.read',
   [ROUTES.skripsiDetail]: 'theses.read',
   [ROUTES.magangMbkmDetail]: 'internships.read',
@@ -61,7 +61,7 @@ const DETAIL_ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   [ROUTES.pengumumanDetail]: 'announcements.read',
 }
 
-for (const [path, permission] of Object.entries({ ...DETAIL_ROUTE_PERMISSIONS, ...PMB_DETAIL_ROUTE_PERMISSIONS })) {
+for (const [path, permission] of Object.entries({ ...DETAIL_ROUTE_PERMISSIONS, ...PMB_DETAIL_ROUTE_PERMISSIONS, ...KEU_DETAIL_ROUTE_PERMISSIONS })) {
   routePermissions.set(path, permission)
 }
 

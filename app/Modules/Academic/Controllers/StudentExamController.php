@@ -23,6 +23,7 @@ use Modules\Academic\Requests\AnswerExamAttemptRequest;
 use Modules\Academic\Requests\RecordExamViolationRequest;
 use Modules\Academic\Resources\StudentExamAttemptResource;
 use Modules\Academic\Resources\StudentExamResource;
+use Modules\Academic\Services\AcademicBlockService;
 use Modules\Academic\Services\ExamService;
 
 /**
@@ -39,6 +40,7 @@ class StudentExamController extends Controller
     public function __construct(
         private readonly ExamService $exams,
         private readonly ExamParticipationPolicy $policy,
+        private readonly AcademicBlockService $blocks,
     ) {}
 
     public function index(): JsonResponse
@@ -115,6 +117,9 @@ class StudentExamController extends Controller
 
         $krsItem = $this->exams->resolveEligibleKrsItem($exam, $student);
         abort_unless($this->policy->startOwn($user, $krsItem), 403);
+
+        // Cekal ujian (A.8, mis. cekal keuangan KEU) — dicek di server saat mulai attempt (BR-SIA-CKL-07).
+        $this->blocks->assertAllowed($student, 'exam');
 
         $this->exams->assertWithinSchedule($exam);
 

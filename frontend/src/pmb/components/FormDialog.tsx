@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -36,13 +36,15 @@ export interface FormDialogProps {
   onSubmit: (values: Record<string, unknown>) => Promise<unknown>
   description?: string
   wide?: boolean
+  /** Konten tambahan di atas field (mis. pemilih mahasiswa) — opsional. */
+  prepend?: ReactNode
 }
 
 /**
  * Formulir modal generik berbasis definisi field — dipakai halaman admin
  * CRUD. Galat validasi Laravel dipetakan ke field; galat lain di atas.
  */
-export function FormDialog({ open, title, fields, initial, submitLabel = 'Simpan', onClose, onSubmit, description, wide }: FormDialogProps) {
+export function FormDialog({ open, title, fields, initial, submitLabel = 'Simpan', onClose, onSubmit, description, wide, prepend }: FormDialogProps) {
   const [values, setValues] = useState<Record<string, unknown>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
@@ -126,6 +128,7 @@ export function FormDialog({ open, title, fields, initial, submitLabel = 'Simpan
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {description && <p className="text-sm text-ink-secondary">{description}</p>}
         {formError && <Alert variant="danger">{formError}</Alert>}
+        {prepend}
         {fields.filter((f) => !f.visible || f.visible(values)).map((field) => {
           const common = { label: field.label + (field.required ? ' *' : ''), hint: field.hint, error: fieldError(field.name) }
           const value = values[field.name]
