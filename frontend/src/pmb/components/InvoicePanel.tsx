@@ -112,7 +112,7 @@ export function InvoicePanel({ invoice, onChanged, allowInstallment = false }: {
 }
 
 function TransactionInstructions({ transaction: t, onProof, onCancel, onRefresh }: { transaction: Transaction; onProof: () => void; onCancel: () => void; onRefresh: () => void }) {
-  // Backend: [{title, steps[]}] per kanal (PaymentService::manualInstructions, MidtransGateway::instructions).
+  // Backend: [{title, steps[]}] per kanal (PaymentService::manualInstructions, XenditGateway::instructions).
   const blocks = Array.isArray(t.instructions) ? (t.instructions as Array<{ title?: string; steps?: string[] }>) : []
 
   return (

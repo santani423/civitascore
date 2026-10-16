@@ -1,7 +1,9 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Modules\Academic\Enums\AcademicBlockStatus;
 use Modules\Academic\Models\AcademicBlock;
 use Modules\Academic\Models\AcademicBlockHistory;
@@ -148,13 +150,61 @@ test('a provider amount mismatch is flagged for reconciliation instead of being 
 test('online channels without a configured provider are never offered or accepted', function () {
     $world = keuWorld();
     $invoice = keuInvoice($world);
-    $channel = keuChannel($world, ['provider' => 'midtrans']);
+    $channel = keuChannel($world, ['provider' => 'xendit']);
 
     $this->actingAs($world['user'])->withHeaders(portalHeaders($world))->getJson('/api/v1/student/finance/channels')
         ->assertApiSuccess()->assertJsonCount(0, 'data.online')->assertJsonPath('data.manual_transfer.enabled', true);
     $this->withHeaders(['Idempotency-Key' => 'k-2'])->postJson('/api/v1/student/finance/payments/online', ['payment_channel_id' => $channel->id, 'target_type' => 'invoice', 'target_id' => $invoice->id])
         ->assertApiError(409)->assertJsonPath('errors.code', 'CHANNEL_NOT_CONNECTED');
     expect(PaymentTransaction::query()->count())->toBe(0);
+});
+
+test('xendit invoices are limited to the chosen channel, expired on cancel, and settled once through the shared callback endpoint', function () {
+    config(['services.xendit.secret_key' => 'xnd_development_TEST', 'services.xendit.webhook_token' => 'cb-token-TEST']);
+    app()->forgetInstance(GatewayRegistry::class);
+    $world = keuWorld();
+    $invoice = keuInvoice($world, '500000');
+    $channel = keuChannel($world, ['provider' => 'xendit', 'method' => 'va', 'bank_code' => 'bni']);
+    $paid = false;
+    $created = 0;
+    Http::fake(function (HttpRequest $request) use (&$paid, &$created) {
+        if (str_ends_with($request->url(), '/expire!')) {
+            return Http::response(['id' => 'inv-keu-1', 'status' => 'EXPIRED']);
+        }
+
+        if ($request->method() === 'POST' && str_ends_with($request->url(), '/v2/invoices')) {
+            $id = 'inv-keu-'.(++$created);
+
+            return Http::response(['id' => $id, 'external_id' => $request['external_id'], 'status' => 'PENDING', 'amount' => $request['amount'], 'currency' => 'IDR',
+                'invoice_url' => "https://checkout-staging.xendit.co/web/{$id}", 'expiry_date' => now()->addDay()->toIso8601ZuluString(),
+                'available_banks' => [['bank_code' => 'BNI', 'collection_type' => 'POOL']]]);
+        }
+
+        return Http::response(['id' => 'inv-keu-2', 'status' => $paid ? 'PAID' : 'PENDING', 'amount' => 500000, 'paid_amount' => 500000, 'currency' => 'IDR', 'paid_at' => now()->toIso8601ZuluString()]);
+    });
+    $headers = portalHeaders($world);
+    $body = ['payment_channel_id' => $channel->id, 'target_type' => 'invoice', 'target_id' => $invoice->id];
+
+    // Transaksi pertama digantikan transaksi baru → invoice Xendit lama di-expire.
+    $first = $this->actingAs($world['user'])->withHeaders([...$headers, 'Idempotency-Key' => 'k-x1'])->postJson('/api/v1/student/finance/payments/online', $body)
+        ->assertApiSuccess(201)->assertJsonPath('data.redirect_url', 'https://checkout-staging.xendit.co/web/inv-keu-1')->assertJsonPath('data.va_number', null)->json('data');
+    $tx = $this->withHeaders([...$headers, 'Idempotency-Key' => 'k-x2'])->postJson('/api/v1/student/finance/payments/online', $body)->assertApiSuccess(201)->json('data');
+    Http::assertSent(fn (HttpRequest $r) => str_ends_with($r->url(), '/invoices/inv-keu-1/expire!'));
+    Http::assertSent(fn (HttpRequest $r) => str_ends_with($r->url(), '/v2/invoices') && $r['payment_methods'] === ['BNI'] && $r['amount'] === 500000 && $r['external_id'] === 'KEU-'.$tx['id']);
+    expect(PaymentTransaction::query()->find($first['id'])->status)->toBe(TransactionStatus::Cancelled);
+
+    $payload = ['id' => 'inv-keu-2', 'external_id' => 'KEU-'.$tx['id'], 'status' => 'PAID', 'amount' => 500000, 'paid_amount' => 500000, 'currency' => 'IDR', 'paid_at' => now()->toIso8601ZuluString()];
+    $this->flushHeaders();
+    $this->postJson('/api/v1/webhooks/xendit', $payload, ['x-callback-token' => 'salah'])->assertStatus(401);
+    expect(PaymentTransaction::query()->find($tx['id'])->status)->toBe(TransactionStatus::Pending);
+
+    $paid = true;
+    $this->postJson('/api/v1/webhooks/xendit', $payload, ['x-callback-token' => 'cb-token-TEST'])->assertOk();
+    $this->postJson('/api/v1/webhooks/xendit', $payload, ['x-callback-token' => 'cb-token-TEST'])->assertOk()->assertJsonPath('message', 'Sudah diproses.');
+
+    expect(PaymentTransaction::query()->find($tx['id'])->status)->toBe(TransactionStatus::Success)
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::Paid)
+        ->and(Payment::query()->where('invoice_id', $invoice->id)->count())->toBe(1);
 });
 
 test('activating production online channels is limited by the package quota while offline and sandbox are not counted', function () {

@@ -135,7 +135,7 @@ function TransactionsTab() {
       <AdminList<Transaction & { invoice: { id: string; number: string | null; type: string | null }; applicant: string | null; registration_number: string | null; recheck_attempts: number }> path="transactions" rowKey={(r) => r.id} itemLabel="transaksi"
         filters={[
           { name: 'status', label: 'Status', type: 'select', options: ['created', 'pending', 'success', 'failed', 'expired', 'cancelled', 'refunded'].map((v) => ({ value: v, label: statusLabel(v) })) },
-          { name: 'provider', label: 'Penyedia', type: 'select', options: ['manual', 'cashier', 'midtrans'].map((v) => ({ value: v, label: v })) },
+          { name: 'provider', label: 'Penyedia', type: 'select', options: ['manual', 'cashier', 'xendit'].map((v) => ({ value: v, label: v })) },
           { name: 'date_from', label: 'Dari', type: 'date' }, { name: 'date_to', label: 'Sampai', type: 'date' },
         ]}
         columns={[
@@ -205,7 +205,7 @@ function ReconciliationTab() {
           { header: 'Penyedia', cell: (r) => r.provider }, { header: 'Cocok', cell: (r) => `${r.matched_items} / ${r.total_items}` },
           { header: 'Status', cell: (r) => <StatusBadge status={r.status} /> },
         ]} />
-      <FormDialog open={creating} title="Batch rekonsiliasi" description="Gateway: settlement ditarik otomatis. Transfer manual: unggah mutasi bank setelah batch dibuat." fields={[{ name: 'provider', label: 'Penyedia', type: 'select', required: true, options: [{ value: 'manual', label: 'Transfer bank (mutasi)' }, { value: 'midtrans', label: 'Midtrans' }] }, { name: 'statement_date', label: 'Tanggal', type: 'date', required: true }]} onClose={() => setCreating(false)} onSubmit={async (v) => { const b = await pmbAdmin.post<{ id: string }>('reconciliation-batches', v); setReload(reload + 1); setBatchId(b.id) }} />
+      <FormDialog open={creating} title="Batch rekonsiliasi" description="Xendit: deteksi transaksi ganda dan selisih (settlement tidak ditarik otomatis). Transfer manual: unggah mutasi bank setelah batch dibuat." fields={[{ name: 'provider', label: 'Penyedia', type: 'select', required: true, options: [{ value: 'manual', label: 'Transfer bank (mutasi)' }, { value: 'xendit', label: 'Xendit' }] }, { name: 'statement_date', label: 'Tanggal', type: 'date', required: true }]} onClose={() => setCreating(false)} onSubmit={async (v) => { const b = await pmbAdmin.post<{ id: string }>('reconciliation-batches', v); setReload(reload + 1); setBatchId(b.id) }} />
       {batchId && <BatchModal id={batchId} onClose={() => { setBatchId(null); setReload(reload + 1) }} />}
     </>
   )

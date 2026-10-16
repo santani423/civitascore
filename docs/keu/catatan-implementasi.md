@@ -31,13 +31,13 @@ Cakupan yang dibangun: komponen biaya & tabel tarif berversi, penerbitan tagihan
 | Model & enum | `Finance/Models` (34), `Finance/Enums` (33), `Academic/Models/AcademicBlock*`, `Academic/Enums/{AcademicBlockStatus,BlockExemptionStatus}` | Semua model `TenantScoped` + ULID. Enum ber-`label()` Bahasa Indonesia. |
 | Layanan domain | `Finance/Services` (27) | Seluruh aturan bisnis; controller tipis. Inti: `InvoiceLedger` (satu-satunya penghitung status), `PaymentPostingService` (satu-satunya jalur uang masuk), `BillingService`, `TariffResolver`, `AdjustmentService`, `DepositService`, `ClearanceService`. |
 | Cekal SIAKAD | `Academic/Services/AcademicBlockService.php` | Simpan/cabut cekal idempoten, dispensasi per layanan, riwayat append-only, `assertAllowed()` di titik layanan. |
-| Penyedia pembayaran | `Finance/Payments` | Kontrak `PaymentGateway`, `GatewayRegistry`, adapter `MidtransGateway`. |
+| Penyedia pembayaran | `Finance/Payments` | Kontrak `PaymentGateway`, `GatewayRegistry`, adapter `XenditGateway` (Xendit Invoice API). |
 | Pendukung | `Finance/Support` | `Money` (hitung dalam sen), `FinanceNumbering` (nomor berurutan per tenant), `Approvals` (SoD), `KeuPermission` (katalog izin & peran), `KeuSettings`, `Presenter`, `AuditMask`. |
 | HTTP | `Finance/Routes/api.php`, `Finance/Controllers/{Admin,Student}`, `WebhookController`, `ReceiptController` | ±150 endpoint: admin `/api/v1/finance/*`, mahasiswa `/api/v1/student/finance/*`, webhook publik `POST /api/v1/finance/webhooks/payments/{provider}`. |
 | Konsol & jadwal | `Finance/Console/{KeuInstallCommand,KeuDailyCommand,KeuRecheckPaymentsCommand}`, `routes/console.php` | `keu:install`, `keu:daily` (00:30), `keu:recheck-payments` (tiap 10 menit). |
 | Event & listener | `Finance/Events/StudentFinanceChanged`, `Finance/Listeners/*`, `Academic/Events/KrsSubmissionApproved` | Evaluasi ulang cekal saat kewajiban berubah; tagihan SKS saat KRS disetujui. |
 | Tampilan | `Finance/Views/pdf/receipt.blade.php` | Kuitansi PDF (dompdf). |
-| Konfigurasi | `config/keu.php`, `.env.example` (`KEU_*`) | Kuota kanal per paket, kredensial Midtrans. |
+| Konfigurasi | `config/keu.php`, `config/services.php`, `.env.example` (`XENDIT_*`) | Kuota kanal per paket, kredensial Xendit. |
 | Frontend | `frontend/src/keu` | `routes.ts`, `api.ts`, `types.ts`, `components.tsx`, `permissions.ts`, `lookups.ts`, `columns.tsx`, `statementCsv.ts`, `adminNav.ts`, `AdminRoutes.tsx`, `pages/admin/*` (9 berkas, 24 halaman), `pages/portal/PortalFinancePages.tsx`. |
 | Tes | `Finance/Tests/Feature/Keu*Test.php`, `tests/Helpers/Keu.php` | 41 tes KEU baru (lihat §11). |
 
@@ -101,7 +101,7 @@ Kunci unik pencegah duplikasi: `invoice_items.active_key` (mahasiswa:semester:ko
 | IMP-03 | Kepemilikan cekal | Tabel cekal milik SIAKAD (`academic_blocks*`). Tabel aturan generik `academic_block_rules` **belum** dibuat; aturan keuangan di `finance_clearance_rules`. |
 | IMP-04 | Layanan yang dapat dicekal | Hanya `krs` dan `exam` (`AcademicBlockService::ENFORCED_SERVICES`) yang ditegakkan di server. Nilai, transkrip, yudisium, wisuda tercantum di katalog tetapi **belum ditegakkan**, sehingga tidak dapat dipilih pada aturan cekal KEU. |
 | IMP-05 | Kuota kanal | Urutan: penimpaan Super Admin (`keu.payment_channels.limit_override`) → `subscription_plans.limits.keu_payment_channels` → `config/keu.php` per kode paket → bawaan 3. Nilai acuan Growth/Business 3, Professional 4, Premium 5, Enterprise 6 **tidak diubah**. Paket CivitasOne saat ini (`trial/starter/professional/enterprise`) dipetakan di `config/keu.php`; keputusan final pemetaan paket tetap terbuka (rancangan Q-KEU-02). |
-| IMP-06 | Kredensial Midtrans | `KEU_MIDTRANS_*`, jatuh ke `PMB_MIDTRANS_*` bila kosong. Karena satu akun Midtrans hanya punya satu URL notifikasi di dashboard, adapter KEU mengirim header `X-Override-Notification` per transaksi ke `/api/v1/finance/webhooks/payments/midtrans`; cek ulang berkala (`keu:recheck-payments`) menjadi cadangan. **Belum diverifikasi dengan akun nyata.** |
+| IMP-06 | Payment gateway Xendit | `XENDIT_*` (dipakai bersama PMB). Satu transaksi = satu invoice Xendit yang dibatasi ke kanal pilihan (`payment_methods` dari `method` + `bank_code` kanal: VA `bca/bni/bri/mandiri/permata/bsi/cimb/bjb`, `qris`, e-wallet `ovo/dana/shopeepay/linkaja`, ritel `alfamart/indomaret`); mahasiswa membayar di halaman checkout Xendit (`redirect_url`). `external_id` = `KEU-<id transaksi>`. Satu akun Xendit hanya punya satu URL callback invoice, jadi callback masuk lewat `POST /api/v1/webhooks/xendit` dan diarahkan ke KEU menurut prefiks `KEU-`; token `x-callback-token` diverifikasi dan status dicek ulang lewat `GET /v2/invoices/{id}`; cek ulang berkala (`keu:recheck-payments`) menjadi cadangan. **Belum diverifikasi dengan akun nyata** (diuji dengan respons tiruan). |
 | IMP-07 | Impor mutasi CSV | Endpoint menerima `rows` (JSON) atau `file_upload_id` CSV, tetapi `POST /file-uploads` hanya menerima pdf/jpg/png/doc/xls. UI membaca CSV **di peramban** (`statementCsv.ts`, parser nominal sama dengan server) lalu mengirim `rows` — FileManagement tidak diubah. |
 | IMP-08 | Tingkat semester tarif | Dihitung dari tahun angkatan & semester berjalan; **cuti belum dikurangkan**. |
 | IMP-09 | Pembukaan cekal manual | Mencabut cekal; evaluasi berikutnya dapat menerbitkannya lagi bila kewajiban belum dipenuhi. Untuk pengecualian sementara gunakan dispensasi. Pesan ini ditampilkan di UI. |
@@ -152,13 +152,13 @@ Diubah lewat **Keuangan → Pengaturan Keuangan** (tercatat audit).
 
 ### 8.2 Lingkungan (`.env`)
 
-`KEU_MIDTRANS_SERVER_KEY`, `KEU_MIDTRANS_PRODUCTION`, `KEU_GATEWAY_TIMEOUT` (lihat `.env.example`). Tanpa server key, adapter tidak didaftarkan dan seluruh kanal online tampil **Belum terhubung**.
+`XENDIT_SECRET_KEY`, `XENDIT_WEBHOOK_TOKEN`, `XENDIT_BASE_URL`, `XENDIT_TIMEOUT` (lihat `.env.example`). Tanpa secret key, adapter tidak didaftarkan dan seluruh kanal online tampil **Belum terhubung**. Di Dashboard Xendit, isi URL callback *Invoices paid* dengan `<APP_URL>/api/v1/webhooks/xendit`.
 
 ## 9. Ketergantungan eksternal
 
 | Kebutuhan | Status |
 |---|---|
-| Akun & kredensial penyedia pembayaran (Midtrans) per kampus | **Belum tersedia** — adapter ditulis tetapi belum diuji terhadap API nyata (sandbox maupun produksi). |
+| Akun & kredensial Xendit | **Belum tersedia** — adapter ditulis & diuji dengan respons tiruan, belum diuji terhadap API nyata (test mode maupun live). Kredensial bersifat platform (satu akun untuk semua tenant). |
 | Integrasi bank H2H / VA langsung bank, e-commerce lain | **Belum dibangun** — hanya kontrak `PaymentGateway` yang siap untuk adapter baru. |
 | Refund otomatis via API penyedia | **Belum dibangun** — transfer refund dilakukan manual lalu dicatat. |
 | Format mutasi bank resmi tiap bank | Belum ada; impor memakai CSV generik (tanggal, keterangan, nominal, referensi). |
@@ -174,7 +174,7 @@ Diubah lewat **Keuangan → Pengaturan Keuangan** (tercatat audit).
 | Penyesuaian (naik/turun/bebas/bebas denda/void) | Selesai | |
 | Tunai & sesi kasir, kuitansi PDF | Selesai | |
 | Transfer manual + verifikasi bukti | Selesai | |
-| Pembayaran online | **Parsial / belum aktif** | Alur, webhook, idempotensi, cek ulang selesai & diuji dengan adapter palsu; adapter Midtrans belum diverifikasi; tidak aktif tanpa kredensial. |
+| Pembayaran online | **Parsial / belum aktif** | Alur, webhook, idempotensi, cek ulang selesai & diuji dengan adapter palsu; adapter Xendit belum diverifikasi dengan akun nyata; tidak aktif tanpa kredensial. |
 | Pembayaran sebagian, alokasi termin, kelebihan → deposit | Selesai | |
 | Pembalikan transaksi | Selesai | |
 | Deposit & refund | Selesai | Transfer refund manual. |

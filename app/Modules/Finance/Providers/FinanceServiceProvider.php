@@ -12,12 +12,12 @@ use Modules\Finance\Events\StudentFinanceChanged;
 use Modules\Finance\Listeners\BillCreditsOnKrsApproval;
 use Modules\Finance\Listeners\ReevaluateFinancialClearance;
 use Modules\Finance\Payments\GatewayRegistry;
-use Modules\Finance\Payments\MidtransGateway;
+use Modules\Finance\Payments\XenditGateway;
 use Modules\Finance\Support\KeuSettings;
 
 /**
  * Modul KEU — Administrasi Keuangan Mahasiswa. Adapter penyedia pembayaran
- * hanya didaftarkan bila kredensialnya ada (config/keu.php); tanpa itu
+ * (Xendit) hanya didaftarkan bila kredensialnya ada (config/services.php); tanpa itu
  * pembayaran online tidak tersedia dan sistem tidak berpura-pura terhubung.
  */
 class FinanceServiceProvider extends ServiceProvider
@@ -27,10 +27,10 @@ class FinanceServiceProvider extends ServiceProvider
         $this->app->scoped(KeuSettings::class);
         $this->app->singleton(GatewayRegistry::class, function (): GatewayRegistry {
             $registry = new GatewayRegistry;
-            $midtrans = config('keu.gateways.midtrans');
+            $xendit = config('services.xendit');
 
-            if (! empty($midtrans['server_key'])) {
-                $registry->register(new MidtransGateway((string) $midtrans['server_key'], (bool) $midtrans['is_production'], (int) ($midtrans['timeout_seconds'] ?? 10)));
+            if (! empty($xendit['secret_key'])) {
+                $registry->register(new XenditGateway((string) $xendit['secret_key'], (string) ($xendit['webhook_token'] ?? ''), (string) $xendit['base_url'], (int) $xendit['timeout']));
             }
 
             return $registry;

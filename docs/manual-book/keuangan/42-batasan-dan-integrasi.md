@@ -8,7 +8,7 @@ Lampiran ini mencatat apa yang **belum tersedia** atau **bergantung pada pihak l
 
 | Integrasi | Status | Dampak & cara kerja sementara |
 |---|---|---|
-| **Pembayaran online (VA/QRIS) melalui penyedia (Midtrans)** | Adapter tersedia, **belum diuji dengan akun nyata**; **tidak aktif** tanpa kredensial di server | Kanal online tampil **Terhubung: Belum** dan tidak ditawarkan ke mahasiswa. Gunakan tunai di loket dan transfer manual. Aktivasi memerlukan: akun penyedia kampus, kredensial dipasang administrator sistem (`KEU_MIDTRANS_*`), uji di lingkungan sandbox, lalu kanal produksi diaktifkan. |
+| **Pembayaran online (VA/QRIS/e-wallet) melalui Xendit** | Adapter tersedia, **belum diuji dengan akun nyata**; **tidak aktif** tanpa kredensial di server | Kanal online tampil **Terhubung: Belum** dan tidak ditawarkan ke mahasiswa. Gunakan tunai di loket dan transfer manual. Aktivasi memerlukan: akun penyedia kampus, kredensial dipasang administrator sistem (`XENDIT_SECRET_KEY`, `XENDIT_WEBHOOK_TOKEN`), uji dengan kunci test mode Xendit, lalu kanal produksi diaktifkan. |
 | **Bank host-to-host / VA langsung bank** | **Belum dibangun** | Gunakan transfer manual + rekonsiliasi mutasi CSV. |
 | **Refund otomatis lewat bank/penyedia** | **Belum dibangun** | Transfer refund dilakukan manual lalu dicatat. |
 | **Format mutasi khusus tiap bank** | **Belum ada** | Impor CSV generik (tanggal, keterangan, nominal, referensi) — sesuaikan kolom hasil ekspor internet banking. |

@@ -106,7 +106,7 @@ Datang ke loket kampus dan sebutkan **nomor tagihan** (`INV-…`) atau nomor pen
 
 Bila kampus mengaktifkan gateway pembayaran, pilihan seperti *Virtual Account* atau *QRIS* muncul di **Metode pembayaran**. Setelah **Buat instruksi pembayaran**, tampil nomor VA (dengan tombol salin) atau tautan **Buka QR / halaman pembayaran**. Status diperbarui otomatis setelah pembayaran; tombol **Cek status** dapat dipakai untuk memeriksa ulang.
 
-> **Perlu konfirmasi** — Integrasi gateway (Midtrans) sudah tersedia, tetapi membutuhkan kredensial dan uji coba dari kampus. Pada lingkungan tanpa gateway hanya tersedia transfer manual dan loket. Lihat [lampiran 61](61-hal-perlu-konfirmasi.md).
+> **Perlu konfirmasi** — Integrasi gateway (Xendit) sudah tersedia, tetapi membutuhkan kredensial dan uji coba dari kampus. Pada lingkungan tanpa gateway hanya tersedia transfer manual dan loket. Lihat [lampiran 61](61-hal-perlu-konfirmasi.md).
 
 ## 7. Setelah lunas
 

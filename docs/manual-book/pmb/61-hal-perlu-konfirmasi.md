@@ -8,7 +8,7 @@
 
 | # | Hal | Status di aplikasi | Yang dibutuhkan |
 |---|---|---|---|
-| E1 | Gateway pembayaran (Midtrans: VA/QRIS) | Adapter & webhook tersedia, diuji dengan respons tiruan. | Kredensial sandbox/produksi dan uji coba di sandbox Midtrans. Tanpa itu hanya **transfer manual** dan **loket** yang tersedia. |
+| E1 | Gateway pembayaran (Xendit: VA/QRIS/e-wallet) | Adapter & webhook tersedia, diuji dengan respons tiruan. | Secret key & webhook token Xendit dan uji coba di test mode Xendit. Tanpa itu hanya **transfer manual** dan **loket** yang tersedia. |
 | E2 | SMS/WhatsApp (OTP, notifikasi, broadcast SMS) | Driver `log` (tidak terkirim) dan `http` generik. | Kontrak & spesifikasi API penyedia; aktifkan `pmb.sms.enabled`. |
 | E3 | CAPTCHA (Cloudflare Turnstile) | Terintegrasi; default nonaktif. | *Site key* & *secret*. |
 | E4 | Antivirus berkas unggahan | Kontrak pemindai tersedia; bawaan belum memindai. | ClamAV atau layanan pemindai. |

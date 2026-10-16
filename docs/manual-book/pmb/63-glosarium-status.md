@@ -106,7 +106,7 @@ Daftar ini memetakan **label yang tampil di layar** ke **kode sistem** (dipakai 
 
 Hasil rekonsiliasi: `matched` (cocok), `missing_in_system` (ada di mutasi, tidak ada di sistem), `missing_in_provider` (ada di sistem, tidak ada di mutasi), `amount_mismatch` (nominal berbeda), `duplicate_payment` (pembayaran ganda).
 
-Kanal/penyedia: `manual_transfer`/`manual` (transfer + bukti), `cashier` (loket), `midtrans` (gateway).
+Kanal/penyedia: `manual_transfer`/`manual` (transfer + bukti), `cashier` (loket), `xendit` (gateway).
 
 ## 4. Ujian & seleksi
 

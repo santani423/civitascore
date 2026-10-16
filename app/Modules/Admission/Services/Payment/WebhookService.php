@@ -40,7 +40,7 @@ class WebhookService
         }
 
         $event = $this->gateways->gateway($provider)->verifyWebhook($request);
-        $headers = collect($request->headers->all())->only(['x-signature', 'x-timestamp', 'user-agent', 'content-type'])->map(fn ($v) => $v[0] ?? null)->all();
+        $headers = collect($request->headers->all())->only(['webhook-id', 'user-agent', 'content-type'])->map(fn ($v) => $v[0] ?? null)->all();
 
         if ($event === null) {
             PaymentCallback::query()->create([
@@ -83,7 +83,8 @@ class WebhookService
             return;
         }
 
-        $reference = (string) ($callback->payload['order_id'] ?? $callback->payload['provider_reference'] ?? $callback->payload['external_id'] ?? '');
+        // Xendit: `id` pada callback invoice = ID invoice = provider_reference transaksi.
+        $reference = (string) ($callback->payload['id'] ?? '');
         $transaction = PaymentTransaction::query()->withoutGlobalScopes()->where('provider', $callback->provider)->where('provider_reference', $reference)->first();
 
         if ($transaction === null) {

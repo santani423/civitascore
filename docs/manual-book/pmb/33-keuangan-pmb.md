@@ -57,7 +57,7 @@ Pada transaksi gateway yang masih *Menunggu*, klik **Cek ulang** (izin rekonsili
 
 ## 3. Transaksi
 
-Daftar semua transaksi, dengan filter **Status**, **Penyedia** (`manual`, `cashier`, `midtrans`), dan rentang tanggal. Kolom **Transaksi** menampilkan referensi: `MAN-<id>` untuk transfer manual, `CSH-<kuitansi>` untuk loket, atau referensi gateway. Untuk transaksi gateway, tombol **Callback** menampilkan riwayat notifikasi penyedia (waktu diterima, keabsahan tanda tangan, hasil pemrosesan, jumlah percobaan, galat).
+Daftar semua transaksi, dengan filter **Status**, **Penyedia** (`manual`, `cashier`, `xendit`), dan rentang tanggal. Kolom **Transaksi** menampilkan referensi: `MAN-<id>` untuk transfer manual, `CSH-<kuitansi>` untuk loket, atau referensi gateway. Untuk transaksi gateway, tombol **Callback** menampilkan riwayat notifikasi penyedia (waktu diterima, keabsahan tanda tangan, hasil pemrosesan, jumlah percobaan, galat).
 
 ![Transaksi](assets/33-06-transaksi.png)
 *Gambar 33.4 — Tab Transaksi.*
@@ -85,7 +85,7 @@ Kolom: pendaftar & nomor tagihan, pengirim (nama & bank), tanggal transfer, **no
 
 Untuk mencocokkan transaksi sistem dengan mutasi bank/settlement gateway:
 
-1. Tab **Rekonsiliasi** → **Batch baru**: pilih **Penyedia** (*Transfer bank (mutasi)* atau *Midtrans*) dan **Tanggal**, **Simpan**.
+1. Tab **Rekonsiliasi** → **Batch baru**: pilih **Penyedia** (*Transfer bank (mutasi)* atau *Xendit*) dan **Tanggal**, **Simpan**.
 2. Pada batch transfer bank, klik **Impor mutasi** dan unggah CSV/XLSX berkolom **tanggal, keterangan, nominal, referensi**. Sistem mencocokkan otomatis. Untuk gateway, settlement ditarik otomatis.
 3. Tabel item menampilkan referensi, nominal & tanggal eksternal, transaksi sistem, dan **Hasil** (*matched* atau ketidakcocokan). Untuk item yang tidak cocok, klik **Selesaikan**, pilih resolusi, dan isi catatan.
 4. Klik **Tutup batch** setelah semua item terselesaikan.

@@ -131,14 +131,14 @@ it('forbids self-approval of a selection run (separation of duties)', function (
     expect(SelectionRun::query()->withoutGlobalScopes()->find($runId)->status->value)->toBe('pending_approval');
 });
 
-it('verifies gateway webhooks and applies each payment exactly once', function (): void {
-    config(['pmb.payment.gateway' => 'midtrans', 'pmb.payment.midtrans.server_key' => 'SB-Mid-server-TEST', 'pmb.payment.midtrans.production' => false]);
+it('verifies Xendit callbacks and applies each payment exactly once', function (): void {
+    config(['services.xendit.secret_key' => 'xnd_development_TEST', 'services.xendit.webhook_token' => 'cb-token-TEST']);
     $this->app->forgetInstance(PaymentGatewayManager::class);
 
     $w = PmbWorld::create($this);
     $cfg = pmbConfigure($w);
     pmbOk($w->asStaff('admission_administrator', 'PUT', 'settings', ['values' => ['pmb.payment.channels' => [
-        ['code' => 'va_bca', 'label' => 'Virtual Account BCA', 'provider' => 'midtrans', 'admin_fee' => '0.00', 'fee_borne_by' => 'campus', 'sort' => 1, 'is_active' => true],
+        ['code' => 'va_bca', 'label' => 'Virtual Account BCA', 'provider' => 'xendit', 'admin_fee' => '0.00', 'fee_borne_by' => 'campus', 'sort' => 1, 'is_active' => true],
     ]]]));
 
     $token = pmbApplicantToken($w, 'h@example.test', 'Hadi Kusuma');
@@ -147,26 +147,33 @@ it('verifies gateway webhooks and applies each payment exactly once', function (
 
     $settled = false;
     Http::fake(function (Request $request) use (&$settled) {
-        if (str_ends_with($request->url(), '/v2/charge')) {
-            return Http::response(['status_code' => '201', 'order_id' => $request['transaction_details']['order_id'], 'transaction_status' => 'pending', 'va_numbers' => [['bank' => 'bca', 'va_number' => '12345678901']]]);
+        if ($request->method() === 'POST' && str_ends_with($request->url(), '/v2/invoices')) {
+            return Http::response(['id' => 'inv-pmb-1', 'external_id' => $request['external_id'], 'status' => 'PENDING', 'amount' => $request['amount'], 'currency' => 'IDR',
+                'invoice_url' => 'https://checkout-staging.xendit.co/web/inv-pmb-1', 'expiry_date' => now()->addDay()->toIso8601ZuluString(),
+                'available_banks' => [['bank_code' => 'BCA', 'collection_type' => 'POOL', 'bank_account_number' => '12345678901']]]);
         }
 
-        return Http::response(['status_code' => '200', 'transaction_status' => $settled ? 'settlement' : 'pending', 'fraud_status' => 'accept', 'gross_amount' => '150000.00', 'currency' => 'IDR', 'settlement_time' => now()->toDateTimeString()]);
+        return Http::response(['id' => 'inv-pmb-1', 'status' => $settled ? 'PAID' : 'PENDING', 'amount' => 150000, 'paid_amount' => 150000, 'currency' => 'IDR', 'paid_at' => now()->toIso8601ZuluString()]);
     });
 
     $tx = pmbOk($w->asApplicant($token, 'POST', "invoices/{$invoice['id']}/transactions", ['channel' => 'va_bca'], ['Idempotency-Key' => (string) Str::uuid()]))->json('data.transaction');
-    expect($tx['va_number'])->toBe('12345678901')->and($tx['status'])->toBe('pending');
+    expect($tx['va_number'])->toBe('12345678901')
+        ->and($tx['redirect_url'])->toBe('https://checkout-staging.xendit.co/web/inv-pmb-1')
+        ->and($tx['status'])->toBe('pending');
+    Http::assertSent(fn (Request $r) => str_ends_with($r->url(), '/v2/invoices') && $r['payment_methods'] === ['BCA'] && $r['amount'] === 150000
+        && $r['external_id'] === 'PMB-'.$tx['id'] && $r->hasHeader('Authorization', 'Basic '.base64_encode('xnd_development_TEST:')));
 
-    $payload = ['order_id' => $tx['id'], 'status_code' => '200', 'gross_amount' => '150000.00', 'transaction_status' => 'settlement', 'settlement_time' => now()->toDateTimeString()];
+    $payload = ['id' => 'inv-pmb-1', 'external_id' => 'PMB-'.$tx['id'], 'status' => 'PAID', 'amount' => 150000, 'paid_amount' => 150000, 'currency' => 'IDR', 'paid_at' => now()->toIso8601ZuluString()];
 
-    // Tanda tangan salah → 401, tidak mengubah apa pun.
+    // Token callback salah/tidak ada → 401, tidak mengubah apa pun.
     $this->flushHeaders();
-    $this->postJson('/api/v1/pmb/webhooks/payments/midtrans', [...$payload, 'signature_key' => str_repeat('0', 128)])->assertStatus(401);
+    $this->postJson('/api/v1/webhooks/xendit', $payload, ['x-callback-token' => 'salah'])->assertStatus(401);
+    $this->postJson('/api/v1/webhooks/xendit', $payload)->assertStatus(401);
 
+    // Endpoint bersama & endpoint modul menerima callback yang sama → diterapkan sekali.
     $settled = true;
-    $signed = [...$payload, 'signature_key' => hash('sha512', $tx['id'].'200'.'150000.00'.'SB-Mid-server-TEST')];
-    $this->postJson('/api/v1/pmb/webhooks/payments/midtrans', $signed)->assertOk();
-    $this->postJson('/api/v1/pmb/webhooks/payments/midtrans', $signed)->assertOk();
+    $this->postJson('/api/v1/webhooks/xendit', $payload, ['x-callback-token' => 'cb-token-TEST'])->assertOk();
+    $this->postJson('/api/v1/pmb/webhooks/payments/xendit', $payload, ['x-callback-token' => 'cb-token-TEST'])->assertOk();
 
     $invoiceModel = PmbInvoice::query()->withoutGlobalScopes()->findOrFail($invoice['id']);
     expect($invoiceModel->status->value)->toBe('paid')->and((string) $invoiceModel->amount_paid)->toBe('150000.00');

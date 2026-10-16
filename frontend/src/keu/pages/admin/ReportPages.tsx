@@ -155,7 +155,7 @@ function ChannelsCard() {
         fields={[
           { name: 'code', label: 'Kode', required: true }, { name: 'name', label: 'Nama tampilan', required: true },
           { name: 'category', label: 'Kategori', type: 'select', required: true, options: [{ value: 'bank', label: 'Bank (VA/H2H)' }, { value: 'ecommerce', label: 'E-commerce/payment gateway' }, { value: 'offline', label: 'Offline (loket/transfer manual)' }] },
-          { name: 'provider', label: 'Penyedia (mis. midtrans, cash, manual)', required: true },
+          { name: 'provider', label: 'Penyedia (mis. xendit, cash, manual)', required: true },
           { name: 'method', label: 'Metode', type: 'select', required: true, options: ['va', 'qris', 'ewallet', 'retail', 'biller', 'cash', 'manual_transfer'].map((v) => ({ value: v, label: v })) },
           { name: 'bank_code', label: 'Kode bank' },
           { name: 'fee_amount', label: 'Biaya admin (Rp)', type: 'number', required: true },

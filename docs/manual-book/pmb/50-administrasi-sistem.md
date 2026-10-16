@@ -75,8 +75,8 @@ Tambahkan cron:
 | `PMB_STORAGE_DISK` | Disk penyimpanan berkas PMB (default `local`, privat). Unduhan selalu lewat URL bertanda tangan berumur pendek. |
 | `PMB_CAPTCHA_DRIVER` | `none` atau `turnstile` (Cloudflare Turnstile). |
 | `PMB_TURNSTILE_SITE_KEY`, `PMB_TURNSTILE_SECRET` | Kunci Turnstile. |
-| `PMB_PAYMENT_GATEWAY` | Kosong (hanya transfer manual & loket) atau `midtrans`. |
-| `PMB_MIDTRANS_SERVER_KEY`, `PMB_MIDTRANS_PRODUCTION` | Kredensial & mode Midtrans. |
+| `XENDIT_SECRET_KEY` | Secret API key Xendit (dipakai bersama modul Keuangan). Kosong = hanya transfer manual & loket. |
+| `XENDIT_WEBHOOK_TOKEN` | Token verifikasi callback Xendit (header `x-callback-token`). URL callback *Invoices paid* di Dashboard Xendit: `<APP_URL>/api/v1/webhooks/xendit`. |
 | `PMB_SMS_DRIVER` | `log` (hanya dicatat, tidak terkirim) atau `http` (penyedia generik). |
 | `PMB_SMS_HTTP_ENDPOINT`, `PMB_SMS_HTTP_TOKEN` | Endpoint & token penyedia SMS/WA. |
 | `PMB_CBT_WEBHOOK_SECRET` | Rahasia HMAC untuk sistem CBT eksternal. |
@@ -87,7 +87,7 @@ Tambahkan cron:
 
 | Endpoint | Pengaman | Fungsi |
 |---|---|---|
-| `POST webhooks/payments/{provider}` | Tanda tangan penyedia (Midtrans SHA-512) + verifikasi ulang status ke API penyedia | Notifikasi pembayaran. Callback ganda diabaikan. |
+| `POST webhooks/payments/{provider}` | Token callback Xendit (`x-callback-token`) + verifikasi ulang status ke API Xendit | Notifikasi pembayaran. Callback ganda diabaikan. |
 | `POST webhooks/cbt/{provider}` | HMAC (`PMB_CBT_WEBHOOK_SECRET`) | Nilai dari CBT eksternal. |
 | `POST integrations/leads` | Token klien staf berizin | Penerimaan *lead* dari CRM/portal mitra. |
 

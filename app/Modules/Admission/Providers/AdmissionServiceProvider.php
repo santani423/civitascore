@@ -27,8 +27,8 @@ use Modules\Admission\Listeners\SyncApprovalDecisions;
 use Modules\Admission\Outbox\Handlers;
 use Modules\Admission\Outbox\OutboxProcessor;
 use Modules\Admission\Outbox\OutboxRecorder;
-use Modules\Admission\Payments\MidtransGateway;
 use Modules\Admission\Payments\PaymentGatewayManager;
+use Modules\Admission\Payments\XenditGateway;
 use Modules\Admission\Support\PmbSettings;
 use Modules\Admission\Support\ScopeResolver;
 use Modules\FileManagement\Models\FileUpload;
@@ -52,8 +52,11 @@ class AdmissionServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentGatewayManager::class, function ($app): PaymentGatewayManager {
             $manager = new PaymentGatewayManager($app->make(PmbSettings::class));
 
-            if (config('pmb.payment.gateway') === 'midtrans' && config('pmb.payment.midtrans.server_key')) {
-                $manager->register(new MidtransGateway((string) config('pmb.payment.midtrans.server_key'), (bool) config('pmb.payment.midtrans.is_production')));
+            // Gateway online = Xendit (config/services.php); tanpa secret key hanya transfer manual & loket.
+            $xendit = config('services.xendit');
+
+            if (! empty($xendit['secret_key'])) {
+                $manager->register(new XenditGateway((string) $xendit['secret_key'], (string) ($xendit['webhook_token'] ?? ''), (string) $xendit['base_url'], (int) $xendit['timeout']));
             }
 
             return $manager;

@@ -26,14 +26,7 @@ return [
     // Kuota bila tenant tidak memiliki langganan aktif (paket acuan terendah).
     'default_payment_channel_limit' => 3,
 
-    'gateways' => [
-        // Adapter Midtrans KEU aktif hanya bila server key diisi. Tanpa
-        // kredensial, kanal online tidak dapat dipakai (hanya tunai &
-        // transfer manual) — sistem tidak pernah berpura-pura terhubung.
-        'midtrans' => [
-            'server_key' => env('KEU_MIDTRANS_SERVER_KEY', env('PMB_MIDTRANS_SERVER_KEY')),
-            'is_production' => (bool) env('KEU_MIDTRANS_PRODUCTION', env('PMB_MIDTRANS_PRODUCTION', false)),
-            'timeout_seconds' => (int) env('KEU_GATEWAY_TIMEOUT', 10),
-        ],
-    ],
+    // Payment gateway = Xendit, kredensial di config/services.php (XENDIT_*).
+    // Tanpa kredensial, kanal online tidak dapat dipakai (hanya tunai &
+    // transfer manual) — sistem tidak pernah berpura-pura terhubung.
 ];

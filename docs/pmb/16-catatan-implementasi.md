@@ -45,7 +45,7 @@ Dokumen ini mencatat **bagaimana** rancangan PMB (dokumen 01–15) diimplementas
 - **Data sensitif**: NIK, paspor, nama ibu, KIP, rekening refund, jawaban sensitif dienkripsi; tampil tersamar; pembukaan nilai asli wajib tujuan & tercatat (`pmb_sensitive_access_logs`).
 - **Berkas**: deteksi MIME via `finfo`, re-encode gambar, validasi PDF, path per tenant, `VirusScanner`, unduhan hanya lewat URL bertanda tangan berumur pendek.
 - **Idempotensi**: header `Idempotency-Key` disimpan di DB 24 jam (replay identik; kunci dipakai ulang dengan isi berbeda → 422).
-- **Webhook**: tanda tangan SHA-512 Midtrans + verifikasi ulang status ke API penyedia; callback duplikat → no-op.
+- **Webhook**: token `x-callback-token` Xendit (`XENDIT_WEBHOOK_TOKEN`) + verifikasi ulang status ke API penyedia (`GET /v2/invoices/{id}`); callback duplikat → no-op. URL callback bersama PMB & KEU: `POST /api/v1/webhooks/xendit` (diarahkan menurut prefiks `external_id` `PMB-`/`KEU-`).
 - **Ekspor**: alasan wajib, dicatat, hanya dapat diunduh pemiliknya, kedaluwarsa 24 jam; kolom CSV diawali `= + - @` dinetralkan.
 
 ## 4. Operasional
@@ -54,14 +54,14 @@ Dokumen ini mencatat **bagaimana** rancangan PMB (dokumen 01–15) diimplementas
 2. Seeder permission & role: `php artisan db:seed --class="Modules\\UserManagement\\Database\\Seeders\\RolePermissionSeeder"` lalu `OrganizationalRoleSeeder` (role baru: `admission_administrator`, `admission_approver`, `admission_verifier`, `admission_selection_committee`, `admission_registrar`).
 3. Data awal per kampus: `php artisan pmb:install {kode_kampus?}` — jenis dokumen default (04 §E.2), sistem kuliah, alur persetujuan default. Aman diulang.
 4. Penjadwal: `* * * * * php artisan schedule:run` (menjalankan `pmb:tick` & `pmb:daily`). Worker antrean opsional.
-5. Variabel lingkungan: lihat blok `PMB_*` di `.env.example` dan `VITE_PMB_UNIVERSITY_CODE` di `frontend/.env.example`.
+5. Variabel lingkungan: lihat blok `XENDIT_*` & `PMB_*` di `.env.example` dan `VITE_PMB_UNIVERSITY_CODE` di `frontend/.env.example`.
 6. Urutan konfigurasi admin: Jalur & Dokumen → Template Formulir (publikasi) → Skema Seleksi (kunci) → Periode → Gelombang → Gelombang-jalur → Kuota → Persyaratan dokumen → Biaya → Konten legal (Kebijakan Privasi & Ketentuan) → Publikasi periode (daftar periksa).
 
 ## 5. Ketergantungan eksternal / belum terverifikasi
 
 | Butir | Status | Yang dibutuhkan |
 |---|---|---|
-| Gateway Midtrans | Adapter lengkap & teruji dengan respons tiruan (HTTP fake) | Kredensial sandbox/produksi + uji di sandbox Midtrans |
+| Gateway Xendit (Invoice API: VA, QRIS, e-wallet, ritel) | Adapter lengkap & teruji dengan respons tiruan (HTTP fake) | Secret key & webhook token + uji di test mode Xendit |
 | SMS/WhatsApp | Driver `log` & `http` generik | Kontrak & spesifikasi API penyedia |
 | CAPTCHA Turnstile | Terintegrasi | Site key & secret |
 | Antivirus | Kontrak `VirusScanner`; terpasang `NullVirusScanner` | ClamAV/penyedia pemindai |

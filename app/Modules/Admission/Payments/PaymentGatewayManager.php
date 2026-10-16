@@ -5,7 +5,7 @@ namespace Modules\Admission\Payments;
 use Modules\Admission\Support\PmbSettings;
 
 /**
- * Menentukan adapter gateway aktif (config pmb.payment.gateway) dan daftar
+ * Menentukan adapter gateway aktif (Xendit, config services.xendit) dan daftar
  * kanal tenant (`pmb.payment.channels`, BR-17). Kanal `manual_transfer` &
  * `cashier` tidak memerlukan gateway.
  */

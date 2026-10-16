@@ -90,7 +90,7 @@ Kartu **Kanal pembayaran** menampilkan:
 
 Langkah menambah kanal online:
 
-1. Klik **Kanal**, isi **Kode**, **Nama tampilan**, **Kategori** (Bank/E-commerce/Offline), **Penyedia** (mis. `midtrans`), **Metode** (`va`, `qris`, …), **Kode bank** (untuk VA Midtrans: `bni`, `bri`, `bca`, `permata`, `cimb`, atau `mandiri`), **Biaya admin** dan **Biaya ditanggung**, **Masa berlaku instruksi (menit)**, **Lingkungan**, **Instruksi pembayaran**.
+1. Klik **Kanal**, isi **Kode**, **Nama tampilan**, **Kategori** (Bank/E-commerce/Offline), **Penyedia** (`xendit` untuk kanal online), **Metode** (`va`, `qris`, `ewallet`, `retail`), **Kode bank/penyedia** (VA: `bca`, `bni`, `bri`, `mandiri`, `permata`, `bsi`, `cimb`, `bjb`; e-wallet: `ovo`, `dana`, `shopeepay`, `linkaja`; ritel: `alfamart`, `indomaret`), **Biaya admin** dan **Biaya ditanggung**, **Masa berlaku instruksi (menit)**, **Lingkungan**, **Instruksi pembayaran**.
 2. Klik **Simpan**. Kanal baru berstatus **Nonaktif**.
 3. Klik **Aktifkan**. Untuk kanal produksi yang dihitung kuota, sistem menolak bila kuota habis: *"Kuota kanal pembayaran online paket Anda sudah terpakai (x dari y). Nonaktifkan kanal lain atau tingkatkan paket."*
 4. Kanal online yang **Terhubung: Belum** tidak ditawarkan ke mahasiswa walaupun aktif.

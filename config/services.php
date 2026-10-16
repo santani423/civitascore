@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    /*
+    | Payment gateway pembayaran online PMB & KEU. Mode test/live mengikuti
+    | jenis secret key (xnd_development_… / xnd_production_…). Tanpa
+    | secret key, adapter tidak didaftarkan dan hanya kanal offline
+    | (transfer manual & loket) yang dapat dipakai.
+    */
+    'xendit' => [
+        'secret_key' => env('XENDIT_SECRET_KEY'),
+        // Token verifikasi callback (header x-callback-token) dari Dashboard Xendit → Webhooks.
+        'webhook_token' => env('XENDIT_WEBHOOK_TOKEN'),
+        'base_url' => env('XENDIT_BASE_URL', 'https://api.xendit.co'),
+        'timeout' => (int) env('XENDIT_TIMEOUT', 10),
+    ],
+
 ];

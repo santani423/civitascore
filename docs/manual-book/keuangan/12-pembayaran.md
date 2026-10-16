@@ -72,7 +72,7 @@ Setoran kas juga dapat dicocokkan dengan mutasi bank lewat [rekonsiliasi sumber 
 
 ## 4. Pembayaran online (VA/QRIS)
 
-> **Status:** hanya tersedia bila kampus memiliki akun penyedia pembayaran, kredensialnya dipasang administrator sistem, dan kanal online diaktifkan di **Pengaturan Keuangan**. Pada instalasi tanpa kredensial, kotak **Pembayaran online** di portal menampilkan *"Pembayaran online (virtual account/QRIS) belum tersedia di kampus Anda…"* dan mahasiswa memakai transfer manual atau tunai. Adapter penyedia (Midtrans) **belum diuji dengan akun nyata** — lihat [bab 42](42-batasan-dan-integrasi.md).
+> **Status:** hanya tersedia bila kampus memiliki akun penyedia pembayaran, kredensialnya dipasang administrator sistem, dan kanal online diaktifkan di **Pengaturan Keuangan**. Pada instalasi tanpa kredensial, kotak **Pembayaran online** di portal menampilkan *"Pembayaran online (virtual account/QRIS) belum tersedia di kampus Anda…"* dan mahasiswa memakai transfer manual atau tunai. Adapter penyedia (Xendit) **belum diuji dengan akun nyata** — lihat [bab 42](42-batasan-dan-integrasi.md).
 
 **Alur bila aktif**
 

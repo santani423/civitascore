@@ -21,13 +21,8 @@ return [
     ],
 
     'payment' => [
-        // Gateway online aktif: null (hanya transfer manual & loket) | midtrans.
-        'gateway' => env('PMB_PAYMENT_GATEWAY'),
-        'midtrans' => [
-            'server_key' => env('PMB_MIDTRANS_SERVER_KEY'),
-            'is_production' => (bool) env('PMB_MIDTRANS_PRODUCTION', false),
-        ],
-        'gateway_timeout_seconds' => 10,
+        // Gateway online = Xendit; kredensial di config/services.php (XENDIT_*).
+        // Tanpa XENDIT_SECRET_KEY hanya transfer manual & loket yang tersedia.
         // Toleransi timestamp webhook (detik) — 05 §F.4.
         'webhook_tolerance_seconds' => 300,
     ],
