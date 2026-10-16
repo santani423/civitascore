@@ -1,1 +1,0 @@
-import{n as e}from"./index-D3qoBiH3.js";import{t}from"./Badge-DPGqpi0G.js";import{n,r}from"./labels-BMiv97lE.js";var i=e();function a({status:e,label:a}){return(0,i.jsx)(t,{variant:r(e),children:a??n(e)})}export{a as t};

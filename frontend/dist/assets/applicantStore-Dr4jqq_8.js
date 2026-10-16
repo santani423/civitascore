@@ -1,1 +1,0 @@
-import{a as e,i as t}from"./cn-80CkmUdE.js";var n=e()(t(e=>({token:null,expiresAt:null,account:null,setSession:(t,n,r)=>e({token:t,expiresAt:n,account:r}),setAccount:t=>e({account:t}),clear:()=>e({token:null,expiresAt:null,account:null})}),{name:`civitasone-pmb-applicant`}));export{n as t};
