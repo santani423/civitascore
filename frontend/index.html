@@ -4,7 +4,42 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/gif" href="/favicon.gif" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Sistem Manajemen Akademik Universitas" />
+    <meta
+      name="description"
+      content="Civitas One Atma adalah sistem informasi universitas terintegrasi untuk pengelolaan akademik, administrasi, dan layanan civitas akademika dalam satu platform digital."
+    />
+    <meta name="theme-color" content="#faf9f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111012" media="(prefers-color-scheme: dark)" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Civitas One Atma" />
+    <meta property="og:title" content="Civitas One Atma — Platform Pengelolaan Universitas Terintegrasi" />
+    <meta
+      property="og:description"
+      content="Pengelolaan akademik, administrasi, dan layanan civitas akademika dalam satu platform digital yang terintegrasi."
+    />
+    <meta property="og:locale" content="id_ID" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Civitas One Atma — Platform Pengelolaan Universitas Terintegrasi" />
+    <meta
+      name="twitter:description"
+      content="Pengelolaan akademik, administrasi, dan layanan civitas akademika dalam satu platform digital yang terintegrasi."
+    />
+    <script>
+      // Apply the saved theme (or the OS preference) before first paint so there is
+      // no flash of the wrong theme. Mirrors stores/themeStore.ts + hooks/useThemeSync.ts.
+      ;(function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('civitasone-theme') || 'null')
+          var theme = saved && saved.state && saved.state.theme
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          }
+          if (theme === 'dark') document.documentElement.classList.add('dark')
+        } catch (e) {}
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

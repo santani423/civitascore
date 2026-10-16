@@ -6,11 +6,12 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Checkbox } from '@/components/ui/Checkbox'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
+import { RichTextEditor } from '@/pmb/components/RichTextEditor'
 import { describeError } from '@/pmb/components/useAction'
 import { fromLocalInput, toLocalInput } from '@/pmb/lib/format'
 import type { NormalizedApiError } from '@/services/api'
 
-export type FieldType = 'text' | 'email' | 'number' | 'date' | 'datetime' | 'textarea' | 'select' | 'checkbox' | 'file' | 'json' | 'multiselect' | 'password'
+export type FieldType = 'text' | 'email' | 'number' | 'date' | 'datetime' | 'textarea' | 'richtext' | 'select' | 'checkbox' | 'file' | 'json' | 'multiselect' | 'password'
 
 export interface FieldDef {
   name: string
@@ -96,7 +97,7 @@ export function FormDialog({ open, title, fields, initial, submitLabel = 'Simpan
             return
           }
         }
-      } else if (field.type === 'select' || field.type === 'text' || field.type === 'textarea' || field.type === 'date' || field.type === 'email') output[field.name] = raw === '' ? null : raw
+      } else if (field.type === 'select' || field.type === 'text' || field.type === 'textarea' || field.type === 'richtext' || field.type === 'date' || field.type === 'email') output[field.name] = raw === '' ? null : raw
       else output[field.name] = raw
     }
 
@@ -137,6 +138,8 @@ export function FormDialog({ open, title, fields, initial, submitLabel = 'Simpan
             case 'textarea':
             case 'json':
               return <Textarea key={field.name} {...common} rows={field.type === 'json' ? 6 : 4} value={String(value ?? '')} placeholder={field.placeholder} onChange={(e) => set(field.name, e.target.value)} className={field.type === 'json' ? 'font-mono text-xs' : undefined} />
+            case 'richtext':
+              return <RichTextEditor key={field.name} {...common} value={String(value ?? '')} onChange={(html) => set(field.name, html)} />
             case 'select':
               return <Select key={field.name} {...common} options={field.options ?? []} placeholder="Pilih..." value={String(value ?? '')} onChange={(e) => set(field.name, e.target.value)} />
             case 'checkbox':

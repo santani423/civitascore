@@ -1,4 +1,39 @@
 import type { Config } from 'tailwindcss'
+import plugin from 'tailwindcss/plugin'
+
+/**
+ * Landing page type scale (src/landing). Registered as components so it
+ * beats preflight's heading reset yet still yields to utilities, whatever
+ * order the stylesheets load in. Fonts come from `--lp-font-*` on `.lp-root`;
+ * Mandarin spacing tweaks live in src/landing/styles/landing.css.
+ */
+const landingTypography = plugin(({ addComponents }) => {
+  const display = { fontFamily: 'var(--lp-font-display)' }
+  addComponents({
+    '.lp-display': {
+      ...display,
+      fontWeight: '700',
+      fontSize: 'clamp(2.25rem, 1.35rem + 3.6vw, 4.375rem)',
+      lineHeight: '1.04',
+      letterSpacing: '-0.035em',
+      textWrap: 'balance',
+    },
+    '.lp-h2': {
+      ...display,
+      fontWeight: '700',
+      fontSize: 'clamp(1.75rem, 1.2rem + 2vw, 2.875rem)',
+      lineHeight: '1.1',
+      letterSpacing: '-0.028em',
+      textWrap: 'balance',
+    },
+    '.lp-h3': { ...display, fontWeight: '650', fontSize: 'clamp(1.125rem, 1.05rem + 0.3vw, 1.3125rem)', lineHeight: '1.3', letterSpacing: '-0.012em' },
+    '.lp-h4': { ...display, fontWeight: '650', fontSize: '1rem', lineHeight: '1.4', letterSpacing: '-0.006em' },
+    '.lp-lead': { fontSize: 'clamp(1.0625rem, 1rem + 0.3vw, 1.25rem)', lineHeight: '1.62', textWrap: 'pretty' },
+    '.lp-body': { fontSize: '1rem', lineHeight: '1.65', textWrap: 'pretty' },
+    '.lp-small': { fontSize: '0.875rem', lineHeight: '1.55' },
+    '.lp-eyebrow': { fontSize: '0.75rem', lineHeight: '1.3', fontWeight: '650', letterSpacing: '0.14em', textTransform: 'uppercase' },
+  })
+})
 
 /**
  * Brand color scale sampled from the Atma Jaya crest (docs/Logo_unika-atmajaya.gif):
@@ -66,6 +101,40 @@ const config: Config = {
           warn: 'rgb(var(--one-warn) / <alpha-value>)',
           bad: 'rgb(var(--one-bad) / <alpha-value>)',
         },
+        // Civitas One Atma landing page tokens (src/landing/styles/landing.css),
+        // scoped to `.lp-root` like the `one-*` set above.
+        lp: {
+          canvas: 'rgb(var(--lp-canvas) / <alpha-value>)',
+          surface: 'rgb(var(--lp-surface) / <alpha-value>)',
+          sunken: 'rgb(var(--lp-sunken) / <alpha-value>)',
+          elev: 'rgb(var(--lp-elev) / <alpha-value>)',
+          line: 'rgb(var(--lp-line) / <alpha-value>)',
+          strong: 'rgb(var(--lp-line-strong) / <alpha-value>)',
+          fg: 'rgb(var(--lp-fg) / <alpha-value>)',
+          muted: 'rgb(var(--lp-muted) / <alpha-value>)',
+          subtle: 'rgb(var(--lp-subtle) / <alpha-value>)',
+          brand: 'rgb(var(--lp-brand) / <alpha-value>)',
+          'brand-hover': 'rgb(var(--lp-brand-hover) / <alpha-value>)',
+          'brand-text': 'rgb(var(--lp-brand-text) / <alpha-value>)',
+          'brand-soft': 'rgb(var(--lp-brand-soft) / <alpha-value>)',
+          onbrand: 'rgb(var(--lp-onbrand) / <alpha-value>)',
+          gold: 'rgb(var(--lp-gold) / <alpha-value>)',
+          'gold-text': 'rgb(var(--lp-gold-text) / <alpha-value>)',
+          band: 'rgb(var(--lp-band) / <alpha-value>)',
+          'band-elev': 'rgb(var(--lp-band-elev) / <alpha-value>)',
+          'band-fg': 'rgb(var(--lp-band-fg) / <alpha-value>)',
+          'band-muted': 'rgb(var(--lp-band-muted) / <alpha-value>)',
+          'band-line': 'rgb(var(--lp-band-line) / <alpha-value>)',
+          ok: 'rgb(var(--lp-ok) / <alpha-value>)',
+          warn: 'rgb(var(--lp-warn) / <alpha-value>)',
+          bad: 'rgb(var(--lp-bad) / <alpha-value>)',
+          info: 'rgb(var(--lp-info) / <alpha-value>)',
+          viz1: 'rgb(var(--lp-viz-1) / <alpha-value>)',
+          viz2: 'rgb(var(--lp-viz-2) / <alpha-value>)',
+          viz3: 'rgb(var(--lp-viz-3) / <alpha-value>)',
+          ring: 'rgb(var(--lp-ring) / <alpha-value>)',
+          scrim: 'rgb(var(--lp-scrim) / <alpha-value>)',
+        },
         success: { DEFAULT: 'var(--color-success)' },
         warning: { DEFAULT: 'var(--color-warning)' },
         danger: { DEFAULT: 'var(--color-danger)' },
@@ -93,6 +162,10 @@ const config: Config = {
       borderRadius: {
         xl: '0.875rem',
         '2xl': '1.125rem',
+        'lp-sm': 'var(--lp-radius-sm)',
+        lp: 'var(--lp-radius)',
+        'lp-lg': 'var(--lp-radius-lg)',
+        'lp-xl': 'var(--lp-radius-xl)',
       },
       boxShadow: {
         card: '0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 1px rgb(0 0 0 / 0.06)',
@@ -100,6 +173,10 @@ const config: Config = {
         soft: 'var(--one-shadow-soft)',
         lift: 'var(--one-shadow-lift)',
         overlay: 'var(--one-shadow-overlay)',
+        'lp-sm': 'var(--lp-shadow-sm)',
+        'lp-md': 'var(--lp-shadow-md)',
+        'lp-lg': 'var(--lp-shadow-lg)',
+        'lp-xl': 'var(--lp-shadow-xl)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
@@ -119,7 +196,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [landingTypography],
 }
 
 export default config

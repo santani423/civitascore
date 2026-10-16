@@ -1,0 +1,1 @@
+import{s as e,u as t}from"./index-D3qoBiH3.js";import{c as n}from"./components-KgaDtOSp.js";var r=t(e(),1),i=null;function a(e=0){let[t,a]=(0,r.useState)(null);return(0,r.useEffect)(()=>{e>0&&(i=null),i??=n.get(`lookups`),i.then(a).catch(()=>{i=null})},[e]),t}function o(){i=null}var s=(e,t)=>(e??[]).map(e=>({value:e.id,label:t(e)}));export{s as n,a as r,o as t};

@@ -1,0 +1,385 @@
+/**
+ * Civitas One Atma — landing page design tokens.
+ *
+ * Every color on the landing page (sections, dialogs, dashboard mockups)
+ * resolves to one of these variables. Channels are space-separated RGB so
+ * Tailwind's opacity modifier works (`bg-lp-brand/10`).
+ *
+ * Theme source: the app-wide `.dark` class on <html> (stores/themeStore.ts),
+ * so the landing page and the application share one theme preference.
+ * Scope: `.lp-root` only — nothing here leaks into the admin app or /one.
+ *
+ * Brand: neutral warm surfaces with a burgundy accent and a restrained gold
+ * that echoes the dove-and-rays of the Atma Jaya crest.
+ */
+
+.lp-root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --lp-canvas: 250 249 247;
+  --lp-surface: 255 255 255;
+  --lp-sunken: 244 242 239;
+  --lp-elev: 255 255 255;
+  --lp-line: 232 228 223;
+  --lp-line-strong: 214 208 201;
+
+  /* Text (muted >= 7:1, subtle >= 4.5:1 on canvas) */
+  --lp-fg: 26 23 22;
+  --lp-muted: 87 81 76;
+  --lp-subtle: 115 108 102;
+
+  /* Brand — burgundy. `brand` fills (buttons), `brand-text` for accent text on surfaces. */
+  --lp-brand: 138 28 59;
+  --lp-brand-hover: 115 22 48;
+  --lp-brand-text: 138 28 59;
+  --lp-brand-soft: 248 236 239;
+  --lp-onbrand: 255 255 255;
+
+  /* Gold — decorative; `gold-text` is the text-safe step. */
+  --lp-gold: 187 122 18;
+  --lp-gold-text: 140 95 14;
+
+  /* Contrast band (security section, final CTA frame): dark in both modes. */
+  --lp-band: 28 20 24;
+  --lp-band-elev: 40 30 35;
+  --lp-band-fg: 246 241 239;
+  --lp-band-muted: 200 189 193;
+  --lp-band-line: 64 50 57;
+
+  /* Status */
+  --lp-ok: 21 128 61;
+  --lp-warn: 180 83 9;
+  --lp-bad: 194 39 45;
+  --lp-info: 37 99 168;
+
+  /* Data-viz (validated: 3 slots, all-pairs, light surface #fff) */
+  --lp-viz-1: 163 50 79;
+  --lp-viz-2: 187 122 18;
+  --lp-viz-3: 59 111 176;
+  --lp-viz-grid: 236 232 228;
+  --lp-viz-axis: 115 108 102;
+
+  --lp-ring: 138 28 59;
+
+  /* Modal backdrop — identical in both modes. */
+  --lp-scrim: 12 8 10;
+
+  /* Elevation */
+  --lp-shadow-sm: 0 1px 2px rgb(28 20 24 / 0.05);
+  --lp-shadow-md: 0 1px 2px rgb(28 20 24 / 0.04), 0 6px 16px -6px rgb(28 20 24 / 0.1);
+  --lp-shadow-lg: 0 2px 4px rgb(28 20 24 / 0.04), 0 18px 40px -12px rgb(28 20 24 / 0.16);
+  --lp-shadow-xl: 0 2px 6px rgb(28 20 24 / 0.05), 0 40px 80px -24px rgb(60 18 34 / 0.28);
+
+  /* Radius */
+  --lp-radius-sm: 0.5rem;
+  --lp-radius: 0.875rem;
+  --lp-radius-lg: 1.25rem;
+  --lp-radius-xl: 1.75rem;
+
+  /* Spacing rhythm */
+  --lp-gutter: 1rem;
+  --lp-section-y: 5rem;
+  --lp-nav-h: 4rem;
+
+  /* Typography */
+  --lp-font-sans: Inter, ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+  --lp-font-display: 'Plus Jakarta Sans', Inter, ui-sans-serif, system-ui, 'Segoe UI', sans-serif;
+}
+
+.dark .lp-root {
+  color-scheme: dark;
+
+  --lp-canvas: 17 16 18;
+  --lp-surface: 27 25 28;
+  --lp-sunken: 21 20 23;
+  --lp-elev: 35 33 37;
+  --lp-line: 46 43 49;
+  --lp-line-strong: 64 60 68;
+
+  --lp-fg: 244 241 238;
+  --lp-muted: 190 183 178;
+  --lp-subtle: 150 143 139;
+
+  --lp-brand: 176 46 82;
+  --lp-brand-hover: 196 62 98;
+  --lp-brand-text: 236 140 164;
+  --lp-brand-soft: 58 30 40;
+  --lp-onbrand: 255 255 255;
+
+  --lp-gold: 214 160 72;
+  --lp-gold-text: 228 182 98;
+
+  --lp-band: 26 19 23;
+  --lp-band-elev: 38 29 34;
+  --lp-band-fg: 246 241 239;
+  --lp-band-muted: 196 186 190;
+  --lp-band-line: 62 49 56;
+
+  --lp-ok: 92 200 130;
+  --lp-warn: 240 176 64;
+  --lp-bad: 244 112 112;
+  --lp-info: 110 160 230;
+
+  /* Data-viz (validated: 3 slots, all-pairs, dark surface #1b191c) */
+  --lp-viz-1: 196 70 106;
+  --lp-viz-2: 192 132 38;
+  --lp-viz-3: 90 143 214;
+  --lp-viz-grid: 42 39 45;
+  --lp-viz-axis: 150 143 139;
+
+  --lp-ring: 236 140 164;
+
+  --lp-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
+  --lp-shadow-md: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 20px -8px rgb(0 0 0 / 0.55);
+  --lp-shadow-lg: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 20px 44px -12px rgb(0 0 0 / 0.6);
+  --lp-shadow-xl: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 40px 90px -24px rgb(0 0 0 / 0.75);
+}
+
+@media (min-width: 640px) {
+  .lp-root {
+    --lp-gutter: 1.5rem;
+  }
+}
+@media (min-width: 768px) {
+  .lp-root {
+    --lp-section-y: 6.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .lp-root {
+    --lp-gutter: 2rem;
+    --lp-section-y: 7.5rem;
+  }
+}
+
+/* ---------- Base ---------- */
+
+.lp-root {
+  color: rgb(var(--lp-fg));
+  font-family: var(--lp-font-sans);
+  font-feature-settings: 'cv11', 'ss01';
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Mandarin: CJK-capable fonts first after the Latin faces (Noto Sans SC is loaded on demand). */
+.lp-root:lang(zh-CN) {
+  --lp-font-sans: Inter, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+  --lp-font-display: 'Plus Jakarta Sans', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', 'Hiragino Sans GB', sans-serif;
+}
+
+.lp-page {
+  min-height: 100vh;
+  background-color: rgb(var(--lp-canvas));
+  overflow-x: clip;
+}
+
+:where(.lp-root *) {
+  border-color: rgb(var(--lp-line));
+}
+
+:where(.lp-root) :focus-visible {
+  outline: 2px solid rgb(var(--lp-ring));
+  outline-offset: 2px;
+}
+
+/* On the dark contrast band the burgundy ring is too faint — use the light band ink. */
+.lp-on-band :focus-visible {
+  outline-color: rgb(var(--lp-band-fg));
+}
+
+/* Sections receive programmatic focus after in-page navigation (for screen readers); no ring needed. */
+.lp-root [data-section-focus]:focus {
+  outline: none;
+}
+
+.lp-root ::selection {
+  background-color: rgb(var(--lp-brand) / 0.18);
+}
+
+:where(.lp-container) {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: var(--lp-gutter);
+}
+
+/* Vertical padding exceeds the fixed navbar height, so sections can scroll flush to the top. */
+:where(.lp-section) {
+  padding-block: var(--lp-section-y);
+}
+
+.lp-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Typography scale ---------- */
+/* The type scale (.lp-display … .lp-eyebrow) is a Tailwind components plugin in tailwind.config.ts. */
+
+/* CJK text should not be tightly tracked, and needs a little more leading. */
+.lp-root:lang(zh-CN) .lp-display,
+.lp-root:lang(zh-CN) .lp-h2 {
+  letter-spacing: 0;
+  line-height: 1.22;
+}
+.lp-root:lang(zh-CN) .lp-h3,
+.lp-root:lang(zh-CN) .lp-h4 {
+  letter-spacing: 0;
+}
+.lp-root:lang(zh-CN) .lp-lead,
+.lp-root:lang(zh-CN) .lp-body {
+  line-height: 1.8;
+}
+.lp-root:lang(zh-CN) .lp-eyebrow {
+  letter-spacing: 0.08em;
+}
+
+/* ---------- Decorative backgrounds (used sparingly) ---------- */
+
+.lp-grid-bg {
+  background-image:
+    linear-gradient(to right, rgb(var(--lp-line) / 0.7) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--lp-line) / 0.7) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+}
+
+.lp-hero-glow {
+  background:
+    radial-gradient(60% 50% at 70% 10%, rgb(var(--lp-brand) / 0.1), transparent 70%),
+    radial-gradient(40% 40% at 15% 20%, rgb(var(--lp-gold) / 0.08), transparent 70%);
+}
+
+.lp-band-glow {
+  background:
+    radial-gradient(50% 60% at 85% 0%, rgb(176 46 82 / 0.28), transparent 70%),
+    radial-gradient(40% 50% at 0% 100%, rgb(214 160 72 / 0.1), transparent 70%);
+}
+
+.lp-dots {
+  background-image: radial-gradient(rgb(var(--lp-line-strong)) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* ---------- Motion ---------- */
+
+.lp-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--lp-delay, 0ms);
+}
+.lp-reveal[data-visible='true'] {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes lp-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+.lp-float {
+  animation: lp-float 7s ease-in-out infinite;
+}
+.lp-float-delayed {
+  animation: lp-float 8s ease-in-out 1.2s infinite;
+}
+
+@keyframes lp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.lp-tab-enter {
+  animation: lp-fade-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes lp-dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+.lp-flow-line {
+  stroke-dasharray: 4 4;
+  animation: lp-dash 1.2s linear infinite;
+}
+
+@keyframes lp-pulse-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.lp-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  animation: lp-pulse-ring 2.2s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+}
+
+/* Theme crossfade fallback when the View Transitions API is unavailable. */
+.lp-theme-switching,
+.lp-theme-switching * {
+  transition:
+    background-color 0.25s ease,
+    border-color 0.25s ease,
+    color 0.2s ease,
+    fill 0.25s ease,
+    stroke 0.25s ease !important;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.28s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .lp-root *,
+  .lp-root *::before,
+  .lp-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Utilities ---------- */
+
+.lp-no-scrollbar {
+  scrollbar-width: none;
+}
+.lp-no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media print {
+  .lp-reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
