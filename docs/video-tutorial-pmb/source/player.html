@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Video Tutorial PMB</title>
+<!--
+  Pemutar video tutorial PMB. Dibuka dengan ?v=<nama> (calon-mahasiswa | penyelenggara);
+  memuat <nama>.timeline.js hasil build_audio.mjs. window.render(t) menggambar frame pada detik t,
+  render.mjs menangkap frame demi frame lalu menggabungkannya dengan narasi.
+  Pratinjau di peramban: player.html?v=calon-mahasiswa&play  atau  &t=42.5
+-->
+<style>
+:root{
+  --primary:#166534;--primary-d:#14532d;--p50:#ecfdf3;--p100:#dcfce7;
+  --ink1:#0f172a;--ink2:#475569;--ink3:#94a3b8;--border:#e2e8f0;--border-s:#cbd5e1;--bg:#f8fafc;
+  --amber:#f59e0b;--amber-bg:#fef3c7;--amber-bd:#fcd34d;--amber-ink:#92400e;
+  --red-bg:#fee2e2;--red-bd:#fca5a5;--red-ink:#991b1b;--blue-bg:#e0f2fe;--blue-bd:#7dd3fc;--blue-ink:#075985;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1280px;height:720px;overflow:hidden;background:#0b1220;font-family:"Segoe UI",Inter,Roboto,Arial,sans-serif;color:var(--ink1)}
+#frame{position:relative;width:1280px;height:720px;overflow:hidden;background:radial-gradient(1200px 600px at 80% -10%,#dcefe2 0,#eef3f0 45%,#e9eef3 100%)}
+#top{position:absolute;left:0;top:0;right:0;height:64px;display:flex;align-items:center;gap:12px;padding:0 28px;background:rgba(255,255,255,.88);border-bottom:1px solid var(--border);z-index:5}
+#top .logo{width:36px;height:36px;border-radius:9px;background:var(--primary);display:flex;align-items:center;justify-content:center}
+#top .brand{font-weight:700;font-size:18px}
+#top .sub{color:var(--ink2);font-size:15px;padding-left:12px;border-left:1px solid var(--border-s)}
+#chip{margin-left:auto;background:var(--primary);color:#fff;font-weight:600;font-size:15px;padding:7px 14px;border-radius:999px;white-space:nowrap}
+#stage{position:absolute;left:0;top:64px;width:1280px;height:556px}
+.scene{position:absolute;inset:0;opacity:0;visibility:hidden}
+#cap{position:absolute;left:0;right:0;bottom:0;height:100px;background:#0f172a;display:flex;align-items:center;justify-content:center;padding:0 70px;z-index:5}
+#capText{color:#fff;font-size:24px;line-height:1.35;text-align:center;font-weight:500}
+#prog{position:absolute;left:0;bottom:0;height:4px;width:100%;background:rgba(255,255,255,.08);z-index:6}
+#prog i{display:block;height:100%;background:#4ade80;width:0}
+
+/* ---------- title / end ---------- */
+.hero{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 90px}
+.kicker{font-size:17px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--primary)}
+.hero h1{font-size:50px;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin-top:12px;max-width:1000px}
+.hero .lead{font-size:21px;color:var(--ink2);line-height:1.5;margin-top:16px;max-width:900px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px;max-width:1080px}
+.chips span{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border-s);border-radius:999px;padding:9px 16px;font-weight:600;font-size:17px}
+.chips span b{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:13px;align-items:center;justify-content:center}
+.endov{position:absolute;inset:0;background:linear-gradient(135deg,#166534,#14532d);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:14px;opacity:0;text-align:center;padding:0 80px}
+.endov .big{font-size:46px;font-weight:800;line-height:1.15}
+.endov .small{font-size:22px;opacity:.92;line-height:1.5}
+.endov .logo{width:84px;height:84px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center}
+
+/* ---------- flow ---------- */
+.flowwrap{position:absolute;inset:0;padding:34px 60px}
+.st{font-size:30px;font-weight:800;letter-spacing:-.01em}
+.sst{font-size:18px;color:var(--ink2);margin-top:6px;line-height:1.45}
+.flow{display:grid;gap:14px;margin-top:30px}
+.step{position:relative;background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 16px 18px;box-shadow:0 6px 20px rgba(15,23,42,.06);transition:none}
+.step .num{width:38px;height:38px;border-radius:50%;background:var(--p100);color:var(--primary);font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center}
+.step h4{font-size:18px;margin-top:10px;line-height:1.25}
+.step p{font-size:14.5px;color:var(--ink2);margin-top:6px;line-height:1.45}
+.step.on{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,101,52,.18),0 10px 26px rgba(15,23,42,.10)}
+.step.on .num{background:var(--primary);color:#fff}
+.step .who{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--primary);background:var(--p50);border:1px solid var(--p100);border-radius:999px;padding:2px 9px}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:14px;margin-top:24px}
+.tc{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px 18px;display:flex;gap:14px;box-shadow:0 6px 20px rgba(15,23,42,.06)}
+.tc .e{width:46px;height:46px;flex-shrink:0;border-radius:12px;background:var(--p50);display:flex;align-items:center;justify-content:center;font-size:24px}
+.tc h4{font-size:18px;line-height:1.25}
+.tc p{font-size:14.5px;color:var(--ink2);line-height:1.45;margin-top:5px}
+.tc.on{border-color:var(--primary);box-shadow:0 0 0 3px rgba(22,101,52,.18),0 10px 26px rgba(15,23,42,.10)}
+.tc.warn .e{background:var(--amber-bg)}
+.tc.bad .e{background:var(--red-bg)}
+
+/* ---------- shot (screenshot) ---------- */
+.split{position:absolute;inset:0;display:flex;align-items:center;gap:22px;padding:0 22px 0 24px}
+.browser{width:844px;height:530px;background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(15,23,42,.18);overflow:hidden;border:1px solid var(--border-s);flex-shrink:0;position:relative}
+.bbar{height:34px;background:#e9edf2;display:flex;align-items:center;gap:7px;padding:0 12px;border-bottom:1px solid var(--border-s)}
+.bbar i{width:11px;height:11px;border-radius:50%;display:block}
+.bbar .url{margin-left:14px;flex:1;background:#fff;border-radius:7px;height:22px;font-size:12.5px;color:var(--ink2);display:flex;align-items:center;padding:0 10px;white-space:nowrap;overflow:hidden}
+.vp{position:absolute;top:34px;left:0;width:842px;height:494px;overflow:hidden;background:var(--bg)}
+.vp img.shot{position:absolute;left:0;top:0;transform-origin:0 0;opacity:0;will-change:transform}
+.hl{position:absolute;border:3px solid var(--amber);border-radius:10px;opacity:0;box-shadow:0 0 0 5px rgba(245,158,11,.20);pointer-events:none}
+.cur{position:absolute;left:0;top:0;width:0;height:0;opacity:0;z-index:4}
+.cur svg{position:absolute;left:-4px;top:-3px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+.cur .rip{position:absolute;left:-20px;top:-20px;width:40px;height:40px;border-radius:50%;border:3px solid #22c55e;opacity:0}
+.side{flex:1;position:relative;height:500px}
+.sidecard{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px 22px;box-shadow:0 10px 30px rgba(15,23,42,.08);opacity:0}
+.sidecard .n{display:inline-flex;min-width:32px;height:32px;padding:0 10px;border-radius:999px;background:var(--primary);color:#fff;align-items:center;justify-content:center;font-weight:700;font-size:15px;margin-bottom:10px}
+.sidecard h3{font-size:21px;line-height:1.25;margin-bottom:8px}
+.sidecard p{font-size:15.5px;line-height:1.5;color:var(--ink2)}
+.sidecard ul{margin:4px 0 0 18px;font-size:15px;line-height:1.5;color:var(--ink2)}
+.sidecard ul li{margin:3px 0}
+.sidecard b{color:var(--ink1)}
+.sidecard .warn,.sidecard .tip,.sidecard .ok,.sidecard .bad{margin-top:12px;border-radius:10px;padding:9px 12px;font-size:14.5px;font-weight:600;line-height:1.42}
+.sidecard .warn{background:var(--amber-bg);border:1px solid var(--amber-bd);color:var(--amber-ink)}
+.sidecard .tip{background:var(--blue-bg);border:1px solid var(--blue-bd);color:var(--blue-ink)}
+.sidecard .ok{background:var(--p100);border:1px solid #86efac;color:#14532d}
+.sidecard .bad{background:var(--red-bg);border:1px solid var(--red-bd);color:var(--red-ink)}
+.sidecard .warn b,.sidecard .tip b,.sidecard .ok b,.sidecard .bad b{color:inherit}
+.sidecard code{font-family:Consolas,monospace;font-size:.92em;background:#f1f5f9;border-radius:4px;padding:0 4px;color:var(--ink1)}
+
+/* ---------- phones ---------- */
+.phones{position:absolute;left:24px;top:0;width:844px;height:556px;display:flex;align-items:center;justify-content:center;gap:40px}
+.phone{width:262px;height:540px;border-radius:38px;background:#111827;padding:12px;box-shadow:0 20px 50px rgba(15,23,42,.25);opacity:0}
+.phone .scr{width:238px;height:516px;border-radius:28px;overflow:hidden;background:#fff}
+.phone img{width:238px;display:block}
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="top">
+    <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/><path d="M22 10v6"/></svg></div>
+    <div class="brand">Civitas One</div>
+    <div class="sub" id="sub"></div>
+    <div id="chip"></div>
+  </div>
+  <div id="stage"></div>
+  <div id="cap"><div id="capText"></div></div>
+  <div id="prog"><i></i></div>
+</div>
+<script>
+const LOGO_SVG = (size, color) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/><path d="M22 10v6"/></svg>`;
+const CURSOR_SVG = '<svg width="26" height="30" viewBox="0 0 26 30"><path d="M3 2 L3 24 L9 18.5 L13 27.5 L17 25.8 L13.2 17 L21 17 Z" fill="#fff" stroke="#0f172a" stroke-width="2" stroke-linejoin="round"/></svg>';
+const ASSET_DIR = '../../manual-book/pmb/assets/';
+const VP_W = 842, VP_H = 494;
+
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = (x) => (x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
+const P = (lt, s, d = .5) => ease(clamp((lt - s) / d));
+const esc = (s) => String(s);
+
+function fade(el, p, dy = 18, dx = 0) { if (!el) return; el.style.opacity = p; el.style.transform = `translate(${(1 - p) * dx}px,${(1 - p) * dy}px)`; }
+
+function cardHTML(c) {
+  if (!c) return '';
+  const body = Array.isArray(c.b) ? `<ul>${c.b.map((x) => `<li>${x}</li>`).join('')}</ul>` : c.b ? `<p>${c.b}</p>` : '';
+  const extra = ['tip', 'warn', 'ok', 'bad'].map((k) => (c[k] ? `<div class="${k}">${c[k]}</div>` : '')).join('');
+  return `${c.n ? `<span class="n">${c.n}</span>` : ''}${c.t ? `<h3>${c.t}</h3>` : ''}${body}${extra}`;
+}
+
+// ---------- builders per jenis adegan ----------
+const B = {
+  title(sc) {
+    return `<div class="hero"><div class="kicker">${sc.kicker || ''}</div><h1>${sc.heading}</h1>${sc.lead ? `<p class="lead">${sc.lead}</p>` : ''}
+      <div class="chips">${(sc.items || []).map((it, i) => `<span data-i="${i}"><b>${i + 1}</b>${it.t}</span>`).join('')}</div></div>`;
+  },
+  flow(sc) {
+    const cols = sc.cols || Math.min(sc.items.length, 4);
+    return `<div class="flowwrap"><div class="st">${sc.heading}</div>${sc.lead ? `<div class="sst">${sc.lead}</div>` : ''}
+      <div class="flow" style="grid-template-columns:repeat(${cols},1fr)">${sc.items.map((it, i) => `<div class="step" data-i="${i}"><div class="num">${it.n || i + 1}</div><h4>${it.t}</h4>${it.d ? `<p>${it.d}</p>` : ''}${it.who ? `<span class="who">${it.who}</span>` : ''}</div>`).join('')}</div></div>`;
+  },
+  cards(sc) {
+    const cols = sc.cols || 2;
+    return `<div class="flowwrap"><div class="st">${sc.heading}</div>${sc.lead ? `<div class="sst">${sc.lead}</div>` : ''}
+      <div class="grid" style="grid-template-columns:repeat(${cols},1fr)">${sc.items.map((it, i) => `<div class="tc ${it.kind || ''}" data-i="${i}"><div class="e">${it.e || '•'}</div><div><h4>${it.t}</h4>${it.d ? `<p>${it.d}</p>` : ''}</div></div>`).join('')}</div></div>`;
+  },
+  shot(sc) {
+    const imgs = [...new Set([sc.img, ...sc.lines.map((l) => l.img)].filter(Boolean))];
+    sc._imgs = imgs;
+    return `<div class="split"><div class="browser"><div class="bbar"><i style="background:#f87171"></i><i style="background:#fbbf24"></i><i style="background:#4ade80"></i><div class="url">🔒&nbsp; <span class="u">${sc.url || ''}</span></div></div>
+      <div class="vp">${imgs.map((f, i) => `<img class="shot" data-i="${i}" src="${ASSET_DIR + f}">`).join('')}<div class="hls"></div><div class="cur">${CURSOR_SVG}<i class="rip"></i></div></div></div>
+      <div class="side"></div></div>`;
+  },
+  phones(sc) {
+    return `<div class="phones">${sc.items.map((it, i) => `<div class="phone" data-i="${i}"><div class="scr"><img src="${ASSET_DIR + it.img}"></div></div>`).join('')}</div><div class="split" style="pointer-events:none"><div style="width:844px;flex-shrink:0"></div><div class="side"></div></div>`;
+  },
+  end(sc) {
+    return `<div class="flowwrap"><div class="st">${sc.heading}</div>${sc.lead ? `<div class="sst">${sc.lead}</div>` : ''}
+      <div class="grid" style="grid-template-columns:repeat(${sc.cols || 2},1fr)">${sc.items.map((it, i) => `<div class="tc" data-i="${i}"><div class="e">${it.e || '✓'}</div><div><h4>${it.t}</h4>${it.d ? `<p>${it.d}</p>` : ''}</div></div>`).join('')}</div></div>
+      <div class="endov"><div class="logo">${LOGO_SVG(50, '#166534')}</div><div class="big">${sc.final || 'Terima kasih'}</div><div class="small">${sc.finalSub || ''}</div></div>`;
+  },
+};
+
+// ---------- animator per jenis adegan ----------
+// lt = waktu lokal adegan, c = waktu mulai tiap baris (lokal), k = indeks baris aktif
+function revealItems(root, sc, lt, c, sel) {
+  (sc.items || []).forEach((it, i) => {
+    const el = root.querySelector(`${sel}[data-i="${i}"]`);
+    const at = it.at == null ? 0 : it.at;
+    const t0 = at === 0 ? .15 + i * .12 : c[Math.min(at, c.length - 1)] - .1 + (it.d0 || 0);
+    fade(el, P(lt, t0, .45), 0, -26);
+  });
+}
+function focusItems(root, sc, k, sel) {
+  const f = k >= 0 ? sc.lines[k].focus : null;
+  const set = f == null ? [] : Array.isArray(f) ? f : [f];
+  root.querySelectorAll(sel).forEach((el) => el.classList.toggle('on', set.includes(+el.dataset.i)));
+}
+
+function sideCards(root, sc, lt, c) {
+  const side = root.querySelector('.side');
+  if (!side) return;
+  if (!side.dataset.b) {
+    side.innerHTML = sc.lines.map((l) => (l.card ? `<div class="sidecard">${cardHTML(l.card)}</div>` : '<div class="sidecard" style="display:none"></div>')).join('');
+    side.dataset.b = 1;
+  }
+  const cards = [...side.children];
+  let act = -1;
+  sc.lines.forEach((l, k) => { if (l.card && lt >= c[k] - .1) act = k; });
+  cards.forEach((el, k) => {
+    if (k !== act) { el.style.opacity = 0; return; }
+    const p = P(lt, c[k] - .1, .45);
+    el.style.opacity = p;
+    el.style.transform = `translateY(calc(-50% + ${(1 - p) * 20}px))`;
+  });
+}
+
+// status kamera per baris untuk adegan screenshot (dihitung sekali setelah gambar dimuat)
+function prepShot(root, sc) {
+  if (sc._prep) return sc._prep;
+  const imgEls = [...root.querySelectorAll('img.shot')];
+  const size = imgEls.map((im) => ({ w: im.naturalWidth || 1440, h: im.naturalHeight || 900 }));
+  let img = sc.img || sc.lines.find((l) => l.img).img, v = null, prevImg = null, url = sc.url || '';
+  const st = sc.lines.map((l) => {
+    if (l.img) img = l.img;
+    if (l.url) url = l.url;
+    const ii = sc._imgs.indexOf(img);
+    if (l.v) v = l.v; else if (img !== prevImg) v = [0, 0, size[ii].w];
+    const switched = img !== prevImg;
+    prevImg = img;
+    return { ii, v: fit(v, size[ii]), switched, hl: l.hl || [], click: l.click || null, clickAt: l.clickAt, url };
+  });
+  sc._prep = { imgEls, size, st };
+  return sc._prep;
+}
+function fit(v, s) {
+  const w = Math.min(v[2], s.w), h = w * VP_H / VP_W;
+  const x = clamp(v[0], 0, Math.max(0, s.w - w));
+  const y = s.h <= h ? 0 : clamp(v[1], 0, s.h - h);
+  return [x, y, w];
+}
+const lerpV = (a, b, p) => [a[0] + (b[0] - a[0]) * p, a[1] + (b[1] - a[1]) * p, a[2] + (b[2] - a[2]) * p];
+
+function animShot(root, sc, lt, c, k) {
+  const { imgEls, st } = prepShot(root, sc);
+  const kk = Math.max(0, k);
+  const s = st[kk];
+  // kamera: geser halus dari baris sebelumnya pada gambar yang sama
+  let cam = s.v;
+  if (kk > 0 && !s.switched) cam = lerpV(st[kk - 1].v, s.v, P(lt, c[kk] - .1, .9));
+  const scale = VP_W / cam[2];
+  imgEls.forEach((im, i) => {
+    let op = 0;
+    if (i === s.ii) op = s.switched && kk > 0 ? P(lt, c[kk] - .15, .35) : 1;
+    else if (kk > 0 && s.switched && i === st[kk - 1].ii) op = 1 - P(lt, c[kk] - .15, .35);
+    im.style.opacity = op;
+    if (i === s.ii) im.style.transform = `translate(${-cam[0] * scale}px,${-cam[1] * scale}px) scale(${scale})`;
+  });
+  // sorotan
+  const box = root.querySelector('.hls');
+  const key = `${kk}`;
+  if (box.dataset.k !== key) {
+    box.innerHTML = s.hl.map(() => '<div class="hl"></div>').join('');
+    box.dataset.k = key;
+  }
+  const pHl = P(lt, c[kk] + .45, .35);
+  [...box.children].forEach((el, i) => {
+    const r = s.hl[i], pad = 6;
+    Object.assign(el.style, { left: (r[0] - cam[0]) * scale - pad + 'px', top: (r[1] - cam[1]) * scale - pad + 'px', width: r[2] * scale + pad * 2 + 'px', height: r[3] * scale + pad * 2 + 'px', opacity: pHl });
+  });
+  // kursor
+  const cur = root.querySelector('.cur');
+  const rip = cur.querySelector('.rip');
+  if (s.click) {
+    const tc = c[kk] + (s.clickAt != null ? s.clickAt : 1.1);
+    const to = [(s.click[0] - cam[0]) * scale, (s.click[1] - cam[1]) * scale];
+    const pv = kk > 0 && st[kk - 1].click && !s.switched ? st[kk - 1].click : null;
+    const from = pv ? [(pv[0] - cam[0]) * scale, (pv[1] - cam[1]) * scale] : [VP_W * .78, VP_H + 30];
+    const g = P(lt, tc - .85, .7);
+    const x = from[0] + (to[0] - from[0]) * g, y = from[1] + (to[1] - from[1]) * g;
+    cur.style.left = x + 'px'; cur.style.top = y + 'px';
+    const tEnd = kk + 1 < c.length ? c[kk + 1] - .2 : sc.dur;
+    cur.style.opacity = P(lt, tc - .95, .25) * (1 - P(lt, tEnd - .3, .3));
+    if (lt >= tc && lt < tc + .5) { const rp = (lt - tc) / .5; rip.style.opacity = 1 - rp; rip.style.transform = `scale(${.5 + rp * 1.1})`; } else rip.style.opacity = 0;
+    cur.querySelector('svg').style.transform = lt >= tc && lt < tc + .15 ? 'scale(.85)' : 'none';
+  } else cur.style.opacity = 0;
+  if (s.url) root.querySelector('.u').textContent = s.url;
+}
+
+const A = {
+  title(root, sc, lt, c) {
+    fade(root.querySelector('.kicker'), P(lt, .1, .5));
+    fade(root.querySelector('h1'), P(lt, .25, .6));
+    fade(root.querySelector('.lead'), P(lt, .5, .6));
+    revealItems(root, sc, lt, c, '.chips span');
+  },
+  flow(root, sc, lt, c, k) {
+    fade(root.querySelector('.st'), P(lt, 0, .5)); fade(root.querySelector('.sst'), P(lt, .15, .5));
+    revealItems(root, sc, lt, c, '.step'); focusItems(root, sc, k, '.step');
+  },
+  cards(root, sc, lt, c, k) {
+    fade(root.querySelector('.st'), P(lt, 0, .5)); fade(root.querySelector('.sst'), P(lt, .15, .5));
+    revealItems(root, sc, lt, c, '.tc'); focusItems(root, sc, k, '.tc');
+  },
+  shot(root, sc, lt, c, k) { animShot(root, sc, lt, c, k); sideCards(root, sc, lt, c); },
+  phones(root, sc, lt, c) { revealItems(root, sc, lt, c, '.phone'); sideCards(root, sc, lt, c); },
+  end(root, sc, lt, c, k) {
+    fade(root.querySelector('.st'), P(lt, 0, .5)); fade(root.querySelector('.sst'), P(lt, .15, .5));
+    revealItems(root, sc, lt, c, '.tc'); focusItems(root, sc, k, '.tc');
+    const fin = sc.finalAt == null ? c.length - 1 : sc.finalAt;
+    root.querySelector('.endov').style.opacity = P(lt, c[fin] - .3, .7);
+  },
+};
+
+// ---------- mesin ----------
+const roots = [];
+const STAGE = document.getElementById('stage'), CAP = document.getElementById('capText'), CHIP = document.getElementById('chip'), PROG = document.querySelector('#prog i');
+let TLD = null, cur = null;
+
+window.render = function (t) {
+  const S = TLD.scenes, n = S.length;
+  let i = S.findIndex((s) => t >= s.start && t < s.start + s.dur);
+  if (i < 0) i = n - 1;
+  const sc = S[i], lt = t - sc.start, root = roots[i];
+  if (cur !== root) { if (cur) { cur.style.visibility = 'hidden'; cur.style.opacity = 0; } root.style.visibility = 'visible'; cur = root; }
+  root.style.opacity = i === 0 ? P(lt, 0, .6) : P(lt, 0, .45);
+  const c = sc.lines.map((l) => l.start - sc.start);
+  let k = -1; c.forEach((s, j) => { if (lt >= s - .12) k = j; });
+  A[sc.type](root, sc, lt, c, k);
+  const txt = k >= 0 ? sc.lines[k].cap : '';
+  if (CAP.textContent !== txt) CAP.textContent = txt;
+  CAP.style.opacity = k >= 0 ? P(lt, c[k] - .12, .2) : 0;
+  const chip = i === 0 ? TLD.meta.chip : `Bagian ${i}/${n - 1} · ${sc.title}`;
+  if (CHIP.textContent !== chip) CHIP.textContent = chip;
+  PROG.style.width = (t / TLD.total * 100) + '%';
+};
+
+const name = new URLSearchParams(location.search).get('v') || 'calon-mahasiswa';
+window.ready = new Promise((resolve, reject) => {
+  const s = document.createElement('script');
+  s.src = `${name}.timeline.js`;
+  s.onerror = () => reject(new Error('timeline tidak ditemukan: ' + name));
+  s.onload = () => {
+    TLD = window.TL;
+    document.getElementById('sub').textContent = TLD.meta.sub;
+    document.title = TLD.meta.title;
+    TLD.scenes.forEach((sc) => { const d = document.createElement('section'); d.className = 'scene'; d.innerHTML = B[sc.type](sc); STAGE.appendChild(d); roots.push(d); });
+    Promise.all([...document.images].map((im) => (im.complete ? 1 : new Promise((r) => { im.onload = im.onerror = r; })))).then(resolve);
+  };
+  document.head.appendChild(s);
+});
+const q = new URLSearchParams(location.search);
+if (q.has('t')) ready.then(() => render(+q.get('t')));
+else if (q.has('play')) { const t0 = performance.now() - (+q.get('play') || 0) * 1000; const loop = () => { render(((performance.now() - t0) / 1000) % TLD.total); requestAnimationFrame(loop); }; ready.then(loop); }
+</script>
+</body>
+</html>

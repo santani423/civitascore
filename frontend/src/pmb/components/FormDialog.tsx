@@ -24,6 +24,11 @@ export interface FieldDef {
   /** Tampilkan hanya bila fungsi bernilai true atas nilai form saat ini. */
   visible?: (values: Record<string, unknown>) => boolean
   accept?: string
+  /** Batas bawah/atas untuk field date, datetime, dan number (atribut HTML `min`/`max`). */
+  min?: string
+  max?: string
+  /** Isian kustom (mis. pemilih peta) menggantikan input bawaan; nilainya dikirim apa adanya. */
+  render?: (props: { label: string; value: unknown; onChange: (value: unknown) => void; error?: string }) => ReactNode
 }
 
 export interface FormDialogProps {
@@ -134,6 +139,8 @@ export function FormDialog({ open, title, fields, initial, submitLabel = 'Simpan
           const common = { label: field.label + (field.required ? ' *' : ''), hint: field.hint, error: fieldError(field.name) }
           const value = values[field.name]
 
+          if (field.render) return <div key={field.name}>{field.render({ label: common.label, value, error: common.error, onChange: (v) => set(field.name, v) })}</div>
+
           switch (field.type) {
             case 'textarea':
             case 'json':
@@ -167,6 +174,8 @@ export function FormDialog({ open, title, fields, initial, submitLabel = 'Simpan
                   {...common}
                   type={field.type === 'datetime' ? 'datetime-local' : field.type ?? 'text'}
                   step={field.type === 'number' ? 'any' : undefined}
+                  min={field.min}
+                  max={field.max}
                   placeholder={field.placeholder}
                   value={String(value ?? '')}
                   onChange={(e) => set(field.name, e.target.value)}

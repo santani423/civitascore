@@ -12,6 +12,17 @@ Manual ini menjelaskan **cara memakai** setiap menu dan fitur Modul PMB Civitas 
 
 ---
 
+## Manual book & video per pengguna
+
+Selain bab-bab di bawah, tersedia dua manual berkas tunggal yang disusun per sasaran pembaca, masing-masing dengan video tutorial pendamping yang memakai screenshot dan alur yang sama:
+
+| Untuk | Manual book | Video tutorial | Naskah video |
+|---|---|---|---|
+| **Calon mahasiswa** | [MANUAL-BOOK-PMB-CALON-MAHASISWA](MANUAL-BOOK-PMB-CALON-MAHASISWA.md) | [tutorial-pmb-calon-mahasiswa.mp4](../../video-tutorial-pmb/tutorial-pmb-calon-mahasiswa.mp4) (17:28) | [naskah](../../video-tutorial-pmb/naskah-video-pmb-calon-mahasiswa.md) |
+| **Penyelenggara PMB** (semua peran panitia & staf) | [MANUAL-BOOK-PMB-PENYELENGGARA](MANUAL-BOOK-PMB-PENYELENGGARA.md) | [tutorial-pmb-penyelenggara.mp4](../../video-tutorial-pmb/tutorial-pmb-penyelenggara.mp4) (18:37) | [naskah](../../video-tutorial-pmb/naskah-video-pmb-penyelenggara.md) |
+
+Kedua manual tersebut (16 Oktober 2026) sudah memuat pembaruan aplikasi sesudah bab-bab ini ditulis: baris filter pada tabel konfigurasi, editor teks kaya pada deskripsi profil prodi, dan rekonsiliasi Xendit (settlement tidak ditarik otomatis).
+
 ## Mulai dari mana?
 
 | Saya adalah… | Baca bagian |

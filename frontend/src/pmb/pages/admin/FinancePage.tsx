@@ -29,6 +29,7 @@ import { PMB, to } from '@/pmb/routes'
 type FTab = 'invoices' | 'transactions' | 'proofs' | 'reconciliation' | 'refunds'
 type InvoiceRow = Invoice & { application: { id: string; registration_number: string | null; name: string | null; email: string | null }; resolution_note: string | null }
 type InvoiceDetail = InvoiceRow & { refunds: RefundRow[]; transactions: Array<Transaction & { idempotency_key?: string }> }
+interface ProofRow { id: string; status: string; sender_bank: string; sender_name: string; transfer_date: string; transferred_amount: string; expected_amount: string; unique_code: number | null; duplicate_warning: boolean; invoice_number: string | null; registration_number: string | null; applicant: string | null; reason_code: string | null; reviewer: string | null; created_at: string | null }
 interface RefundRow { id: string; status: string; amount: string; reason_code: string; reason_note: string; beneficiary_bank: string | null; beneficiary_account_masked: string | null; beneficiary_name: string | null; transaction_id: string; invoice_number: string | null; applicant: string | null; requested_by: string | null; approval_request_id: string | null; completed_at: string | null; created_at: string | null }
 
 const REFUND_CODES = ['DUPLICATE_PAYMENT', 'PERIOD_CANCELLED', 'WITHDRAWAL', 'LATE_PAYMENT', 'OVERPAYMENT', 'POLICY', 'OTHER']
@@ -157,13 +158,12 @@ function TransactionsTab() {
 
 function ProofsTab({ onChanged }: { onChanged: () => void }) {
   const [reload, setReload] = useState(0)
-  const [deciding, setDeciding] = useState<{ id: string; expected_amount: string; transferred_amount: string } | null>(null)
-  const action = useAction()
+  const [deciding, setDeciding] = useState<ProofRow | null>(null)
+  const [viewing, setViewing] = useState<ProofRow | null>(null)
 
   return (
     <>
-      <Feedback state={action} />
-      <AdminList<{ id: string; status: string; sender_bank: string; sender_name: string; transfer_date: string; transferred_amount: string; expected_amount: string; unique_code: number | null; duplicate_warning: boolean; invoice_number: string | null; registration_number: string | null; applicant: string | null; reason_code: string | null; reviewer: string | null; created_at: string | null }>
+      <AdminList<ProofRow>
         path="manual-proofs" reloadKey={reload} search={false} rowKey={(r) => r.id} itemLabel="bukti"
         filters={[{ name: 'status', label: 'Status', type: 'select', options: [{ value: 'submitted', label: 'Menunggu' }, { value: 'approved', label: 'Disetujui' }, { value: 'rejected', label: 'Ditolak' }] }]}
         columns={[
@@ -173,11 +173,12 @@ function ProofsTab({ onChanged }: { onChanged: () => void }) {
           { header: 'Status', cell: (r) => <span className="flex gap-1"><StatusBadge status={r.status} />{r.duplicate_warning && <Badge variant="danger">Mirip bukti lain</Badge>}</span> },
           { header: '', cell: (r) => (
             <div className="flex gap-1">
-              <Button size="sm" variant="ghost" onClick={() => action.run(() => pmbAdmin.open(`manual-proofs/${r.id}/file`))}>Lihat bukti</Button>
+              <Button size="sm" variant="ghost" onClick={() => setViewing(r)}>Lihat bukti</Button>
               {r.status === 'submitted' && <Button size="sm" onClick={() => setDeciding(r)}>Putuskan</Button>}
             </div>
           ) },
         ]} />
+      {viewing && <ProofViewerModal proof={viewing} onClose={() => setViewing(null)} onDecide={viewing.status === 'submitted' ? () => { setDeciding(viewing); setViewing(null) } : undefined} />}
       <FormDialog open={deciding !== null} title="Verifikasi bukti transfer" description={deciding ? `Cocokkan dengan mutasi rekening: ${money(deciding.transferred_amount)} (tagihan ${money(deciding.expected_amount)}).` : undefined} fields={[
         { name: 'approve', label: 'Keputusan', type: 'select', required: true, options: [{ value: '1', label: 'Setujui — dana diterima' }, { value: '0', label: 'Tolak' }] },
         { name: 'reason_code', label: 'Alasan penolakan', type: 'select', options: PROOF_REJECT.map((c) => ({ value: c, label: c })), visible: (v) => v.approve === '0' },
@@ -188,6 +189,46 @@ function ProofsTab({ onChanged }: { onChanged: () => void }) {
         onChanged()
       }} />
     </>
+  )
+}
+
+/** Pratinjau bukti transfer di dalam halaman (gambar/PDF disajikan `inline` oleh FileDownloadController). */
+function ProofViewerModal({ proof, onClose, onDecide }: { proof: ProofRow; onClose: () => void; onDecide?: () => void }) {
+  const file = useLoad(() => pmbAdmin.get<{ url: string; mime_type: string }>(`manual-proofs/${proof.id}/file`), [proof.id])
+  const f = file.data
+  const mismatch = proof.transferred_amount !== proof.expected_amount
+
+  return (
+    <Modal open onClose={onClose} title={`Bukti transfer · ${proof.invoice_number ?? proof.applicant ?? ''}`} className="max-w-5xl">
+      <div className="grid gap-4 lg:grid-cols-[1fr_16rem]">
+        <div className="flex min-h-[50vh] items-center justify-center overflow-hidden rounded-lg border border-border bg-surface-hover">
+          {file.loading && <p className="text-sm text-ink-tertiary">Memuat bukti…</p>}
+          {file.error && <div className="p-4"><Alert variant="danger">{file.error.message}</Alert></div>}
+          {f && (f.mime_type.startsWith('image/')
+            ? <img src={f.url} alt={`Bukti transfer ${proof.sender_name}`} className="max-h-[65vh] w-auto object-contain" />
+            : f.mime_type === 'application/pdf'
+              ? <iframe title="Bukti transfer" src={f.url} className="h-[65vh] w-full" />
+              : <p className="p-4 text-sm text-ink-secondary">Pratinjau tidak tersedia untuk tipe berkas ini. Gunakan “Buka di tab baru”.</p>)}
+        </div>
+        <div className="flex flex-col gap-4">
+          <KeyValue columns={1} items={[
+            ['Pendaftar', <span key="applicant">{proof.applicant}<span className="block text-xs text-ink-tertiary">{proof.registration_number}</span></span>],
+            ['Pengirim', `${proof.sender_name} (${proof.sender_bank})`],
+            ['Tanggal transfer', date(proof.transfer_date)],
+            ['Nominal ditransfer', <span key="amount" className={mismatch ? 'font-semibold text-danger' : 'font-semibold'}>{money(proof.transferred_amount)}</span>],
+            ['Tagihan', `${money(proof.expected_amount)}${proof.unique_code ? ` · kode ${proof.unique_code}` : ''}`],
+            ['Status', <span key="status" className="flex flex-wrap gap-1"><StatusBadge status={proof.status} />{proof.duplicate_warning && <Badge variant="danger">Mirip bukti lain</Badge>}</span>],
+            ...(proof.reason_code ? [['Alasan penolakan', proof.reason_code] as [string, string]] : []),
+            ...(proof.reviewer ? [['Diputuskan oleh', proof.reviewer] as [string, string]] : []),
+          ]} />
+          {mismatch && <Alert variant="warning">Nominal ditransfer berbeda dengan tagihan.</Alert>}
+          <div className="mt-auto flex flex-col gap-2">
+            {onDecide && <Button onClick={onDecide}>Putuskan</Button>}
+            {f && <a href={f.url} target="_blank" rel="noopener noreferrer" className="text-center text-sm text-primary hover:underline">Buka di tab baru</a>}
+          </div>
+        </div>
+      </div>
+    </Modal>
   )
 }
 

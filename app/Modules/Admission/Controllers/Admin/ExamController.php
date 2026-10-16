@@ -358,7 +358,7 @@ class ExamController extends AdminController
         return $request->validate([
             'name' => [$creating ? 'required' : 'sometimes', 'string', 'max:150'],
             'address' => ['nullable', 'string', 'max:1000'],
-            'map_url' => ['nullable', 'url', 'max:500'],
+            'map_url' => ['nullable', 'url:http,https', 'max:500'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
     }

@@ -6,6 +6,7 @@ import { useLoad } from '@/pmb/components/useLoad'
 import { Feedback, useAction } from '@/pmb/components/useAction'
 import { AdminList } from '@/pmb/components/AdminList'
 import { FormDialog, type FieldDef } from '@/pmb/components/FormDialog'
+import { MapLocationField } from '@/pmb/components/MapLocationField'
 import { ReasonDialog } from '@/pmb/components/ReasonDialog'
 import { StatusBadge } from '@/pmb/components/StatusBadge'
 import { Tabs } from '@/pmb/components/Tabs'
@@ -24,6 +25,9 @@ import { PMB, to } from '@/pmb/routes'
 
 interface Venue { id: string; name: string; address: string | null; map_url: string | null; is_active: boolean; rooms: Array<{ id: string; code: string; name: string; capacity: number; is_accessible: boolean; facilities: string[] | null; is_active: boolean }> }
 interface Schedule { id: string; title: string; mode: string; exam_date: string; status: string; wave_path_ids: string[]; selection_component_id: string; component?: { code: string; name: string; source: string } | null; sessions_count?: number; participants_count?: number; instructions?: string | null; cbt_duration_minutes?: number | null; cbt_question_count?: number | null; cbt_randomize?: boolean; external_reference?: string | null }
+
+/** Jendela ujian gelombang — tanggal jadwal ujian wajib di dalamnya kecuali gelombang ODS (ExamService::saveSchedule). */
+interface WaveWindow { exam_starts_on: string | null; exam_ends_on: string | null; is_ods: boolean }
 
 type ExamTab = 'schedules' | 'venues' | 'reschedules'
 
@@ -47,6 +51,8 @@ function SchedulesTab() {
   const [target, setTarget] = useState<{ period?: string; wave?: string }>({})
   const schedules = useLoad(() => (target.wave ? pmbAdmin.get<Schedule[]>(`waves/${target.wave}/exam-schedules`) : Promise.resolve([])), [target.wave])
   const wavePaths = useLoad(() => (target.wave ? pmbAdmin.get<Array<{ id: string; admission_path: { name: string } | null; selection_scheme_id: string | null }>>(`waves/${target.wave}/paths`) : Promise.resolve([])), [target.wave])
+  const waves = useLoad(() => (target.period ? pmbAdmin.get<Array<WaveWindow & { id: string }>>(`periods/${target.period}/waves`) : Promise.resolve([])), [target.period])
+  const wave = waves.data?.find((w) => w.id === target.wave)
   const [components, setComponents] = useState<Array<{ value: string; label: string }>>([])
   const [creating, setCreating] = useState(false)
 
@@ -71,17 +77,29 @@ function SchedulesTab() {
           { header: 'Status', cell: (s) => <StatusBadge status={s.status} /> },
         ]} />
       </Card>
-      <FormDialog open={creating} title="Jadwal ujian" fields={scheduleFields(components, (wavePaths.data ?? []).map((wp) => ({ value: wp.id, label: wp.admission_path?.name ?? wp.id })))} initial={{ mode: 'onsite', wave_path_ids: (wavePaths.data ?? []).map((wp) => wp.id) }} onClose={() => setCreating(false)} onSubmit={async (v) => { await pmbAdmin.post(`waves/${target.wave}/exam-schedules`, v); schedules.reload() }} />
+      <FormDialog open={creating} title="Jadwal ujian" fields={scheduleFields(components, (wavePaths.data ?? []).map((wp) => ({ value: wp.id, label: wp.admission_path?.name ?? wp.id })), wave)} initial={{ mode: 'onsite', wave_path_ids: (wavePaths.data ?? []).map((wp) => wp.id), exam_date: wave && !wave.is_ods ? wave.exam_starts_on : undefined }} onClose={() => setCreating(false)} onSubmit={async (v) => { await pmbAdmin.post(`waves/${target.wave}/exam-schedules`, v); schedules.reload() }} />
     </div>
   )
 }
 
-const scheduleFields = (components: Array<{ value: string; label: string }>, wavePaths: Array<{ value: string; label: string }>): FieldDef[] => [
+/** Field tanggal ujian dibatasi ke jendela ujian gelombang; gelombang ODS bebas. */
+function examDateField(wave?: WaveWindow | null): FieldDef {
+  const min = wave?.exam_starts_on?.slice(0, 10)
+  const max = wave?.exam_ends_on?.slice(0, 10)
+
+  if (!wave || wave.is_ods || !min || !max) {
+    return { name: 'exam_date', label: 'Tanggal ujian', type: 'date', required: true, hint: wave?.is_ods ? 'Gelombang ODS — tanggal ujian tidak dibatasi jendela ujian.' : undefined }
+  }
+
+  return { name: 'exam_date', label: 'Tanggal ujian', type: 'date', required: true, min, max, hint: `Pilih tanggal dalam jendela ujian gelombang: ${date(min)} – ${date(max)}.` }
+}
+
+const scheduleFields = (components: Array<{ value: string; label: string }>, wavePaths: Array<{ value: string; label: string }>, wave?: WaveWindow | null): FieldDef[] => [
   { name: 'title', label: 'Judul', required: true },
   { name: 'selection_component_id', label: 'Komponen seleksi', type: 'select', required: true, options: components },
   { name: 'wave_path_ids', label: 'Jalur peserta', type: 'multiselect', required: true, options: wavePaths },
   { name: 'mode', label: 'Mode', type: 'select', required: true, options: MODES },
-  { name: 'exam_date', label: 'Tanggal ujian', type: 'date', required: true },
+  examDateField(wave),
   { name: 'instructions', label: 'Instruksi untuk peserta', type: 'textarea' },
   { name: 'cbt_duration_minutes', label: 'Durasi CBT (menit)', type: 'number', visible: (v) => v.mode === 'cbt' },
   { name: 'cbt_question_count', label: 'Jumlah soal ditampilkan (kosong = semua)', type: 'number', visible: (v) => v.mode === 'cbt' },
@@ -109,7 +127,11 @@ function VenuesTab() {
           ]} />
         </Card>
       ))}
-      <FormDialog open={venueForm !== null} title="Lokasi ujian" fields={[{ name: 'name', label: 'Nama', required: true }, { name: 'address', label: 'Alamat', type: 'textarea' }, { name: 'map_url', label: 'URL peta' }, { name: 'is_active', label: 'Aktif', type: 'checkbox' }]} initial={venueForm && venueForm !== 'new' ? (venueForm as unknown as Record<string, unknown>) : { is_active: true }} onClose={() => setVenueForm(null)} onSubmit={async (v) => {
+      <FormDialog open={venueForm !== null} wide title="Lokasi ujian" fields={[
+        { name: 'name', label: 'Nama', required: true }, { name: 'address', label: 'Alamat', type: 'textarea' },
+        { name: 'map_url', label: 'Lokasi di peta', render: (f) => <MapLocationField label={f.label} value={String(f.value ?? '')} error={f.error} onChange={f.onChange} /> },
+        { name: 'is_active', label: 'Aktif', type: 'checkbox' },
+      ]} initial={venueForm && venueForm !== 'new' ? (venueForm as unknown as Record<string, unknown>) : { is_active: true }} onClose={() => setVenueForm(null)} onSubmit={async (v) => {
         if (venueForm === 'new') await pmbAdmin.post('exam-venues', v)
         else if (venueForm) await pmbAdmin.patch(`exam-venues/${venueForm.id}`, v)
         venues.reload()
@@ -150,7 +172,7 @@ function RescheduleTab() {
   )
 }
 
-interface ScheduleDetail extends Schedule { wave: { id: string; name: string; is_ods: boolean } | null; sessions: Array<{ id: string; code: string; starts_at: string; ends_at: string; checkin_opens_at: string | null; capacity: number; participants_count: number; online_url: string | null; scores_locked_at: string | null; room_id: string | null; room: { name: string; venue: { name: string } | null } | null; examiners: Array<{ user_id: string; role: string; user: { name: string } | null }> }>; unassigned_count: number; cbt_question_total: number | null }
+interface ScheduleDetail extends Schedule { wave: (WaveWindow & { id: string; name: string }) | null; sessions: Array<{ id: string; code: string; starts_at: string; ends_at: string; checkin_opens_at: string | null; capacity: number; participants_count: number; online_url: string | null; scores_locked_at: string | null; room_id: string | null; room: { name: string; venue: { name: string } | null } | null; examiners: Array<{ user_id: string; role: string; user: { name: string } | null }> }>; unassigned_count: number; cbt_question_total: number | null }
 
 /** ADM-51 Detail jadwal: sesi, penempatan otomatis, petugas, bank soal CBT, publikasi. */
 export function ExamScheduleDetailPage() {
@@ -232,7 +254,7 @@ export function ExamScheduleDetailPage() {
         { name: 'user_ids', label: 'Petugas', type: 'multiselect', required: true, options: users.map((u) => ({ value: u.id, label: u.name })) },
         { name: 'per_session', label: 'Jumlah per sesi', type: 'number' },
       ]} initial={{ role: 'proctor', per_session: 1 }} onClose={() => setDialog(null)} onSubmit={async (v) => { await pmbAdmin.post(`exam-schedules/${id}/auto-examiners`, v); s.reload() }} />
-      <FormDialog open={dialog === 'edit'} title="Ubah jadwal" fields={scheduleFields([{ value: d.selection_component_id, label: d.component?.name ?? 'Komponen' }], d.wave_path_ids.map((x) => ({ value: x, label: x })))} initial={d as unknown as Record<string, unknown>} onClose={() => setDialog(null)} onSubmit={async (v) => { await pmbAdmin.patch(`exam-schedules/${id}`, v); s.reload() }} />
+      <FormDialog open={dialog === 'edit'} title="Ubah jadwal" fields={scheduleFields([{ value: d.selection_component_id, label: d.component?.name ?? 'Komponen' }], d.wave_path_ids.map((x) => ({ value: x, label: x })), d.wave)} initial={d as unknown as Record<string, unknown>} onClose={() => setDialog(null)} onSubmit={async (v) => { await pmbAdmin.patch(`exam-schedules/${id}`, v); s.reload() }} />
       <ReasonDialog open={dialog === 'cancel'} title="Batalkan jadwal ujian" description="Peserta diberi notifikasi pembatalan." onClose={() => setDialog(null)} onConfirm={async (v) => { await pmbAdmin.post(`exam-schedules/${id}/cancel`, v); s.reload() }} />
       <FormDialog open={dialog === 'question'} wide title="Soal CBT" fields={[
         { name: 'question', label: 'Pertanyaan', type: 'textarea', required: true },
