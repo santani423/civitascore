@@ -15,7 +15,7 @@ class ExamListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Ujian')),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/akademik/ujian/baru'),
+        onPressed: () => context.push('/l/exams/new'),
         child: const Icon(Icons.add),
       ),
       body: examsAsync.when(
@@ -51,8 +51,7 @@ class ExamListScreen extends ConsumerWidget {
                           ? Colors.green.withValues(alpha: 0.15)
                           : Colors.grey.withValues(alpha: 0.15),
                     ),
-                    onTap: () =>
-                        context.push('/akademik/ujian/${exam.id}/edit'),
+                    onTap: () => context.push('/l/exams/${exam.id}/edit'),
                   ),
                 );
               },

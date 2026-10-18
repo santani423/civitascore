@@ -1,232 +1,164 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
-import '../../../../core/network/api_failure.dart';
-import '../../../../core/router/route_paths.dart';
+import '../../../../core/l10n/core_strings.dart';
 import '../../../../core/theme/app_dimensions.dart';
-import '../../../../core/widgets/app_alert.dart';
-import '../../../../core/widgets/app_card.dart';
-import '../../domain/entities/user_device.dart';
-import '../../domain/entities/user_session.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_feedback.dart';
+import '../../../../core/widgets/state_views.dart';
+import '../../../../core/widgets/ui_kit.dart';
+import '../../domain/auth_user.dart';
+import '../../l10n/auth_strings.dart';
 import '../controllers/auth_controller.dart';
-import '../controllers/security_sessions_controller.dart';
 
-class SecuritySessionsScreen extends ConsumerStatefulWidget {
+final _sessionsProvider = FutureProvider.autoDispose<List<UserSession>>(
+  (ref) => ref.watch(authApiProvider).sessions(),
+);
+final _devicesProvider = FutureProvider.autoDispose<List<UserDevice>>(
+  (ref) => ref.watch(authApiProvider).devices(),
+);
+
+/// `GET /sessions`, `DELETE /sessions/{id}`, `GET /devices`, `POST /logout-all`.
+class SecuritySessionsScreen extends ConsumerWidget {
   const SecuritySessionsScreen({super.key});
 
   @override
-  ConsumerState<SecuritySessionsScreen> createState() =>
-      _SecuritySessionsScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = context.l10n;
+    final a = context.authL10n;
+    final sessions = ref.watch(_sessionsProvider);
+    final devices = ref.watch(_devicesProvider);
 
-class _SecuritySessionsScreenState
-    extends ConsumerState<SecuritySessionsScreen> {
-  String? _revokingId;
-  bool _isLoggingOutAll = false;
-
-  Future<void> _revoke(String id) async {
-    setState(() => _revokingId = id);
-    try {
-      await ref.read(authRepositoryProvider).revokeSession(id);
-      ref.invalidate(userSessionsProvider);
-    } on ApiFailure catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
-      }
-    } finally {
-      if (mounted) setState(() => _revokingId = null);
+    Future<void> refresh() async {
+      ref.invalidate(_sessionsProvider);
+      ref.invalidate(_devicesProvider);
+      await ref.read(_sessionsProvider.future);
     }
-  }
-
-  Future<void> _logoutAll() async {
-    setState(() => _isLoggingOutAll = true);
-    await ref.read(authControllerProvider.notifier).logoutAll();
-    if (mounted) context.go(RoutePaths.login);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final sessionsAsync = ref.watch(userSessionsProvider);
-    final devicesAsync = ref.watch(userDevicesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Keamanan'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.md),
-            child: TextButton.icon(
-              onPressed: _isLoggingOutAll ? null : _logoutAll,
-              icon: _isLoggingOutAll
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.logout, size: 18),
-              label: const Text('Keluar Semua'),
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(a.sessionsTitle)),
       body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(userSessionsProvider);
-          ref.invalidate(userDevicesProvider);
-        },
+        onRefresh: refresh,
         child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.only(bottom: AppSpacing.xl2),
           children: [
-            Text('Sesi Aktif', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.sm),
-            sessionsAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(AppSpacing.xl2),
-                child: Center(child: CircularProgressIndicator()),
+            SectionHeader(title: a.activeSessions),
+            sessions.when(
+              loading: () => const SizedBox(
+                height: 200,
+                child: SkeletonList(itemCount: 2),
               ),
-              error: (error, _) => AppAlert(
-                message: error is ApiFailure
-                    ? error.message
-                    : 'Gagal memuat sesi aktif.',
-                variant: AppAlertVariant.danger,
+              error: (e, _) => SizedBox(
+                height: 260,
+                child: ErrorView(error: e, onRetry: refresh),
               ),
-              data: (sessions) => AppCard(
-                noPadding: true,
-                child: sessions.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.all(AppSpacing.lg),
-                        child: Text('Tidak ada sesi aktif.'),
-                      )
-                    : Column(
-                        children: [
-                          for (final session in sessions)
-                            _SessionTile(
-                              session: session,
-                              isRevoking: _revokingId == session.id,
-                              onRevoke: () => _revoke(session.id),
+              data: (list) => list.isEmpty
+                  ? const SizedBox(height: 200, child: EmptyView())
+                  : Column(
+                      children: [
+                        for (final session in list)
+                          ListTile(
+                            leading: const Icon(Icons.phone_android_outlined),
+                            title: Text(
+                              session.deviceName ??
+                                  session.userAgent ??
+                                  a.unknownDevice,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                        ],
+                            subtitle: Text(
+                              '${a.lastActive}: ${context.formatDateTime(session.lastActivityAt)}'
+                              '${session.ipAddress == null ? '' : ' · ${session.ipAddress}'}',
+                            ),
+                            trailing:
+                                session.isActive && session.revokedAt == null
+                                ? TextButton(
+                                    onPressed: () async {
+                                      final ok = await confirmAction(
+                                        context,
+                                        title: a.revoke,
+                                        message: a.revokeConfirm,
+                                        destructive: true,
+                                        confirmLabel: a.revoke,
+                                      );
+                                      if (!ok) return;
+                                      try {
+                                        await ref
+                                            .read(authApiProvider)
+                                            .revokeSession(session.id);
+                                        if (context.mounted) {
+                                          showAppSnack(context, a.revoked);
+                                        }
+                                        ref.invalidate(_sessionsProvider);
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          showErrorSnack(context, e);
+                                        }
+                                      }
+                                    },
+                                    child: Text(a.revoke),
+                                  )
+                                : StatusChip(
+                                    label: a.revokedLabel,
+                                    dense: true,
+                                  ),
+                          ),
+                      ],
+                    ),
+            ),
+            SectionHeader(title: a.devices),
+            devices.when(
+              loading: () => const SizedBox(
+                height: 120,
+                child: SkeletonList(itemCount: 1),
+              ),
+              error: (e, _) => Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Text(s.errorFor(e)),
+              ),
+              data: (list) => Column(
+                children: [
+                  for (final d in list)
+                    ListTile(
+                      leading: const Icon(Icons.devices_other_outlined),
+                      title: Text(d.deviceName ?? a.unknownDevice),
+                      subtitle: Text(
+                        '${d.platform ?? '-'} · ${context.formatDateTime(d.lastUsedAt)}',
                       ),
+                      trailing: d.isTrusted
+                          ? StatusChip(
+                              label: a.trusted,
+                              tone: StatusTone.success,
+                              dense: true,
+                            )
+                          : null,
+                    ),
+                ],
               ),
             ),
-            const SizedBox(height: AppSpacing.xl2),
-            Text(
-              'Perangkat Terdaftar',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            devicesAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(AppSpacing.xl2),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, _) => AppAlert(
-                message: error is ApiFailure
-                    ? error.message
-                    : 'Gagal memuat perangkat.',
-                variant: AppAlertVariant.danger,
-              ),
-              data: (devices) => AppCard(
-                noPadding: true,
-                child: devices.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.all(AppSpacing.lg),
-                        child: Text('Tidak ada perangkat terdaftar.'),
-                      )
-                    : Column(
-                        children: [
-                          for (final device in devices)
-                            _DeviceTile(device: device),
-                        ],
-                      ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.logout),
+                label: Text(a.logoutAll),
+                onPressed: () async {
+                  final ok = await confirmAction(
+                    context,
+                    title: a.logoutAll,
+                    message: a.logoutAllConfirm,
+                    destructive: true,
+                  );
+                  if (ok) {
+                    await ref
+                        .read(authControllerProvider.notifier)
+                        .logout(allDevices: true);
+                  }
+                },
               ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SessionTile extends StatelessWidget {
-  const _SessionTile({
-    required this.session,
-    required this.isRevoking,
-    required this.onRevoke,
-  });
-
-  final UserSession session;
-  final bool isRevoking;
-  final VoidCallback onRevoke;
-
-  @override
-  Widget build(BuildContext context) {
-    final title =
-        session.device?.deviceName ??
-        session.userAgent ??
-        'Perangkat tidak dikenal';
-    final lastActivity = session.lastActivityAt != null
-        ? DateFormat('d MMM yyyy, HH:mm').format(session.lastActivityAt!)
-        : '-';
-
-    return ListTile(
-      leading: Icon(_iconForPlatform(session.device?.platform)),
-      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text('${session.ipAddress ?? '-'} · $lastActivity'),
-      trailing: session.isActive
-          ? IconButton(
-              icon: isRevoking
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.close),
-              tooltip: 'Cabut sesi',
-              onPressed: isRevoking ? null : onRevoke,
-            )
-          : const Text('Dicabut', style: TextStyle(fontSize: 12)),
-    );
-  }
-
-  IconData _iconForPlatform(String? platform) {
-    final normalized = platform?.toLowerCase() ?? '';
-    if (normalized.contains('android') || normalized.contains('ios')) {
-      return Icons.smartphone;
-    }
-    return Icons.computer;
-  }
-}
-
-class _DeviceTile extends StatelessWidget {
-  const _DeviceTile({required this.device});
-
-  final UserDevice device;
-
-  @override
-  Widget build(BuildContext context) {
-    final lastUsed = device.lastUsedAt != null
-        ? DateFormat('d MMM yyyy, HH:mm').format(device.lastUsedAt!)
-        : '-';
-
-    return ListTile(
-      leading: const Icon(Icons.devices_other),
-      title: Text(
-        device.deviceName ?? device.deviceType,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      subtitle: Text('${device.platform ?? '-'} · Terakhir dipakai $lastUsed'),
-      trailing: device.isTrusted
-          ? const Chip(
-              label: Text('Dipercaya', style: TextStyle(fontSize: 11)),
-              padding: EdgeInsets.zero,
-            )
-          : null,
     );
   }
 }

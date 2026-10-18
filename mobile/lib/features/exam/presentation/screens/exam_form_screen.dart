@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/l10n/core_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -135,7 +136,7 @@ class _ExamFormScreenState extends ConsumerState<ExamFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.errorFor(e))));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -155,7 +156,7 @@ class _ExamFormScreenState extends ConsumerState<ExamFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.errorFor(e))));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -242,7 +243,7 @@ class _QuestionSettingsStep extends ConsumerWidget {
                   variant: AppButtonVariant.outline,
                   leftIcon: Icons.quiz_outlined,
                   onPressed: () =>
-                      context.push('/akademik/ujian/${state.examId}/soal'),
+                      context.push('/l/exams/${state.examId}/questions'),
                 )
               else
                 const Text(

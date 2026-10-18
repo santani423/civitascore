@@ -4,6 +4,7 @@ namespace Modules\Tenancy\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Modules\Academic\Database\Seeders\AtmaJayaQuestionBankSeeder;
+use Modules\Academic\Database\Seeders\AtmaJayaSistemInformasiStudentSeeder;
 use Modules\Academic\Database\Seeders\AtmaJayaStudentSeeder;
 use Modules\Tenancy\Enums\MembershipType;
 use Modules\Tenancy\Enums\SubscriptionStatus;
@@ -164,6 +165,9 @@ class DemoUniversitiesSeeder extends Seeder
         ]))->run();
 
         (new AtmaJayaStudentSeeder())->run();
+        // Mahasiswa Sistem Informasi kelas SFT 303 — setelah
+        // AtmaJayaStudentSeeder, yang membuat mata kuliah SFT 303.
+        (new AtmaJayaSistemInformasiStudentSeeder())->run();
         (new AtmaJayaQuestionBankSeeder())->run();
 
         $this->seedLocalDevDomains();

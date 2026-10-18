@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/l10n/core_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_failure.dart';
@@ -239,7 +240,7 @@ class _QuestionEditorSheetState extends ConsumerState<_QuestionEditorSheet> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ).showSnackBar(SnackBar(content: Text(context.l10n.errorFor(e))));
       }
     } finally {
       if (mounted) setState(() => _saving = false);

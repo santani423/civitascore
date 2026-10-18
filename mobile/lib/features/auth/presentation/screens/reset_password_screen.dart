@@ -2,22 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/core_strings.dart';
 import '../../../../core/network/api_failure.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/widgets/app_alert.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/app_feedback.dart';
+import '../../../../core/widgets/ui_kit.dart';
+import '../../l10n/auth_strings.dart';
 import '../controllers/auth_controller.dart';
 
+/// Reset form. The backend emails a web link (`/reset-password?token&email`);
+/// the same parameters are accepted here (deep link) or typed manually.
 class ResetPasswordScreen extends ConsumerStatefulWidget {
-  const ResetPasswordScreen({
-    super.key,
-    required this.token,
-    required this.email,
-  });
-
+  const ResetPasswordScreen({super.key, this.token, this.email});
   final String? token;
   final String? email;
 
@@ -28,136 +26,114 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
-  bool _isSubmitting = false;
-  bool _success = false;
+  late final _token = TextEditingController(text: widget.token);
+  late final _email = TextEditingController(text: widget.email);
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
+  bool _busy = false;
   ApiFailure? _error;
 
   @override
   void dispose() {
-    _passwordController.dispose();
-    _confirmController.dispose();
+    for (final c in [_token, _email, _password, _confirm]) {
+      c.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
-      _isSubmitting = true;
+      _busy = true;
       _error = null;
     });
     try {
       await ref
-          .read(authRepositoryProvider)
+          .read(authApiProvider)
           .resetPassword(
-            token: widget.token!,
-            email: widget.email!,
-            password: _passwordController.text,
-            passwordConfirmation: _confirmController.text,
+            token: _token.text.trim(),
+            email: _email.text,
+            password: _password.text,
+            confirmation: _confirm.text,
           );
-      setState(() => _success = true);
+      if (!mounted) return;
+      showAppSnack(context, context.authL10n.resetDone);
+      context.go(RoutePaths.login);
     } on ApiFailure catch (e) {
-      setState(() => _error = e);
+      if (mounted) setState(() => _error = e);
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isValidLink =
-        widget.token != null &&
-        widget.token!.isNotEmpty &&
-        widget.email != null &&
-        widget.email!.isNotEmpty;
-
+    final s = context.l10n;
+    final a = context.authL10n;
     return Scaffold(
+      appBar: AppBar(title: Text(a.resetTitle)),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl2),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: !isValidLink
-                  ? const AppAlert(
-                      message: 'Tautan tidak valid.',
-                      variant: AppAlertVariant.danger,
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'Atur Ulang Kata Sandi',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: AppSpacing.xl2),
-                        if (_success) ...[
-                          const AppAlert(
-                            message:
-                                'Kata sandi berhasil diperbarui. Silakan masuk dengan kata sandi baru Anda.',
-                            variant: AppAlertVariant.success,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          AppButton(
-                            label: 'Ke Halaman Masuk',
-                            expand: true,
-                            onPressed: () => context.go(RoutePaths.login),
-                          ),
-                        ] else ...[
-                          if (_error != null) ...[
-                            AppAlert(
-                              message: _error!.message,
-                              variant: AppAlertVariant.danger,
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                          ],
-                          Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                AppPasswordField(
-                                  label: 'Kata Sandi Baru',
-                                  controller: _passwordController,
-                                  validator: Validators.minLength(
-                                    8,
-                                    fieldName: 'Kata sandi',
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                                AppPasswordField(
-                                  label: 'Konfirmasi Kata Sandi',
-                                  controller: _confirmController,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Konfirmasi kata sandi wajib diisi';
-                                    }
-                                    if (value != _passwordController.text) {
-                                      return 'Konfirmasi kata sandi tidak sama';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          AppButton(
-                            label: 'Simpan Kata Sandi',
-                            expand: true,
-                            isLoading: _isSubmitting,
-                            onPressed: _submit,
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.xl),
-                        TextButton(
-                          onPressed: () => context.go(RoutePaths.login),
-                          child: const Text('Kembali ke halaman masuk'),
-                        ),
-                      ],
-                    ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl2),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _token,
+                  decoration: InputDecoration(
+                    labelText: a.resetToken,
+                    helperText: a.resetTokenHelp,
+                  ),
+                  validator: Validators.required(s),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(labelText: a.email),
+                  validator: Validators.compose([
+                    Validators.required(s),
+                    Validators.email(s),
+                  ]),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _password,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: a.newPassword,
+                    errorText: _error?.fieldError('password'),
+                  ),
+                  validator: Validators.compose([
+                    Validators.required(s),
+                    Validators.minLength(s, 8),
+                  ]),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _confirm,
+                  obscureText: true,
+                  decoration: InputDecoration(labelText: a.confirmPassword),
+                  validator: Validators.compose([
+                    Validators.required(s),
+                    Validators.matches(s, () => _password.text),
+                  ]),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                if (_error != null) ...[
+                  AppBanner(
+                    message: s.errorFor(_error!),
+                    tone: StatusTone.danger,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                FilledButton(
+                  onPressed: _busy ? null : _submit,
+                  child: Text(a.resetTitle),
+                ),
+              ],
             ),
           ),
         ),

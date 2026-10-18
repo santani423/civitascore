@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/core_strings.dart';
 import '../../../../core/network/api_failure.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/widgets/app_alert.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/ui_kit.dart';
+import '../../l10n/auth_strings.dart';
 import '../controllers/auth_controller.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -20,104 +21,94 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  bool _isSubmitting = false;
+  final _email = TextEditingController();
+  bool _busy = false;
   bool _sent = false;
-  ApiFailure? _error;
+  Object? _error;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _email.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() {
-      _isSubmitting = true;
+      _busy = true;
       _error = null;
     });
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .forgotPassword(email: _emailController.text.trim());
-      setState(() => _sent = true);
+      await ref.read(authApiProvider).forgotPassword(_email.text);
+      if (mounted) setState(() => _sent = true);
     } on ApiFailure catch (e) {
-      setState(() => _error = e);
+      if (mounted) setState(() => _error = e);
     } finally {
-      if (mounted) setState(() => _isSubmitting = false);
+      if (mounted) setState(() => _busy = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final s = context.l10n;
+    final a = context.authL10n;
     return Scaffold(
+      appBar: AppBar(title: Text(a.forgotTitle)),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xl2),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Icon(
-                    Icons.school_outlined,
-                    size: 40,
-                    color: Theme.of(context).colorScheme.primary,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl2),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  a.forgotBody,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                TextFormField(
+                  controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: a.email,
+                    prefixIcon: const Icon(Icons.alternate_email),
+                  ),
+                  validator: Validators.compose([
+                    Validators.required(s),
+                    Validators.email(s),
+                  ]),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                if (_sent) ...[
+                  AppBanner(message: a.linkSent, tone: StatusTone.success),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                if (_error != null) ...[
+                  AppBanner(
+                    message: s.errorFor(_error!),
+                    tone: StatusTone.danger,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  Text(
-                    'Lupa Kata Sandi',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Masukkan email Anda untuk menerima tautan reset kata sandi.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.xl2),
-                  if (_sent)
-                    const AppAlert(
-                      message:
-                          'Jika email terdaftar, tautan reset kata sandi sudah dikirim ke email Anda.',
-                      variant: AppAlertVariant.success,
-                    )
-                  else ...[
-                    if (_error != null) ...[
-                      AppAlert(
-                        message: _error!.message,
-                        variant: AppAlertVariant.danger,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                    Form(
-                      key: _formKey,
-                      child: AppTextField(
-                        label: 'Email',
-                        controller: _emailController,
-                        leadingIcon: Icons.mail_outline,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: Validators.email,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    AppButton(
-                      label: 'Kirim Tautan Reset',
-                      expand: true,
-                      isLoading: _isSubmitting,
-                      onPressed: _submit,
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.xl),
-                  TextButton(
-                    onPressed: () => context.pop(),
-                    child: const Text('Kembali ke halaman masuk'),
-                  ),
                 ],
-              ),
+                FilledButton(
+                  onPressed: _busy ? null : _submit,
+                  child: _busy
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2.4),
+                        )
+                      : Text(a.sendLink),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextButton(
+                  onPressed: () => context.push(RoutePaths.resetPassword),
+                  child: Text(a.resetTitle),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                AppBanner(message: a.forgotNimNote, tone: StatusTone.info),
+              ],
             ),
           ),
         ),

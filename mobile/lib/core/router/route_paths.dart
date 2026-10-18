@@ -1,89 +1,137 @@
-/// Padanan `constants/routes.ts` (`ROUTES`) — path identik dengan React
-/// agar App Link/deep link (BAB 8.8) bisa memakai skema yang sama.
+/// Every route of the app. Feature modules register their `GoRoute`s in
+/// `features/<feature>/<feature>_routes.dart` using these paths; screens
+/// navigate with `context.push(RoutePaths.x)` / `context.go(...)`.
 ///
-/// Fase 0 hanya mendaftarkan route publik + dashboard placeholder di
-/// [core/router/app_router.dart]; sisanya didaftarkan bertahap per modul
-/// (BAB 12) tapi konstantanya didefinisikan di muka agar tidak perlu diubah
-/// tiap kali modul baru ditambahkan.
+/// Student routes live under `/s/…`, lecturer & advisor routes under `/l/…`.
+/// Detail routes are pushed on the root navigator (above the bottom bar).
 abstract final class RoutePaths {
+  // Public / session -------------------------------------------------------
+  static const splash = '/splash';
   static const login = '/login';
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
-  static const dashboard = '/dashboard';
-  static const pengaturanKeamanan = '/pengaturan/keamanan';
+  static const changePassword = '/change-password';
+  static const lock = '/lock';
+  static const noAccess = '/no-access';
 
-  static const persetujuan = '/persetujuan';
-  static const persetujuanDetail = '/persetujuan/:id';
-  static const persetujuanWorkflow = '/persetujuan/alur';
+  // Shared ----------------------------------------------------------------
+  static const notifications = '/notifications';
+  static const settings = '/settings';
+  static const securitySessions = '/settings/security';
+  static const pendingFeaturesStudent = '/pending/student';
+  static const pendingFeaturesLecturer = '/pending/lecturer';
+  static const pendingFeaturesAdvisor = '/pending/advisor';
+  static String pendingFeature(String key) => '/pending/feature/$key';
 
-  static const akademikKurikulum = '/akademik/kurikulum';
-  static const akademikKurikulumDetail = '/akademik/kurikulum/:id';
-  static const akademikMataKuliah = '/akademik/mata-kuliah';
-  static const akademikMataKuliahDetail = '/akademik/mata-kuliah/:id';
-  static const akademikKelasJadwal = '/akademik/kelas-jadwal';
-  static const akademikKelasJadwalDetail = '/akademik/kelas-jadwal/:id';
-  static const akademikProgramStudi = '/akademik/program-studi';
-  static const akademikProgramStudiDetail = '/akademik/program-studi/:id';
-  static const akademikKrs = '/akademik/krs';
-  static const akademikAbsensi = '/akademik/absensi';
-  static const akademikPenilaian = '/akademik/penilaian';
-  static const akademikUjian = '/akademik/ujian';
-  static const akademikUjianBaru = '/akademik/ujian/baru';
-  static const akademikUjianEdit = '/akademik/ujian/:id/edit';
-  static const akademikUjianSoal = '/akademik/ujian/:id/soal';
+  // Student shell tabs ------------------------------------------------------
+  static const studentHome = '/s/home';
+  static const studentAcademic = '/s/academic';
+  static const studentLearning = '/s/learning';
+  static const studentFinance = '/s/finance';
+  static const studentAccount = '/s/account';
 
-  static const mahasiswa = '/mahasiswa';
-  static const mahasiswaDetail = '/mahasiswa/:id';
-  static const dosen = '/dosen';
-  static const dosenDetail = '/dosen/:id';
-  static const pegawai = '/pegawai';
-  static const pegawaiDetail = '/pegawai/:id';
+  // Student: profile & academic records (feature academic_records)
+  static const studentProfile = '/s/profile';
+  static const studentAcademicHistory = '/s/academic-history';
+  static const studentGrades = '/s/grades';
+  static const studentKhs = '/s/khs';
+  static const studentTranscript = '/s/transcript';
+  static const studentDocuments = '/s/documents';
 
-  static const keuanganTagihan = '/keuangan/tagihan';
-  static const keuanganTagihanDetail = '/keuangan/tagihan/:id';
-  static const keuanganPembayaran = '/keuangan/pembayaran';
-  static const keuanganBeasiswa = '/keuangan/beasiswa';
-  static const keuanganBeasiswaDetail = '/keuangan/beasiswa/:id';
+  // Student: schedule, calendar, attendance (feature schedule_attendance)
+  static const studentSchedule = '/s/schedule';
+  static const studentCalendar = '/s/calendar';
+  static const studentAttendance = '/s/attendance';
+  static String studentAttendanceDetail(String krsItemId) =>
+      '/s/attendance/$krsItemId';
 
-  static const skripsi = '/skripsi';
-  static const skripsiDetail = '/skripsi/:id';
-  static const magangMbkm = '/magang-mbkm';
-  static const magangMbkmDetail = '/magang-mbkm/:id';
-  static const perpustakaan = '/perpustakaan';
-  static const perpustakaanDetail = '/perpustakaan/:id';
-  static const alumni = '/alumni';
-  static const alumniDetail = '/alumni/:id';
-  static const pengumuman = '/pengumuman';
-  static const pengumumanDetail = '/pengumuman/:id';
-  static const laporan = '/laporan';
+  // Student: KRS (feature krs)
+  static const studentKrs = '/s/krs';
+  static const studentKrsOfferings = '/s/krs/offerings';
+  static const studentKrsHistory = '/s/krs/history';
 
-  static const pengaturanRoles = '/pengaturan/roles';
-  static const pengaturanPermissions = '/pengaturan/permissions';
-  static const pengaturanUserRoles = '/pengaturan/user-roles';
-  static const pengaturanSystemSettings = '/pengaturan/system-settings';
-  static const pengaturanFeatureFlags = '/pengaturan/feature-flags';
-  static const pengaturanNotifikasi = '/pengaturan/notifikasi';
-  static const pengaturanAuditLog = '/pengaturan/audit-log';
+  // Student: learning (feature learning)
+  static const studentCourses = '/s/courses';
+  static String studentCourse(String classSectionId) =>
+      '/s/courses/$classSectionId';
+  static const studentMaterials = '/s/materials';
+  static const studentAssignments = '/s/assignments';
+  static String studentAssignment(String id) => '/s/assignments/$id';
 
-  static const platformUniversitas = '/platform/universitas';
-  static const platformKeamanan = '/platform/keamanan';
+  // Student: exams (feature exam_student)
+  static const studentExams = '/s/exams';
+  static String studentExam(String examId) => '/s/exams/$examId';
+  static String studentExamAttempt(String attemptId) =>
+      '/s/exam-attempts/$attemptId';
+  static String studentExamResult(String attemptId) =>
+      '/s/exam-attempts/$attemptId/result';
 
-  static const portalProfil = '/portal/profil';
-  static const portalKrs = '/portal/krs';
-  static const portalJadwal = '/portal/jadwal-kuliah';
-  static const portalKhs = '/portal/khs';
-  static const portalTranskrip = '/portal/transkrip';
-  static const portalNilai = '/portal/nilai';
-  static const portalAbsensi = '/portal/absensi';
-  static const portalTugas = '/portal/tugas';
-  static const portalKuis = '/portal/kuis';
-  static const portalCuti = '/portal/cuti';
-  static const portalSurat = '/portal/surat';
-  static const portalBeasiswa = '/portal/beasiswa';
-  static const portalTagihan = '/portal/tagihan';
-  static const portalBimbinganAkademik = '/portal/bimbingan-akademik';
-  static const portalBimbinganSkripsi = '/portal/bimbingan-skripsi';
-  static const portalPengumuman = '/portal/pengumuman';
-  static const portalEvaluasiDosen = '/portal/evaluasi-dosen';
-  static const portalWisuda = '/portal/wisuda';
+  // Student: finance (feature finance; tab root = studentFinance)
+  static const studentInvoices = '/s/finance/invoices';
+  static String studentInvoice(String id) => '/s/finance/invoices/$id';
+  static String studentInvoicePay(String id) => '/s/finance/invoices/$id/pay';
+  static const studentTransactions = '/s/finance/transactions';
+  static const studentDeposit = '/s/finance/deposit';
+  static const studentStatement = '/s/finance/statement';
+  static const studentUkt = '/s/finance/ukt';
+  static const studentAwards = '/s/finance/awards';
+  static const studentClearance = '/s/finance/clearance';
+
+  // Student: administrative requests & letters (feature student_services)
+  static const studentRequests = '/s/requests';
+  static const studentRequestNew = '/s/requests/new';
+  static String studentRequest(String id) => '/s/requests/$id';
+
+  // Student: announcements (feature announcements)
+  static const studentAnnouncements = '/s/announcements';
+  static String studentAnnouncement(String id) => '/s/announcements/$id';
+
+  // Lecturer shell tabs -----------------------------------------------------
+  static const lecturerHome = '/l/home';
+  static const lecturerTeaching = '/l/teaching';
+  static const lecturerSchedule = '/l/schedule';
+  static const lecturerAdvising = '/l/advising';
+  static const lecturerAccount = '/l/account';
+
+  // Lecturer: classes & LMS (feature teaching)
+  static String lecturerClass(String classSectionId) =>
+      '/l/classes/$classSectionId';
+  static String lecturerClassStudents(String classSectionId) =>
+      '/l/classes/$classSectionId/students';
+  static String lecturerClassMaterials(String classSectionId) =>
+      '/l/classes/$classSectionId/materials';
+  static String lecturerClassAssignments(String classSectionId) =>
+      '/l/classes/$classSectionId/assignments';
+  static String lecturerAssignmentSubmissions(String assignmentId) =>
+      '/l/assignments/$assignmentId/submissions';
+  static const lecturerCalendar = '/l/calendar';
+  static String lecturerStudent(String studentId) => '/l/students/$studentId';
+
+  // Lecturer: attendance & grades (feature lecturer_assessment)
+  static String lecturerClassAttendance(String classSectionId) =>
+      '/l/classes/$classSectionId/attendance';
+  static String lecturerClassGrades(String classSectionId) =>
+      '/l/classes/$classSectionId/grades';
+
+  // Lecturer: exams & question bank (feature exam)
+  static const lecturerExams = '/l/exams';
+  static const lecturerExamNew = '/l/exams/new';
+  static String lecturerExam(String examId) => '/l/exams/$examId';
+  static String lecturerExamEdit(String examId) => '/l/exams/$examId/edit';
+  static String lecturerExamQuestions(String examId) =>
+      '/l/exams/$examId/questions';
+  static String lecturerExamPreview(String examId) =>
+      '/l/exams/$examId/preview';
+  static const lecturerQuestionBank = '/l/question-bank';
+
+  // Advisor: KRS approvals (feature advising)
+  static String lecturerKrsSubmission(String id) => '/l/advising/krs/$id';
+
+  // Lecturer: profile & HR self-service (feature hr)
+  static const lecturerProfile = '/l/profile';
+  static const hrProfile = '/l/hr/profile';
+  static const hrLeaveRequests = '/l/hr/leave';
+  static const hrLeaveRequestNew = '/l/hr/leave/new';
+  static const hrRequests = '/l/hr/requests';
+  static const hrRequestNew = '/l/hr/requests/new';
 }

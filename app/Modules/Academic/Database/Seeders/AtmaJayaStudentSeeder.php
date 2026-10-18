@@ -38,7 +38,7 @@ use Modules\Tenancy\Models\University;
  * (or name), Course by (university_id, code) — matching its unique
  * constraint — Student by (university_id, nim) — matching the students
  * table's unique constraint — ClassSection by (university_id, course_id,
- * academic_term_id), and KrsItem by (student_id, class_section_id) —
+ * academic_term_id, class_code), and KrsItem by (student_id, class_section_id) —
  * matching its unique constraint — so re-running never duplicates rows.
  */
 class AtmaJayaStudentSeeder extends Seeder
@@ -213,11 +213,14 @@ class AtmaJayaStudentSeeder extends Seeder
             ->where('is_current', true)
             ->firstOrFail();
 
+        // class_code ikut jadi kunci: mata kuliah yang sama bisa punya kelas
+        // lain di semester yang sama (mis. kelas "SFT 303" prodi Sistem
+        // Informasi, lihat AtmaJayaSistemInformasiStudentSeeder) yang tidak
+        // boleh tertimpa menjadi TI01.
         return $courses->map(fn (Course $course) => ClassSection::query()->updateOrCreate(
-            ['university_id' => $university->id, 'course_id' => $course->id, 'academic_term_id' => $currentTerm->id],
+            ['university_id' => $university->id, 'course_id' => $course->id, 'academic_term_id' => $currentTerm->id, 'class_code' => 'TI01'],
             [
                 'study_program_id' => $studyProgram->id,
-                'class_code' => 'TI01',
                 'capacity' => 50,
                 'is_active' => true,
             ],

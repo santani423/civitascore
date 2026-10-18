@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/core_strings.dart';
 import '../../../../core/network/api_failure.dart';
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/storage/local_prefs.dart';
+import '../../../../core/storage/storage_keys.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/widgets/app_alert.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/language_menu_button.dart';
+import '../../../../core/widgets/ui_kit.dart';
+import '../../l10n/auth_strings.dart';
 import '../controllers/auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -20,128 +23,205 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _rememberMe = true;
+  final _identifier = TextEditingController();
+  final _password = TextEditingController();
+  late bool _byNim;
+  bool _obscure = true;
+  bool _submitting = false;
+  ApiFailure? _failure;
+
+  @override
+  void initState() {
+    super.initState();
+    _byNim =
+        ref
+            .read(sharedPreferencesProvider)
+            .getString(StorageKeys.lastLoginIdentifier) !=
+        'email';
+  }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _identifier.dispose();
+    _password.dispose();
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    setState(() => _failure = null);
     if (!_formKey.currentState!.validate()) return;
-    ref
-        .read(authControllerProvider.notifier)
-        .login(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+    setState(() => _submitting = true);
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .login(
+            identifier: _identifier.text,
+            byNim: _byNim,
+            password: _password.text,
+          );
+      await ref
+          .read(sharedPreferencesProvider)
+          .setString(StorageKeys.lastLoginIdentifier, _byNim ? 'nim' : 'email');
+    } on ApiFailure catch (f) {
+      if (mounted) setState(() => _failure = f);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authControllerProvider);
-    final isSubmitting = authState.isLoading;
-    final error = authState.hasError ? authState.error : null;
+    final s = context.l10n;
+    final a = context.authL10n;
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final fieldError =
+        _failure?.fieldError(_byNim ? 'nim' : 'email') ??
+        _failure?.fieldError('password');
+    final generalError = _failure == null
+        ? null
+        : (fieldError ?? s.errorFor(_failure!));
 
     return Scaffold(
+      appBar: AppBar(actions: const [LanguageMenuButton()]),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.xl2),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
+              constraints: const BoxConstraints(maxWidth: 440),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      Icons.school_outlined,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.primary,
+                    Center(
+                      child: Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: scheme.primary,
+                          borderRadius: BorderRadius.circular(AppRadius.xl),
+                        ),
+                        child: Icon(
+                          Icons.school_rounded,
+                          size: 40,
+                          color: scheme.onPrimary,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.lg),
                     Text(
-                      'CivitasOne',
+                      s.appName,
+                      style: text.headlineMedium,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     Text(
-                      'Sistem Manajemen Akademik Universitas',
+                      a.loginSubtitle,
+                      style: text.bodyMedium,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: AppSpacing.xl2),
-                    if (error != null) ...[
-                      AppAlert(
-                        message: error is ApiFailure
-                            ? error.message
-                            : 'Terjadi kesalahan. Silakan coba lagi.',
-                        variant: AppAlertVariant.danger,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-                    AppTextField(
-                      label: 'Email atau Username',
-                      controller: _emailController,
-                      leadingIcon: Icons.mail_outline,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      autofillHints: const [AutofillHints.email],
-                      validator: Validators.email,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    AppPasswordField(
-                      label: 'Kata Sandi',
-                      controller: _passwordController,
-                      textInputAction: TextInputAction.done,
-                      autofillHints: const [AutofillHints.password],
-                      validator: Validators.minLength(
-                        6,
-                        fieldName: 'Kata sandi',
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Checkbox(
-                              value: _rememberMe,
-                              onChanged: (value) =>
-                                  setState(() => _rememberMe = value ?? true),
-                            ),
-                            const Text('Ingat saya'),
-                          ],
+                    SegmentedButton<bool>(
+                      segments: [
+                        ButtonSegment(
+                          value: true,
+                          label: Text(a.asStudent),
+                          icon: const Icon(Icons.person_outline),
                         ),
-                        TextButton(
-                          onPressed: () =>
-                              context.push(RoutePaths.forgotPassword),
-                          child: const Text('Lupa sandi?'),
+                        ButtonSegment(
+                          value: false,
+                          label: Text(a.asLecturer),
+                          icon: const Icon(Icons.co_present_outlined),
                         ),
                       ],
+                      selected: {_byNim},
+                      onSelectionChanged: (v) => setState(() {
+                        _byNim = v.first;
+                        _failure = null;
+                      }),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    TextFormField(
+                      key: const Key('login-identifier'),
+                      controller: _identifier,
+                      keyboardType: _byNim
+                          ? TextInputType.text
+                          : TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: [
+                        _byNim ? AutofillHints.username : AutofillHints.email,
+                      ],
+                      decoration: InputDecoration(
+                        labelText: _byNim ? a.nim : a.email,
+                        hintText: _byNim ? a.nimHint : a.emailHint,
+                        prefixIcon: Icon(
+                          _byNim ? Icons.badge_outlined : Icons.alternate_email,
+                        ),
+                      ),
+                      validator: Validators.compose([
+                        Validators.required(s),
+                        if (!_byNim) Validators.email(s),
+                        Validators.maxLength(s, _byNim ? 50 : 191),
+                      ]),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    AppButton(
-                      label: 'Masuk',
-                      expand: true,
-                      size: AppButtonSize.lg,
-                      isLoading: isSubmitting,
-                      onPressed: _submit,
+                    TextFormField(
+                      key: const Key('login-password'),
+                      controller: _password,
+                      obscureText: _obscure,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.password],
+                      onFieldSubmitted: (_) => _submit(),
+                      decoration: InputDecoration(
+                        labelText: a.password,
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          tooltip: _obscure ? a.showPassword : a.hidePassword,
+                          icon: Icon(
+                            _obscure
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                          onPressed: () => setState(() => _obscure = !_obscure),
+                        ),
+                      ),
+                      validator: Validators.required(s),
                     ),
-                    const SizedBox(height: AppSpacing.xl2),
-                    Text(
-                      'Versi 0.1.0-fase0 · © ${DateTime.now().year} CivitasOne',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: () =>
+                            context.push(RoutePaths.forgotPassword),
+                        child: Text(a.forgotPassword),
+                      ),
                     ),
+                    if (generalError != null) ...[
+                      AppBanner(message: generalError, tone: StatusTone.danger),
+                      const SizedBox(height: AppSpacing.md),
+                    ],
+                    FilledButton(
+                      key: const Key('login-submit'),
+                      onPressed: _submitting ? null : _submit,
+                      child: _submitting
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                              ),
+                            )
+                          : Text(a.signIn),
+                    ),
+                    if (_byNim) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(
+                        a.studentPasswordHint,
+                        style: text.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ],
                 ),
               ),
