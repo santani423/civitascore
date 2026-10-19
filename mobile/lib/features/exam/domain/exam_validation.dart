@@ -1,9 +1,19 @@
-import 'entities/question_selection_mode.dart';
+import 'question_selection_mode.dart';
 
-/// Aturan validasi konfigurasi ujian (spec §2/§8/§18) — sengaja diduplikasi
-/// murni sebagai pengecekan sisi-klien untuk umpan balik instan; backend
-/// tetap satu-satunya sumber kebenaran dan menjalankan pengecekan yang sama
-/// saat publish (lihat ExamService::publish di backend).
+/// Jenis masalah konfigurasi ujian (spec §2/§8/§18). UI menerjemahkannya via
+/// `ExamStrings.issueText`; pesan Indonesia di bawah dipertahankan untuk
+/// pengecekan murni & tes.
+enum ExamIssueType { participantCount, poolEmpty, exceedsPool, manualShort }
+
+class ExamIssue {
+  const ExamIssue(this.type, {this.required = 0, this.selected = 0});
+  final ExamIssueType type;
+  final int required;
+  final int selected;
+}
+
+/// Aturan validasi konfigurasi ujian — pengecekan sisi-klien untuk umpan balik
+/// instan; backend tetap sumber kebenaran (ExamService::publish).
 abstract final class ExamValidation {
   static String? participantCountError(int questionsPerParticipant) {
     if (questionsPerParticipant <= 0) {
@@ -40,9 +50,44 @@ abstract final class ExamValidation {
     return null;
   }
 
-  /// Kumpulan seluruh pesan error yang berlaku untuk konfigurasi saat ini,
-  /// dipakai layar wizard untuk menampilkan status & menonaktifkan tombol
-  /// Publish (spec §18 — "Publish button disabled until valid").
+  /// Masalah terstruktur (untuk UI terlokalisasi).
+  static List<ExamIssue> issuesFor({
+    required int questionPoolSize,
+    required int questionsPerParticipant,
+    required QuestionSelectionMode selectionMode,
+    required int manuallySelectedCount,
+  }) {
+    final issues = <ExamIssue>[];
+    if (participantCountError(questionsPerParticipant) != null) {
+      issues.add(const ExamIssue(ExamIssueType.participantCount));
+    }
+    if (poolSizeError(questionPoolSize) != null) {
+      issues.add(const ExamIssue(ExamIssueType.poolEmpty));
+    }
+    if (participantExceedsPoolError(
+          questionsPerParticipant: questionsPerParticipant,
+          questionPoolSize: questionPoolSize,
+        ) !=
+        null) {
+      issues.add(const ExamIssue(ExamIssueType.exceedsPool));
+    }
+    if (selectionMode == QuestionSelectionMode.manual &&
+        manualSelectionError(
+              questionsPerParticipant: questionsPerParticipant,
+              selectedCount: manuallySelectedCount,
+            ) !=
+            null) {
+      issues.add(
+        ExamIssue(
+          ExamIssueType.manualShort,
+          required: questionsPerParticipant,
+          selected: manuallySelectedCount,
+        ),
+      );
+    }
+    return issues;
+  }
+
   static List<String> errorsFor({
     required int questionPoolSize,
     required int questionsPerParticipant,
@@ -86,9 +131,8 @@ abstract final class ExamValidation {
     manuallySelectedCount: manuallySelectedCount,
   ).isEmpty;
 
-  /// Ringkasan distribusi soal berbahasa Indonesia untuk layar preview
-  /// (spec §11/§20) — dibangun dari konfigurasi yang sama dengan validasi di
-  /// atas supaya tidak ada dua sumber kebenaran untuk teks yang sama.
+  /// Ringkasan distribusi soal berbahasa Indonesia (spec §11/§20). UI memakai
+  /// `ExamStrings.distributionSummary` untuk versi terlokalisasi.
   static String distributionSummary({
     required int questionPoolSize,
     required int questionsPerParticipant,

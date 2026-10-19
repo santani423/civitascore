@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../domain/krs_models.dart';
 
-final krsApiProvider = Provider<KrsApi>((ref) => KrsApi(ref.watch(apiClientProvider)));
+final krsApiProvider = Provider<KrsApi>(
+  (ref) => KrsApi(ref.watch(apiClientProvider)),
+);
 
 class KrsApi {
   KrsApi(this._api);

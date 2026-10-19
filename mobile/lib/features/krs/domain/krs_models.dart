@@ -29,7 +29,8 @@ class KrsTerm {
     isKrsOpen: asBool(j['is_krs_open']),
   );
 
-  static KrsTerm? maybe(Object? v) => v is Map ? KrsTerm.fromJson(asMap(v)) : null;
+  static KrsTerm? maybe(Object? v) =>
+      v is Map ? KrsTerm.fromJson(asMap(v)) : null;
 }
 
 class KrsLecturer {
@@ -284,7 +285,9 @@ class KrsOffering {
   final List<KrsOfferingClass> classes;
   factory KrsOffering.fromJson(Map<String, dynamic> j) => KrsOffering(
     course: KrsCourse.fromJson(asMap(j['course'])),
-    prerequisites: asMapList(j['prerequisites']).map(KrsPrerequisite.fromJson).toList(),
+    prerequisites: asMapList(
+      j['prerequisites'],
+    ).map(KrsPrerequisite.fromJson).toList(),
     bestGrade: asString(j['best_grade']),
     isRetake: asBool(j['is_retake']),
     isSelected: asBool(j['is_selected']),

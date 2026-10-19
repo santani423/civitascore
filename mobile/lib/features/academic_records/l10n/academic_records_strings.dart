@@ -10,7 +10,8 @@ class AcademicRecordsStrings {
 
   // Hub
   String get hubTitle => _p('Akademik', 'Academic', '学业');
-  String get summaryTitle => _p('Ringkasan akademik', 'Academic summary', '学业概览');
+  String get summaryTitle =>
+      _p('Ringkasan akademik', 'Academic summary', '学业概览');
   String get menuTitle => _p('Layanan akademik', 'Academic services', '学业服务');
   String get pendingSection =>
       _p('Menunggu backend', 'Awaiting backend', '等待后端');
@@ -33,26 +34,17 @@ class AcademicRecordsStrings {
     '课程、考试与截止日期',
   );
   String get attendance => _p('Presensi', 'Attendance', '考勤');
-  String get attendanceSub => _p(
-    'Kehadiran per mata kuliah',
-    'Attendance per course',
-    '各课程出勤',
-  );
+  String get attendanceSub =>
+      _p('Kehadiran per mata kuliah', 'Attendance per course', '各课程出勤');
   String get grades => _p('Nilai', 'Grades', '成绩');
   String get gradesSub =>
       _p('Nilai per semester', 'Grades per semester', '按学期成绩');
   String get khs => _p('KHS', 'Grade report (KHS)', '成绩单 (KHS)');
-  String get khsSub => _p(
-    'Kartu hasil studi dan IPS',
-    'Semester report and GPA',
-    '学期成绩与学期绩点',
-  );
+  String get khsSub =>
+      _p('Kartu hasil studi dan IPS', 'Semester report and GPA', '学期成绩与学期绩点');
   String get transcript => _p('Transkrip', 'Transcript', '成绩总表');
-  String get transcriptSub => _p(
-    'Seluruh nilai dan IPK',
-    'All grades and cumulative GPA',
-    '全部成绩与累计绩点',
-  );
+  String get transcriptSub =>
+      _p('Seluruh nilai dan IPK', 'All grades and cumulative GPA', '全部成绩与累计绩点');
   String get documents => _p('Dokumen', 'Documents', '文件');
   String get documentsSub => _p(
     'Unduh KRS, KHS, dan transkrip (PDF)',
@@ -72,8 +64,7 @@ class AcademicRecordsStrings {
   String get sks => _p('SKS', 'Credits', '学分');
   String get totalCredits => _p('Total SKS', 'Total credits', '总学分');
   String get passedCredits => _p('SKS lulus', 'Passed credits', '已通过学分');
-  String get remainingCredits =>
-      _p('Sisa SKS', 'Remaining credits', '剩余学分');
+  String get remainingCredits => _p('Sisa SKS', 'Remaining credits', '剩余学分');
   String get currentTermCredits =>
       _p('SKS semester ini', 'Credits this term', '本学期学分');
   String get maxCredits => _p('Batas SKS', 'Credit limit', '学分上限');
@@ -110,7 +101,8 @@ class AcademicRecordsStrings {
   String get totalSemesters => _p('Semester', 'Semesters', '学期数');
 
   // KHS
-  String get khsTitle => _p('Kartu Hasil Studi', 'Semester grade report', '学期成绩单');
+  String get khsTitle =>
+      _p('Kartu Hasil Studi', 'Semester grade report', '学期成绩单');
   String get chooseTerm => _p('Pilih semester', 'Choose term', '选择学期');
   String get khsEmpty => _p(
     'Belum ada KRS yang disetujui sehingga KHS belum tersedia.',
@@ -150,7 +142,8 @@ class AcademicRecordsStrings {
   );
 
   // Documents
-  String get documentsTitle => _p('Dokumen akademik', 'Academic documents', '学业文件');
+  String get documentsTitle =>
+      _p('Dokumen akademik', 'Academic documents', '学业文件');
   String get documentsEmpty => _p(
     'Belum ada dokumen yang dapat diunduh.',
     'No documents available yet.',
@@ -163,11 +156,8 @@ class AcademicRecordsStrings {
 
   // History
   String get historyTitle => _p('Riwayat akademik', 'Academic history', '学业历程');
-  String get historyEmpty => _p(
-    'Belum ada riwayat akademik.',
-    'No academic history yet.',
-    '暂无学业历程。',
-  );
+  String get historyEmpty =>
+      _p('Belum ada riwayat akademik.', 'No academic history yet.', '暂无学业历程。');
   String get typeAdmission => _p('Penerimaan', 'Admission', '入学');
   String get typeTerm => _p('Semester', 'Term', '学期');
   String get typeStatus => _p('Status', 'Status', '状态');
@@ -195,11 +185,8 @@ class AcademicRecordsStrings {
     'A data change request is being processed.',
     '有一项数据变更申请正在处理中。',
   );
-  String get phoneInvalid => _p(
-    'Nomor telepon tidak valid',
-    'Invalid phone number',
-    '电话号码无效',
-  );
+  String get phoneInvalid =>
+      _p('Nomor telepon tidak valid', 'Invalid phone number', '电话号码无效');
   String get addressTooLong =>
       _p('Maksimal 500 karakter', 'Maximum 500 characters', '最多 500 个字符');
   String get profileSaved =>

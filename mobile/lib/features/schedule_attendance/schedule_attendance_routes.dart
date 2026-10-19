@@ -1,6 +1,29 @@
-// ignore: unused_import
-import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-// STUB — replaced by the `schedule_attendance` feature module.
-final List<RouteBase> scheduleAttendanceRoutes = <RouteBase>[];
+import 'presentation/screens/attendance_detail_screen.dart';
+import 'presentation/screens/attendance_screen.dart';
+import 'presentation/screens/calendar_screen.dart';
+import 'presentation/screens/schedule_screen.dart';
+
+final List<RouteBase> scheduleAttendanceRoutes = <RouteBase>[
+  GoRoute(
+    path: '/s/schedule',
+    builder: (_, _) => const StudentScheduleScreen(),
+  ),
+  GoRoute(
+    path: '/s/calendar',
+    builder: (_, _) => const StudentCalendarScreen(),
+  ),
+  GoRoute(
+    path: '/s/attendance',
+    builder: (_, _) => const StudentAttendanceScreen(),
+    routes: [
+      GoRoute(
+        path: ':krsItemId',
+        builder: (_, state) => StudentAttendanceDetailScreen(
+          krsItemId: state.pathParameters['krsItemId']!,
+        ),
+      ),
+    ],
+  ),
+];

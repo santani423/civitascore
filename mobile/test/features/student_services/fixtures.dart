@@ -1,0 +1,50 @@
+Map<String, dynamic> requestJson({
+  String id = '01REQ1',
+  String type = 'letter',
+  String status = 'draft',
+  String title = 'Surat aktif kuliah untuk beasiswa',
+  Map<String, dynamic>? payload,
+  bool hasLetter = false,
+  List<Map<String, dynamic>> history = const [],
+  Map<String, dynamic>? attachment,
+  Map<String, dynamic>? currentStep,
+  String? submittedAt,
+  String? decisionNote,
+}) => {
+  'id': id,
+  'type': type,
+  'type_label': 'Surat Keterangan',
+  'status': status,
+  'status_label': status,
+  'title': title,
+  'description': 'Untuk keperluan beasiswa',
+  'payload':
+      payload ?? {'letter_type': 'active_student', 'purpose': 'Beasiswa'},
+  'letter_type_label': 'Surat Keterangan Aktif Kuliah',
+  'attachment': attachment,
+  'term': {'id': 'T1', 'label': '2026/2027 Ganjil'},
+  'submitted_at': submittedAt,
+  'decided_at': null,
+  'reviewer': null,
+  'decision_note': decisionNote,
+  'cancelled_at': null,
+  'current_step': currentStep,
+  'can_act': false,
+  'history': history,
+  'has_letter': hasLetter,
+  'created_at': '2026-10-01T03:00:00+00:00',
+};
+
+const optionsJson = {
+  'letter_types': [
+    {'value': 'active_student', 'label': 'Surat Keterangan Aktif Kuliah'},
+    {'value': 'good_conduct', 'label': 'Surat Keterangan Berkelakuan Baik'},
+  ],
+  'data_change_fields': [
+    'name',
+    'email',
+    'birth_place',
+    'tanggal_lahir',
+    'gender',
+  ],
+};

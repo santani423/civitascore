@@ -112,8 +112,7 @@ class Meeting {
   final DateTime? date;
   final List<AttendanceRecord> records;
 
-  int count(AttendanceStatus s) =>
-      records.where((r) => r.status == s).length;
+  int count(AttendanceStatus s) => records.where((r) => r.status == s).length;
 
   AttendanceStatus? statusOf(String krsItemId) {
     for (final r in records) {
@@ -136,10 +135,7 @@ List<Meeting> groupMeetings(List<AttendanceRecord> records) {
         date: byNumber[n]!
             .map((r) => r.meetingDate)
             .whereType<DateTime>()
-            .fold<DateTime?>(
-              null,
-              (a, b) => a == null || b.isAfter(a) ? b : a,
-            ),
+            .fold<DateTime?>(null, (a, b) => a == null || b.isAfter(a) ? b : a),
         records: byNumber[n]!,
       ),
   ];

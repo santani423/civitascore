@@ -134,13 +134,13 @@ class CoursesOverview {
   final List<CourseSummary> courses;
 }
 
-enum MaterialType { file, link, video, text }
+enum LmsMaterialType { file, link, video, text }
 
-MaterialType materialTypeOf(String? v) => switch (v) {
-  'link' => MaterialType.link,
-  'video' => MaterialType.video,
-  'text' => MaterialType.text,
-  _ => MaterialType.file,
+LmsMaterialType lmsMaterialTypeOf(String? v) => switch (v) {
+  'link' => LmsMaterialType.link,
+  'video' => LmsMaterialType.video,
+  'text' => LmsMaterialType.text,
+  _ => LmsMaterialType.file,
 };
 
 class FileRef {
@@ -180,7 +180,7 @@ class CourseMaterial {
   factory CourseMaterial.fromJson(Map<String, dynamic> j) => CourseMaterial(
     id: asString(j['id']) ?? '',
     title: asString(j['title']) ?? '',
-    type: materialTypeOf(asString(j['type'])),
+    type: lmsMaterialTypeOf(asString(j['type'])),
     typeLabel: asString(j['type_label']) ?? '',
     meetingNumber: asInt(j['meeting_number']),
     description: asString(j['description']),
@@ -190,7 +190,7 @@ class CourseMaterial {
   );
   final String id;
   final String title;
-  final MaterialType type;
+  final LmsMaterialType type;
   final String typeLabel;
   final int? meetingNumber;
   final String? description;
@@ -383,7 +383,9 @@ class AssignmentsOverview {
       assignments: asMapList(
         j['assignments'],
       ).map(AssignmentItem.fromJson).toList(),
-      counts: {for (final e in counts.entries) '${e.key}': asInt(e.value) ?? 0},
+      counts: {
+        for (final e in counts.entries) e.key.toString(): asInt(e.value) ?? 0,
+      },
     );
   }
   final LearningTerm? term;

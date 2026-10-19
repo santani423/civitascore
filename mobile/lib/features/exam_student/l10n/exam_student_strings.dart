@@ -29,11 +29,8 @@ class ExamStudentStrings {
   String get anytime => _p('Tanpa batas waktu', 'No time limit', '不限时间');
   String get questions => _p('Jumlah soal', 'Questions', '题数');
   String get attempts => _p('Percobaan', 'Attempts', '尝试次数');
-  String attemptsOf(int used, int max) => _p(
-    '$used dari $max terpakai',
-    '$used of $max used',
-    '已用 $used / $max',
-  );
+  String attemptsOf(int used, int max) =>
+      _p('$used dari $max terpakai', '$used of $max used', '已用 $used / $max');
   String get backNavigation =>
       _p('Kembali ke soal sebelumnya', 'Go back to earlier questions', '返回上一题');
   String get allowed => _p('Diizinkan', 'Allowed', '允许');
@@ -232,17 +229,15 @@ class ExamStudentStrings {
   String get correct => _p('Benar', 'Correct', '正确');
   String get wrong => _p('Salah', 'Wrong', '错误');
   String get timeSpent => _p('Waktu pengerjaan', 'Time spent', '用时');
+  String get submittedAt => _p('Dikumpulkan', 'Submitted', '交卷时间');
   String get attemptNo => _p('Percobaan ke', 'Attempt no.', '第几次');
   String get review => _p('Review jawaban', 'Answer review', '答案回顾');
   String get yourAnswer => _p('Jawaban Anda', 'Your answer', '您的答案');
   String get correctAnswer => _p('Jawaban benar', 'Correct answer', '正确答案');
   String get explanation => _p('Pembahasan', 'Explanation', '解析');
   String get downloadPdf => _p('Unduh PDF', 'Download PDF', '下载 PDF');
-  String get resultPending => _p(
-    'Hasil belum tersedia',
-    'Result not available yet',
-    '成绩暂不可用',
-  );
+  String get resultPending =>
+      _p('Hasil belum tersedia', 'Result not available yet', '成绩暂不可用');
   String get backToExams =>
       _p('Kembali ke daftar ujian', 'Back to exams', '返回考试列表');
   String get skipped => _p('Tidak dijawab', 'Skipped', '未作答');

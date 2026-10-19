@@ -14,8 +14,9 @@ final advisingSearchProvider = StateProvider.autoDispose<String>((ref) => '');
 
 class KrsListNotifier extends PagedNotifier<KrsSubmission> {
   @override
-  Future<Paginated<KrsSubmission>> fetchPage(int page) =>
-      ref.read(advisingApiProvider).list(
+  Future<Paginated<KrsSubmission>> fetchPage(int page) => ref
+      .read(advisingApiProvider)
+      .list(
         status: ref.read(advisingStatusProvider),
         search: ref.read(advisingSearchProvider),
         page: page,
@@ -30,9 +31,10 @@ class KrsListNotifier extends PagedNotifier<KrsSubmission> {
 }
 
 final krsListProvider =
-    AsyncNotifierProvider.autoDispose<KrsListNotifier, PagedState<KrsSubmission>>(
-      KrsListNotifier.new,
-    );
+    AsyncNotifierProvider.autoDispose<
+      KrsListNotifier,
+      PagedState<KrsSubmission>
+    >(KrsListNotifier.new);
 
 final krsDetailProvider = FutureProvider.autoDispose
     .family<KrsSubmission, String>(

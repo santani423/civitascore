@@ -12,6 +12,11 @@ abstract final class Env {
   static late final String universityId;
   static late final String apiPinnedCertSha256;
 
+  /// Public web (SPA) origin, e.g. `https://civitas.atmajaya.ac.id`, used to
+  /// build links that open in the web app (exam access links `/exam/{token}`).
+  /// Falls back to the API origin when not provided.
+  static late final String webBaseUrl;
+
   static void init(Flavor f) {
     flavor = f;
     apiBaseUrl = const String.fromEnvironment(
@@ -23,6 +28,8 @@ abstract final class Env {
     apiPinnedCertSha256 = const String.fromEnvironment(
       'API_PINNED_CERT_SHA256',
     );
+    const web = String.fromEnvironment('WEB_BASE_URL');
+    webBaseUrl = web.isNotEmpty ? web : Uri.parse(apiBaseUrl).origin;
   }
 
   static String get appName => switch (flavor) {

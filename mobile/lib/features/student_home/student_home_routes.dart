@@ -1,13 +1,7 @@
-import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/widgets/feature_placeholder.dart';
 
-// STUB — replaced by the `student_home` feature module.
-class StudentHomeScreen extends StatelessWidget {
-  const StudentHomeScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const FeaturePlaceholder(title: 'StudentHomeScreen');
-}
+export 'presentation/screens/student_home_screen.dart' show StudentHomeScreen;
 
+/// The home tab has no detail routes of its own; every card navigates to
+/// routes owned by other modules.
 final List<RouteBase> studentHomeRoutes = <RouteBase>[];

@@ -1,4 +1,4 @@
-import 'package:civitasone/features/exam/domain/entities/question_selection_mode.dart';
+import 'package:civitasone/features/exam/domain/question_selection_mode.dart';
 import 'package:civitasone/features/exam/domain/exam_validation.dart';
 import 'package:flutter_test/flutter_test.dart';
 

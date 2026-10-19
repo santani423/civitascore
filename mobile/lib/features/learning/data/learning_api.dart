@@ -48,7 +48,7 @@ class LearningApi {
   }) => _api.post(
     '/student/assignments/$assignmentId/submission',
     data: {
-      if (fileUploadId != null) 'file_upload_id': fileUploadId,
+      'file_upload_id': ?fileUploadId,
       if (notes != null && notes.trim().isNotEmpty) 'notes': notes.trim(),
     },
     decode: (d) => AssignmentItem.fromJson(Map<String, dynamic>.from(d as Map)),

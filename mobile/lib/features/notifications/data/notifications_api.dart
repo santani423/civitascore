@@ -14,11 +14,7 @@ class NotificationsApi {
     bool unreadOnly = false,
   }) => _api.getPage(
     '/notifications',
-    query: {
-      'page': page,
-      'per_page': 20,
-      if (unreadOnly) 'unread': 1,
-    },
+    query: {'page': page, 'per_page': 20, if (unreadOnly) 'unread': 1},
     item: NotificationItem.fromJson,
     cache: true,
   );
@@ -44,7 +40,11 @@ class NotificationsApi {
     String type = '*',
   }) => _api.post<void>(
     '/notification-preferences',
-    data: {'channel': channel, 'notification_type': type, 'is_enabled': enabled},
+    data: {
+      'channel': channel,
+      'notification_type': type,
+      'is_enabled': enabled,
+    },
     decode: (_) {},
   );
 }

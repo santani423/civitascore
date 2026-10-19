@@ -37,11 +37,10 @@ class AssessmentApi {
 
   /// Enrolled students of a class (`GET /krs-items`), sorted by NIM.
   Future<List<RosterStudent>> roster(String classSectionId) async {
-    final list = await _all(
-      '/krs-items',
-      {'filter[class_section_id]': classSectionId, 'filter[status]': 'enrolled'},
-      RosterStudent.fromJson,
-    );
+    final list = await _all('/krs-items', {
+      'filter[class_section_id]': classSectionId,
+      'filter[status]': 'enrolled',
+    }, RosterStudent.fromJson);
     list.sort((a, b) => a.nim.compareTo(b.nim));
     return list;
   }
@@ -52,11 +51,9 @@ class AssessmentApi {
     AttendanceRecord.fromJson,
   );
 
-  Future<List<GradeEntry>> grades(String classSectionId) => _all(
-    '/grades',
-    {'filter[class_section_id]': classSectionId},
-    GradeEntry.fromJson,
-  );
+  Future<List<GradeEntry>> grades(String classSectionId) => _all('/grades', {
+    'filter[class_section_id]': classSectionId,
+  }, GradeEntry.fromJson);
 
   /// Upserts one meeting (re-posting the same number corrects it). Returns
   /// the backend message.

@@ -19,11 +19,9 @@ class NotificationsNotifier extends PagedNotifier<NotificationItem> {
   }
 
   @override
-  Future<Paginated<NotificationItem>> fetchPage(int page) =>
-      ref.read(notificationsApiProvider).list(
-        page: page,
-        unreadOnly: ref.read(notificationsUnreadOnlyProvider),
-      );
+  Future<Paginated<NotificationItem>> fetchPage(int page) => ref
+      .read(notificationsApiProvider)
+      .list(page: page, unreadOnly: ref.read(notificationsUnreadOnlyProvider));
 
   /// Marks one notification read (PATCH) and updates the list + bell.
   Future<void> markRead(NotificationItem item) async {

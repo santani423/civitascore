@@ -301,7 +301,9 @@ class AttendanceDetail {
       lecturer: asString(j['lecturer']),
       minimumPercent: asDouble(j['minimum_percent']),
       totals: AttendanceTotals.fromJson(j),
-      meetings: asMapList(j['meetings']).map(AttendanceMeeting.fromJson).toList(),
+      meetings: asMapList(
+        j['meetings'],
+      ).map(AttendanceMeeting.fromJson).toList(),
     );
   }
 }

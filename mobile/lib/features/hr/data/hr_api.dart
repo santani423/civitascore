@@ -58,11 +58,8 @@ class HrApi {
   Future<void> cancelLeave(String id) =>
       _api.patch<void>('/me/hr/leave-requests/$id/cancel', decode: (_) {});
 
-  Future<List<HrRequest>> requests() => _api.getList(
-    '/me/hr/requests',
-    cache: true,
-    item: HrRequest.fromJson,
-  );
+  Future<List<HrRequest>> requests() =>
+      _api.getList('/me/hr/requests', cache: true, item: HrRequest.fromJson);
 
   Future<HrRequest> createRequest({
     required String type,
@@ -92,4 +89,6 @@ class HrApi {
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
 
-final hrApiProvider = Provider<HrApi>((ref) => HrApi(ref.watch(apiClientProvider)));
+final hrApiProvider = Provider<HrApi>(
+  (ref) => HrApi(ref.watch(apiClientProvider)),
+);

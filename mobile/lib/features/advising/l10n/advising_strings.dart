@@ -22,6 +22,7 @@ class AdvisingStrings {
     'No KRS submissions match this filter.',
     '没有符合此筛选的选课提交。',
   );
+  String get clear => _p('Hapus pencarian', 'Clear search', '清除搜索');
   String get detailTitle => _p('Pengajuan KRS', 'KRS submission', '选课提交');
   String get student => _p('Mahasiswa', 'Student', '学生');
   String get nim => _p('NIM', 'Student ID', '学号');
@@ -71,11 +72,8 @@ class AdvisingStrings {
     'KRS returned to the student.',
     '选课已退回给学生。',
   );
-  String get notePending => _p(
-    'Menunggu keputusan Anda.',
-    'Awaiting your decision.',
-    '等待您的决定。',
-  );
+  String get notePending =>
+      _p('Menunggu keputusan Anda.', 'Awaiting your decision.', '等待您的决定。');
 
   String statusLabel(String status, [String? fallback]) => switch (status) {
     'all' => _p('Semua', 'All', '全部'),

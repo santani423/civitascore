@@ -1,23 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/l10n/core_strings.dart';
 import '../../../../core/theme/app_dimensions.dart';
-import '../../domain/entities/exam_question.dart';
-import '../controllers/question_bank_controller.dart';
+import '../../../../core/widgets/state_views.dart';
+import '../../domain/exam_question.dart';
+import '../../l10n/exam_strings.dart';
+import '../providers.dart';
 
-/// "Preview sebagai Mahasiswa" (spec §12) — mensimulasikan tampilan soal ke
-/// peserta dari draft bank soal saat ini. Ini HANYA pratinjau di sisi wizard
-/// (tidak memanggil API attempt) — layar pengerjaan ujian sungguhan untuk
-/// mahasiswa ada di luar cakupan implementasi ini, lihat catatan di plan.
+/// "Preview sebagai mahasiswa" — simulasi tampilan soal dari soal ujian
+/// saat ini. Hanya pratinjau lokal: tidak memanggil API attempt dan tidak
+/// menampilkan kunci jawaban.
 class ExamPreviewScreen extends ConsumerStatefulWidget {
-  const ExamPreviewScreen({
-    super.key,
-    required this.examId,
-    required this.title,
-  });
+  const ExamPreviewScreen({super.key, required this.examId});
 
   final String examId;
-  final String title;
 
   @override
   ConsumerState<ExamPreviewScreen> createState() => _ExamPreviewScreenState();
@@ -26,94 +23,95 @@ class ExamPreviewScreen extends ConsumerStatefulWidget {
 class _ExamPreviewScreenState extends ConsumerState<ExamPreviewScreen> {
   int _index = 0;
 
+  static const _labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
   @override
   Widget build(BuildContext context) {
-    final questionsAsync = ref.watch(
-      questionBankControllerProvider(widget.examId),
-    );
+    final s = context.examL10n;
+    final core = context.l10n;
+    final questions = ref.watch(examQuestionsProvider(widget.examId));
+    final exam = ref.watch(examProvider(widget.examId)).valueOrNull;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
-      body: questionsAsync.when(
-        data: (questions) {
-          if (questions.isEmpty) {
-            return const Center(
-              child: Text('Belum ada soal untuk dipratinjau.'),
-            );
-          }
-
-          final question = questions[_index.clamp(0, questions.length - 1)];
-
-          return Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Soal ${_index + 1} dari ${questions.length}',
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  question.questionText,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Expanded(child: _OptionsList(question: question)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      appBar: AppBar(title: Text(exam?.title ?? s.previewTitle)),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: AsyncValueView<List<ExamQuestion>>(
+            value: questions,
+            onRetry: () => ref.invalidate(examQuestionsProvider(widget.examId)),
+            isEmpty: (l) => l.isEmpty,
+            empty: EmptyView(
+              icon: Icons.visibility_off_outlined,
+              title: s.previewEmpty,
+            ),
+            data: (list) {
+              final i = _index.clamp(0, list.length - 1);
+              final q = list[i];
+              return Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextButton(
-                      onPressed: _index > 0
-                          ? () => setState(() => _index -= 1)
-                          : null,
-                      child: const Text('< Sebelumnya'),
+                    Text(
+                      s.questionOf(i + 1, list.length),
+                      style: Theme.of(context).textTheme.labelLarge,
                     ),
-                    TextButton(
-                      onPressed: _index < questions.length - 1
-                          ? () => setState(() => _index += 1)
-                          : null,
-                      child: const Text('Berikutnya >'),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      q.questionText,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount: q.options.length,
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: AppSpacing.sm),
+                        itemBuilder: (context, k) => Card(
+                          margin: EdgeInsets.zero,
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              child: Text(
+                                k < _labels.length ? _labels[k] : '${k + 1}',
+                              ),
+                            ),
+                            title: Text(q.options[k].optionText),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: TextButton.icon(
+                            icon: const Icon(Icons.chevron_left),
+                            label: Text(core.previous),
+                            onPressed: i > 0
+                                ? () => setState(() => _index = i - 1)
+                                : null,
+                          ),
+                        ),
+                        Flexible(
+                          child: TextButton.icon(
+                            iconAlignment: IconAlignment.end,
+                            icon: const Icon(Icons.chevron_right),
+                            label: Text(core.next),
+                            onPressed: i < list.length - 1
+                                ? () => setState(() => _index = i + 1)
+                                : null,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Gagal memuat soal: $error')),
-      ),
-    );
-  }
-}
-
-class _OptionsList extends StatelessWidget {
-  const _OptionsList({required this.question});
-
-  final ExamQuestion question;
-
-  static const _labels = ['A', 'B', 'C', 'D', 'E', 'F'];
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      itemCount: question.options.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-      itemBuilder: (context, index) {
-        final option = question.options[index];
-        final label = index < _labels.length ? _labels[index] : '${index + 1}';
-
-        return Card(
-          margin: EdgeInsets.zero,
-          child: ListTile(
-            leading: CircleAvatar(child: Text(label)),
-            // is_correct sengaja tidak ditampilkan — pratinjau ini meniru apa
-            // yang dilihat mahasiswa, bukan tampilan admin.
-            title: Text(option.optionText),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

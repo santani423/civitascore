@@ -1,13 +1,36 @@
-import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/widgets/feature_placeholder.dart';
 
-// STUB — replaced by the `learning` feature module.
-class LearningHubScreen extends StatelessWidget {
-  const LearningHubScreen({super.key});
-  @override
-  Widget build(BuildContext context) =>
-      const FeaturePlaceholder(title: 'LearningHubScreen');
-}
+import '../../core/router/route_paths.dart';
+import 'presentation/screens/assignment_detail_screen.dart';
+import 'presentation/screens/assignments_screen.dart';
+import 'presentation/screens/course_detail_screen.dart';
+import 'presentation/screens/courses_screen.dart';
+import 'presentation/screens/materials_screen.dart';
 
-final List<RouteBase> learningRoutes = <RouteBase>[];
+export 'presentation/screens/learning_hub_screen.dart' show LearningHubScreen;
+
+final List<RouteBase> learningRoutes = <RouteBase>[
+  GoRoute(
+    path: RoutePaths.studentCourses,
+    builder: (_, _) => const CoursesScreen(),
+  ),
+  GoRoute(
+    path: '/s/courses/:classSectionId',
+    builder: (_, state) => CourseDetailScreen(
+      classSectionId: state.pathParameters['classSectionId']!,
+    ),
+  ),
+  GoRoute(
+    path: RoutePaths.studentMaterials,
+    builder: (_, _) => const MaterialsScreen(),
+  ),
+  GoRoute(
+    path: RoutePaths.studentAssignments,
+    builder: (_, _) => const AssignmentsScreen(),
+  ),
+  GoRoute(
+    path: '/s/assignments/:id',
+    builder: (_, state) =>
+        AssignmentDetailScreen(assignmentId: state.pathParameters['id']!),
+  ),
+];

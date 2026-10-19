@@ -17,8 +17,7 @@ class ScheduleAttendanceStrings {
   String get todayClasses => _p('Kelas hari ini', 'Today\'s classes', '今日课程');
   String get noClassToday =>
       _p('Tidak ada kelas hari ini', 'No classes today', '今天没有课');
-  String get noClassesThisDay =>
-      _p('Tidak ada kelas', 'No classes', '没有课程');
+  String get noClassesThisDay => _p('Tidak ada kelas', 'No classes', '没有课程');
   String get scheduleEmptyTitle =>
       _p('Belum ada jadwal', 'No schedule yet', '暂无课表');
   String get scheduleEmptyBody => _p(
@@ -59,7 +58,8 @@ class ScheduleAttendanceStrings {
         _ => serverLabel ?? category,
       };
 
-  String get overall => _p('Kehadiran keseluruhan', 'Overall attendance', '总出勤');
+  String get overall =>
+      _p('Kehadiran keseluruhan', 'Overall attendance', '总出勤');
   String get present => _p('Hadir', 'Present', '出席');
   String get sick => _p('Sakit', 'Sick', '病假');
   String get permitted => _p('Izin', 'Permit', '请假');
@@ -86,17 +86,17 @@ class ScheduleAttendanceStrings {
   String get meetingsList => _p('Daftar pertemuan', 'Meetings', '课次列表');
   String get noMeetings =>
       _p('Belum ada pertemuan tercatat', 'No meetings recorded', '暂无课次记录');
-  String meetingNo(int? n) =>
-      n == null ? _p('Pertemuan', 'Meeting', '课次') : _p('Pertemuan $n', 'Meeting $n', '第 $n 次');
+  String meetingNo(int? n) => n == null
+      ? _p('Pertemuan', 'Meeting', '课次')
+      : _p('Pertemuan $n', 'Meeting $n', '第 $n 次');
 
-  String meetingStatus(String status, String? serverLabel) =>
-      switch (status) {
-        'present' => present,
-        'permitted' => permitted,
-        'sick' => sick,
-        'absent' => absent,
-        _ => serverLabel ?? status,
-      };
+  String meetingStatus(String status, String? serverLabel) => switch (status) {
+    'present' => present,
+    'permitted' => permitted,
+    'sick' => sick,
+    'absent' => absent,
+    _ => serverLabel ?? status,
+  };
 }
 
 extension ScheduleAttendanceStringsX on BuildContext {

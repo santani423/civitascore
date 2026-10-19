@@ -11,8 +11,7 @@ class NotificationsStrings {
   String get title => _p('Notifikasi', 'Notifications', '通知');
   String get markAllRead =>
       _p('Tandai semua dibaca', 'Mark all as read', '全部标为已读');
-  String get unreadOnly =>
-      _p('Hanya belum dibaca', 'Unread only', '仅显示未读');
+  String get unreadOnly => _p('Hanya belum dibaca', 'Unread only', '仅显示未读');
   String get preferences =>
       _p('Preferensi notifikasi', 'Notification preferences', '通知偏好');
   String get emptyTitle =>

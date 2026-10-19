@@ -166,9 +166,7 @@ class ApiClient {
         file.path,
         queryParameters: query,
         onReceiveProgress: onProgress,
-        options: Options(
-          headers: {'Accept': 'application/pdf, application/json'},
-        ),
+        options: Options(headers: {'Accept': '*/*'}),
       );
       return file;
     } on DioException catch (e) {

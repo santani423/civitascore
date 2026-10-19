@@ -19,9 +19,8 @@ final studentCalendarProvider = FutureProvider.autoDispose
 /// Key: selected term id (null = backend default).
 final studentAttendanceProvider = FutureProvider.autoDispose
     .family<AttendanceSummary, String?>(
-      (ref, termId) => ref
-          .watch(scheduleAttendanceApiProvider)
-          .attendance(termId: termId),
+      (ref, termId) =>
+          ref.watch(scheduleAttendanceApiProvider).attendance(termId: termId),
     );
 
 final studentAttendanceDetailProvider = FutureProvider.autoDispose

@@ -158,9 +158,7 @@ class ExamAttempt {
     violationCount: asInt(j['violation_count']) ?? 0,
     grade: asString(j['grade']),
     resultVisible: asBool(j['result_visible']),
-    questions: asMapList(
-      j['questions'],
-    ).map(AttemptQuestion.fromJson).toList(),
+    questions: asMapList(j['questions']).map(AttemptQuestion.fromJson).toList(),
   );
 
   final String id;

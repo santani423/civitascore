@@ -132,7 +132,8 @@ class HrProfile {
     final lecturer = asMap(e['lecturer']);
     final rank = asMap(e['rank']);
     final quotaMap = json['leave_quota'];
-    String? label(String key) => asString(e['${key}_label']) ?? asString(e[key]);
+    String? label(String key) =>
+        asString(e['${key}_label']) ?? asString(e[key]);
     return HrProfile(
       id: asString(e['id']) ?? '',
       name: asString(e['name']) ?? '',
@@ -158,9 +159,7 @@ class HrProfile {
       highestEducation: label('highest_education'),
       supervisorName: asString(asMap(e['supervisor'])['name']),
       joinedAt: asDateTime(e['joined_at']),
-      quota: quotaMap is Map
-          ? LeaveQuota.fromJson(asMap(quotaMap))
-          : null,
+      quota: quotaMap is Map ? LeaveQuota.fromJson(asMap(quotaMap)) : null,
     );
   }
 }

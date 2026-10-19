@@ -68,40 +68,83 @@ Future<String?> promptText(
   bool required = true,
   int maxLines = 4,
   int? maxLength,
-}) async {
-  final s = context.l10n;
-  final controller = TextEditingController();
-  final formKey = GlobalKey<FormState>();
-  final result = await showDialog<String>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(title),
+}) => showDialog<String>(
+  context: context,
+  builder: (_) => _PromptTextDialog(
+    title: title,
+    label: label,
+    confirmLabel: confirmLabel,
+    required: required,
+    maxLines: maxLines,
+    maxLength: maxLength,
+  ),
+);
+
+/// Owns its controller so it is disposed only after the dialog's exit
+/// animation (disposing right after `showDialog` returns throws).
+class _PromptTextDialog extends StatefulWidget {
+  const _PromptTextDialog({
+    required this.title,
+    required this.label,
+    required this.confirmLabel,
+    required this.required,
+    required this.maxLines,
+    required this.maxLength,
+  });
+
+  final String title;
+  final String? label;
+  final String? confirmLabel;
+  final bool required;
+  final int maxLines;
+  final int? maxLength;
+
+  @override
+  State<_PromptTextDialog> createState() => _PromptTextDialogState();
+}
+
+class _PromptTextDialogState extends State<_PromptTextDialog> {
+  final _controller = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.l10n;
+    return AlertDialog(
+      title: Text(widget.title),
       content: Form(
-        key: formKey,
+        key: _formKey,
         child: TextFormField(
-          controller: controller,
+          controller: _controller,
           autofocus: true,
-          maxLines: maxLines,
-          maxLength: maxLength,
-          decoration: InputDecoration(labelText: label),
-          validator: (v) => required && (v == null || v.trim().isEmpty)
+          maxLines: widget.maxLines,
+          maxLength: widget.maxLength,
+          decoration: InputDecoration(labelText: widget.label),
+          validator: (v) => widget.required && (v == null || v.trim().isEmpty)
               ? s.validationRequired
               : null,
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: Text(s.cancel)),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(s.cancel),
+        ),
         FilledButton(
           onPressed: () {
-            if (formKey.currentState!.validate()) {
-              Navigator.pop(ctx, controller.text.trim());
+            if (_formKey.currentState!.validate()) {
+              Navigator.pop(context, _controller.text.trim());
             }
           },
-          child: Text(confirmLabel ?? s.submit),
+          child: Text(widget.confirmLabel ?? s.submit),
         ),
       ],
-    ),
-  );
-  controller.dispose();
-  return result;
+    );
+  }
 }

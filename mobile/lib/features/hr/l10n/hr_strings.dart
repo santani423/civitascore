@@ -40,8 +40,11 @@ class HrStrings {
     '留空以删除号码',
   );
   String get phoneSaved => _p('Profil diperbarui', 'Profile updated', '资料已更新');
-  String get lecturerNotLinkedTitle =>
-      _p('Akun belum tertaut ke data dosen', 'Account not linked to lecturer data', '账号尚未关联教师数据');
+  String get lecturerNotLinkedTitle => _p(
+    'Akun belum tertaut ke data dosen',
+    'Account not linked to lecturer data',
+    '账号尚未关联教师数据',
+  );
   String get lecturerNotLinkedBody => _p(
     'Hubungi Bagian SDM agar akun Anda ditautkan ke data dosen.',
     'Contact HR so your account can be linked to your lecturer record.',
@@ -80,7 +83,8 @@ class HrStrings {
   String get employeeSnapshot => _p('Data pegawai', 'Employee data', '员工数据');
   String get academicRank => _p('Jabatan akademik', 'Academic rank', '学术职称');
   String get rank => _p('Pangkat/golongan', 'Civil rank/grade', '职级');
-  String get serdos => _p('No. sertifikasi dosen', 'Lecturer certification no.', '教师资格证号');
+  String get serdos =>
+      _p('No. sertifikasi dosen', 'Lecturer certification no.', '教师资格证号');
   String get expertise => _p('Bidang keahlian', 'Expertise', '专业领域');
   String get lecturerStatus => _p('Status dosen', 'Lecturer status', '教师状态');
   String get position => _p('Jabatan', 'Position', '职位');
@@ -89,18 +93,16 @@ class HrStrings {
   String get employeeType => _p('Jenis pegawai', 'Employee type', '员工类型');
   String get joinedAt => _p('Tanggal bergabung', 'Joined on', '入职日期');
   String get menuLeave => _p('Cuti & izin', 'Leave', '请假');
-  String get menuLeaveSub => _p(
-    'Ajukan dan pantau cuti',
-    'Request and track leave',
-    '申请并跟踪请假',
-  );
+  String get menuLeaveSub =>
+      _p('Ajukan dan pantau cuti', 'Request and track leave', '申请并跟踪请假');
   String get menuRequests => _p('Pengajuan kepegawaian', 'HR requests', '人事申请');
   String get menuRequestsSub => _p(
     'Mutasi, perubahan data, kenaikan pangkat, dokumen',
     'Transfer, data change, promotion, documents',
     '调动、资料变更、晋升、文件',
   );
-  String get leaveQuota => _p('Kuota cuti tahunan', 'Annual leave quota', '年假额度');
+  String get leaveQuota =>
+      _p('Kuota cuti tahunan', 'Annual leave quota', '年假额度');
   String quotaLine(int year, num remaining, num quota) => _p(
     '$year: sisa $remaining dari $quota hari',
     '$year: $remaining of $quota days remaining',
@@ -111,7 +113,8 @@ class HrStrings {
 
   // Leave --------------------------------------------------------------------
   String get leaveTitle => _p('Cuti & izin', 'Leave', '请假');
-  String get leaveEmptyTitle => _p('Belum ada pengajuan cuti', 'No leave requests', '暂无请假申请');
+  String get leaveEmptyTitle =>
+      _p('Belum ada pengajuan cuti', 'No leave requests', '暂无请假申请');
   String get leaveEmptyBody => _p(
     'Ketuk tombol di bawah untuk mengajukan cuti.',
     'Tap the button below to request leave.',
@@ -129,24 +132,25 @@ class HrStrings {
     'Sick leave requires a doctor\'s note when submitting.',
     '病假提交时必须附上医生证明。',
   );
-  String get attachmentUploaded => _p('Lampiran terunggah', 'Attachment uploaded', '附件已上传');
-  String get removeAttachment => _p('Hapus lampiran', 'Remove attachment', '移除附件');
+  String get attachmentUploaded =>
+      _p('Lampiran terunggah', 'Attachment uploaded', '附件已上传');
+  String get removeAttachment =>
+      _p('Hapus lampiran', 'Remove attachment', '移除附件');
   String get saveDraft => _p('Simpan draf', 'Save draft', '保存草稿');
   String get submitLeave => _p('Ajukan', 'Submit', '提交');
   String get submitDraft => _p('Ajukan draf', 'Submit draft', '提交草稿');
-  String get cancelRequest => _p('Batalkan pengajuan', 'Cancel request', '取消申请');
-  String get cancelConfirm => _p(
-    'Batalkan pengajuan ini?',
-    'Cancel this request?',
-    '确定取消此申请？',
-  );
+  String get cancelRequest =>
+      _p('Batalkan pengajuan', 'Cancel request', '取消申请');
+  String get cancelConfirm =>
+      _p('Batalkan pengajuan ini?', 'Cancel this request?', '确定取消此申请？');
   String get keepIt => _p('Tidak', 'No', '否');
   String get submitConfirm => _p(
     'Ajukan cuti ini untuk persetujuan?',
     'Submit this leave for approval?',
     '提交此请假申请以供审批？',
   );
-  String get cancelled => _p('Pengajuan dibatalkan', 'Request cancelled', '申请已取消');
+  String get cancelled =>
+      _p('Pengajuan dibatalkan', 'Request cancelled', '申请已取消');
   String get submitted => _p('Pengajuan dikirim', 'Request submitted', '申请已提交');
   String get quotaNote => _p(
     'Kuota cuti tahunan dihitung per tahun dari hari kerja (Senin–Jumat). Jika tanggal bertumpang tindih atau kuota tidak cukup, pengajuan akan ditolak sistem.',
@@ -178,8 +182,10 @@ class HrStrings {
   };
 
   // Requests -----------------------------------------------------------------
-  String get requestsTitle => _p('Pengajuan kepegawaian', 'HR requests', '人事申请');
-  String get requestsEmptyTitle => _p('Belum ada pengajuan', 'No requests yet', '暂无申请');
+  String get requestsTitle =>
+      _p('Pengajuan kepegawaian', 'HR requests', '人事申请');
+  String get requestsEmptyTitle =>
+      _p('Belum ada pengajuan', 'No requests yet', '暂无申请');
   String get requestsEmptyBody => _p(
     'Ketuk tombol di bawah untuk membuat pengajuan.',
     'Tap the button below to create a request.',
@@ -190,7 +196,8 @@ class HrStrings {
   String get title => _p('Judul', 'Title', '标题');
   String get description => _p('Keterangan', 'Description', '说明');
   String get submitRequest => _p('Kirim pengajuan', 'Send request', '提交申请');
-  String get changesSection => _p('Data yang diubah', 'Data to change', '待变更数据');
+  String get changesSection =>
+      _p('Data yang diubah', 'Data to change', '待变更数据');
   String get changesHint => _p(
     'Isi minimal satu data yang ingin diperbarui.',
     'Fill in at least one field you want to update.',
@@ -204,7 +211,8 @@ class HrStrings {
   String get birthPlace => _p('Tempat lahir', 'Birth place', '出生地');
   String get address => _p('Alamat', 'Address', '地址');
   String get requestSent => _p('Pengajuan dikirim', 'Request sent', '申请已发送');
-  String get uploadAttachment => _p('Unggah lampiran', 'Upload attachment', '上传附件');
+  String get uploadAttachment =>
+      _p('Unggah lampiran', 'Upload attachment', '上传附件');
   String get uploading => _p('Mengunggah…', 'Uploading…', '上传中…');
 
   String requestTypeLabel(String v) => switch (v) {
