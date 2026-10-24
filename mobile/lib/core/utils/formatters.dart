@@ -24,6 +24,10 @@ extension FormatX on BuildContext {
   String formatTime(DateTime? d) =>
       d == null ? '—' : DateFormat.Hm(_tag).format(d);
 
+  /// 14.30.05 — where seconds matter (exam attempt reports).
+  String formatTimeSeconds(DateTime? d) =>
+      d == null ? '—' : DateFormat.Hms(_tag).format(d);
+
   /// "08:00:00" or "08:00" → "08.00" (id) / "08:00".
   String formatClock(String? hhmmss) {
     if (hhmmss == null || hhmmss.isEmpty) return '—';

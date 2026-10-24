@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_envelope.dart';
 import '../../../core/network/api_failure.dart';
+import '../domain/attempt_report.dart';
 import '../domain/exam.dart';
 import '../domain/exam_monitoring.dart';
 import '../domain/exam_question.dart';
@@ -246,6 +247,17 @@ class ExamApi {
         '/exam-attempts/$attemptId/violations',
         decode: (d) => AttemptViolations.fromJson(asMap(d)),
       );
+
+  /// "Detail Report" satu percobaan — waktu, jawaban per soal, pelanggaran,
+  /// linimasa. Tanpa cache: dipantau langsung selama peserta mengerjakan.
+  Future<AttemptReport> attemptReport(String attemptId) =>
+      _api.get<AttemptReport>(
+        '/exam-attempts/$attemptId/report',
+        decode: (d) => AttemptReport.fromJson(asMap(d)),
+      );
+
+  static String attemptReportPdfPath(String attemptId) =>
+      '/exam-attempts/$attemptId/report/pdf';
 
   Future<ExamRecap> recap(String examId) => _api.get<ExamRecap>(
     '/exams/$examId/recap',

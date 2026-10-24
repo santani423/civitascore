@@ -122,6 +122,8 @@ abstract final class RoutePaths {
       '/l/exams/$examId/questions';
   static String lecturerExamPreview(String examId) =>
       '/l/exams/$examId/preview';
+  static String lecturerExamAttemptReport(String examId, String attemptId) =>
+      '/l/exams/$examId/attempts/$attemptId';
   static const lecturerQuestionBank = '/l/question-bank';
 
   // Advisor: KRS approvals (feature advising)

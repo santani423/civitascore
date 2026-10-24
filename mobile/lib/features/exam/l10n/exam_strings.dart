@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../core/l10n/app_language.dart';
+import '../domain/attempt_report.dart';
 import '../domain/exam_monitoring.dart';
 import '../domain/exam_validation.dart';
 import '../domain/grade_range.dart';
@@ -339,6 +340,117 @@ class ExamStrings {
   String get violationTimeline =>
       _p('Linimasa pelanggaran', 'Violation timeline', '违规时间线');
   String get penaltyPoints => _p('Poin penalti', 'Penalty points', '扣分');
+  String get openReport => _p('Detail laporan', 'Report details', '详细报告');
+
+  // Detail Report ---------------------------------------------------------
+  String get reportTitle => _p('Laporan pengerjaan', 'Attempt report', '作答报告');
+  String get downloadReportPdf => _p('Unduh PDF', 'Download PDF', '下载 PDF');
+  String get attemptPicker => _p('Percobaan', 'Attempt', '作答次数');
+  String attemptOption(int n, bool submitted, String score) => submitted
+      ? _p(
+          'Percobaan ke-$n — Nilai $score',
+          'Attempt $n — Score $score',
+          '第 $n 次 — 得分 $score',
+        )
+      : _p(
+          'Percobaan ke-$n — Sedang dikerjakan',
+          'Attempt $n — In progress',
+          '第 $n 次 — 作答中',
+        );
+  String get inProgressBanner => _p(
+    'Mahasiswa masih mengerjakan ujian ini — laporan diperbarui otomatis tiap 10 detik. Nilai akhir tersedia setelah ujian dikumpulkan.',
+    'The student is still taking this exam — the report auto-refreshes every 10 seconds. The final score is available once submitted.',
+    '学生仍在作答 — 报告每 10 秒自动刷新。提交后才有最终成绩。',
+  );
+  String get studentSection => _p('Identitas mahasiswa', 'Student', '学生信息');
+  String get nameRow => _p('Nama', 'Name', '姓名');
+  String get nimRow => _p('NIM', 'Student ID', '学号');
+  String get studyProgramRow => _p('Program studi', 'Study program', '专业');
+  String attemptOf(int n, int max) =>
+      _p('Ke-$n dari maks. $max', '$n of max. $max', '第 $n 次（最多 $max 次）');
+  String get examSection => _p('Informasi ujian', 'Exam', '考试信息');
+  String get courseRow => _p('Mata kuliah', 'Course', '课程');
+  String get termRow => _p('Semester', 'Term', '学期');
+  String get lecturerRow => _p('Dosen pengampu', 'Lecturer', '任课教师');
+  String get timeSection => _p('Waktu pengerjaan', 'Timing', '作答时间');
+  String get startedRow => _p('Mulai mengerjakan', 'Started', '开始作答');
+  String get submittedRow => _p('Selesai / dikumpulkan', 'Submitted', '提交时间');
+  String get deadlineRow =>
+      _p('Batas waktu peserta', 'Participant deadline', '作答截止');
+  String get examScheduleRow => _p('Jadwal ujian', 'Exam window', '考试时间');
+  String get timeSpentRow => _p('Durasi pengerjaan', 'Time spent', '作答用时');
+  String get timeUsage => _p('Pemakaian waktu', 'Time used', '用时占比');
+  String get submittedManual =>
+      _p('Dikumpulkan peserta', 'Submitted by student', '学生已提交');
+  String get submittedAuto => _p(
+    'Dikumpulkan otomatis (waktu habis)',
+    'Auto-submitted (time up)',
+    '自动提交（超时）',
+  );
+  String get attemptInProgress =>
+      _p('Sedang mengerjakan', 'In progress', '作答中');
+  String get scoreSection => _p('Ringkasan nilai', 'Score summary', '成绩概览');
+  String get statQuestions => _p('Jumlah soal', 'Questions', '题数');
+  String get statAnswered => _p('Dijawab', 'Answered', '已答');
+  String get statCorrect => _p('Benar', 'Correct', '正确');
+  String get statWrong => _p('Salah', 'Wrong', '错误');
+  String get statUnanswered => _p('Tidak dijawab', 'Unanswered', '未答');
+  String get statPoints => _p('Poin', 'Points', '得分点');
+  String penaltyTimes(int n) =>
+      _p('Penalti ($n×)', 'Penalty ($n×)', '扣分（$n 次）');
+  String get answerSheet => _p('Lembar jawaban', 'Answer sheet', '答题卡');
+  String get answerSheetHelp => _p(
+    'Ketuk nomor untuk melihat detail soal.',
+    'Tap a number to see the question.',
+    '点击题号查看题目详情。',
+  );
+  String get violationsSection => _p('Pelanggaran', 'Violations', '违规');
+  String get noViolations => _p(
+    'Tidak ada pelanggaran tercatat pada percobaan ini.',
+    'No violations were recorded in this attempt.',
+    '本次作答没有违规记录。',
+  );
+  String elapsedAt(String hms) => _p('menit ke-$hms', 'at $hms', '第 $hms');
+  String get activityTimeline =>
+      _p('Linimasa aktivitas', 'Activity timeline', '活动时间线');
+  String get activityTimelineHelp => _p(
+    'Waktu jawaban adalah saat jawaban terakhir disimpan.',
+    'Answer times are when the last answer was saved.',
+    '作答时间为最后一次保存答案的时间。',
+  );
+  String get answersSection =>
+      _p('Detail jawaban per soal', 'Answers per question', '逐题作答详情');
+  String questionNo(int n) => _p('Soal $n', 'Question $n', '第 $n 题');
+  String pointsOf(String earned, String total) =>
+      _p('$earned / $total poin', '$earned / $total pts', '$earned / $total 分');
+  String savedAt(String time, String hms) => _p(
+    'Disimpan $time · menit ke-$hms',
+    'Saved $time · at $hms',
+    '保存于 $time · 第 $hms',
+  );
+  String get fromBank => _p('Bank soal', 'Question bank', '题库');
+  String get questionUnavailable => _p(
+    '(Soal tidak lagi tersedia)',
+    '(Question no longer available)',
+    '（题目已不可用）',
+  );
+  String get studentAnswer => _p('Jawaban mahasiswa', 'Student answer', '学生答案');
+  String get answerKey => _p('Kunci jawaban', 'Answer key', '正确答案');
+  String get notAnswered => _p(
+    'Mahasiswa tidak menjawab soal ini.',
+    'The student did not answer this question.',
+    '学生未作答此题。',
+  );
+  String get noQuestionsInFilter => _p(
+    'Tidak ada soal dengan status ini.',
+    'No questions with this status.',
+    '没有该状态的题目。',
+  );
+  String questionStatus(ReportQuestionStatus st) => switch (st) {
+    ReportQuestionStatus.correct => statCorrect,
+    ReportQuestionStatus.wrong => statWrong,
+    ReportQuestionStatus.unanswered => statUnanswered,
+  };
 
   // Rekap ---------------------------------------------------------------------
   String get statTotal => _p('Peserta', 'Participants', '考生');

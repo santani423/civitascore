@@ -1,4 +1,5 @@
 import 'package:civitasone/core/l10n/app_language.dart';
+import 'package:civitasone/features/exam/presentation/screens/exam_attempt_report_screen.dart';
 import 'package:civitasone/features/exam/presentation/screens/exam_detail_screen.dart';
 import 'package:civitasone/features/exam/presentation/screens/exam_form_screen.dart';
 import 'package:civitasone/features/exam/presentation/screens/exam_list_screen.dart';
@@ -358,12 +359,30 @@ void main() {
         expect(find.text('Citra Dewi'), findsNothing);
         await tester.tap(find.widgetWithText(ChoiceChip, 'Semua'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Andi Pratama'));
+        await tester.tap(find.text('2 pelanggaran'));
         await tester.pumpAndSettle();
         expect(find.text('Linimasa pelanggaran'), findsOneWidget);
         expect(find.text('Berpindah Tab/Aplikasi'), findsOneWidget);
       },
     );
+
+    testWidgets('tapping a participant opens the attempt report route', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        const ExamDetailScreen(examId: 'e1'),
+        api: detailApi(),
+        user: testLecturer,
+      );
+      await tester.tap(find.text('Rekap'));
+      await tester.pumpAndSettle();
+      // Citra belum punya percobaan → tidak ada tautan laporan.
+      expect(find.text('Detail laporan'), findsNWidgets(2));
+      await tester.tap(find.text('Andi Pratama'));
+      await tester.pumpAndSettle();
+      expect(find.text('route:/l/exams/e1/attempts/a1'), findsOneWidget);
+    });
 
     testWidgets('grades tab saves ranges and blocks overlaps', (tester) async {
       final api = detailApi();
@@ -654,6 +673,162 @@ void main() {
         findsOneWidget,
       );
       expect(api.requests.where((r) => r.method == 'PUT'), hasLength(2));
+    });
+  });
+
+  group('ExamAttemptReportScreen', () {
+    testWidgets('shows timing, scores, violations, timeline and answers', (
+      tester,
+    ) async {
+      final api = FakeApi()
+        ..get('/exam-attempts/a1/report', attemptReportJson());
+      await pumpApp(
+        tester,
+        const ExamAttemptReportScreen(attemptId: 'a1'),
+        api: api,
+        user: testLecturer,
+        size: TestScreens.smallPhone,
+      );
+      Future<void> scrollTo(Finder f) async {
+        await tester.scrollUntilVisible(f, 200, scrollable: _listScrollable);
+        await tester.pumpAndSettle();
+      }
+
+      expect(find.text('Laporan pengerjaan'), findsOneWidget);
+      expect(find.text('Andi Pratama'), findsWidgets);
+      expect(find.byTooltip('Unduh PDF'), findsOneWidget);
+      await scrollTo(find.text('Teknik Informatika'));
+      await scrollTo(find.text('Dikumpulkan peserta'));
+      await scrollTo(find.text('00:30:00 / 01:00:00 (50%)'));
+      expect(find.text('00:30:00'), findsOneWidget);
+      await scrollTo(find.text('Penalti (1×)'));
+      await scrollTo(find.text('Berpindah Tab/Aplikasi · 1× · -1'));
+      await scrollTo(find.text('Berpindah Tab/Aplikasi'));
+      await scrollTo(find.text('Pelanggaran #1: Berpindah Tab/Aplikasi'));
+      expect(find.text('Menyimpan jawaban soal 1 (pilihan B)'), findsOneWidget);
+      await scrollTo(find.text('Jawaban mahasiswa · Kunci jawaban'));
+      expect(find.text('Struktur data LIFO adalah?'), findsOneWidget);
+      await scrollTo(find.text('Mahasiswa tidak menjawab soal ini.'));
+      expect(tester.takeException(), isNull);
+
+      // Filter "Tidak dijawab" hanya menyisakan soal 2.
+      final chip = find.widgetWithText(ChoiceChip, 'Tidak dijawab');
+      await tester.scrollUntilVisible(chip, -200, scrollable: _listScrollable);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      expect(find.text('Struktur data LIFO adalah?'), findsNothing);
+      expect(find.text('Kompleksitas binary search?'), findsOneWidget);
+    });
+
+    testWidgets('answer sheet cell opens the question in a sheet', (
+      tester,
+    ) async {
+      final api = FakeApi()
+        ..get('/exam-attempts/a1/report', attemptReportJson());
+      await pumpApp(
+        tester,
+        const ExamAttemptReportScreen(attemptId: 'a1'),
+        api: api,
+        user: testLecturer,
+      );
+      final cell = find.byKey(const ValueKey('answer-cell-2'));
+      await tester.scrollUntilVisible(cell, 200, scrollable: _listScrollable);
+      await tester.pumpAndSettle();
+      await tester.tap(cell);
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Kompleksitas binary search?'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('in-progress attempt auto-refreshes every 10s', (tester) async {
+      final api = FakeApi()
+        ..get(
+          '/exam-attempts/a1/report',
+          attemptReportJson(status: 'in_progress'),
+        );
+      await pumpApp(
+        tester,
+        const ExamAttemptReportScreen(attemptId: 'a1'),
+        api: api,
+        user: testLecturer,
+        language: AppLanguage.en,
+      );
+      expect(
+        find.textContaining('auto-refreshes every 10 seconds'),
+        findsOneWidget,
+      );
+      int calls() => api.requests
+          .where((r) => r.path == '/exam-attempts/a1/report')
+          .length;
+      final before = calls();
+      await tester.pump(const Duration(seconds: 11));
+      await tester.pumpAndSettle();
+      expect(calls(), greaterThan(before));
+      // dispose the screen to cancel the timer
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('switching attempts loads the other report', (tester) async {
+      final attempts = [
+        {
+          'id': 'a1',
+          'attempt_number': 1,
+          'status': 'submitted',
+          'score': '49.00',
+        },
+        {
+          'id': 'a2',
+          'attempt_number': 2,
+          'status': 'submitted',
+          'score': '49.00',
+        },
+      ];
+      final api = FakeApi()
+        ..get('/exam-attempts/a1/report', attemptReportJson(attempts: attempts))
+        ..get(
+          '/exam-attempts/a2/report',
+          attemptReportJson(id: 'a2', attempts: attempts),
+        );
+      await pumpApp(
+        tester,
+        const ExamAttemptReportScreen(attemptId: 'a1'),
+        api: api,
+        user: testLecturer,
+        themeMode: ThemeMode.dark,
+      );
+      expect(find.text('Ke-1 dari maks. 2'), findsOneWidget);
+      await tester.tap(find.text('Percobaan ke-1 — Nilai 49'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Percobaan ke-2 — Nilai 49').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Ke-2 dari maks. 2'), findsOneWidget);
+      expect(
+        api.requests.where((r) => r.path == '/exam-attempts/a2/report'),
+        isNotEmpty,
+      );
+    });
+
+    testWidgets('error state offers retry', (tester) async {
+      final api = FakeApi()
+        ..on(
+          'GET',
+          '/exam-attempts/a1/report',
+          (_) => FakeResponse.error(500, 'boom'),
+        );
+      await pumpApp(
+        tester,
+        const ExamAttemptReportScreen(attemptId: 'a1'),
+        api: api,
+        user: testLecturer,
+      );
+      expect(find.text('Coba lagi'), findsOneWidget);
     });
   });
 

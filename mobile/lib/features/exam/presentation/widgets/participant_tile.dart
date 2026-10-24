@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/permission/permission_gate.dart';
+import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/state_views.dart';
@@ -16,22 +19,33 @@ StatusTone participantTone(ParticipantStatus s) => switch (s) {
 };
 
 /// Baris peserta (NIM, nama, skor Raw/Penalti/Akhir/Grade, pelanggaran,
-/// status). Skor dihitung backend; klien hanya menampilkan.
-class ParticipantTile extends StatelessWidget {
-  const ParticipantTile({super.key, required this.participant});
+/// status). Skor dihitung backend; klien hanya menampilkan. Ketuk kartu untuk
+/// Detail Report percobaan terakhir; ketuk jumlah pelanggaran untuk linimasa
+/// pelanggaran saja.
+class ParticipantTile extends ConsumerWidget {
+  const ParticipantTile({
+    super.key,
+    required this.examId,
+    required this.participant,
+  });
 
+  final String examId;
   final ExamParticipant participant;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final s = context.examL10n;
     final text = Theme.of(context).textTheme;
     final p = participant;
     final hasScore = p.score != null;
-    final canOpen = p.latestAttemptId != null;
+    final attemptId = p.latestAttemptId;
+    final canOpen =
+        attemptId != null && PermissionGate.allows(ref, 'exam_attempts.read');
     return AppSurfaceCard(
       onTap: canOpen
-          ? () => showAttemptViolations(context, p.latestAttemptId!)
+          ? () => context.push(
+              RoutePaths.lecturerExamAttemptReport(examId, attemptId),
+            )
           : null,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -80,12 +94,38 @@ class ParticipantTile extends StatelessWidget {
                     ),
                 ],
                 if (p.violationCount > 0)
-                  Text(
-                    s.violationsCount(p.violationCount),
-                    style: text.labelMedium?.copyWith(
-                      color: context.palette.danger,
+                  InkWell(
+                    onTap: canOpen
+                        ? () => showAttemptViolations(context, attemptId)
+                        : null,
+                    child: Text(
+                      s.violationsCount(p.violationCount),
+                      style: text.labelMedium?.copyWith(
+                        color: context.palette.danger,
+                        decoration: canOpen ? TextDecoration.underline : null,
+                        decorationColor: context.palette.danger,
+                      ),
                     ),
                   ),
+              ],
+            ),
+          ],
+          if (canOpen) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  s.openReport,
+                  style: text.labelMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ],
             ),
           ],

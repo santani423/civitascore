@@ -4,6 +4,7 @@ import '../../../core/network/api_envelope.dart';
 import '../../../core/widgets/paged_list.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
 import '../data/exam_api.dart';
+import '../domain/attempt_report.dart';
 import '../domain/exam.dart';
 import '../domain/exam_monitoring.dart';
 import '../domain/exam_question.dart';
@@ -83,6 +84,11 @@ final attemptViolationsProvider = FutureProvider.autoDispose
     .family<AttemptViolations, String>(
       (ref, attemptId) =>
           ref.watch(examApiProvider).attemptViolations(attemptId),
+    );
+
+final attemptReportProvider = FutureProvider.autoDispose
+    .family<AttemptReport, String>(
+      (ref, attemptId) => ref.watch(examApiProvider).attemptReport(attemptId),
     );
 
 // Bank soal ------------------------------------------------------------------

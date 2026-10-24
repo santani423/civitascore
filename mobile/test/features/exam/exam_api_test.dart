@@ -1,5 +1,6 @@
 import 'package:civitasone/core/network/api_failure.dart';
 import 'package:civitasone/features/exam/data/exam_api.dart';
+import 'package:civitasone/features/exam/domain/attempt_report.dart';
 import 'package:civitasone/features/exam/domain/exam_monitoring.dart';
 import 'package:civitasone/features/exam/domain/grade_range.dart';
 import 'package:civitasone/features/exam/domain/question_selection_mode.dart';
@@ -245,6 +246,29 @@ void main() {
     final t = await api.attemptViolations('a1');
     expect(t.score, 78.0);
     expect(t.violations, isEmpty);
+  });
+
+  test('attempt report parses summary, questions and timeline', () async {
+    fake.get('/exam-attempts/a1/report', attemptReportJson());
+    final r = await api.attemptReport('a1');
+    expect(r.isSubmitted, isTrue);
+    expect(r.autoSubmitted, isFalse);
+    expect(r.score, 49.0);
+    expect(r.weightPercentage, 30.0);
+    expect(r.timeUsage, 0.5);
+    expect(r.questions, hasLength(2));
+    expect(r.questions.first.status, ReportQuestionStatus.correct);
+    expect(r.questions.first.options.last.isCorrect, isTrue);
+    expect(r.questions.last.selectedOptionId, isNull);
+    expect(r.violations.single.occurredAfterSeconds, 600);
+    expect(r.violationBreakdown.single.count, 1);
+    expect(r.timeline.map((e) => e.type), [
+      TimelineEventType.started,
+      TimelineEventType.answered,
+      TimelineEventType.violation,
+      TimelineEventType.submitted,
+    ]);
+    expect(ExamApi.attemptReportPdfPath('a1'), '/exam-attempts/a1/report/pdf');
   });
 
   test('grade ranges GET/PUT payload', () async {

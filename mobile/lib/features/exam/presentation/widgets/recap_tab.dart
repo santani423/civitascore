@@ -155,7 +155,10 @@ class _RecapTabState extends ConsumerState<RecapTab> {
                 for (final p in list)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: ParticipantTile(participant: p),
+                    child: ParticipantTile(
+                      examId: widget.examId,
+                      participant: p,
+                    ),
                   ),
             ],
           ),

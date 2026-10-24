@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/permission/permission_gate.dart';
 import '../../core/router/route_paths.dart';
+import 'presentation/screens/exam_attempt_report_screen.dart';
 import 'presentation/screens/exam_detail_screen.dart';
 import 'presentation/screens/exam_form_screen.dart';
 import 'presentation/screens/exam_list_screen.dart';
@@ -57,6 +58,15 @@ final List<RouteBase> examRoutes = <RouteBase>[
     builder: (_, state) => PermissionGate(
       permission: 'exams.read',
       child: ExamPreviewScreen(examId: state.pathParameters['id']!),
+    ),
+  ),
+  GoRoute(
+    path: '/l/exams/:id/attempts/:attemptId',
+    builder: (_, state) => PermissionGate(
+      permission: 'exam_attempts.read',
+      child: ExamAttemptReportScreen(
+        attemptId: state.pathParameters['attemptId']!,
+      ),
     ),
   ),
 ];
