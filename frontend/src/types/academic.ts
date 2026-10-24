@@ -430,6 +430,86 @@ export interface ExamAttemptViolationTimeline {
   violations: ExamViolation[]
 }
 
+export type ExamAttemptReportQuestionStatus = 'correct' | 'wrong' | 'unanswered'
+
+export interface ExamAttemptReportQuestion {
+  number: number
+  question_id: string
+  question_text: string | null
+  points: string
+  earned_points: string
+  from_question_bank: boolean
+  /** Urutan sesuai yang dilihat peserta (option_order attempt), label A/B/C… dari urutan itu. */
+  options: { id: string; label: string; option_text: string | null; is_correct: boolean }[]
+  selected_option_id: string | null
+  selected_option_label: string | null
+  correct_option_id: string | null
+  correct_option_label: string | null
+  status: ExamAttemptReportQuestionStatus
+  /** Waktu jawaban TERAKHIR disimpan (ditimpa tiap kali peserta mengganti jawaban). */
+  answered_at: string | null
+  answered_after_seconds: number | null
+}
+
+export interface ExamAttemptReportTimelineEvent {
+  type: 'started' | 'answered' | 'violation' | 'submitted'
+  occurred_at: string
+  elapsed_seconds: number
+  description: string
+}
+
+/** Laporan lengkap satu percobaan untuk dosen — lihat ExamService::buildAttemptReport. */
+export interface ExamAttemptReport {
+  generated_at: string
+  timezone: string
+  exam: {
+    id: string
+    title: string
+    course_code: string | null
+    course_name: string | null
+    class_code: string | null
+    academic_term: string | null
+    lecturer_name: string | null
+    duration_minutes: number
+    starts_at: string | null
+    ends_at: string | null
+    max_attempts: number
+    weight_percentage: string | null
+  }
+  student: { id: string; name: string; nim: string; study_program: string | null }
+  attempt: {
+    id: string
+    attempt_number: number
+    status: 'in_progress' | 'submitted'
+    started_at: string
+    submitted_at: string | null
+    deadline_at: string
+    allowed_seconds: number
+    duration_seconds: number
+    submission_type: 'manual' | 'auto_timeout' | null
+  }
+  summary: {
+    total_questions: number
+    answered: number
+    correct_answers: number
+    wrong_answers: number
+    unanswered: number
+    total_points: string
+    earned_points: string
+    raw_score: string | null
+    penalty_score: string
+    score: string | null
+    grade: string | null
+    weighted_score: string | null
+    violation_count: number
+  }
+  questions: ExamAttemptReportQuestion[]
+  violations: (Omit<ExamViolation, 'exam_attempt_id' | 'student_name' | 'student_nim'> & { occurred_after_seconds: number })[]
+  violation_breakdown: { violation_type: ExamViolationType; violation_label: string; count: number; penalty_points: string }[]
+  timeline: ExamAttemptReportTimelineEvent[]
+  attempts: { id: string; attempt_number: number; status: 'in_progress' | 'submitted'; score: string | null }[]
+}
+
 export interface ExamGradeRange {
   id: string
   grade: string

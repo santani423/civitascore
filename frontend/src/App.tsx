@@ -39,6 +39,7 @@ import { AttendancePage } from '@/pages/academic/AttendancePage'
 import { ExamsPage } from '@/pages/academic/ExamsPage'
 import { ExamDetailPage } from '@/pages/academic/ExamDetailPage'
 import { ExamRecapPage } from '@/pages/academic/ExamRecapPage'
+import { ExamAttemptReportPage } from '@/pages/academic/ExamAttemptReportPage'
 import { QuestionBankPage } from '@/pages/academic/QuestionBankPage'
 import { ScholarshipsPage } from '@/pages/scholarship/ScholarshipsPage'
 import { ScholarshipDetailPage } from '@/pages/scholarship/ScholarshipDetailPage'
@@ -145,6 +146,7 @@ const APP_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: ROUTES.akademik.ujian, element: <ExamsPage /> },
   { path: ROUTES.akademik.ujianDetail, element: <ExamDetailPage /> },
   { path: ROUTES.akademik.ujianRekap, element: <ExamRecapPage /> },
+  { path: ROUTES.akademik.ujianLaporan, element: <ExamAttemptReportPage /> },
   { path: ROUTES.akademik.bankSoal, element: <QuestionBankPage /> },
 
   { path: ROUTES.pengaturan.roles, element: <RolesPage /> },

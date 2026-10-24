@@ -36,3 +36,20 @@ body {
   background-color: var(--color-border-strong);
   border-radius: 9999px;
 }
+
+/* Cetak dari browser (mis. Laporan Pengerjaan Ujian): A4, latar putih, dan
+   warna status/badge ikut tercetak. Shell aplikasi disembunyikan lewat
+   kelas `print:hidden` di DashboardLayout/Sidebar/Header. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

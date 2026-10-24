@@ -31,8 +31,8 @@ use Modules\Academic\Controllers\StudentLearningController;
 use Modules\Academic\Controllers\StudentProfileController;
 use Modules\Academic\Controllers\StudentRequestController;
 use Modules\Academic\Controllers\StudentRequestReviewController;
-use Modules\Academic\Controllers\TeachingController;
 use Modules\Academic\Controllers\StudyProgramController;
+use Modules\Academic\Controllers\TeachingController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('students', [StudentController::class, 'index'])->middleware('permission:students.read');
@@ -112,6 +112,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('exam-attempts/{examAttempt}/answer', [ExamAttemptController::class, 'answer'])->middleware('permission:exam_attempts.update');
     Route::patch('exam-attempts/{examAttempt}/submit', [ExamAttemptController::class, 'submit'])->middleware('permission:exam_attempts.update');
     Route::get('exam-attempts/{examAttempt}/violations', [ExamAttemptController::class, 'violations'])->middleware('permission:exam_attempts.read');
+    Route::get('exam-attempts/{examAttempt}/report', [ExamAttemptController::class, 'report'])->middleware('permission:exam_attempts.read');
+    Route::get('exam-attempts/{examAttempt}/report/pdf', [ExamAttemptController::class, 'reportPdf'])->middleware('permission:exam_attempts.read');
 
     // Portal Mahasiswa — self-service mengerjakan ujian sendiri (terpisah
     // dari exam-attempts di atas, lihat komentar ExamParticipationPolicy).

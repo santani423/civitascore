@@ -101,7 +101,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
     <>
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden print:hidden"
           onClick={onCloseMobile}
           aria-hidden
         />
@@ -109,7 +109,7 @@ export function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-surface transition-all duration-200',
+          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-surface transition-all duration-200 print:hidden',
           'lg:sticky lg:top-0 lg:z-30 lg:h-screen lg:translate-x-0',
           collapsed ? 'lg:w-[76px]' : 'lg:w-64',
           'w-64',

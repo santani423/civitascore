@@ -9,6 +9,7 @@ import type {
   EnrollKrsPayload,
   Employee,
   Exam,
+  ExamAttemptReport,
   ExamAttemptViolationTimeline,
   ExamGradeRange,
   ExamParticipant,
@@ -351,6 +352,19 @@ export const examAttemptViolationService = {
       `/exam-attempts/${attemptId}/violations`,
     )
     return response.data.data
+  },
+}
+
+/** "Detail Report" satu percobaan untuk dosen — waktu, jawaban per soal, pelanggaran, linimasa. */
+export const examAttemptReportService = {
+  async show(attemptId: string): Promise<ExamAttemptReport> {
+    const response = await apiClient.get<ApiSuccessResponse<ExamAttemptReport>>(`/exam-attempts/${attemptId}/report`)
+    return response.data.data
+  },
+
+  async downloadPdf(attemptId: string, filename: string): Promise<void> {
+    const response = await apiClient.get(`/exam-attempts/${attemptId}/report/pdf`, { responseType: 'blob' })
+    triggerBlobDownload(response.data as Blob, filename)
   },
 }
 

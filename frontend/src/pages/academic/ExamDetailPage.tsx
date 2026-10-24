@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { BarChart3, Copy, Download, FileText, Library, Plus, QrCode, RefreshCw, ShieldAlert, Trash2 } from 'lucide-react'
+import { BarChart3, ClipboardList, Copy, Download, FileText, Library, Plus, QrCode, RefreshCw, ShieldAlert, Trash2 } from 'lucide-react'
 import { QRCodeCanvas } from 'qrcode.react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -292,11 +292,18 @@ export function ExamDetailPage() {
     },
     {
       header: 'Aksi',
-      cell: (row) => (
-        <Link to={`${ROUTES.mahasiswa}/${row.student_id}`} className="text-sm font-medium text-primary hover:underline">
-          Detail Mahasiswa
-        </Link>
-      ),
+      cell: (row) =>
+        row.latest_attempt_id && exam ? (
+          <Link
+            to={ROUTES.akademik.ujianLaporan.replace(':id', exam.id).replace(':attemptId', row.latest_attempt_id)}
+            className="inline-flex items-center gap-1 whitespace-nowrap text-sm font-medium text-primary hover:underline"
+          >
+            <ClipboardList className="size-3.5" />
+            Detail Report
+          </Link>
+        ) : (
+          <span className="whitespace-nowrap text-sm text-ink-tertiary">Belum ada report</span>
+        ),
     },
   ]
 

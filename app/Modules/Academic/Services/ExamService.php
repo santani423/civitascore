@@ -3,7 +3,9 @@
 namespace Modules\Academic\Services;
 
 use App\Support\Http\Exceptions\ConflictException;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +24,7 @@ use Modules\Academic\Models\ExamQuestion;
 use Modules\Academic\Models\ExamViolation;
 use Modules\Academic\Models\KrsItem;
 use Modules\Academic\Models\Student;
+use Modules\Tenancy\Models\University;
 
 /**
  * Aturan bisnis modul Ujian (RANCANGAN-APLIKASI.md §4.18, spec konfigurasi
@@ -586,7 +589,9 @@ class ExamService
                 'attempt_number' => $attempt->attempt_number,
                 'started_at' => $startedAt->toIso8601String(),
                 'submitted_at' => $submittedAt?->toIso8601String(),
-                'duration_seconds' => $submittedAt !== null ? (int) $submittedAt->diffInSeconds($startedAt) : null,
+                // Carbon 3: diffInSeconds() bertanda ($argumen − $this), jadi
+                // harus dari started_at ke submitted_at supaya tidak negatif.
+                'duration_seconds' => $submittedAt !== null ? (int) $startedAt->diffInSeconds($submittedAt) : null,
             ],
             'student' => [
                 'name' => $attempt->krsItem->student->name,
@@ -618,13 +623,237 @@ class ExamService
     }
 
     /**
+     * Laporan lengkap satu percobaan untuk dosen pengampu ("Detail Report"
+     * di tabel peserta Detail Ujian) — identitas, waktu pengerjaan, rincian
+     * skor, jawaban per soal, pelanggaran, dan linimasa aktivitas. Dipakai
+     * ExamAttemptController::report() (JSON) dan reportPdf() (PDF).
+     *
+     * Beda dengan buildAttemptResult(): boleh untuk attempt yang masih
+     * in_progress (dosen memantau langsung) dan tidak terikat
+     * `show_result_after_submission`, karena ini konsumsi dosen. Opsi tiap
+     * soal disusun sesuai `option_order` attempt — urutan yang benar-benar
+     * dilihat peserta — dan diberi label A/B/C… dari urutan itu.
+     *
+     * `answered_at` ditimpa setiap kali peserta mengganti jawaban
+     * (updateOrCreate di answerAttempt()), jadi yang tercatat adalah waktu
+     * jawaban TERAKHIR disimpan, bukan pertama kali soal dijawab.
+     *
+     * @return array<string, mixed>
+     */
+    public function buildAttemptReport(ExamAttempt $attempt): array
+    {
+        $attempt->load([
+            'krsItem.student.studyProgram',
+            'exam.classSection.course',
+            'exam.classSection.academicTerm',
+            'exam.classSection.lecturer',
+            'answers',
+            'violations',
+        ]);
+
+        $exam = $attempt->exam;
+        $startedAt = $attempt->started_at;
+        $submittedAt = $attempt->submitted_at;
+        $deadline = $this->attemptDeadline($attempt);
+        $isSubmitted = $attempt->status === ExamAttemptStatus::Submitted;
+        $secondsSinceStart = fn (CarbonInterface $at): int => max(0, (int) $startedAt->diffInSeconds($at));
+
+        $questionsById = ExamQuestion::query()
+            ->whereIn('id', $attempt->question_order)
+            ->with('options')
+            ->get()
+            ->keyBy('id');
+
+        $answersByQuestionId = $attempt->answers->keyBy('exam_question_id');
+        $totalPoints = 0.0;
+        $earnedPoints = 0.0;
+        $counts = ['correct' => 0, 'wrong' => 0, 'unanswered' => 0];
+
+        $questions = collect($attempt->question_order)->values()->map(function (string $questionId, int $index) use ($attempt, $questionsById, $answersByQuestionId, $secondsSinceStart, &$totalPoints, &$earnedPoints, &$counts) {
+            $question = $questionsById->get($questionId);
+            $optionsById = $question?->options->keyBy('id');
+            $points = (float) ($question->points ?? 0);
+            $totalPoints += $points;
+
+            $answer = $answersByQuestionId->get($questionId);
+            $selectedOptionId = $answer?->exam_question_option_id;
+            $correctOption = $question?->options->firstWhere('is_correct', true);
+
+            $status = match (true) {
+                $selectedOptionId === null => 'unanswered',
+                $correctOption !== null && $selectedOptionId === $correctOption->id => 'correct',
+                default => 'wrong',
+            };
+            $counts[$status]++;
+
+            if ($status === 'correct') {
+                $earnedPoints += $points;
+            }
+
+            $options = collect($attempt->option_order[$questionId] ?? [])->values()->map(fn (string $optionId, int $optionIndex) => [
+                'id' => $optionId,
+                'label' => chr(65 + $optionIndex),
+                'option_text' => $optionsById?->get($optionId)?->option_text,
+                'is_correct' => (bool) $optionsById?->get($optionId)?->is_correct,
+            ]);
+
+            return [
+                'number' => $index + 1,
+                'question_id' => $questionId,
+                'question_text' => $question?->question_text,
+                'points' => number_format($points, 2, '.', ''),
+                'earned_points' => number_format($status === 'correct' ? $points : 0, 2, '.', ''),
+                'from_question_bank' => $question?->question_bank_item_id !== null,
+                'options' => $options->all(),
+                'selected_option_id' => $selectedOptionId,
+                'selected_option_label' => $options->firstWhere('id', $selectedOptionId)['label'] ?? null,
+                'correct_option_id' => $correctOption?->id,
+                'correct_option_label' => $options->firstWhere('id', $correctOption?->id)['label'] ?? null,
+                'status' => $status,
+                'answered_at' => $selectedOptionId !== null ? $answer->answered_at->toIso8601String() : null,
+                'answered_after_seconds' => $selectedOptionId !== null ? $secondsSinceStart($answer->answered_at) : null,
+            ];
+        });
+
+        $violations = $attempt->violations->sortBy('sequence_number')->values();
+
+        $violationRows = $violations->map(fn (ExamViolation $violation) => [
+            'id' => $violation->id,
+            'sequence_number' => $violation->sequence_number,
+            'violation_type' => $violation->violation_type->value,
+            'violation_label' => $violation->violation_type->label(),
+            'penalty_points' => (string) $violation->penalty_points,
+            'occurred_at' => $violation->occurred_at->toIso8601String(),
+            'occurred_after_seconds' => $secondsSinceStart($violation->occurred_at),
+        ]);
+
+        $violationBreakdown = $violations
+            ->groupBy(fn (ExamViolation $violation) => $violation->violation_type->value)
+            ->map(fn ($group) => [
+                'violation_type' => $group->first()->violation_type->value,
+                'violation_label' => $group->first()->violation_type->label(),
+                'count' => $group->count(),
+                'penalty_points' => number_format($group->sum(fn (ExamViolation $v) => (float) $v->penalty_points), 2, '.', ''),
+            ])
+            ->sortByDesc('count')
+            ->values();
+
+        $timeline = collect([['type' => 'started', 'occurred_at' => $startedAt, 'description' => 'Mulai mengerjakan ujian']])
+            ->concat($questions->whereNotNull('answered_at')->map(fn (array $q) => [
+                'type' => 'answered',
+                'occurred_at' => CarbonImmutable::parse($q['answered_at']),
+                'description' => "Menyimpan jawaban soal {$q['number']} (pilihan {$q['selected_option_label']})",
+            ]))
+            ->concat($violations->map(fn (ExamViolation $violation) => [
+                'type' => 'violation',
+                'occurred_at' => $violation->occurred_at,
+                'description' => "Pelanggaran #{$violation->sequence_number}: {$violation->violation_type->label()}",
+            ]))
+            ->when($submittedAt !== null, fn ($items) => $items->push([
+                'type' => 'submitted',
+                'occurred_at' => $submittedAt,
+                'description' => $submittedAt->greaterThanOrEqualTo($deadline)
+                    ? 'Ujian dikumpulkan otomatis (waktu habis)'
+                    : 'Ujian dikumpulkan',
+            ]))
+            ->sortBy(fn (array $event) => $event['occurred_at']->getTimestamp())
+            ->values()
+            ->map(fn (array $event) => [
+                ...$event,
+                'occurred_at' => $event['occurred_at']->toIso8601String(),
+                'elapsed_seconds' => $secondsSinceStart($event['occurred_at']),
+            ]);
+
+        $student = $attempt->krsItem->student;
+        $classSection = $exam->classSection;
+        $allowedSeconds = $secondsSinceStart($deadline);
+
+        return [
+            'generated_at' => now()->toIso8601String(),
+            'timezone' => University::query()->whereKey($attempt->university_id)->value('timezone') ?: config('app.timezone'),
+            'exam' => [
+                'id' => $exam->id,
+                'title' => $exam->title,
+                'course_code' => $classSection->course->code,
+                'course_name' => $classSection->course->name,
+                'class_code' => $classSection->class_code,
+                'academic_term' => $classSection->academicTerm->label(),
+                'lecturer_name' => $classSection->lecturer?->name,
+                'duration_minutes' => $exam->duration_minutes,
+                'starts_at' => $exam->starts_at?->toIso8601String(),
+                'ends_at' => $exam->ends_at?->toIso8601String(),
+                'max_attempts' => $exam->max_attempts,
+                'weight_percentage' => $exam->weight_percentage,
+            ],
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'nim' => $student->nim,
+                'study_program' => $student->studyProgram->name,
+            ],
+            'attempt' => [
+                'id' => $attempt->id,
+                'attempt_number' => $attempt->attempt_number,
+                'status' => $attempt->status->value,
+                'started_at' => $startedAt->toIso8601String(),
+                'submitted_at' => $submittedAt?->toIso8601String(),
+                'deadline_at' => $deadline->toIso8601String(),
+                'allowed_seconds' => $allowedSeconds,
+                // Selama in_progress: waktu berjalan sampai sekarang (dibatasi
+                // deadline), supaya dosen yang memantau melihat progres nyata.
+                'duration_seconds' => $isSubmitted
+                    ? $secondsSinceStart($submittedAt)
+                    : min($allowedSeconds, $secondsSinceStart(now())),
+                'submission_type' => match (true) {
+                    ! $isSubmitted => null,
+                    $submittedAt->greaterThanOrEqualTo($deadline) => 'auto_timeout',
+                    default => 'manual',
+                },
+            ],
+            'summary' => [
+                'total_questions' => $questions->count(),
+                'answered' => $counts['correct'] + $counts['wrong'],
+                'correct_answers' => $counts['correct'],
+                'wrong_answers' => $counts['wrong'],
+                'unanswered' => $counts['unanswered'],
+                'total_points' => number_format($totalPoints, 2, '.', ''),
+                'earned_points' => number_format($earnedPoints, 2, '.', ''),
+                'raw_score' => $attempt->raw_score !== null ? (string) $attempt->raw_score : null,
+                'penalty_score' => (string) $attempt->penalty_score,
+                'score' => $attempt->score !== null ? (string) $attempt->score : null,
+                'grade' => $attempt->grade,
+                'weighted_score' => $attempt->weighted_score !== null ? (string) $attempt->weighted_score : null,
+                'violation_count' => $violations->count(),
+            ],
+            'questions' => $questions->all(),
+            'violations' => $violationRows->all(),
+            'violation_breakdown' => $violationBreakdown->all(),
+            'timeline' => $timeline->all(),
+            // Semua percobaan peserta ini untuk ujian yang sama — supaya
+            // dosen bisa berpindah laporan antar-percobaan (max_attempts > 1).
+            'attempts' => ExamAttempt::query()
+                ->where('exam_id', $exam->id)
+                ->where('krs_item_id', $attempt->krs_item_id)
+                ->orderBy('attempt_number')
+                ->get(['id', 'attempt_number', 'status', 'score', 'submitted_at'])
+                ->map(fn (ExamAttempt $a) => [
+                    'id' => $a->id,
+                    'attempt_number' => $a->attempt_number,
+                    'status' => $a->status->value,
+                    'score' => $a->score !== null ? (string) $a->score : null,
+                ])
+                ->all(),
+        ];
+    }
+
+    /**
      * Query dasar "peserta terdaftar untuk ujian ini" (KrsItem Enrolled di
      * class_section ujian, dengan attempt terbarunya) — satu sumber
      * kebenaran dipakai bersama oleh ExamAttemptController::index() (tabel
      * peserta) dan ExamController::recap()/exportRecap() (Score Recap,
      * spec §7), supaya keduanya tidak bisa saling menyimpang.
      */
-    public function participantsQuery(Exam $exam): \Illuminate\Database\Eloquent\Builder
+    public function participantsQuery(Exam $exam): Builder
     {
         return KrsItem::query()
             ->where('class_section_id', $exam->class_section_id)

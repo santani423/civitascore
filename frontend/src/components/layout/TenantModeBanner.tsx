@@ -29,7 +29,7 @@ export function TenantModeBanner() {
   }
 
   return (
-    <div className="flex items-center justify-center gap-2 bg-primary px-4 py-1.5 text-xs font-medium text-white">
+    <div className="flex items-center justify-center gap-2 bg-primary px-4 py-1.5 text-xs font-medium text-white print:hidden">
       <Building2 className="size-3.5" />
       <span>
         Anda sedang melihat data: <strong>{selectedUniversity.name}</strong>

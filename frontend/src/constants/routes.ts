@@ -22,6 +22,7 @@ export const ROUTES = {
     ujian: '/akademik/ujian',
     ujianDetail: '/akademik/ujian/:id',
     ujianRekap: '/akademik/ujian/:id/rekap',
+    ujianLaporan: '/akademik/ujian/:id/laporan/:attemptId',
     bankSoal: '/akademik/bank-soal',
     // Dosen wali / Bagian Akademik menyetujui KRS mandiri mahasiswa.
     persetujuanKrs: '/akademik/persetujuan-krs',

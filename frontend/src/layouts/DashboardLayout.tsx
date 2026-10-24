@@ -26,7 +26,7 @@ export function DashboardLayout() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen bg-background print:block print:min-h-0 print:bg-white">
       <Sidebar
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed((current) => !current)}
@@ -38,7 +38,7 @@ export function DashboardLayout() {
         <TenantModeBanner />
         <Header onMenuClick={handleMenuClick} />
 
-        <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 sm:py-6">
+        <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 sm:py-6 print:p-0">
           <Outlet />
         </main>
       </div>

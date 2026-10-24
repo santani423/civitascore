@@ -48,6 +48,7 @@ const DETAIL_ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   [ROUTES.akademik.mataKuliahDetail]: 'courses.read',
   [ROUTES.akademik.ujianDetail]: 'exams.read',
   [ROUTES.akademik.ujianRekap]: 'exams.read',
+  [ROUTES.akademik.ujianLaporan]: 'exam_attempts.read',
   [ROUTES.portal.ujianKerjakan]: 'exam_participation.read',
   [ROUTES.portal.ujianHasil]: 'exam_participation.read',
   [ROUTES.portal.mataKuliahDetail]: 'student_portal.read',

@@ -5,8 +5,11 @@ namespace Modules\Academic\Controllers;
 use App\Http\Controllers\Controller;
 use App\Support\Http\ApiResponse;
 use App\Support\Http\ListQuery;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use Modules\Academic\Models\Exam;
 use Modules\Academic\Models\ExamAttempt;
 use Modules\Academic\Models\KrsItem;
@@ -89,5 +92,45 @@ class ExamAttemptController extends Controller
             'violation_count' => $violations->count(),
             'violations' => ExamViolationResource::collection($violations),
         ]);
+    }
+
+    /**
+     * Laporan lengkap satu percobaan untuk dosen — waktu pengerjaan, jawaban
+     * per soal, pelanggaran, linimasa (lihat ExamService::buildAttemptReport).
+     * finalizeIfExpired() dulu supaya attempt yang waktunya sudah habis tapi
+     * belum pernah diakses lagi oleh peserta ikut terskor, sama seperti
+     * endpoint hasil mahasiswa.
+     */
+    public function report(ExamAttempt $examAttempt): JsonResponse
+    {
+        $this->authorize('viewAny', [ExamAttempt::class, $examAttempt->exam]);
+
+        $examAttempt = $this->exams->finalizeIfExpired($examAttempt);
+
+        return ApiResponse::success($this->exams->buildAttemptReport($examAttempt));
+    }
+
+    public function reportPdf(ExamAttempt $examAttempt): Response
+    {
+        $this->authorize('viewAny', [ExamAttempt::class, $examAttempt->exam]);
+
+        $examAttempt = $this->exams->finalizeIfExpired($examAttempt);
+        $report = $this->exams->buildAttemptReport($examAttempt);
+        $filename = 'laporan-ujian-'.Str::slug($report['exam']['title']).'-'.$report['student']['nim'].'-percobaan-'.$report['attempt']['attempt_number'].'.pdf';
+
+        $pdf = Pdf::loadView('exams.attempt-report-pdf', ['report' => $report])->setPaper('a4');
+        $pdf->render();
+        $dompdf = $pdf->getDomPDF();
+        $canvas = $dompdf->getCanvas();
+        $canvas->page_text(
+            $canvas->get_width() - 100,
+            $canvas->get_height() - 29,
+            'Halaman {PAGE_NUM} dari {PAGE_COUNT}',
+            $dompdf->getFontMetrics()->getFont('helvetica'),
+            6,
+            [0.58, 0.64, 0.72],
+        );
+
+        return $pdf->download($filename);
     }
 }
