@@ -1,6 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/stores/authStore'
 import { useTenantStore } from '@/stores/tenantStore'
+import { API_BASE_URL } from '@/services/apiBase'
 
 /**
  * Centralized API client. Nothing in the app should call axios/fetch
@@ -9,7 +10,7 @@ import { useTenantStore } from '@/stores/tenantStore'
  * consistent once real endpoints are wired in.
  */
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1',
+  baseURL: API_BASE_URL,
   timeout: 15_000,
   headers: {
     Accept: 'application/json',

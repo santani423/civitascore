@@ -9,6 +9,7 @@ import type {
   StudentExamResult,
 } from '@/types/academic'
 import type { NormalizedApiError } from '@/services/api'
+import { API_BASE_URL } from '@/services/apiBase'
 
 /**
  * Klien API terpisah dari `apiClient` (lihat services/api.ts) — halaman
@@ -18,7 +19,7 @@ import type { NormalizedApiError } from '@/services/api'
  * ada sesi sama sekali) sehingga tidak boleh memicu clearSession().
  */
 const publicApiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1',
+  baseURL: API_BASE_URL,
   timeout: 15_000,
   headers: {
     Accept: 'application/json',

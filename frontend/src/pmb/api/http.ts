@@ -1,10 +1,9 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios'
 import type { NormalizedApiError } from '@/services/api'
 import { apiClient } from '@/services/api'
+import { API_BASE_URL as baseURL } from '@/services/apiBase'
 import { useApplicantStore } from '@/pmb/stores/applicantStore'
 import { resolveCampusCode } from '@/pmb/lib/tenant'
-
-const baseURL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000/api/v1'
 
 type ErrorBody = { message?: string; errors?: Record<string, unknown> }
 

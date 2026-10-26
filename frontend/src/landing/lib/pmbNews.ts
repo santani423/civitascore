@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { PublicContent } from '@/pmb/api/public'
 import { resolveCampusCode } from '@/pmb/lib/tenant'
+import { API_BASE_URL } from '@/services/apiBase'
 
 /**
  * Admissions news from the existing public PMB endpoint
@@ -9,7 +10,7 @@ import { resolveCampusCode } from '@/pmb/lib/tenant'
  * doesn't pull in axios and the app's API client; the endpoint, tenant
  * header and response envelope are unchanged.
  */
-const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8000/api/v1'
+const API_BASE = API_BASE_URL
 const TIMEOUT_MS = 10_000
 
 export type NewsItem = Pick<PublicContent, 'id' | 'slug' | 'title' | 'category' | 'excerpt' | 'published_at'>
