@@ -25,7 +25,7 @@ export function LegalPage({ doc }: { doc: 'privacy' | 'terms' }) {
     <section aria-labelledby="legal-title" className="relative overflow-hidden pb-24 pt-32 sm:pb-32 sm:pt-40">
       <div aria-hidden className="lp-grid-bg pointer-events-none absolute inset-x-0 top-0 h-96" />
       <div className="lp-container relative max-w-3xl">
-        <Link to={LANDING_PATHS.home} className="inline-flex items-center gap-2 text-[14px] font-medium text-lp-muted transition-colors hover:text-lp-fg">
+        <Link to={LANDING_PATHS.home} className="inline-flex items-center gap-2 text-[0.875rem] font-medium text-lp-muted transition-colors hover:text-lp-fg">
           <ArrowLeft size={16} aria-hidden />
           {m.legal.back}
         </Link>
@@ -33,7 +33,7 @@ export function LegalPage({ doc }: { doc: 'privacy' | 'terms' }) {
         <h1 id="legal-title" className="lp-h2 mt-4 text-lp-fg">
           {copy.title}
         </h1>
-        <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-dashed border-lp-strong px-3 py-1 text-[13px] font-medium text-lp-muted">
+        <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-dashed border-lp-strong px-3 py-1 text-[0.8125rem] font-medium text-lp-muted">
           <FileClock size={15} aria-hidden className="text-lp-gold-text" />
           {m.legal.status}
         </p>

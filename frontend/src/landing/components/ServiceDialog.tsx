@@ -31,11 +31,11 @@ export function ServiceDialog({ service, onClose }: { service: ServiceDef | null
     >
       <p className="lp-body text-lp-muted">{copy.summary}</p>
 
-      <h3 className="mt-7 text-[12px] font-semibold uppercase tracking-[0.12em] text-lp-subtle">{d.capabilities}</h3>
+      <h3 className="mt-7 text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-lp-subtle">{d.capabilities}</h3>
       <ul className="mt-3 divide-y divide-lp-line rounded-lp border border-lp-line">
         {service.capabilities.map((cap) => (
           <li key={cap} className="flex items-center justify-between gap-4 px-4 py-3">
-            <span className="text-[14.5px] text-lp-fg">{m.capabilities[cap]}</span>
+            <span className="text-[0.9063rem] text-lp-fg">{m.capabilities[cap]}</span>
             <StatusPill status={CAPABILITY_STATUS[cap]} compact />
           </li>
         ))}
@@ -45,20 +45,20 @@ export function ServiceDialog({ service, onClose }: { service: ServiceDef | null
         <div className="flex items-start gap-3 rounded-lp bg-lp-sunken px-4 py-3.5">
           <Users size={17} aria-hidden className="mt-0.5 shrink-0 text-lp-subtle" />
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-lp-subtle">{d.users}</p>
-            <p className="mt-1 text-[14px] text-lp-fg">{copy.users}</p>
+            <p className="text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-lp-subtle">{d.users}</p>
+            <p className="mt-1 text-[0.875rem] text-lp-fg">{copy.users}</p>
           </div>
         </div>
         <div className="flex items-start gap-3 rounded-lp bg-lp-sunken px-4 py-3.5">
           <KeyRound size={17} aria-hidden className="mt-0.5 shrink-0 text-lp-subtle" />
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-lp-subtle">{d.access}</p>
-            <p className="mt-1 text-[14px] text-lp-fg">{pmb ? d.accessPmb : d.accessLogin}</p>
+            <p className="text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-lp-subtle">{d.access}</p>
+            <p className="mt-1 text-[0.875rem] text-lp-fg">{pmb ? d.accessPmb : d.accessLogin}</p>
           </div>
         </div>
       </div>
 
-      <p className="mt-5 text-[13px] text-lp-subtle">{d.note}</p>
+      <p className="mt-5 text-[0.8125rem] text-lp-subtle">{d.note}</p>
 
       <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         {pmb && (

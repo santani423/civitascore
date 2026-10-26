@@ -37,7 +37,7 @@ export function AudienceStrip() {
         <Reveal>
           <div className="grid gap-8 rounded-lp-lg border border-lp-line bg-lp-surface p-6 shadow-lp-lg sm:p-8 lg:grid-cols-12 lg:gap-0">
             <div className="lg:col-span-6 lg:pr-10">
-              <h2 className="flex items-center gap-2 text-[15px] font-semibold text-lp-fg">
+              <h2 className="flex items-center gap-2 text-[0.9375rem] font-semibold text-lp-fg">
                 <BadgeCheck size={18} aria-hidden className="text-lp-brand-text" />
                 {a.title}
               </h2>
@@ -47,18 +47,18 @@ export function AudienceStrip() {
                     <span className="flex h-10 w-10 items-center justify-center rounded-full bg-lp-brand-soft text-lp-brand-text">
                       <Icon size={19} aria-hidden />
                     </span>
-                    <span className="text-[12.5px] font-semibold leading-tight text-lp-fg">{a.roles[key]}</span>
+                    <span className="text-[0.7813rem] font-semibold leading-tight text-lp-fg">{a.roles[key]}</span>
                   </li>
                 ))}
               </ul>
             </div>
             <div className="border-t border-lp-line pt-8 lg:col-span-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
-              <h2 className="text-[15px] font-semibold text-lp-fg">{a.traitsTitle}</h2>
+              <h2 className="text-[0.9375rem] font-semibold text-lp-fg">{a.traitsTitle}</h2>
               <ul className="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2">
                 {TRAITS.map(({ key, icon: Icon }) => (
                   <li key={key} className="flex items-center gap-3">
                     <Icon size={22} strokeWidth={1.7} aria-hidden className="shrink-0 text-lp-brand-text" />
-                    <span className="text-[14px] font-medium text-lp-muted">{a.traits[key]}</span>
+                    <span className="text-[0.875rem] font-medium text-lp-muted">{a.traits[key]}</span>
                   </li>
                 ))}
               </ul>

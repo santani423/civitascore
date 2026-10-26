@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Mail, MessageSquare, Phone } from 'lucide-react'
+import { Accessibility, Mail, MessageSquare, Phone } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import { PMB } from '@/pmb/routes'
 import { fill, useLandingI18n } from '../../i18n'
@@ -10,19 +10,20 @@ import { NAV_ITEMS } from '../../data/navigation'
 import { PHOTOS, PHOTO_LICENSE } from '../../data/photos'
 import { LANDING_PATHS } from '../../paths'
 import { useLandingUi } from '../../store/ui'
+import { useA11y } from '../../store/a11y'
 import { LanguageSegmented } from './LanguageSwitcher'
 import { ThemeSegmented } from './ThemeToggle'
 import { SectionLink } from './SectionLink'
 import { Wordmark } from './Wordmark'
 
-const linkClass = 'text-[14px] text-lp-band-muted transition-colors hover:text-lp-band-fg'
+const linkClass = 'inline-flex min-h-11 items-center text-[0.875rem] text-lp-band-muted transition-colors hover:text-lp-band-fg'
 
 function Column({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <h2 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-lp-band-fg">{title}</h2>
+      <h2 className="text-[0.8125rem] font-semibold uppercase tracking-[0.12em] text-lp-band-fg">{title}</h2>
       <span aria-hidden className="mt-3 block h-0.5 w-8 rounded-full bg-lp-accent" />
-      <ul className="mt-5 space-y-3">{children}</ul>
+      <ul className="mt-4 space-y-0.5">{children}</ul>
     </div>
   )
 }
@@ -30,6 +31,7 @@ function Column({ title, children }: { title: string; children: ReactNode }) {
 export function Footer() {
   const { m } = useLandingI18n()
   const openContact = useLandingUi((s) => s.openContact)
+  const openA11y = useA11y((s) => s.openPanel)
   const entry = useAppEntry()
   const { contactEmail, contactPhone } = landingConfig
 
@@ -107,14 +109,20 @@ export function Footer() {
                   {m.footer.links.contactTeam}
                 </button>
               </li>
+              <li>
+                <button type="button" className={`${linkClass} gap-2 text-left`} onClick={openA11y}>
+                  <Accessibility size={15} aria-hidden className="shrink-0 text-lp-accent" />
+                  {m.a11y.open}
+                </button>
+              </li>
             </Column>
           </div>
         </div>
 
         <div className="mt-14 flex flex-col gap-6 border-t border-lp-band-line pt-8 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl space-y-2">
-            <p className="text-[13px] text-lp-band-muted">{fill(m.footer.rights, { year: new Date().getFullYear() })}</p>
-            <p className="text-[12px] leading-relaxed text-lp-band-muted/80">
+            <p className="text-[0.8125rem] text-lp-band-muted">{fill(m.footer.rights, { year: new Date().getFullYear() })}</p>
+            <p className="text-[0.75rem] leading-relaxed text-lp-band-muted/80">
               {m.footer.photoCredit}{' '}
               {Object.values(PHOTOS).map((photo, i) => (
                 <span key={photo.source}>
@@ -132,10 +140,10 @@ export function Footer() {
           </div>
           <div className="flex flex-col gap-5 sm:flex-row sm:flex-wrap sm:items-center lg:justify-end">
             <div className="flex gap-5">
-              <Link to={LANDING_PATHS.privacy} className="text-[13px] text-lp-band-muted hover:text-lp-band-fg">
+              <Link to={LANDING_PATHS.privacy} className="inline-flex min-h-11 items-center text-[0.8125rem] text-lp-band-muted hover:text-lp-band-fg">
                 {m.footer.privacy}
               </Link>
-              <Link to={LANDING_PATHS.terms} className="text-[13px] text-lp-band-muted hover:text-lp-band-fg">
+              <Link to={LANDING_PATHS.terms} className="inline-flex min-h-11 items-center text-[0.8125rem] text-lp-band-muted hover:text-lp-band-fg">
                 {m.footer.terms}
               </Link>
             </div>

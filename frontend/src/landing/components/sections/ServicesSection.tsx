@@ -25,7 +25,7 @@ export function ServicesSection() {
       <div className="lp-container">
         <SectionHeader id="services-title" eyebrow={m.services.eyebrow} title={m.services.title} description={m.services.description} />
         <Reveal className="mt-8 flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:gap-4">
-          <p aria-hidden className="shrink-0 text-[13.5px] font-medium text-lp-muted">
+          <p aria-hidden className="shrink-0 text-[0.8438rem] font-medium text-lp-muted">
             {m.services.filterLabel}
           </p>
           {/* On narrow screens the chips scroll sideways; the faded edge hints there is more. */}
@@ -65,7 +65,7 @@ export function ServicesSection() {
               <p className="lp-small mt-1.5 text-lp-muted">{m.services.upcomingBody}</p>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {UPCOMING.map((key) => (
-                  <li key={key} className="rounded-full border border-lp-line bg-lp-surface px-3 py-1 text-[13px] font-medium text-lp-muted">
+                  <li key={key} className="rounded-full border border-lp-line bg-lp-surface px-3 py-1 text-[0.8125rem] font-medium text-lp-muted">
                     {m.services.upcoming[key]}
                   </li>
                 ))}
@@ -99,7 +99,7 @@ function ServiceCard({ service, onDetails }: { service: ServiceDef; onDetails: (
       <p className="lp-small mt-2 flex-1 text-lp-muted">{copy.summary}</p>
       <p className="mt-4 flex flex-wrap gap-1.5">
         {service.audiences.map((a) => (
-          <span key={a} className="rounded-full bg-lp-sunken px-2.5 py-0.5 text-[11.5px] font-medium text-lp-muted">
+          <span key={a} className="rounded-full bg-lp-sunken px-2.5 py-0.5 text-[0.7188rem] font-medium text-lp-muted">
             {m.services.filters[a]}
           </span>
         ))}
@@ -110,13 +110,13 @@ function ServiceCard({ service, onDetails }: { service: ServiceDef; onDetails: (
           onClick={onDetails}
           aria-label={fill(m.services.detailsFor, { name: copy.name })}
           aria-haspopup="dialog"
-          className="inline-flex items-center gap-1.5 rounded-lp-sm text-[13.5px] font-semibold text-lp-muted transition-colors hover:text-lp-fg"
+          className="inline-flex items-center gap-1.5 rounded-lp-sm text-[0.8438rem] font-semibold text-lp-muted transition-colors hover:text-lp-fg"
         >
           {m.services.details}
         </button>
         <Link
           to={service.access.kind === 'pmb' ? service.access.to : entry.to}
-          className="inline-flex items-center gap-1.5 rounded-lp-sm text-[13.5px] font-semibold text-lp-brand-text transition-colors hover:text-lp-brand-hover"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-lp-sm text-[0.8438rem] font-semibold text-lp-brand-text transition-colors hover:text-lp-brand-hover"
         >
           {pmb ? m.services.accessPmb : entry.authenticated ? m.nav.openDashboard : m.services.accessLogin}
           {pmb ? <ArrowUpRight size={15} aria-hidden /> : <ArrowRight size={15} aria-hidden />}

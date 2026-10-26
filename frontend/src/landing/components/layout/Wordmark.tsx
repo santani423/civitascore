@@ -15,17 +15,17 @@ export function Wordmark({ className, size = 'md', tone = 'default' }: { classNa
   return (
     <span className={cn('inline-flex min-w-0 items-center gap-3', className)}>
       <Crest className={size === 'lg' ? 'h-14' : 'h-11'} />
-      <span className="flex min-w-0 flex-col leading-none">
+      <span className="lp-wordmark-text flex min-w-0 flex-col">
         <span
           className={cn(
-            'whitespace-nowrap font-display font-extrabold uppercase tracking-[-0.01em]',
-            size === 'lg' ? 'text-[21px]' : 'text-[17px]',
+            'font-display font-extrabold uppercase leading-[1.1] tracking-[-0.01em] sm:whitespace-nowrap',
+            size === 'lg' ? 'text-[1.3125rem]' : 'text-[1.0625rem]',
             band ? 'text-lp-band-fg' : 'text-lp-fg',
           )}
         >
           <span className={band ? 'text-lp-accent' : 'text-lp-brand-text'}>One</span> Atma Jaya
         </span>
-        <span className={cn('mt-1 truncate font-medium', size === 'lg' ? 'text-[12.5px]' : 'text-[11px]', band ? 'text-lp-band-muted' : 'text-lp-subtle')}>
+        <span className={cn('mt-1 truncate font-medium', size === 'lg' ? 'text-[0.7813rem]' : 'text-[0.6875rem]', band ? 'text-lp-band-muted' : 'text-lp-subtle')}>
           Universitas Katolik Indonesia Atma Jaya
         </span>
       </span>

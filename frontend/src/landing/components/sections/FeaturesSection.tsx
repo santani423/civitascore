@@ -42,7 +42,7 @@ export function FeaturesSection() {
             <li key={key} className="flex">
               <Reveal delay={i * 70} className="flex w-full">
                 <article className="group relative flex w-full flex-col overflow-hidden rounded-lp border border-lp-line bg-lp-surface p-6 shadow-lp-sm transition-[box-shadow,border-color] duration-300 hover:border-lp-brand/30 hover:shadow-lp-md sm:p-7">
-                  <span aria-hidden className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-lp-brand transition-transform duration-500 group-hover:scale-x-100" />
+                  <span aria-hidden data-lp-decor className="absolute inset-x-0 top-0 h-1 origin-left scale-x-0 bg-lp-brand transition-transform duration-500 group-hover:scale-x-100" />
                   <span className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-lp-brand/20 bg-lp-brand-soft text-lp-brand-text">
                     <Icon size={22} aria-hidden />
                   </span>

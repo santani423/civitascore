@@ -52,8 +52,8 @@
   --lp-band-line: 74 69 66;
 
   /* Status */
-  --lp-ok: 21 128 61;
-  --lp-warn: 180 83 9;
+  --lp-ok: 18 104 48;
+  --lp-warn: 160 72 6;
   --lp-bad: 194 39 45;
   --lp-info: 37 99 168;
 
@@ -168,10 +168,6 @@
   overflow-x: clip;
 }
 
-/* In-page anchors land below the fixed navbar. */
-.lp-page [id] {
-  scroll-margin-top: var(--lp-nav-h);
-}
 
 :where(.lp-root *) {
   border-color: rgb(var(--lp-line));
@@ -180,6 +176,11 @@
 :where(.lp-root) :focus-visible {
   outline: 2px solid rgb(var(--lp-ring));
   outline-offset: 2px;
+}
+
+/* Pure white ink on the orange CTA banner (cream falls just short of 4.5:1 there). */
+.lp-root .lp-on-brand {
+  --lp-band-fg: 255 255 255;
 }
 
 /* On charcoal (hero, footer) and on the orange banner the orange ring is too faint — use light ink. */
@@ -244,7 +245,8 @@
 }
 @media (min-width: 768px) {
   .lp-hero-photo {
-    mask-image: linear-gradient(to right, transparent 0%, #000 38%);
+    /* Photo spans the whole hero; the text side keeps a light charcoal veil so copy stays above 4.5:1. */
+    mask-image: linear-gradient(to right, rgb(0 0 0 / 0.14) 0%, rgb(0 0 0 / 0.2) 40%, rgb(0 0 0 / 0.75) 58%, #000 76%);
   }
 }
 
@@ -370,4 +372,285 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* ======================================================================
+   Accessibility preferences ("Pengaturan Aksesibilitas")
+   Set on <html> by hooks/useA11yEffect.ts and removed when the landing
+   unmounts, so none of this can reach the dashboard or other modules.
+   Specificity (html[attr] .lp-root) deliberately beats `.dark .lp-root`.
+   ====================================================================== */
+
+/* Section jumps and keyboard focus both land below the fixed navbar (one mechanism, so offsets never stack). */
+html[data-lp] {
+  scroll-padding-top: 5rem;
+}
+
+/* Text size: everything on the page is rem-based, so the root size scales text AND spacing together. */
+html[data-lp-text='sm'] {
+  font-size: 87.5%;
+}
+html[data-lp-text='lg'] {
+  font-size: 125%;
+}
+html[data-lp-text='xl'] {
+  font-size: 150%;
+}
+
+/* Desktop navigation vs hamburger. The 1024px breakpoint assumes 16px text, so larger text sizes switch to the hamburger at a wider viewport. */
+.lp-root .lp-nav-desktop {
+  display: none;
+}
+.lp-root .lp-nav-burger {
+  display: inline-flex;
+}
+@media (min-width: 1024px) {
+  .lp-root .lp-nav-desktop {
+    display: block;
+  }
+  .lp-root .lp-nav-burger {
+    display: none;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  html[data-lp-text='lg'] .lp-root .lp-nav-desktop {
+    display: none;
+  }
+  html[data-lp-text='lg'] .lp-root .lp-nav-burger {
+    display: inline-flex;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1535px) {
+  html[data-lp-text='xl'] .lp-root .lp-nav-desktop {
+    display: none;
+  }
+  html[data-lp-text='xl'] .lp-root .lp-nav-burger {
+    display: inline-flex;
+  }
+}
+
+/* Language, theme and sign-in are also in the hamburger menu, so the header bar drops them when enlarged text leaves no room. */
+@media (max-width: 767px) {
+  html[data-lp-text='lg'] .lp-root .lp-hdr-extra {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  html[data-lp-text='xl'] .lp-root .lp-hdr-extra {
+    display: none;
+  }
+}
+
+/* Largest text on a phone: the crest alone stands for the wordmark (the link keeps its accessible name via sr-only text). */
+@media (max-width: 479px) {
+  html[data-lp-text='xl'] .lp-root .lp-wordmark-text {
+    display: none;
+  }
+}
+
+/* Buttons and links may wrap their label (and grow taller) when text is enlarged, spaced out or set in a wider typeface. */
+html:is([data-lp-text='lg'], [data-lp-text='xl'], [data-lp-spacing='wide'], [data-lp-spacing='wider'], [data-lp-font='readable']) .lp-root :where(a, button):not(.sr-only) {
+  white-space: normal;
+  height: auto;
+  padding-block: 0.5rem;
+  text-align: center;
+}
+
+/* Long words must wrap instead of spilling out when text is enlarged, spaced out or set in a wider typeface. */
+html:is([data-lp-text], [data-lp-spacing], [data-lp-font]) .lp-root :where(h1, h2, h3, h4, p, li, dd, label) {
+  overflow-wrap: anywhere;
+}
+
+/* Comfortable minimum target size (WCAG 2.5.8 asks 24px; 44px is the design target). */
+.lp-root :where(button, select, [role='tab'], [role='menuitem'], [role='menuitemradio']) {
+  min-height: 44px;
+  min-width: 44px;
+}
+html[data-lp-targets='large'] .lp-root :where(button, select, [role='tab'], [role='menuitem'], [role='menuitemradio']) {
+  min-height: 48px;
+  min-width: 48px;
+}
+html[data-lp-targets='large'] .lp-root :where(nav a, footer a, ul a) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+}
+
+/* ---------- Contrast ---------- */
+
+html[data-lp-contrast='high'] .lp-root {
+  color-scheme: light;
+  --lp-canvas: 255 255 255;
+  --lp-surface: 255 255 255;
+  --lp-sunken: 242 242 242;
+  --lp-elev: 255 255 255;
+  --lp-line: 90 90 90;
+  --lp-line-strong: 0 0 0;
+  --lp-fg: 0 0 0;
+  --lp-muted: 26 26 26;
+  --lp-subtle: 51 51 51;
+  --lp-brand: 150 36 0;
+  --lp-brand-hover: 115 26 0;
+  --lp-brand-text: 140 32 0;
+  --lp-brand-soft: 255 236 224;
+  --lp-onbrand: 255 255 255;
+  --lp-accent: 255 150 70;
+  --lp-gold: 160 100 0;
+  --lp-gold-text: 100 62 0;
+  --lp-band: 0 0 0;
+  --lp-band-elev: 25 25 25;
+  --lp-band-fg: 255 255 255;
+  --lp-band-muted: 240 240 240;
+  --lp-band-line: 200 200 200;
+  --lp-ok: 0 90 30;
+  --lp-warn: 130 55 0;
+  --lp-bad: 160 0 0;
+  --lp-info: 0 70 150;
+  --lp-ring: 0 0 0;
+}
+
+html[data-lp-contrast='dark'] .lp-root {
+  color-scheme: dark;
+  --lp-canvas: 0 0 0;
+  --lp-surface: 0 0 0;
+  --lp-sunken: 18 18 18;
+  --lp-elev: 10 10 10;
+  --lp-line: 170 170 170;
+  --lp-line-strong: 255 255 255;
+  --lp-fg: 255 255 255;
+  --lp-muted: 240 240 240;
+  --lp-subtle: 215 215 215;
+  --lp-brand: 255 214 0;
+  --lp-brand-hover: 255 235 110;
+  --lp-brand-text: 255 214 0;
+  --lp-brand-soft: 46 38 0;
+  --lp-onbrand: 0 0 0;
+  --lp-accent: 255 190 40;
+  --lp-gold: 255 200 60;
+  --lp-gold-text: 255 214 90;
+  --lp-band: 0 0 0;
+  --lp-band-elev: 20 20 20;
+  --lp-band-fg: 255 255 255;
+  --lp-band-muted: 235 235 235;
+  --lp-band-line: 170 170 170;
+  --lp-ok: 120 235 150;
+  --lp-warn: 255 200 70;
+  --lp-bad: 255 140 140;
+  --lp-info: 140 200 255;
+  --lp-ring: 255 214 0;
+}
+
+/* The CTA banner is yellow in dark contrast: flip its "band" ink so buttons and focus rings stay readable. */
+html[data-lp-contrast='dark'] .lp-root .lp-on-brand {
+  --lp-band: 255 255 255;
+  --lp-band-fg: 0 0 0;
+}
+
+/* Strong contrast also underlines links, so they never rely on color alone. */
+html:is([data-lp-colorsafe='on'], [data-lp-easy='on'], [data-lp-contrast='high'], [data-lp-contrast='dark']) .lp-root :where(main a, footer a, [role='dialog'] a) {
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+}
+
+/* ---------- Color-blind friendly status colors (shape + text are always shown as well) ---------- */
+
+html[data-lp-colorsafe='on'] .lp-root {
+  --lp-ok: 0 90 170;
+  --lp-warn: 150 90 0;
+  --lp-bad: 170 40 0;
+  --lp-info: 0 90 170;
+}
+html.dark[data-lp-colorsafe='on']:not([data-lp-contrast='high']) .lp-root,
+html[data-lp-colorsafe='on'][data-lp-contrast='dark'] .lp-root {
+  --lp-ok: 120 190 255;
+  --lp-warn: 255 200 80;
+  --lp-bad: 255 150 100;
+  --lp-info: 120 190 255;
+}
+
+/* ---------- Reader-friendly type ---------- */
+
+html[data-lp-font='readable'] .lp-root {
+  --lp-font-sans: Verdana, Tahoma, 'Segoe UI', Arial, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --lp-font-display: Verdana, Tahoma, 'Segoe UI', Arial, 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-feature-settings: normal;
+}
+html[data-lp-font='readable'] .lp-root :where(.font-display, .font-sans) {
+  font-family: var(--lp-font-sans);
+}
+
+/* Spacing follows WCAG 1.4.12 (letter 0.12em, word 0.16em, line 1.5+, paragraph 2x) at its widest step. */
+html[data-lp-spacing='wide'] .lp-root {
+  --lp-ls: 0.06em;
+  --lp-ws: 0.1em;
+  --lp-lh: 1.7;
+}
+html[data-lp-spacing='wider'] .lp-root {
+  --lp-ls: 0.12em;
+  --lp-ws: 0.16em;
+  --lp-lh: 1.9;
+}
+html[data-lp-spacing] .lp-root * {
+  letter-spacing: var(--lp-ls) !important;
+  word-spacing: var(--lp-ws) !important;
+}
+html[data-lp-spacing] .lp-root :where(p, li, dd, label) {
+  line-height: var(--lp-lh) !important;
+}
+html[data-lp-spacing='wider'] .lp-root p {
+  margin-bottom: 1em;
+}
+
+/* ---------- Easy Reading Mode ---------- */
+
+html[data-lp-easy='on'] .lp-root :where(p, dd) {
+  line-height: 1.9;
+  max-width: 68ch;
+}
+html[data-lp-easy='on'] .lp-root :where(h1, h2, h3, h4) {
+  line-height: 1.3;
+}
+html[data-lp-easy='on'] .lp-root :where(.uppercase, .lp-eyebrow) {
+  text-transform: none !important;
+  letter-spacing: 0.02em;
+}
+html[data-lp-easy='on'] .lp-root [data-lp-decor] {
+  display: none !important;
+}
+html[data-lp-easy='on'] .lp-root .lp-warm {
+  background: rgb(var(--lp-sunken));
+}
+
+/* ---------- Focus ---------- */
+
+html[data-lp-focus='strong'] .lp-root :focus-visible {
+  outline: 4px solid rgb(var(--lp-ring));
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px rgb(var(--lp-canvas));
+}
+html[data-lp-focus='strong'] .lp-root :where(.lp-on-band, .lp-on-brand) :focus-visible {
+  box-shadow: 0 0 0 7px rgb(var(--lp-band));
+}
+
+/* ---------- Motion (the OS-level preference is handled by the media query above) ---------- */
+
+html[data-lp-motion='reduce'] {
+  scroll-behavior: auto;
+}
+html[data-lp-motion='reduce'] .lp-reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+html[data-lp-motion='reduce'] .lp-root *,
+html[data-lp-motion='reduce'] .lp-root *::before,
+html[data-lp-motion='reduce'] .lp-root *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+html[data-lp-motion='reduce'] .lp-scroll-cue {
+  animation: none;
 }

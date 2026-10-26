@@ -19,7 +19,7 @@ export function HeroSection() {
 
   return (
     <section id={SECTION_IDS.home} aria-labelledby="hero-title" className="lp-on-band relative isolate overflow-hidden bg-lp-band pt-16 lg:pt-[4.5rem]">
-      <div className="relative h-72 sm:h-96 md:absolute md:inset-y-0 md:right-0 md:h-auto md:w-[62%] lg:w-[58%]">
+      <div className="relative h-72 sm:h-96 md:absolute md:inset-0 md:h-auto md:w-full">
         <img
           src={photo.src}
           srcSet={photo.srcSet}
@@ -31,13 +31,13 @@ export function HeroSection() {
           decoding="async"
           className="lp-hero-photo h-full w-full object-cover object-[50%_22%]"
         />
-        <p className="absolute bottom-4 right-4 hidden items-center gap-1.5 rounded-full bg-lp-band/70 px-3 py-1.5 text-[12px] font-medium text-lp-band-fg backdrop-blur md:inline-flex">
+        <p className="absolute bottom-4 right-4 hidden items-center gap-1.5 rounded-full bg-lp-band/70 px-3 py-1.5 text-[0.75rem] font-medium text-lp-band-fg backdrop-blur md:inline-flex">
           <MapPin size={13} aria-hidden className="text-lp-accent" />
           {m.hero.photoCaption}
         </p>
       </div>
       {/* Orange sweep in the corner, after the university website's hero. */}
-      <div aria-hidden className="lp-sweep-br absolute -bottom-px right-0 hidden h-24 w-48 bg-lp-accent md:block lg:h-32 lg:w-64" />
+      <div aria-hidden data-lp-decor className="lp-sweep-br absolute -bottom-px right-0 hidden h-24 w-48 bg-lp-accent md:block lg:h-32 lg:w-64" />
 
       <div className="lp-container relative -mt-20 pb-24 sm:-mt-24 md:mt-0 md:flex md:min-h-[34rem] md:items-center md:py-24 lg:min-h-[38rem] lg:pb-32">
         <div className="max-w-xl lg:max-w-[38rem]">
@@ -57,7 +57,7 @@ export function HeroSection() {
           </div>
           <SectionLink
             section={SECTION_IDS.about}
-            className="mt-12 hidden items-center gap-3 rounded-lp-sm text-[13px] font-medium text-lp-band-muted transition-colors hover:text-lp-band-fg md:inline-flex"
+            className="mt-10 hidden min-h-11 items-center gap-3 rounded-lp-sm text-[0.8125rem] font-medium text-lp-band-muted transition-colors hover:text-lp-band-fg md:inline-flex"
           >
             <span aria-hidden className="flex h-9 w-6 items-start justify-center rounded-full border-2 border-lp-band-fg/50 pt-1.5">
               <span className="lp-scroll-cue h-2 w-1 rounded-full bg-lp-accent" />

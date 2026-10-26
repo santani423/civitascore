@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ChevronRight, Menu, MessageSquare, X } from 'lucide-react'
+import { Accessibility, ChevronRight, Menu, MessageSquare, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useLandingI18n } from '../../i18n'
 import { useAppEntry, type AppEntry } from '../../hooks/useAppEntry'
 import { useActiveSection, useScrolled } from '../../hooks/useScroll'
 import { useLandingUi } from '../../store/ui'
+import { useA11y } from '../../store/a11y'
 import { LANDING_PATHS, SECTION_IDS } from '../../paths'
 import { NAV_ITEMS, SPY_SECTIONS } from '../../data/navigation'
 import { Button, IconButton } from '../ui/Button'
@@ -15,6 +16,7 @@ import { LanguageMenu, LanguageSegmented } from './LanguageSwitcher'
 import { ThemeSegmented, ThemeToggle } from './ThemeToggle'
 import { SectionLink } from './SectionLink'
 import { Wordmark } from './Wordmark'
+import { AccessibilityButton } from '../a11y/AccessibilityPanel'
 
 export function Navbar() {
   const { m } = useLandingI18n()
@@ -33,7 +35,7 @@ export function Navbar() {
         scrolled ? 'border-lp-line shadow-lp-md' : 'border-lp-line/70',
       )}
     >
-      <div className="lp-container flex h-16 items-center gap-3 lg:h-[4.5rem]">
+      <div className="lp-container flex min-h-16 items-center gap-3 py-1 lg:min-h-[4.5rem]">
         <SectionLink section={SECTION_IDS.home} className="-ml-1 min-w-0 rounded-lp-sm p-1" aria-current={undefined}>
           <span className="sr-only">{m.nav.homeLink}</span>
           <span aria-hidden className="flex min-w-0">
@@ -41,7 +43,7 @@ export function Navbar() {
           </span>
         </SectionLink>
 
-        <nav aria-label={m.nav.primary} className="ml-auto hidden h-full lg:block">
+        <nav aria-label={m.nav.primary} className="lp-nav-desktop ml-auto h-full">
           <ul className="flex h-full items-stretch gap-1 xl:gap-2">
             {NAV_ITEMS.map((item) => {
               const isActive = onHome && item.covers.some((c) => c === active)
@@ -51,7 +53,7 @@ export function Navbar() {
                     section={item.target}
                     aria-current={isActive ? 'location' : undefined}
                     className={cn(
-                      'relative inline-flex items-center px-3 text-[14.5px] font-semibold transition-colors xl:px-4',
+                      'relative inline-flex min-h-16 items-center px-3 text-[0.9063rem] font-semibold transition-colors lg:min-h-[4.5rem] xl:px-4',
                       isActive ? 'text-lp-brand-text' : 'text-lp-muted hover:text-lp-fg',
                     )}
                   >
@@ -71,14 +73,15 @@ export function Navbar() {
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-4">
-          <LanguageMenu className="hidden sm:block" />
-          <ThemeToggle className="hidden sm:inline-flex" />
-          <Link to={entry.to} className={buttonClass('primary', 'sm', 'ml-1 hidden h-10 px-5 sm:inline-flex')}>
+          <LanguageMenu className="lp-hdr-extra hidden sm:block" />
+          <ThemeToggle className="lp-hdr-extra hidden sm:inline-flex" />
+          <AccessibilityButton />
+          <Link to={entry.to} className={buttonClass('primary', 'sm', 'lp-hdr-extra ml-1 hidden px-5 sm:inline-flex')}>
             <EntryIcon size={16} aria-hidden />
             {entry.label}
           </Link>
           <IconButton
-            className="lg:hidden"
+            className="lp-nav-burger"
             aria-label={m.nav.openMenu}
             aria-expanded={menuOpen}
             aria-controls="lp-mobile-menu"
@@ -107,6 +110,7 @@ function MobileMenu({
 }) {
   const { m } = useLandingI18n()
   const openContact = useLandingUi((s) => s.openContact)
+  const openA11y = useA11y((s) => s.openPanel)
   const EntryIcon = entry.icon
 
   return (
@@ -131,7 +135,7 @@ function MobileMenu({
                     onNavigate={onClose}
                     aria-current={isActive ? 'location' : undefined}
                     className={cn(
-                      'flex h-12 items-center justify-between rounded-lp-sm border-l-[3px] px-3 text-[16px] font-semibold transition-colors',
+                      'flex h-12 items-center justify-between rounded-lp-sm border-l-[3px] px-3 text-[1rem] font-semibold transition-colors',
                       isActive
                         ? 'border-lp-brand bg-lp-brand-soft text-lp-brand-text'
                         : 'border-transparent text-lp-muted hover:bg-lp-sunken hover:text-lp-fg',
@@ -148,11 +152,11 @@ function MobileMenu({
 
         <div className="mt-6 space-y-5 border-t border-lp-line px-2 pt-6">
           <div>
-            <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-lp-subtle">{m.nav.language}</p>
+            <p className="mb-2 text-[0.75rem] font-semibold uppercase tracking-wider text-lp-subtle">{m.nav.language}</p>
             <LanguageSegmented className="flex w-full" />
           </div>
           <div>
-            <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-lp-subtle">{m.nav.theme}</p>
+            <p className="mb-2 text-[0.75rem] font-semibold uppercase tracking-wider text-lp-subtle">{m.nav.theme}</p>
             <ThemeSegmented className="flex w-full" />
           </div>
         </div>
@@ -162,6 +166,17 @@ function MobileMenu({
           <EntryIcon size={17} aria-hidden />
           {entry.label}
         </Link>
+        <Button
+          variant="secondary"
+          className="w-full"
+          onClick={() => {
+            onClose()
+            openA11y()
+          }}
+        >
+          <Accessibility size={16} aria-hidden />
+          {m.a11y.open}
+        </Button>
         <Button
           variant="secondary"
           className="w-full"

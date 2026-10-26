@@ -38,8 +38,12 @@ export function useActiveSection(ids: readonly string[]): string | null {
   return active
 }
 
+/** The OS preference, or the landing's own "Kurangi animasi" setting (mirrored on <html> by useA11yEffect). */
 export function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  return (
+    typeof window !== 'undefined' &&
+    (window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.getAttribute('data-lp-motion') === 'reduce')
+  )
 }
 
 /**

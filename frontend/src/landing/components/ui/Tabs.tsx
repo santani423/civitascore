@@ -68,10 +68,10 @@ export function TabList<K extends string>({ items, value, onChange, label, idPre
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
               'inline-flex shrink-0 items-center gap-2 whitespace-nowrap font-medium transition-[background-color,color,box-shadow] duration-200',
-              variant === 'pill' && 'h-10 rounded-full px-4 text-[14px]',
+              variant === 'pill' && 'h-10 rounded-full px-4 text-[0.875rem]',
               variant === 'pill' &&
                 (selected ? 'bg-lp-surface text-lp-fg shadow-lp-sm ring-1 ring-lp-line' : 'text-lp-muted hover:text-lp-fg'),
-              variant === 'underline' && '-mb-px h-11 border-b-2 text-[14.5px]',
+              variant === 'underline' && '-mb-px h-11 border-b-2 text-[0.9063rem]',
               variant === 'underline' &&
                 (selected ? 'border-lp-brand text-lp-fg' : 'border-transparent text-lp-muted hover:text-lp-fg'),
             )}

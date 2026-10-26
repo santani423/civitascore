@@ -37,7 +37,7 @@ export function AcademicSection() {
             {entry.authenticated ? m.nav.openDashboard : a.cta}
             <ArrowRight size={16} aria-hidden />
           </Link>
-          <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-lp-subtle">{a.signInNote}</p>
+          <p className="mt-4 max-w-xs text-[0.8125rem] leading-relaxed text-lp-subtle">{a.signInNote}</p>
         </Reveal>
 
         <ol className="grid gap-5 sm:grid-cols-2 lg:col-span-8">
@@ -48,7 +48,7 @@ export function AcademicSection() {
                 <Reveal delay={i * 70} className="flex w-full">
                   <article className="flex w-full flex-col overflow-hidden rounded-lp border border-lp-line bg-lp-surface shadow-lp-sm">
                     <div className="relative flex items-center justify-between overflow-hidden bg-gradient-to-br from-lp-brand-soft to-lp-surface px-6 py-5">
-                      <span aria-hidden className="absolute -right-8 -top-12 h-32 w-32 rounded-full border-[14px] border-lp-accent/10" />
+                      <span aria-hidden data-lp-decor className="absolute -right-8 -top-12 h-32 w-32 rounded-full border-[14px] border-lp-accent/10" />
                       <span className="flex h-12 w-12 items-center justify-center rounded-lp bg-lp-brand text-lp-onbrand shadow-lp-sm">
                         <Icon size={22} aria-hidden />
                       </span>
@@ -57,17 +57,17 @@ export function AcademicSection() {
                       </span>
                     </div>
                     <div className="flex flex-1 flex-col px-6 pb-6 pt-4">
-                      <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-lp-subtle">{fill(a.stepLabel, { n: i + 1 })}</p>
+                      <p className="text-[0.75rem] font-semibold uppercase tracking-[0.12em] text-lp-subtle">{fill(a.stepLabel, { n: i + 1 })}</p>
                       <h3 className="lp-h3 mt-1 text-lp-fg">{stage.title}</h3>
                       <ul className="mt-4 flex-1 space-y-2.5">
                         {(['a', 'b', 'c'] as const).map((p) => (
-                          <li key={p} className="flex items-start gap-2.5 text-[14px] leading-snug text-lp-muted">
+                          <li key={p} className="flex items-start gap-2.5 text-[0.875rem] leading-snug text-lp-muted">
                             <Check size={16} aria-hidden className="mt-px shrink-0 text-lp-brand-text" />
                             {stage.points[p]}
                           </li>
                         ))}
                       </ul>
-                      <p className="mt-5 flex flex-wrap items-center gap-1.5 border-t border-lp-line pt-4 text-[12px]">
+                      <p className="mt-5 flex flex-wrap items-center gap-1.5 border-t border-lp-line pt-4 text-[0.75rem]">
                         <span className="font-medium text-lp-subtle">{a.forLabel}:</span>
                         {roles.map((r) => (
                           <span key={r} className="rounded-full bg-lp-sunken px-2.5 py-0.5 font-medium text-lp-muted">

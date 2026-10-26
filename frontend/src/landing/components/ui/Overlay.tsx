@@ -134,17 +134,20 @@ interface DrawerProps {
   onClose: () => void
   label: string
   id?: string
+  /** `clear` keeps the page behind fully visible (used by the accessibility panel so changes can be seen live). */
+  scrim?: 'dim' | 'clear'
+  panelClassName?: string
   children: ReactNode
 }
 
-export function Drawer({ open, onClose, label, id, children }: DrawerProps) {
+export function Drawer({ open, onClose, label, id, scrim = 'dim', panelClassName, children }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   useModal(open, onClose, panelRef)
   if (!open) return null
   return (
     <LandingPortal>
       <div className="fixed inset-0 z-[70]">
-        <div aria-hidden className="absolute inset-0 animate-fade-in bg-lp-scrim/50 backdrop-blur-[2px]" onClick={onClose} />
+        <div aria-hidden className={cn('absolute inset-0 animate-fade-in', scrim === 'dim' ? 'bg-lp-scrim/50 backdrop-blur-[2px]' : 'bg-lp-scrim/10')} onClick={onClose} />
         <div
           ref={panelRef}
           id={id}
@@ -152,7 +155,7 @@ export function Drawer({ open, onClose, label, id, children }: DrawerProps) {
           aria-modal="true"
           aria-label={label}
           tabIndex={-1}
-          className="absolute inset-y-0 right-0 flex w-[min(90vw,380px)] animate-drawer-right flex-col border-l border-lp-line bg-lp-canvas shadow-lp-xl focus:outline-none"
+          className={cn('absolute inset-y-0 right-0 flex w-[min(92vw,380px)] animate-drawer-right flex-col border-l border-lp-line bg-lp-canvas shadow-lp-xl focus:outline-none', panelClassName)}
         >
           {children}
         </div>

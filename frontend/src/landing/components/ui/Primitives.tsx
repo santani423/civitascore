@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react'
 import { cn } from '@/utils/cn'
 import { useInView } from '../../hooks/useInView'
 import { useLandingI18n } from '../../i18n'
+import { CheckCircle2, Circle, CircleDot } from 'lucide-react'
 import type { CapabilityStatus } from '../../data/catalog'
 
 /** Fades + slides its children in the first time they enter the viewport. */
@@ -45,27 +46,25 @@ const statusTone: Record<CapabilityStatus, string> = {
   phased: 'bg-lp-gold/10 text-lp-gold-text ring-lp-gold/25',
   planned: 'bg-lp-sunken text-lp-muted ring-lp-strong',
 }
-const statusDot: Record<CapabilityStatus, string> = {
-  available: 'bg-lp-ok',
-  phased: 'bg-lp-gold',
-  planned: 'border border-lp-subtle bg-transparent',
-}
+/** Each status has its own shape + text, so it never depends on color alone. */
+const statusIcon = { available: CheckCircle2, phased: CircleDot, planned: Circle } as const
 
 /** Development status of a service/capability — always text + shape, never color alone. */
 export function StatusPill({ status, className, compact }: { status: CapabilityStatus; className?: string; compact?: boolean }) {
   const { m } = useLandingI18n()
+  const Icon = statusIcon[status]
   const hint = { available: m.status.availableHint, phased: m.status.phasedHint, planned: m.status.plannedHint }[status]
   return (
     <span
       title={hint}
       className={cn(
         'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full font-medium ring-1 ring-inset',
-        compact ? 'px-2 py-0.5 text-[11px]' : 'px-2.5 py-1 text-[12px]',
+        compact ? 'px-2 py-0.5 text-[0.6875rem]' : 'px-2.5 py-1 text-[0.75rem]',
         statusTone[status],
         className,
       )}
     >
-      <span aria-hidden className={cn('h-1.5 w-1.5 rounded-full', statusDot[status])} />
+      <Icon size={compact ? 12 : 14} aria-hidden className="shrink-0" />
       {m.status[status]}
     </span>
   )

@@ -26,7 +26,7 @@ export function IntegrationSection() {
 
   return (
     <section id={SECTION_IDS.integration} aria-labelledby="integration-title" className="lp-warm relative isolate overflow-hidden">
-      <div aria-hidden className="lp-sweep-br absolute -bottom-px right-0 -z-10 h-20 w-28 bg-lp-accent sm:h-36 sm:w-48 lg:h-44 lg:w-56" />
+      <div aria-hidden data-lp-decor className="lp-sweep-br absolute -bottom-px right-0 -z-10 h-20 w-28 bg-lp-accent sm:h-36 sm:w-48 lg:h-44 lg:w-56" />
 
       <div className="grid lg:grid-cols-12">
         <div className="relative h-72 sm:h-96 lg:col-span-5 lg:h-auto lg:min-h-[36rem]">
@@ -41,7 +41,7 @@ export function IntegrationSection() {
             decoding="async"
             className="lp-photo-curve absolute inset-0 h-full w-full object-cover object-[50%_30%]"
           />
-          <div aria-hidden className="lp-sweep-bl absolute -bottom-px left-0 h-20 w-32 bg-lp-accent sm:h-28 sm:w-44" />
+          <div aria-hidden data-lp-decor className="lp-sweep-bl absolute -bottom-px left-0 h-20 w-32 bg-lp-accent sm:h-28 sm:w-44" />
         </div>
 
         <div className="px-[var(--lp-gutter)] py-14 sm:py-16 lg:col-span-7 lg:py-20 lg:pl-14 xl:pl-20">
@@ -58,8 +58,8 @@ export function IntegrationSection() {
               <li key={key} className="sm:px-4 sm:first:pl-0 sm:last:pr-0">
                 <Reveal delay={i * 70}>
                   <Icon size={30} strokeWidth={1.6} aria-hidden className="text-lp-brand-text" />
-                  <h3 className="mt-3 text-[14.5px] font-semibold leading-snug text-lp-fg">{c.points[key].title}</h3>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-lp-muted">{c.points[key].body}</p>
+                  <h3 className="mt-3 text-[0.9063rem] font-semibold leading-snug text-lp-fg">{c.points[key].title}</h3>
+                  <p className="mt-1.5 text-[0.8125rem] leading-relaxed text-lp-muted">{c.points[key].body}</p>
                 </Reveal>
               </li>
             ))}
@@ -67,7 +67,7 @@ export function IntegrationSection() {
 
           <Reveal className="mt-10 flex max-w-2xl items-start gap-4 rounded-lp border border-lp-line bg-lp-surface p-4 shadow-lp-sm sm:p-5">
             <Crest className="h-12" />
-            <p className="text-[14px] leading-relaxed text-lp-muted">{c.mission}</p>
+            <p className="text-[0.875rem] leading-relaxed text-lp-muted">{c.mission}</p>
           </Reveal>
 
           <Reveal className="mt-8">

@@ -52,7 +52,7 @@ export function ThemeSegmented({ className, tone = 'default' }: { className?: st
             onClick={() => setTheme(key)}
             className={cn(
               'inline-flex items-center justify-center gap-1.5 rounded-full font-semibold transition-[background-color,color,box-shadow] duration-200',
-              tone === 'compact' ? 'h-8 px-3 text-[12px]' : 'h-10 flex-1 px-4 text-[13.5px]',
+              tone === 'compact' ? 'h-8 px-3 text-[0.75rem]' : 'h-10 flex-1 px-4 text-[0.8438rem]',
               selected ? 'bg-lp-surface text-lp-fg shadow-lp-sm ring-1 ring-lp-line' : 'text-lp-muted hover:text-lp-fg',
             )}
           >

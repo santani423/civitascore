@@ -32,7 +32,7 @@ export function InfoSection() {
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <SectionHeader id="info-title" eyebrow={m.info.eyebrow} title={m.info.title} description={m.info.description} />
           <Reveal className="shrink-0">
-            <Link to={PMB.news} className="group inline-flex items-center gap-2 text-[14.5px] font-semibold text-lp-brand-text">
+            <Link to={PMB.news} className="group inline-flex min-h-11 items-center gap-2 text-[0.9063rem] font-semibold text-lp-brand-text">
               {m.info.viewAll}
               <ArrowRight size={16} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
             </Link>
@@ -75,7 +75,7 @@ function NewsCard({ item }: { item: NewsItem }) {
         <Newspaper size={30} className="relative text-white/90" />
       </div>
       <div className="flex flex-1 flex-col p-5">
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.7813rem]">
           {date && !Number.isNaN(date.getTime()) && (
             <time dateTime={item.published_at ?? undefined} className="inline-flex items-center gap-1.5 text-lp-subtle">
               <CalendarDays size={13} aria-hidden />
@@ -91,7 +91,7 @@ function NewsCard({ item }: { item: NewsItem }) {
           </Link>
         </h3>
         {item.excerpt && <p className="lp-small mt-2 line-clamp-3 text-lp-muted">{item.excerpt}</p>}
-        <span aria-hidden className="mt-auto inline-flex items-center gap-1.5 pt-5 text-[13.5px] font-semibold text-lp-brand-text">
+        <span aria-hidden className="mt-auto inline-flex items-center gap-1.5 pt-5 text-[0.8438rem] font-semibold text-lp-brand-text">
           {m.info.readMore}
           <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
         </span>
@@ -151,7 +151,7 @@ function AccessGuide() {
   const photo = PHOTOS.grotto
   const g = m.info.guide
   const rowClass =
-    'group flex w-full items-center gap-3.5 rounded-lp-sm px-3 py-3 text-left text-[14.5px] font-medium text-lp-fg transition-colors hover:bg-lp-brand-soft hover:text-lp-brand-text'
+    'group flex w-full items-center gap-3.5 rounded-lp-sm px-3 py-3 text-left text-[0.9063rem] font-medium text-lp-fg transition-colors hover:bg-lp-brand-soft hover:text-lp-brand-text'
   const iconClass = 'flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-lp-brand/25 text-lp-brand-text'
 
   const links = [
@@ -181,7 +181,7 @@ function AccessGuide() {
           <p className="lp-eyebrow text-lp-brand-text">{g.eyebrow}</p>
           <h3 className="lp-h3 mt-3 text-[1.5rem] text-lp-fg">{g.title}</h3>
           <p className="lp-body mt-4 text-lp-muted">{g.body}</p>
-          <p className="mt-5 flex items-start gap-2.5 rounded-lp-sm bg-lp-sunken px-3.5 py-3 text-[13.5px] leading-relaxed text-lp-muted">
+          <p className="mt-5 flex items-start gap-2.5 rounded-lp-sm bg-lp-sunken px-3.5 py-3 text-[0.8438rem] leading-relaxed text-lp-muted">
             <QrCode size={17} aria-hidden className="mt-0.5 shrink-0 text-lp-brand-text" />
             {g.examNote}
           </p>

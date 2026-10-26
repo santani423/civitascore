@@ -4,6 +4,8 @@ import { useThemeControl } from '../../hooks/useThemeControl'
 import { useCjkFont, useDocumentLang } from '../../hooks/useDocumentSetup'
 import { prefersReducedMotion } from '../../hooks/useScroll'
 import { useLandingUi } from '../../store/ui'
+import { useA11yEffect } from '../../hooks/useA11yEffect'
+import { AccessibilityPanel } from '../a11y/AccessibilityPanel'
 import { Toaster } from '../ui/Toaster'
 import { Navbar } from './Navbar'
 import { Footer } from './Footer'
@@ -20,6 +22,7 @@ export function LandingLayout({ children }: { children: ReactNode }) {
   const previousLocale = useRef(locale)
   useDocumentLang(locale, isDark)
   useCjkFont(locale)
+  useA11yEffect()
 
   // A short cross-fade so a language switch reads as a deliberate change, not a flicker.
   useEffect(() => {
@@ -33,7 +36,7 @@ export function LandingLayout({ children }: { children: ReactNode }) {
     <div className="lp-root lp-page" lang={locale}>
       <a
         href="#main"
-        className="sr-only z-[100] rounded-full bg-lp-brand px-5 py-2.5 text-[14px] font-semibold text-lp-onbrand focus:not-sr-only focus:fixed focus:left-4 focus:top-3"
+        className="sr-only z-[100] rounded-full bg-lp-brand px-5 py-2.5 text-[0.875rem] font-semibold text-lp-onbrand focus:not-sr-only focus:fixed focus:left-4 focus:top-3"
       >
         {m.common.skipToContent}
       </a>
@@ -49,6 +52,7 @@ export function LandingLayout({ children }: { children: ReactNode }) {
           <ContactDialog />
         </Suspense>
       )}
+      <AccessibilityPanel />
       <Toaster />
     </div>
   )

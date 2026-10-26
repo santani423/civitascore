@@ -63,7 +63,7 @@ export function LanguageMenu({ className }: { className?: string }) {
             setOpen(true)
           }
         }}
-        className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-[13.5px] font-semibold text-lp-muted transition-colors hover:bg-lp-sunken hover:text-lp-fg"
+        className="inline-flex h-10 items-center gap-1.5 rounded-full px-3 text-[0.8438rem] font-semibold text-lp-muted transition-colors hover:bg-lp-sunken hover:text-lp-fg"
       >
         <Globe size={16} aria-hidden />
         <span>{current.short}</span>
@@ -95,12 +95,12 @@ export function LanguageMenu({ className }: { className?: string }) {
                   close(true)
                 }}
                 className={cn(
-                  'flex w-full items-center justify-between gap-3 rounded-lp-sm px-3 py-2.5 text-left text-[14px] transition-colors hover:bg-lp-sunken focus-visible:bg-lp-sunken',
+                  'flex w-full items-center justify-between gap-3 rounded-lp-sm px-3 py-2.5 text-left text-[0.875rem] transition-colors hover:bg-lp-sunken focus-visible:bg-lp-sunken',
                   selected ? 'font-semibold text-lp-fg' : 'text-lp-muted',
                 )}
               >
                 <span className="flex items-center gap-3">
-                  <span className="w-7 text-[11px] font-semibold text-lp-subtle">{l.short}</span>
+                  <span className="w-7 text-[0.6875rem] font-semibold text-lp-subtle">{l.short}</span>
                   {l.label}
                 </span>
                 {selected && <Check size={16} aria-hidden className="text-lp-brand-text" />}
@@ -131,7 +131,7 @@ export function LanguageSegmented({ className, tone = 'default' }: { className?:
             onClick={() => changeLocale(l.code)}
             className={cn(
               'rounded-full font-semibold transition-[background-color,color,box-shadow] duration-200',
-              tone === 'compact' ? 'h-8 px-3 text-[12px]' : 'h-10 flex-1 px-4 text-[13.5px]',
+              tone === 'compact' ? 'h-8 px-3 text-[0.75rem]' : 'h-10 flex-1 px-4 text-[0.8438rem]',
               selected ? 'bg-lp-surface text-lp-fg shadow-lp-sm ring-1 ring-lp-line' : 'text-lp-muted hover:text-lp-fg',
             )}
           >

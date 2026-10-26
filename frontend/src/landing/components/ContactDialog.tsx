@@ -79,7 +79,7 @@ function RequiredMark({ label }: { label: string }) {
 function FieldError({ id, text }: { id: string; text?: string }) {
   if (!text) return null
   return (
-    <p id={id} className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-lp-bad">
+    <p id={id} className="mt-1.5 flex items-center gap-1.5 text-[0.7813rem] text-lp-bad">
       <AlertCircle size={13} aria-hidden />
       {text}
     </p>
@@ -87,9 +87,9 @@ function FieldError({ id, text }: { id: string; text?: string }) {
 }
 
 const fieldBase =
-  'mt-1.5 block w-full rounded-lp-sm border bg-lp-surface px-3.5 text-[15px] text-lp-fg placeholder:text-lp-subtle transition-[border-color,box-shadow] duration-150 focus:border-lp-brand focus:outline-none focus:ring-4 focus:ring-lp-brand/15'
+  'mt-1.5 block w-full rounded-lp-sm border bg-lp-surface px-3.5 text-[0.9375rem] text-lp-fg placeholder:text-lp-subtle transition-[border-color,box-shadow] duration-150 focus:border-lp-brand focus:outline-none focus:ring-4 focus:ring-lp-brand/15'
 const fieldState = (invalid: boolean) => (invalid ? 'border-lp-bad focus:border-lp-bad focus:ring-lp-bad/15' : 'border-lp-strong')
-const labelClass = 'text-[13.5px] font-medium text-lp-fg'
+const labelClass = 'text-[0.8438rem] font-medium text-lp-fg'
 
 function ContactForm({ onCancel, onSubmitted }: { onCancel: () => void; onSubmitted: (result: Result) => void }) {
   const { m } = useLandingI18n()
@@ -145,7 +145,7 @@ function ContactForm({ onCancel, onSubmitted }: { onCancel: () => void; onSubmit
   return (
     <form noValidate onSubmit={handleSubmit(onValid)}>
       {showSummary && (
-        <div role="alert" className="mb-5 flex items-center gap-2 rounded-lp-sm border border-lp-bad/30 bg-lp-bad/5 px-3.5 py-2.5 text-[13.5px] text-lp-bad">
+        <div role="alert" className="mb-5 flex items-center gap-2 rounded-lp-sm border border-lp-bad/30 bg-lp-bad/5 px-3.5 py-2.5 text-[0.8438rem] text-lp-bad">
           <AlertCircle size={16} aria-hidden />
           {f.errors.summary}
         </div>
@@ -231,7 +231,7 @@ function ContactForm({ onCancel, onSubmitted }: { onCancel: () => void; onSubmit
             {f.fields.message}
             <RequiredMark label={f.required} />
           </label>
-          <span className={cn('lp-tabular text-[12px]', messageLength > MESSAGE_MAX ? 'text-lp-bad' : 'text-lp-subtle')}>
+          <span className={cn('lp-tabular text-[0.75rem]', messageLength > MESSAGE_MAX ? 'text-lp-bad' : 'text-lp-subtle')}>
             {fill(f.charCount, { count: messageLength, max: MESSAGE_MAX })}
           </span>
         </div>
@@ -248,7 +248,7 @@ function ContactForm({ onCancel, onSubmitted }: { onCancel: () => void; onSubmit
       </div>
 
       <div className="mt-7 flex flex-col gap-4 border-t border-lp-line pt-5 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[12.5px] text-lp-subtle">{f.privacyNote}</p>
+        <p className="text-[0.7813rem] text-lp-subtle">{f.privacyNote}</p>
         <div className="flex flex-col-reverse gap-2 sm:flex-row">
           <Button variant="secondary" onClick={onCancel}>
             {f.cancel}
@@ -293,14 +293,14 @@ function ContactResult({ result, onDone }: { result: Result; onDone: () => void 
   return (
     <div>
       <p className="lp-body text-lp-muted">{result.kind === 'mailto' ? m.form.successMailto : m.form.successManual}</p>
-      <p id={summaryId} className="mt-6 text-[12px] font-semibold uppercase tracking-wider text-lp-subtle">
+      <p id={summaryId} className="mt-6 text-[0.75rem] font-semibold uppercase tracking-wider text-lp-subtle">
         {m.form.summaryTitle}
       </p>
       <pre
         ref={summaryRef}
         aria-labelledby={summaryId}
         tabIndex={0}
-        className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lp-sm border border-lp-line bg-lp-sunken p-4 font-sans text-[13.5px] leading-relaxed text-lp-fg"
+        className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded-lp-sm border border-lp-line bg-lp-sunken p-4 font-sans text-[0.8438rem] leading-relaxed text-lp-fg"
       >
         {result.summary}
       </pre>
