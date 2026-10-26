@@ -17,18 +17,14 @@ export function isLandingPath(pathname: string): boolean {
   return ALL.includes(normalized)
 }
 
-/** In-page section anchors (language-neutral ids). */
+/** In-page section anchors (language-neutral ids — the same in every locale). */
 export const SECTION_IDS = {
-  home: 'home',
-  platform: 'platform',
-  modules: 'modules',
-  demo: 'demo',
-  personas: 'personas',
-  benefits: 'benefits',
-  governance: 'governance',
-  about: 'about',
-  journey: 'journey',
-  faq: 'faq',
+  home: 'beranda',
+  about: 'tentang',
+  integration: 'integrasi',
+  services: 'layanan',
+  academic: 'akademik',
+  info: 'informasi',
 } as const
 
 export type SectionId = (typeof SECTION_IDS)[keyof typeof SECTION_IDS]

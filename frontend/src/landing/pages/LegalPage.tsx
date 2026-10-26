@@ -12,7 +12,7 @@ import { Button } from '../components/ui/Button'
  */
 export function LegalPage({ doc }: { doc: 'privacy' | 'terms' }) {
   const { m } = useLandingI18n()
-  const openRequest = useLandingUi((s) => s.openRequest)
+  const openContact = useLandingUi((s) => s.openContact)
   const copy = m.legal[doc]
   useDocumentMeta({
     title: fill(m.meta.pageTitle, { page: copy.title }),
@@ -40,9 +40,9 @@ export function LegalPage({ doc }: { doc: 'privacy' | 'terms' }) {
         <p className="lp-lead mt-8 text-lp-muted">{copy.intro}</p>
         <div className="mt-10 flex flex-col gap-4 rounded-lp-lg border border-lp-line bg-lp-surface p-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="lp-small text-lp-muted">{m.legal.contact}</p>
-          <Button variant="secondary" className="shrink-0" onClick={() => openRequest('contact')}>
+          <Button variant="secondary" className="shrink-0" onClick={openContact}>
             <MessageSquare size={16} aria-hidden />
-            {m.faq.contactCta}
+            {m.nav.contact}
           </Button>
         </div>
       </div>

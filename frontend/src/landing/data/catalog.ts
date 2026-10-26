@@ -3,16 +3,14 @@ import {
   BarChart3,
   BookOpenCheck,
   Briefcase,
-  Building2,
-  CalendarDays,
   ClipboardCheck,
+  FileCheck2,
   GraduationCap,
-  Landmark,
-  LayoutDashboard,
+  ShieldCheck,
   UserPlus,
-  Users,
   Wallet,
 } from 'lucide-react'
+import { PMB } from '@/pmb/routes'
 import type { Messages } from '../i18n/messages/id'
 
 export type CapabilityStatus = 'available' | 'phased' | 'planned'
@@ -20,95 +18,152 @@ export type CapabilityKey = keyof Messages['capabilities']
 
 /**
  * Honest status of every capability the landing page mentions — verified
- * against the codebase (app/Modules/*, frontend routes) and
- * docs/FRONTEND-IMPLEMENTASI.md. Update this table, not the copy, when a
- * module ships:
- * - available: working in the platform (read + write where applicable)
- * - phased:    data can be viewed, write flows still being built
+ * against the codebase (app/Modules/*, frontend routes and pages). Update
+ * this table, not the copy, when a feature ships:
+ * - available: usable in the web app today (read + write where applicable)
+ * - phased:    partly usable (e.g. read-only, or managed via API only), being completed
  * - planned:   design document only, no implementation yet
  */
 export const CAPABILITY_STATUS: Record<CapabilityKey, CapabilityStatus> = {
-  curriculum: 'available',
-  classes: 'available',
+  pmbSite: 'available',
+  pmbApply: 'available',
+  pmbVerify: 'available',
+  pmbSelection: 'available',
+  pmbResult: 'available',
+  pmbReRegister: 'available',
+  // Xendit adapter exists for PMB and KEU but is only active once credentials are configured.
+  onlinePayment: 'phased',
   krs: 'available',
+  // Advisor approval exists in the API; its page is not routed yet.
+  krsApproval: 'phased',
+  classes: 'available',
+  schedule: 'available',
   attendance: 'available',
   grading: 'available',
+  results: 'available',
+  // Read-only in the app (seeded); no create/edit UI.
+  curriculum: 'phased',
+  // Students can view; event management is API-only.
+  calendar: 'phased',
+  learningStudent: 'available',
+  // Lecturer endpoints exist, the lecturer page is not routed yet.
+  learningLecturer: 'phased',
+  studentRecords: 'available',
   exams: 'available',
-  calendar: 'available',
-  learning: 'available',
-  studentPortal: 'available',
-  documents: 'available',
-  requests: 'available',
-  scholarship: 'phased',
-  thesis: 'phased',
-  internship: 'phased',
-  admissions: 'planned',
+  examAccess: 'available',
+  examMonitoring: 'available',
+  examRecap: 'available',
+  billing: 'available',
+  cashier: 'available',
+  aid: 'available',
+  clearance: 'available',
   lecturers: 'available',
   staff: 'available',
-  hr: 'available',
-  development: 'available',
-  billing: 'phased',
+  lecturerProfile: 'available',
+  // HR histories, contracts and trainings are API-only.
+  hrHistory: 'phased',
+  requests: 'available',
   approvals: 'available',
-  files: 'available',
-  announcements: 'available',
-  library: 'phased',
-  alumni: 'phased',
-  institution: 'available',
+  announcementsFeed: 'available',
+  // Announcement CRUD is API-only; the staff page is read-only.
+  announcementsAuthoring: 'phased',
+  notifications: 'available',
   dashboard: 'available',
   reports: 'available',
-  examRecap: 'available',
-  audit: 'available',
   rbac: 'available',
-  studentRecords: 'available',
+  audit: 'available',
+  settings: 'available',
+  security: 'available',
 }
 
-export type CategoryKey = keyof Messages['platform']['categories']
+export type AudienceKey = Exclude<keyof Messages['services']['filters'], 'all'>
+export type ServiceKey = keyof Messages['services']['items']
 
-export interface EcosystemCategory {
-  key: CategoryKey
-  icon: LucideIcon
-  capabilities: CapabilityKey[]
-}
-
-/** Platform overview groups (section D). */
-export const ECOSYSTEM: EcosystemCategory[] = [
-  {
-    key: 'academic',
-    icon: GraduationCap,
-    capabilities: ['curriculum', 'classes', 'krs', 'attendance', 'grading', 'exams', 'calendar', 'learning'],
-  },
-  {
-    key: 'students',
-    icon: Users,
-    capabilities: ['studentPortal', 'documents', 'requests', 'scholarship', 'thesis', 'internship', 'admissions'],
-  },
-  { key: 'people', icon: Briefcase, capabilities: ['lecturers', 'staff', 'hr', 'development'] },
-  { key: 'finance', icon: Wallet, capabilities: ['billing', 'approvals', 'files'] },
-  { key: 'operations', icon: Building2, capabilities: ['announcements', 'library', 'alumni', 'institution'] },
-  { key: 'analytics', icon: BarChart3, capabilities: ['dashboard', 'reports', 'examRecap', 'audit'] },
-]
-
-export type ModuleKey = keyof Messages['modules']['items']
-
-export interface ModuleDef {
-  key: ModuleKey
+export interface ServiceDef {
+  key: ServiceKey
   icon: LucideIcon
   status: CapabilityStatus
+  audiences: AudienceKey[]
   capabilities: CapabilityKey[]
-  /** Platform-overview category this module belongs to (pre-selects the demo form interest). */
-  category: CategoryKey
+  /** `login` goes through the existing sign-in flow; `pmb` links to the public PMB website. */
+  access: { kind: 'login' } | { kind: 'pmb'; to: string }
 }
 
-/** Core modules (section E), in the order the bento grid lays them out. */
-export const MODULES: ModuleDef[] = [
-  { key: 'studentData', icon: Users, status: 'available', capabilities: ['studentRecords', 'documents', 'rbac'], category: 'students' },
-  { key: 'lectures', icon: CalendarDays, status: 'available', capabilities: ['classes', 'krs', 'attendance', 'learning', 'calendar'], category: 'academic' },
-  { key: 'curriculum', icon: BookOpenCheck, status: 'available', capabilities: ['curriculum', 'classes'], category: 'academic' },
-  { key: 'assessment', icon: ClipboardCheck, status: 'available', capabilities: ['grading', 'exams', 'examRecap', 'documents'], category: 'academic' },
-  { key: 'people', icon: Briefcase, status: 'available', capabilities: ['lecturers', 'staff', 'hr', 'development'], category: 'people' },
-  { key: 'services', icon: GraduationCap, status: 'available', capabilities: ['studentPortal', 'requests', 'announcements', 'scholarship', 'thesis', 'internship'], category: 'students' },
-  { key: 'finance', icon: Wallet, status: 'phased', capabilities: ['billing', 'approvals'], category: 'finance' },
-  { key: 'admissions', icon: UserPlus, status: 'planned', capabilities: ['admissions'], category: 'students' },
-  { key: 'analytics', icon: LayoutDashboard, status: 'available', capabilities: ['dashboard', 'reports', 'examRecap'], category: 'analytics' },
-  { key: 'governance', icon: Landmark, status: 'available', capabilities: ['approvals', 'institution', 'rbac', 'audit'], category: 'operations' },
+/** Section D cards, in display order. A card is `available` when its core flows work end to end. */
+export const SERVICES: ServiceDef[] = [
+  {
+    key: 'admissions',
+    icon: UserPlus,
+    status: 'available',
+    audiences: ['applicants', 'staff'],
+    capabilities: ['pmbSite', 'pmbApply', 'pmbVerify', 'pmbSelection', 'pmbResult', 'pmbReRegister', 'onlinePayment'],
+    access: { kind: 'pmb', to: PMB.home },
+  },
+  {
+    key: 'studentPortal',
+    icon: GraduationCap,
+    status: 'available',
+    audiences: ['students'],
+    capabilities: ['krs', 'schedule', 'attendance', 'results', 'learningStudent', 'exams', 'billing', 'requests', 'announcementsFeed', 'calendar'],
+    access: { kind: 'login' },
+  },
+  {
+    key: 'academic',
+    icon: BookOpenCheck,
+    status: 'available',
+    audiences: ['lecturers', 'staff', 'leaders'],
+    capabilities: ['classes', 'krs', 'attendance', 'grading', 'studentRecords', 'krsApproval', 'learningLecturer', 'curriculum'],
+    access: { kind: 'login' },
+  },
+  {
+    key: 'exams',
+    icon: ClipboardCheck,
+    status: 'available',
+    audiences: ['lecturers', 'students'],
+    capabilities: ['exams', 'examAccess', 'examMonitoring', 'examRecap'],
+    access: { kind: 'login' },
+  },
+  {
+    key: 'finance',
+    icon: Wallet,
+    status: 'available',
+    audiences: ['students', 'staff', 'leaders'],
+    capabilities: ['billing', 'cashier', 'aid', 'clearance', 'onlinePayment'],
+    access: { kind: 'login' },
+  },
+  {
+    key: 'people',
+    icon: Briefcase,
+    status: 'available',
+    audiences: ['staff', 'lecturers', 'leaders'],
+    capabilities: ['lecturers', 'staff', 'lecturerProfile', 'hrHistory'],
+    access: { kind: 'login' },
+  },
+  {
+    key: 'services',
+    icon: FileCheck2,
+    status: 'available',
+    audiences: ['students', 'lecturers', 'staff', 'leaders'],
+    capabilities: ['requests', 'approvals', 'announcementsFeed', 'notifications', 'announcementsAuthoring'],
+    access: { kind: 'login' },
+  },
+  {
+    key: 'analytics',
+    icon: BarChart3,
+    status: 'available',
+    audiences: ['leaders', 'staff'],
+    capabilities: ['dashboard', 'reports'],
+    access: { kind: 'login' },
+  },
+  {
+    key: 'governance',
+    icon: ShieldCheck,
+    status: 'available',
+    audiences: ['staff', 'leaders'],
+    capabilities: ['rbac', 'audit', 'settings', 'security'],
+    access: { kind: 'login' },
+  },
 ]
+
+/** Modules whose records can be viewed but whose management flows are still being built (read-only today). */
+export const UPCOMING: Array<keyof Messages['services']['upcoming']> = ['thesis', 'internship', 'library', 'alumni', 'scholarshipPrograms']

@@ -10,12 +10,12 @@ import { Footer } from './Footer'
 import '../../styles/landing.css'
 
 // The form (zod + react-hook-form) is only fetched once someone opens it.
-const RequestDialog = lazy(() => import('../RequestDialog'))
+const ContactDialog = lazy(() => import('../ContactDialog'))
 
 export function LandingLayout({ children }: { children: ReactNode }) {
   const { m, locale } = useLandingI18n()
   const { isDark } = useThemeControl()
-  const requestLoaded = useLandingUi((s) => s.requestLoaded)
+  const contactLoaded = useLandingUi((s) => s.contactLoaded)
   const contentRef = useRef<HTMLDivElement>(null)
   const previousLocale = useRef(locale)
   useDocumentLang(locale, isDark)
@@ -44,9 +44,9 @@ export function LandingLayout({ children }: { children: ReactNode }) {
         </main>
         <Footer />
       </div>
-      {requestLoaded && (
+      {contactLoaded && (
         <Suspense fallback={null}>
-          <RequestDialog />
+          <ContactDialog />
         </Suspense>
       )}
       <Toaster />

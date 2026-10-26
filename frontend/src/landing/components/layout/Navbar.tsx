@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { ArrowRight, LayoutDashboard, LogIn, Menu, X } from 'lucide-react'
+import { ChevronRight, Menu, MessageSquare, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { ROUTES } from '@/constants/routes'
-import { useAuthStore, selectIsAuthenticated } from '@/stores/authStore'
 import { useLandingI18n } from '../../i18n'
+import { useAppEntry, type AppEntry } from '../../hooks/useAppEntry'
 import { useActiveSection, useScrolled } from '../../hooks/useScroll'
 import { useLandingUi } from '../../store/ui'
-import { LANDING_PATHS } from '../../paths'
+import { LANDING_PATHS, SECTION_IDS } from '../../paths'
 import { NAV_ITEMS, SPY_SECTIONS } from '../../data/navigation'
 import { Button, IconButton } from '../ui/Button'
 import { buttonClass } from '../ui/buttonClass'
@@ -17,61 +16,51 @@ import { ThemeSegmented, ThemeToggle } from './ThemeToggle'
 import { SectionLink } from './SectionLink'
 import { Wordmark } from './Wordmark'
 
-/** "Masuk" for visitors, "Buka Dashboard" when a session already exists. */
-function useAppEntry() {
-  const { m } = useLandingI18n()
-  const authenticated = useAuthStore(selectIsAuthenticated)
-  return authenticated
-    ? { to: ROUTES.dashboard, label: m.nav.openDashboard, icon: LayoutDashboard }
-    : { to: ROUTES.login, label: m.nav.signIn, icon: LogIn }
-}
-
 export function Navbar() {
   const { m } = useLandingI18n()
   const { pathname } = useLocation()
   const onHome = pathname === LANDING_PATHS.home
   const scrolled = useScrolled()
   const active = useActiveSection(onHome ? SPY_SECTIONS : [])
-  const openRequest = useLandingUi((s) => s.openRequest)
   const [menuOpen, setMenuOpen] = useState(false)
   const entry = useAppEntry()
-  const solid = scrolled || !onHome
+  const EntryIcon = entry.icon
 
   return (
     <header
       className={cn(
-        'fixed inset-x-0 top-0 z-50 border-b transition-[background-color,border-color,box-shadow] duration-300',
-        solid ? 'border-lp-line bg-lp-canvas/80 shadow-lp-sm backdrop-blur-xl backdrop-saturate-150' : 'border-transparent bg-transparent',
+        'fixed inset-x-0 top-0 z-50 border-b bg-lp-surface/95 backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow] duration-300',
+        scrolled ? 'border-lp-line shadow-lp-md' : 'border-lp-line/70',
       )}
     >
-      <div className="lp-container flex h-16 items-center gap-3">
-        <SectionLink section="home" className="-ml-1 rounded-lp-sm p-1" aria-current={undefined}>
+      <div className="lp-container flex h-16 items-center gap-3 lg:h-[4.5rem]">
+        <SectionLink section={SECTION_IDS.home} className="-ml-1 min-w-0 rounded-lp-sm p-1" aria-current={undefined}>
           <span className="sr-only">{m.nav.homeLink}</span>
-          <span aria-hidden>
+          <span aria-hidden className="flex min-w-0">
             <Wordmark />
           </span>
         </SectionLink>
 
-        <nav aria-label={m.nav.primary} className="ml-4 hidden lg:block xl:ml-8">
-          <ul className="flex items-center gap-0.5">
+        <nav aria-label={m.nav.primary} className="ml-auto hidden h-full lg:block">
+          <ul className="flex h-full items-stretch gap-1 xl:gap-2">
             {NAV_ITEMS.map((item) => {
               const isActive = onHome && item.covers.some((c) => c === active)
               return (
-                <li key={item.key}>
+                <li key={item.key} className="flex">
                   <SectionLink
                     section={item.target}
                     aria-current={isActive ? 'location' : undefined}
                     className={cn(
-                      'relative inline-flex h-10 items-center rounded-full px-3 text-[14px] font-medium transition-colors xl:px-3.5',
-                      isActive ? 'text-lp-fg' : 'text-lp-muted hover:text-lp-fg',
+                      'relative inline-flex items-center px-3 text-[14.5px] font-semibold transition-colors xl:px-4',
+                      isActive ? 'text-lp-brand-text' : 'text-lp-muted hover:text-lp-fg',
                     )}
                   >
                     {m.nav[item.key]}
                     <span
                       aria-hidden
                       className={cn(
-                        'absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-lp-brand transition-opacity duration-300',
-                        isActive ? 'opacity-100' : 'opacity-0',
+                        'absolute inset-x-3 -bottom-px h-[3px] rounded-t-full bg-lp-brand transition-[opacity,transform] duration-300 xl:inset-x-4',
+                        isActive ? 'scale-x-100 opacity-100' : 'scale-x-50 opacity-0',
                       )}
                     />
                   </SectionLink>
@@ -81,15 +70,13 @@ export function Navbar() {
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-4">
           <LanguageMenu className="hidden sm:block" />
-          <ThemeToggle />
-          <Link to={entry.to} className={buttonClass('ghost', 'sm', 'hidden xl:inline-flex')}>
+          <ThemeToggle className="hidden sm:inline-flex" />
+          <Link to={entry.to} className={buttonClass('primary', 'sm', 'ml-1 hidden h-10 px-5 sm:inline-flex')}>
+            <EntryIcon size={16} aria-hidden />
             {entry.label}
           </Link>
-          <Button size="sm" className="ml-1 hidden sm:inline-flex" onClick={() => openRequest('demo')}>
-            {m.nav.scheduleDemo}
-          </Button>
           <IconButton
             className="lg:hidden"
             aria-label={m.nav.openMenu}
@@ -97,7 +84,7 @@ export function Navbar() {
             aria-controls="lp-mobile-menu"
             onClick={() => setMenuOpen(true)}
           >
-            <Menu size={20} aria-hidden />
+            <Menu size={22} aria-hidden />
           </IconButton>
         </div>
       </div>
@@ -116,17 +103,19 @@ function MobileMenu({
   open: boolean
   onClose: () => void
   active: string | null
-  entry: ReturnType<typeof useAppEntry>
+  entry: AppEntry
 }) {
   const { m } = useLandingI18n()
-  const openRequest = useLandingUi((s) => s.openRequest)
+  const openContact = useLandingUi((s) => s.openContact)
   const EntryIcon = entry.icon
 
   return (
     <Drawer open={open} onClose={onClose} label={m.nav.mobile} id="lp-mobile-menu">
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-lp-line px-5">
-        <Wordmark />
-        <IconButton onClick={onClose} aria-label={m.nav.closeMenu} className="-mr-2">
+      <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-lp-line px-4">
+        <span aria-hidden className="flex min-w-0">
+          <Wordmark />
+        </span>
+        <IconButton onClick={onClose} aria-label={m.nav.closeMenu} className="-mr-1">
           <X size={20} aria-hidden />
         </IconButton>
       </div>
@@ -142,12 +131,14 @@ function MobileMenu({
                     onNavigate={onClose}
                     aria-current={isActive ? 'location' : undefined}
                     className={cn(
-                      'flex h-12 items-center justify-between rounded-lp px-3 text-[16px] font-medium transition-colors',
-                      isActive ? 'bg-lp-sunken text-lp-fg' : 'text-lp-muted hover:bg-lp-sunken hover:text-lp-fg',
+                      'flex h-12 items-center justify-between rounded-lp-sm border-l-[3px] px-3 text-[16px] font-semibold transition-colors',
+                      isActive
+                        ? 'border-lp-brand bg-lp-brand-soft text-lp-brand-text'
+                        : 'border-transparent text-lp-muted hover:bg-lp-sunken hover:text-lp-fg',
                     )}
                   >
                     {m.nav[item.key]}
-                    <ArrowRight size={16} aria-hidden className="text-lp-subtle" />
+                    <ChevronRight size={17} aria-hidden className="text-lp-subtle" />
                   </SectionLink>
                 </li>
               )
@@ -167,19 +158,21 @@ function MobileMenu({
         </div>
       </div>
       <div className="shrink-0 space-y-2 border-t border-lp-line p-4">
+        <Link to={entry.to} onClick={onClose} className={buttonClass('primary', 'md', 'w-full')}>
+          <EntryIcon size={17} aria-hidden />
+          {entry.label}
+        </Link>
         <Button
+          variant="secondary"
           className="w-full"
           onClick={() => {
             onClose()
-            openRequest('demo')
+            openContact()
           }}
         >
-          {m.nav.scheduleDemo}
+          <MessageSquare size={16} aria-hidden />
+          {m.nav.contact}
         </Button>
-        <Link to={entry.to} onClick={onClose} className={buttonClass('secondary', 'md', 'w-full')}>
-          <EntryIcon size={16} aria-hidden />
-          {entry.label}
-        </Link>
       </div>
     </Drawer>
   )

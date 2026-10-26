@@ -4,17 +4,19 @@ import { useLandingI18n } from '../i18n'
 import { useDocumentMeta } from '../hooks/useDocumentSetup'
 import { LANDING_PATHS } from '../paths'
 import { HeroSection } from '../components/sections/HeroSection'
-import { ValueProposition } from '../components/sections/ValueProposition'
-import { PlatformOverview } from '../components/sections/PlatformOverview'
-import { ModuleShowcase } from '../components/sections/ModuleShowcase'
-import { InteractiveProductDemo } from '../components/sections/InteractiveProductDemo'
-import { UserExperienceSection } from '../components/sections/UserExperienceSection'
-import { BenefitsSection } from '../components/sections/BenefitsSection'
-import { SecuritySection } from '../components/sections/SecuritySection'
-import { AboutSection, ImplementationTimeline } from '../components/sections/AboutSection'
-import { FAQSection } from '../components/sections/FAQSection'
+import { AudienceStrip } from '../components/sections/AudienceStrip'
+import { FeaturesSection } from '../components/sections/FeaturesSection'
+import { IntegrationSection } from '../components/sections/IntegrationSection'
+import { ServicesSection } from '../components/sections/ServicesSection'
+import { AcademicSection } from '../components/sections/AcademicSection'
+import { InfoSection } from '../components/sections/InfoSection'
 import { FinalCTA } from '../components/sections/FinalCTA'
 
+/**
+ * One Atma Jaya home: hero → audience strip → about (advantages + integration)
+ * → services → academic cycle → admissions news & access guide → CTA.
+ * The order matches the navbar (Beranda, Tentang Kami, Layanan, Akademik, Informasi).
+ */
 export function HomePage() {
   const { m } = useLandingI18n()
   const { hash } = useLocation()
@@ -30,16 +32,12 @@ export function HomePage() {
   return (
     <>
       <HeroSection />
-      <ValueProposition />
-      <PlatformOverview />
-      <ModuleShowcase />
-      <InteractiveProductDemo />
-      <UserExperienceSection />
-      <BenefitsSection />
-      <SecuritySection />
-      <AboutSection />
-      <ImplementationTimeline />
-      <FAQSection />
+      <AudienceStrip />
+      <FeaturesSection />
+      <IntegrationSection />
+      <ServicesSection />
+      <AcademicSection />
+      <InfoSection />
       <FinalCTA />
     </>
   )

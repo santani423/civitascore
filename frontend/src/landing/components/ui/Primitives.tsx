@@ -22,21 +22,19 @@ interface SectionHeaderProps {
   title: ReactNode
   description?: ReactNode
   align?: 'left' | 'center'
-  tone?: 'default' | 'band'
   className?: string
   children?: ReactNode
 }
 
 /** Eyebrow + h2 + lead. `id` is the heading id that the section's aria-labelledby points to. */
-export function SectionHeader({ id, eyebrow, title, description, align = 'left', tone = 'default', className, children }: SectionHeaderProps) {
-  const band = tone === 'band'
+export function SectionHeader({ id, eyebrow, title, description, align = 'left', className, children }: SectionHeaderProps) {
   return (
-    <Reveal className={cn('max-w-3xl', align === 'center' && 'mx-auto text-center', className)}>
-      <p className={cn('lp-eyebrow', band ? 'text-lp-gold' : 'text-lp-brand-text')}>{eyebrow}</p>
-      <h2 id={id} className={cn('lp-h2 mt-4', band ? 'text-lp-band-fg' : 'text-lp-fg')}>
+    <Reveal className={cn('max-w-2xl', align === 'center' && 'mx-auto text-center', className)}>
+      <p className="lp-eyebrow text-lp-brand-text">{eyebrow}</p>
+      <h2 id={id} className="lp-h2 mt-3 text-lp-fg">
         {title}
       </h2>
-      {description && <p className={cn('lp-lead mt-5', band ? 'text-lp-band-muted' : 'text-lp-muted')}>{description}</p>}
+      {description && <p className="lp-lead mt-4 text-lp-muted">{description}</p>}
       {children}
     </Reveal>
   )
@@ -53,7 +51,7 @@ const statusDot: Record<CapabilityStatus, string> = {
   planned: 'border border-lp-subtle bg-transparent',
 }
 
-/** Development status of a module/capability — always text + shape, never color alone. */
+/** Development status of a service/capability — always text + shape, never color alone. */
 export function StatusPill({ status, className, compact }: { status: CapabilityStatus; className?: string; compact?: boolean }) {
   const { m } = useLandingI18n()
   const hint = { available: m.status.availableHint, phased: m.status.phasedHint, planned: m.status.plannedHint }[status]
@@ -69,39 +67,6 @@ export function StatusPill({ status, className, compact }: { status: CapabilityS
     >
       <span aria-hidden className={cn('h-1.5 w-1.5 rounded-full', statusDot[status])} />
       {m.status[status]}
-    </span>
-  )
-}
-
-export function StatusLegend({ className }: { className?: string }) {
-  const { m } = useLandingI18n()
-  const items: CapabilityStatus[] = ['available', 'phased', 'planned']
-  return (
-    <div className={cn('flex flex-wrap items-center gap-x-5 gap-y-3', className)}>
-      <span className="lp-small font-medium text-lp-muted">{m.status.legendTitle}</span>
-      {items.map((s) => (
-        <span key={s} className="flex items-center gap-2">
-          <StatusPill status={s} compact />
-          <span className="text-[12.5px] text-lp-subtle">{{ available: m.status.availableHint, phased: m.status.phasedHint, planned: m.status.plannedHint }[s]}</span>
-        </span>
-      ))}
-    </div>
-  )
-}
-
-/** Small "Illustrative data" chip shown on every dashboard mockup. */
-export function IllustrativeChip({ className }: { className?: string }) {
-  const { m } = useLandingI18n()
-  return (
-    <span
-      title={m.common.illustrativeNote}
-      className={cn(
-        'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-dashed border-lp-strong px-2 py-0.5 text-[10.5px] font-medium text-lp-subtle',
-        className,
-      )}
-    >
-      <span aria-hidden className="h-1 w-1 rounded-full bg-lp-gold" />
-      {m.common.illustrative}
     </span>
   )
 }

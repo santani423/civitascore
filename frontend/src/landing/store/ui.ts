@@ -1,7 +1,4 @@
 import { create } from 'zustand'
-import type { CategoryKey } from '../data/catalog'
-
-export type RequestMode = 'demo' | 'contact'
 
 interface Toast {
   id: number
@@ -10,15 +7,11 @@ interface Toast {
 }
 
 interface LandingUiState {
-  request: { open: boolean; mode: RequestMode; interests: CategoryKey[] }
+  contactOpen: boolean
   /** True after the first open — the form chunk (zod, react-hook-form) loads lazily from then on. */
-  requestLoaded: boolean
-  openRequest: (mode: RequestMode, interests?: CategoryKey[]) => void
-  closeRequest: () => void
-
-  /** Selected group in the platform ecosystem diagram (footer links can set it). */
-  platformCategory: CategoryKey
-  setPlatformCategory: (key: CategoryKey) => void
+  contactLoaded: boolean
+  openContact: () => void
+  closeContact: () => void
 
   toasts: Toast[]
   toast: (message: string, tone?: Toast['tone']) => void
@@ -32,13 +25,10 @@ interface LandingUiState {
 let toastId = 0
 
 export const useLandingUi = create<LandingUiState>()((set) => ({
-  request: { open: false, mode: 'demo', interests: [] },
-  requestLoaded: false,
-  openRequest: (mode, interests = []) => set({ request: { open: true, mode, interests }, requestLoaded: true }),
-  closeRequest: () => set((s) => ({ request: { ...s.request, open: false } })),
-
-  platformCategory: 'academic',
-  setPlatformCategory: (platformCategory) => set({ platformCategory }),
+  contactOpen: false,
+  contactLoaded: false,
+  openContact: () => set({ contactOpen: true, contactLoaded: true }),
+  closeContact: () => set({ contactOpen: false }),
 
   toasts: [],
   toast: (message, tone = 'success') => {

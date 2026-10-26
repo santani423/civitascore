@@ -6,9 +6,10 @@ import { LegalPage } from './pages/LegalPage'
 import { LANDING_PATHS } from './paths'
 
 /**
- * Civitas One Atma public landing page (UI only — mock data, no API calls).
- * Rendered by App.tsx for the landing paths, and by LandingRoot when the
- * visitor lands here directly (so the admin bundle isn't downloaded).
+ * One Atma Jaya public landing page. Static content, plus one read-only call
+ * to the existing public PMB news endpoint (lib/pmbNews.ts). Rendered by
+ * App.tsx for the landing paths, and by LandingRoot when the visitor lands
+ * here directly (so the admin bundle isn't downloaded).
  */
 export default function LandingApp() {
   const { pathname, hash } = useLocation()
