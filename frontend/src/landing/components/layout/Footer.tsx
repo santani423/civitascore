@@ -1,20 +1,22 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Accessibility, Mail, MessageSquare, Phone } from 'lucide-react'
+import { Accessibility, ArrowRight, Mail, MessageSquare, Phone } from 'lucide-react'
 import { ROUTES } from '@/constants/routes'
 import { PMB } from '@/pmb/routes'
 import { fill, useLandingI18n } from '../../i18n'
 import { landingConfig } from '../../config'
 import { useAppEntry } from '../../hooks/useAppEntry'
-import { NAV_ITEMS } from '../../data/navigation'
+import { HOME_SECTION_ITEMS, STUDENT_AFFAIRS_PAGES } from '../../data/navigation'
 import { PHOTOS, PHOTO_LICENSE } from '../../data/photos'
-import { LANDING_PATHS } from '../../paths'
+import { FACULTIES } from '../../data/faculties'
+import { LANDING_PATHS, detailPath } from '../../paths'
 import { useLandingUi } from '../../store/ui'
 import { useA11y } from '../../store/a11y'
 import { LanguageSegmented } from './LanguageSwitcher'
 import { ThemeSegmented } from './ThemeToggle'
-import { NavItemLink } from './NavItemLink'
+import { SectionLink } from './SectionLink'
 import { Wordmark } from './Wordmark'
+import { buttonClass } from '../ui/buttonClass'
 
 const linkClass = 'inline-flex min-h-11 items-center text-[0.875rem] text-lp-band-muted transition-colors hover:text-lp-band-fg'
 
@@ -28,6 +30,40 @@ function Column({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
+/** The six faculties on the university's orange band, each linking to its page, plus the directory. */
+function FacultyBand() {
+  const { m } = useLandingI18n()
+  return (
+    <nav aria-labelledby="footer-faculties" className="lp-on-brand bg-lp-brand text-lp-onbrand">
+      <div className="lp-container flex flex-col gap-6 py-10 sm:py-12 lg:flex-row lg:items-start lg:gap-12">
+        <div className="shrink-0 lg:w-48">
+          <h2 id="footer-faculties" className="text-[0.8125rem] font-semibold uppercase tracking-[0.12em]">
+            {m.footer.faculties}
+          </h2>
+          <span aria-hidden className="mt-3 block h-0.5 w-8 rounded-full bg-white/70" />
+        </div>
+        <ul className="grid flex-1 gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+          {FACULTIES.map((faculty) => (
+            <li key={faculty.slug}>
+              <Link
+                to={detailPath(LANDING_PATHS.faculties, faculty.slug)}
+                lang="id"
+                className="inline-flex min-h-11 items-center py-1 text-[0.9375rem] font-medium decoration-2 underline-offset-4 hover:underline"
+              >
+                {faculty.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <Link to={LANDING_PATHS.faculties} className={buttonClass('band', 'md', 'group shrink-0 self-start')}>
+          {m.footer.allFaculties}
+          <ArrowRight size={16} aria-hidden className="transition-transform duration-200 group-hover:translate-x-1" />
+        </Link>
+      </div>
+    </nav>
+  )
+}
+
 export function Footer() {
   const { m } = useLandingI18n()
   const openContact = useLandingUi((s) => s.openContact)
@@ -37,6 +73,7 @@ export function Footer() {
 
   return (
     <footer className="lp-on-band bg-lp-band text-lp-band-fg">
+      <FacultyBand />
       <div className="lp-container py-14 sm:py-16">
         <div className="grid gap-12 lg:grid-cols-12">
           <div className="lg:col-span-4">
@@ -46,13 +83,22 @@ export function Footer() {
             <p className="lp-small mt-6 max-w-sm text-lp-band-muted">{m.footer.description}</p>
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-3 lg:col-span-8">
+          <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4 lg:col-span-8">
             <Column title={m.footer.columns.explore}>
-              {NAV_ITEMS.map((item) => (
+              {HOME_SECTION_ITEMS.map((item) => (
                 <li key={item.key}>
-                  <NavItemLink item={item} className={linkClass}>
+                  <SectionLink section={item.target} className={linkClass}>
                     {m.nav[item.key]}
-                  </NavItemLink>
+                  </SectionLink>
+                </li>
+              ))}
+            </Column>
+            <Column title={m.nav.studentAffairs}>
+              {STUDENT_AFFAIRS_PAGES.map((page) => (
+                <li key={page.key}>
+                  <Link to={page.path} className={linkClass}>
+                    {m.nav[page.key]}
+                  </Link>
                 </li>
               ))}
             </Column>

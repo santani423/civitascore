@@ -1,8 +1,7 @@
-import { Link } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
 import { useLandingI18n } from '../../i18n'
 import { PILLARS, STUDENT_LIFE_INTRO, STUDENT_LIFE_TITLE } from '../../data/pillars'
 import { LANDING_PATHS, STUDENT_LIFE_IDS } from '../../paths'
+import { Breadcrumbs } from '../layout/Breadcrumbs'
 import { SectionLink } from '../layout/SectionLink'
 import { Reveal } from '../ui/Primitives'
 import { PillarColonnade } from './PillarColonnade'
@@ -23,21 +22,7 @@ export function StudentLifeHero() {
 
       <div className="lp-container grid gap-14 pb-16 pt-8 sm:pb-20 sm:pt-10 lg:grid-cols-12 lg:items-end lg:gap-12 lg:pb-24 lg:pt-14">
         <div className="lg:col-span-6 xl:col-span-7">
-          <nav aria-label={s.breadcrumb}>
-            <ol className="flex flex-wrap items-center gap-1.5 text-[0.8125rem] font-medium">
-              <li>
-                <Link to={LANDING_PATHS.home} className="inline-flex min-h-11 items-center text-lp-band-muted transition-colors hover:text-lp-band-fg">
-                  {m.nav.home}
-                </Link>
-              </li>
-              <li aria-hidden className="text-lp-band-muted">
-                <ChevronRight size={14} />
-              </li>
-              <li aria-current="page" className="text-lp-band-fg">
-                {s.eyebrow}
-              </li>
-            </ol>
-          </nav>
+          <Breadcrumbs tone="band" items={[{ label: m.nav.home, to: LANDING_PATHS.home }, { label: s.eyebrow }]} />
 
           <Reveal>
             <p className="lp-eyebrow mt-8 text-lp-accent sm:mt-12">{s.eyebrow}</p>

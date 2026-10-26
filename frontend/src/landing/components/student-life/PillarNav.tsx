@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { cn } from '@/utils/cn'
 import { useLandingI18n } from '../../i18n'
 import { PILLARS, pillarNumber } from '../../data/pillars'
-import { prefersReducedMotion, useActiveSection } from '../../hooks/useScroll'
+import { useActiveSection, useKeepActiveInView } from '../../hooks/useScroll'
 import { LANDING_PATHS, STUDENT_LIFE_IDS } from '../../paths'
 import { SectionLink } from '../layout/SectionLink'
 
@@ -20,12 +20,7 @@ export function PillarNav() {
   const active = useActiveSection(SPY_IDS)
   const listRef = useRef<HTMLOListElement>(null)
 
-  useEffect(() => {
-    const list = listRef.current
-    const item = list?.querySelector<HTMLElement>('[aria-current]')
-    if (!list || !item || list.scrollWidth <= list.clientWidth) return
-    list.scrollTo({ left: item.offsetLeft - (list.clientWidth - item.offsetWidth) / 2, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
-  }, [active])
+  useKeepActiveInView(listRef, active)
 
   return (
     <nav

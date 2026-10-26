@@ -8,14 +8,15 @@ import { useActiveSection, useScrolled } from '../../hooks/useScroll'
 import { useLandingUi } from '../../store/ui'
 import { useA11y } from '../../store/a11y'
 import { LANDING_PATHS, SECTION_IDS, normalizePath } from '../../paths'
-import { NAV_ITEMS, SPY_SECTIONS, navCurrent } from '../../data/navigation'
+import { NAV_ITEMS, SPY_SECTIONS, childCurrent, isNavActive } from '../../data/navigation'
 import { Button, IconButton } from '../ui/Button'
 import { buttonClass } from '../ui/buttonClass'
 import { Drawer } from '../ui/Overlay'
 import { LanguageMenu, LanguageSegmented } from './LanguageSwitcher'
 import { ThemeSegmented, ThemeToggle } from './ThemeToggle'
 import { SectionLink } from './SectionLink'
-import { NavItemLink } from './NavItemLink'
+import { NavGroupMenu, NavUnderline } from './NavGroup'
+import { NAV_PAGE_ICONS, mobileLinkClass, navLinkClass } from './navStyles'
 import { Wordmark } from './Wordmark'
 import { AccessibilityButton } from '../a11y/AccessibilityPanel'
 
@@ -68,27 +69,17 @@ export function Navbar() {
         <nav aria-label={m.nav.primary} className="lp-nav-desktop ml-auto h-full">
           <ul className="flex h-full items-stretch gap-1">
             {NAV_ITEMS.map((item) => {
-              const current = navCurrent(item, path, active)
-              const isActive = current !== undefined
+              const isActive = isNavActive(item, path, active)
               return (
                 <li key={item.key} className="flex">
-                  <NavItemLink
-                    item={item}
-                    aria-current={current}
-                    className={cn(
-                      'relative inline-flex min-h-16 items-center whitespace-nowrap px-3 text-[0.9063rem] font-semibold transition-colors lg:min-h-[4.5rem]',
-                      isActive ? 'text-lp-brand-text' : 'text-lp-muted hover:text-lp-fg',
-                    )}
-                  >
-                    {m.nav[item.key]}
-                    <span
-                      aria-hidden
-                      className={cn(
-                        'absolute inset-x-3 -bottom-px h-[3px] rounded-t-full bg-lp-brand transition-[opacity,transform] duration-300',
-                        isActive ? 'scale-x-100 opacity-100' : 'scale-x-50 opacity-0',
-                      )}
-                    />
-                  </NavItemLink>
+                  {'items' in item ? (
+                    <NavGroupMenu item={item} path={path} active={isActive} activeSection={active} />
+                  ) : (
+                    <SectionLink section={item.target} aria-current={isActive ? 'location' : undefined} className={navLinkClass(isActive)}>
+                      {m.nav[item.key]}
+                      <NavUnderline active={isActive} />
+                    </SectionLink>
+                  )}
                 </li>
               )
             })}
@@ -152,24 +143,61 @@ function MobileMenu({
         <nav aria-label={m.nav.mobile}>
           <ul className="space-y-0.5">
             {NAV_ITEMS.map((item) => {
-              const current = navCurrent(item, path, active)
-              const isActive = current !== undefined
+              if ('items' in item) {
+                const groupId = `lp-mobile-${item.key}`
+                return (
+                  <li key={item.key} className="py-2">
+                    <p id={groupId} className="px-3 pb-1.5 pt-1 text-[0.75rem] font-semibold uppercase tracking-wider text-lp-subtle">
+                      {m.nav[item.key]}
+                    </p>
+                    <ul aria-labelledby={groupId} className="space-y-0.5">
+                      {item.items.map((child) => {
+                        const current = childCurrent(child, path, active)
+                        const Icon = NAV_PAGE_ICONS[child.key]
+                        const body = (
+                          <>
+                            <span className="flex min-w-0 items-center gap-3">
+                              <Icon size={18} aria-hidden className="shrink-0 opacity-80" />
+                              {m.nav[child.key]}
+                            </span>
+                            <ChevronRight size={17} aria-hidden className="shrink-0 text-lp-subtle" />
+                          </>
+                        )
+                        return (
+                          <li key={child.key}>
+                            {'path' in child ? (
+                              <Link to={child.path} onClick={onClose} aria-current={current} className={mobileLinkClass(current !== undefined)}>
+                                {body}
+                              </Link>
+                            ) : (
+                              <SectionLink
+                                section={child.target}
+                                onNavigate={onClose}
+                                aria-current={current === 'location' ? current : undefined}
+                                className={mobileLinkClass(current !== undefined)}
+                              >
+                                {body}
+                              </SectionLink>
+                            )}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </li>
+                )
+              }
+              const isActive = isNavActive(item, path, active)
               return (
                 <li key={item.key}>
-                  <NavItemLink
-                    item={item}
+                  <SectionLink
+                    section={item.target}
                     onNavigate={onClose}
-                    aria-current={current}
-                    className={cn(
-                      'flex h-12 items-center justify-between rounded-lp-sm border-l-[3px] px-3 text-[1rem] font-semibold transition-colors',
-                      isActive
-                        ? 'border-lp-brand bg-lp-brand-soft text-lp-brand-text'
-                        : 'border-transparent text-lp-muted hover:bg-lp-sunken hover:text-lp-fg',
-                    )}
+                    aria-current={isActive ? 'location' : undefined}
+                    className={mobileLinkClass(isActive)}
                   >
                     {m.nav[item.key]}
                     <ChevronRight size={17} aria-hidden className="text-lp-subtle" />
-                  </NavItemLink>
+                  </SectionLink>
                 </li>
               )
             })}

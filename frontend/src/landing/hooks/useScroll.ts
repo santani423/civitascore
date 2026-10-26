@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type RefObject } from 'react'
 import { useLocation } from 'react-router-dom'
 
 /** True when the page is scrolled past `offset` px (drives the navbar surface). */
@@ -37,6 +37,21 @@ export function useActiveSection(ids: readonly string[]): string | null {
   }, [key])
 
   return active
+}
+
+/**
+ * For a sideways-scrolling list of section links (sticky section navs on
+ * phones): keeps the item marked `aria-current` scrolled into view, and
+ * returns to the start when none is marked (e.g. back up in the hero).
+ */
+export function useKeepActiveInView(listRef: RefObject<HTMLElement | null>, active: string | null) {
+  useEffect(() => {
+    const list = listRef.current
+    if (!list || list.scrollWidth <= list.clientWidth) return
+    const item = list.querySelector<HTMLElement>('[aria-current]')
+    const left = item ? item.offsetLeft - (list.clientWidth - item.offsetWidth) / 2 : 0
+    list.scrollTo({ left, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+  }, [listRef, active])
 }
 
 /** Arriving at page#section (shared link, or a link from another landing page): jump there once rendered. */

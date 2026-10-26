@@ -95,7 +95,7 @@ import { ApprovalRequestsPage } from '@/pages/approvals/ApprovalRequestsPage'
 import { ApprovalRequestDetailPage } from '@/pages/approvals/ApprovalRequestDetailPage'
 import { ApprovalWorkflowsPage } from '@/pages/approvals/ApprovalWorkflowsPage'
 import { ROUTES } from '@/constants/routes'
-import { LANDING_PATHS } from '@/landing/paths'
+import { LANDING_ROUTE_PATTERNS } from '@/landing/paths'
 import { pmbPublicRoutes } from '@/pmb/PmbRoutes'
 import { PMB_ADMIN_ROUTES } from '@/pmb/AdminRoutes'
 import { KEU_ROUTES } from '@/keu/AdminRoutes'
@@ -283,10 +283,11 @@ function App() {
           }
         />
 
-        {/* Public landing page + its legal pages. Signed-in users reach the
-            app from its "Buka Dashboard" button (previously `/` redirected
-            straight to the dashboard). */}
-        {Object.values(LANDING_PATHS).map((path) => (
+        {/* Public landing pages (home, Student Life Journey, student-affairs
+            directories and their detail pages, legal pages). Signed-in users
+            reach the app from its "Buka Dashboard" button (previously `/`
+            redirected straight to the dashboard). */}
+        {LANDING_ROUTE_PATTERNS.map((path) => (
           <Route
             key={path}
             path={path}

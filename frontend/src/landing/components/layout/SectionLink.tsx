@@ -1,12 +1,12 @@
 import type { MouseEvent, ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LANDING_PATHS, normalizePath, type LandingPath } from '../../paths'
+import { LANDING_PATHS, normalizePath } from '../../paths'
 import { scrollToSection } from '../../hooks/useScroll'
 
 interface SectionLinkProps {
   section: string
-  /** The page the section is on (default: home). */
-  path?: LandingPath
+  /** The page the section is on (default: home), e.g. a list page or a detail page path. */
+  path?: string
   children: ReactNode
   className?: string
   onNavigate?: () => void
