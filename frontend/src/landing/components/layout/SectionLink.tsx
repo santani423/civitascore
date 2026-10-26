@@ -1,10 +1,12 @@
 import type { MouseEvent, ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { LANDING_PATHS } from '../../paths'
+import { LANDING_PATHS, normalizePath, type LandingPath } from '../../paths'
 import { scrollToSection } from '../../hooks/useScroll'
 
 interface SectionLinkProps {
   section: string
+  /** The page the section is on (default: home). */
+  path?: LandingPath
   children: ReactNode
   className?: string
   onNavigate?: () => void
@@ -12,16 +14,16 @@ interface SectionLinkProps {
 }
 
 /**
- * Link to an in-page section. On the home page it smooth-scrolls; from the
- * legal pages it routes to `/#section` and the home page scrolls on arrival.
+ * Link to a section of a landing page. On that page it smooth-scrolls; from
+ * another page it routes to `path#section` and the page scrolls on arrival.
  */
-export function SectionLink({ section, children, className, onNavigate, ...aria }: SectionLinkProps) {
+export function SectionLink({ section, path = LANDING_PATHS.home, children, className, onNavigate, ...aria }: SectionLinkProps) {
   const { pathname } = useLocation()
-  const onHome = pathname === LANDING_PATHS.home
+  const onPage = normalizePath(pathname) === path
 
   const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return
-    if (!onHome) {
+    if (!onPage) {
       onNavigate?.()
       return
     }
@@ -37,7 +39,7 @@ export function SectionLink({ section, children, className, onNavigate, ...aria 
   }
 
   return (
-    <Link to={`${LANDING_PATHS.home}#${section}`} onClick={onClick} className={className} {...aria}>
+    <Link to={`${path}#${section}`} onClick={onClick} className={className} {...aria}>
       {children}
     </Link>
   )

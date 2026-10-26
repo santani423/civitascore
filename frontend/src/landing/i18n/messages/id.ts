@@ -40,6 +40,7 @@ export const id = {
     about: 'Tentang Kami',
     services: 'Layanan',
     academic: 'Akademik',
+    studentLife: '5 Pilar Mahasiswa',
     info: 'Informasi',
     signIn: 'Masuk',
     openDashboard: 'Buka Dashboard',
@@ -314,6 +315,77 @@ export const id = {
           c: 'Unduh KRS, KHS, dan transkrip dalam PDF',
         },
       },
+    },
+  },
+  /**
+   * /student-life-journey and its teaser on the home page. Pillar names and
+   * descriptions are official Indonesian text in data/pillars.ts, not here.
+   */
+  studentLife: {
+    metaTitle: '5 Pilar Student Life Journey',
+    metaDescription:
+      'Kenali 5 Pilar Student Life Journey Unika Atma Jaya: Prestasi dan Reputasi, Kepemimpinan Transformatif, Kompetensi Interpersonal, Keunggulan Intelektual, dan Perilaku Keberlanjutan.',
+    breadcrumb: 'Lokasi halaman',
+    eyebrow: 'Student Life Journey',
+    /** Shown in other languages only: the official content below is in Indonesian. */
+    officialNote: '',
+    scrollCue: 'Jelajahi kelima pilar',
+    colonnade: 'Lima pilar Student Life Journey',
+    span: 'Sejak inisiasi mahasiswa baru hingga lulus',
+    rail: 'Navigasi pilar',
+    pillarLabel: 'Pilar {n}',
+    art: {
+      achievement: 'Ikon pilar Prestasi dan Reputasi: sosok mengangkat bintang di atas podium',
+      leadership: 'Ikon pilar Kepemimpinan Transformatif: sosok di puncak tangga mengulurkan tangan kepada sosok lain',
+      interpersonal: 'Ikon pilar Kompetensi Interpersonal: tiga sosok yang saling terhubung',
+      intellectual: 'Ikon pilar Keunggulan Intelektual: sosok dengan bola lampu bergambar hati',
+      sustainability: 'Ikon pilar Perilaku Keberlanjutan: sosok bermotif ornamen tradisional dengan koin Rupiah',
+    },
+    /** Translation of each pillar name, shown under the official name in other languages. */
+    gloss: {
+      achievement: '',
+      leadership: '',
+      interpersonal: '',
+      intellectual: '',
+      sustainability: '',
+    },
+    activities: {
+      cta: 'Lihat Kegiatan untuk Pilar Ini',
+      ctaAll: 'Lihat Kegiatan Mahasiswa',
+      allNote: 'Daftar kegiatan belum dapat dipilah per pilar.',
+      pending: 'Daftar kegiatan per pilar belum tersedia di One Atma Jaya.',
+      ask: 'Tanyakan ke BKK',
+    },
+    connect: {
+      eyebrow: 'Dari Pilar ke Kegiatan',
+      title: 'Setiap pilar tumbuh lewat kegiatan kampus',
+      body: 'Kelima pilar dikembangkan sepanjang Student Life Journey — melalui berbagai aktivitas kampus dan perkuliahan, sejak inisiasi mahasiswa baru hingga lulus.',
+      pendingTitle: 'Daftar kegiatan belum terhubung',
+      pendingBody:
+        'Kegiatan mahasiswa belum dapat ditelusuri melalui One Atma Jaya. Untuk informasi kegiatan yang mendukung setiap pilar, hubungi BKK Unika Atma Jaya.',
+    },
+    contact: {
+      eyebrow: 'Kontak',
+      title: 'BKK Unika Atma Jaya',
+      body: 'Pertanyaan seputar Student Life Journey dan kegiatan mahasiswa dapat disampaikan ke BKK.',
+      address: 'Alamat',
+      whatsapp: 'WhatsApp',
+      phone: 'Telepon',
+      email: 'Email',
+      social: 'Media sosial',
+      newTab: '(membuka tab baru)',
+    },
+    cta: {
+      title: 'Temukan ruang untuk bertumbuh.',
+      description:
+        'Kenali berbagai kegiatan kampus yang dapat mendukung perjalananmu dalam mengembangkan potensi, kompetensi, kepemimpinan, dan kepedulian.',
+      primary: 'Jelajahi Kegiatan Mahasiswa',
+      whatsapp: 'Hubungi BKK via WhatsApp',
+      email: 'Email BKK',
+    },
+    teaser: {
+      body: 'Lima keunggulan utama yang dikembangkan mahasiswa Unika Atma Jaya sejak inisiasi mahasiswa baru hingga lulus.',
+      cta: 'Kenali 5 Pilar',
     },
   },
   info: {

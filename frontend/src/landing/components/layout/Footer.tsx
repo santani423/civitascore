@@ -13,7 +13,7 @@ import { useLandingUi } from '../../store/ui'
 import { useA11y } from '../../store/a11y'
 import { LanguageSegmented } from './LanguageSwitcher'
 import { ThemeSegmented } from './ThemeToggle'
-import { SectionLink } from './SectionLink'
+import { NavItemLink } from './NavItemLink'
 import { Wordmark } from './Wordmark'
 
 const linkClass = 'inline-flex min-h-11 items-center text-[0.875rem] text-lp-band-muted transition-colors hover:text-lp-band-fg'
@@ -50,9 +50,9 @@ export function Footer() {
             <Column title={m.footer.columns.explore}>
               {NAV_ITEMS.map((item) => (
                 <li key={item.key}>
-                  <SectionLink section={item.target} className={linkClass}>
+                  <NavItemLink item={item} className={linkClass}>
                     {m.nav[item.key]}
-                  </SectionLink>
+                  </NavItemLink>
                 </li>
               ))}
             </Column>

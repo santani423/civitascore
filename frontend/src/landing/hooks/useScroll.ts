@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 
 /** True when the page is scrolled past `offset` px (drives the navbar surface). */
 export function useScrolled(offset = 8): boolean {
@@ -36,6 +37,16 @@ export function useActiveSection(ids: readonly string[]): string | null {
   }, [key])
 
   return active
+}
+
+/** Arriving at page#section (shared link, or a link from another landing page): jump there once rendered. */
+export function useScrollToHash() {
+  const { hash } = useLocation()
+  useEffect(() => {
+    if (!hash) return
+    const frame = window.requestAnimationFrame(() => document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ block: 'start' }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [hash])
 }
 
 /** The OS preference, or the landing's own "Kurangi animasi" setting (mirrored on <html> by useA11yEffect). */
