@@ -126,6 +126,13 @@ abstract final class RoutePaths {
       '/l/exams/$examId/attempts/$attemptId';
   static const lecturerQuestionBank = '/l/question-bank';
 
+  // Lecturer: PMB exam duties — proctor/examiner (feature pmb_duty)
+  static const lecturerPmbSessions = '/l/pmb/sessions';
+  static String lecturerPmbSession(String sessionId) =>
+      '/l/pmb/sessions/$sessionId';
+  static String lecturerPmbSessionScores(String sessionId) =>
+      '/l/pmb/sessions/$sessionId/scores';
+
   // Advisor: KRS approvals (feature advising)
   static String lecturerKrsSubmission(String id) => '/l/advising/krs/$id';
 

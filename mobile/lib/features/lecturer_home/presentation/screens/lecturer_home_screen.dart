@@ -11,6 +11,8 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/notification_bell.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
+import '../../../pmb_duty/presentation/providers.dart';
+import '../../../pmb_duty/presentation/widgets/home_duty_section.dart';
 import '../../domain/home_models.dart';
 import '../../l10n/lecturer_home_strings.dart';
 import '../providers.dart';
@@ -31,6 +33,7 @@ class LecturerHomeScreen extends ConsumerWidget {
     Future<void> refresh() async {
       ref.invalidate(homeClassesProvider);
       ref.invalidate(homePendingKrsProvider);
+      ref.invalidate(homeDutySessionsProvider);
       ref.invalidate(unreadNotificationCountProvider);
     }
 
@@ -75,6 +78,7 @@ class LecturerHomeScreen extends ConsumerWidget {
                   ),
                 if (user?.isLecturer ?? false) const _TeachingSection(),
                 if (user?.isAdvisor ?? false) const _AdvisingSection(),
+                const PmbDutyHomeSection(),
                 const SizedBox(height: AppSpacing.md),
                 PendingFeatureTile(
                   feature: pendingFeatureByKey('lecturer_announcements')!,
