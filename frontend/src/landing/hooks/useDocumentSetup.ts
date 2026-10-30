@@ -39,7 +39,20 @@ function upsertLink(rel: string, href: string): () => void {
  * when a production origin is configured. Restores the previous values when
  * the landing page unmounts so the application keeps its own title.
  */
-export function useDocumentMeta({ title, description, ogLocale, path }: { title: string; description: string; ogLocale: string; path: string }) {
+export function useDocumentMeta({
+  title,
+  description,
+  ogLocale,
+  path,
+  robots,
+}: {
+  title: string
+  description: string
+  ogLocale: string
+  path: string
+  /** e.g. "noindex" for a not-found state. */
+  robots?: string
+}) {
   useEffect(() => {
     const previousTitle = document.title
     document.title = title
@@ -51,6 +64,7 @@ export function useDocumentMeta({ title, description, ogLocale, path }: { title:
       upsertMeta('name', 'twitter:title', title),
       upsertMeta('name', 'twitter:description', description),
     ]
+    if (robots) restore.push(upsertMeta('name', 'robots', robots))
     if (landingConfig.siteUrl) {
       const url = `${landingConfig.siteUrl}${path}`
       restore.push(upsertLink('canonical', url), upsertMeta('property', 'og:url', url))
@@ -59,7 +73,7 @@ export function useDocumentMeta({ title, description, ogLocale, path }: { title:
       document.title = previousTitle
       restore.forEach((fn) => fn())
     }
-  }, [title, description, ogLocale, path])
+  }, [title, description, ogLocale, path, robots])
 }
 
 /** <html lang> and color-scheme follow the landing page while it is mounted. */

@@ -41,7 +41,7 @@ mobile/lib/
     l10n/<modul>_strings.dart  string ID/EN/ZH modul
 ```
 
-Modul fitur: `auth`, `account`, `student_home`, `academic_records`, `schedule_attendance`, `krs`, `learning`, `exam_student`, `finance`, `student_services`, `announcements`, `notifications`, `lecturer_home`, `teaching`, `lecturer_assessment`, `exam` (ujian dosen), `advising`, `hr`.
+Modul fitur: `auth`, `account`, `student_home`, `academic_records`, `schedule_attendance`, `krs`, `learning`, `exam_student`, `finance`, `student_services`, `announcements`, `notifications`, `lecturer_home`, `teaching`, `lecturer_assessment`, `exam` (ujian dosen), `advising`, `hr`, `pmb_duty` (tugas ujian PMB: pengawas/penguji/pewawancara).
 
 ## 3. Alur data
 
@@ -74,6 +74,7 @@ Widget ──watch──▶ Provider (Riverpod) ──▶ <Modul>Api ──▶ A
 | Mahasiswa (`/s/...`) | Beranda · Akademik · Kuliah · Keuangan · Akun | Layar detail di-*push* di atas bottom bar. |
 | Dosen/PA (`/l/...`) | Beranda · Mengajar · Jadwal · Perwalian · Akun | Mengajar & Jadwal hanya bila dosen; Perwalian hanya bila `krs_advising.read`. |
 | Bersama | Notifikasi, Pengaturan, Sesi & perangkat, Fitur menunggu backend | Dapat dibuka dari kedua shell. |
+| Tugas ujian PMB (`/l/pmb/...`) | Daftar sesi → detail & presensi → input nilai | **Modul kondisional** (MOB-OTH-01..03): entri di Beranda dosen hanya tampil bila `GET /pmb/admin/examiner/sessions` tidak kosong dan pengguna memiliki `pmb_scores.create`/`pmb_exams.update`. Pembatasan per sesi tetap di backend (`ExamService::assertSessionStaff`). |
 
 Redirect terpusat (`resolveRedirect`, diuji unit): splash saat memulihkan sesi → login → kunci biometrik → ganti sandi wajib → tanpa-akses → beranda sesuai peran; pengalaman mahasiswa tidak dapat membuka rute `/l/...` dan sebaliknya.
 
@@ -97,6 +98,14 @@ Redirect terpusat (`resolveRedirect`, diuji unit): splash saat memulihkan sesi �
 - Banner global saat tidak ada koneksi.
 - GET data milik pengguna memakai `cache: true`: bila jaringan gagal, respons terakhir dari cache terenkripsi ditampilkan.
 - Aksi tulis (KRS, pembayaran, pengajuan, nilai, presensi) membutuhkan koneksi; kegagalan ditampilkan dengan pesan yang jelas.
+- Pengecualian: respons `/pmb/admin/*` (tugas ujian PMB) berisi nama pendaftar dan dikirim dengan `Cache-Control: no-store`, sehingga **tidak** disimpan ke cache offline.
+
+## 8a. Tugas ujian PMB (`pmb_duty`)
+
+- **Presensi** (pengawas/penguji/pewawancara, `pmb_exam_attendance.update`): pindai QR kartu ujian (`mobile_scanner`, mode beruntun untuk antrean peserta), masukkan kode secara manual, atau pilih status per peserta. Format token kartu (`participantId.sessionId.hmac32`) divalidasi di klien sebelum memanggil `POST …/check-in`. Status *Tidak hadir* dan *Diskualifikasi* meminta konfirmasi karena mengubah status seleksi dan mengirim notifikasi ke pendaftar. Lebih dari 2 jam setelah sesi berakhir, layar menjadi baca-saja (aturan backend; hanya panitia). Daftar hadir PDF dibuka lewat URL bertanda tangan berumur pendek.
+- **Nilai** (hanya penguji/pewawancara): tiga bentuk komponen — angka dengan rentang `raw_min..raw_max`, lulus/tidak (`pass_fail`), dan rubrik berbobot (pratinjau nilai = rata-rata berbobot, rumus sama dengan `SelectionCalculator::rubricRaw`). Disimpan per peserta (`PUT …/scores` satu baris) dengan alur "Simpan & berikutnya" (peserta berikutnya dicari berdasarkan ID, berhenti bila sesi terkunci); rentang divalidasi di klien karena satu baris salah menolak seluruh batch. Input angka: maks. 2 desimal, `.`/`,` sebagai pemisah desimal, pemisah ribuan ditolak. Galat simpan (423 terkunci, 403, `saved=0`) tampil **di dalam** sheet. Sesi yang dikunci panitia menjadi baca-saja.
+- **Skor milik sendiri:** respons nilai bisa memuat baris penguji lain (pemegang `pmb_exams.update`) dan baris bersama hasil impor (`examiner_user_id` null). Komponen wawancara/portofolio hanya memakai baris `examiner_user_id` = pengguna; komponen lain memakai baris bersama. Ringkasan "x/y dinilai" hanya menghitung peserta yang dapat dinilai.
+- **Pemindai beruntun:** kartu yang sudah berhasil di-check-in tidak dikirim ulang selama layar pemindai terbuka (tiap panggilan menimpa `checked_in_at` dan menambah jejak audit).
 
 ## 9. Fitur tanpa backend
 

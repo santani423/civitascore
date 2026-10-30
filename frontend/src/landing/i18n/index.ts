@@ -10,6 +10,16 @@ export const dictionaries: Record<Locale, Messages> = { id, en, 'zh-CN': zhCN }
 
 export type FillVars = Record<string, string | number>
 
+export interface PluralForms {
+  one: string
+  other: string
+}
+
+/** The plural form for `n` in a locale (Indonesian and Chinese always take `other`). */
+export function plural(intl: string, n: number, forms: PluralForms): string {
+  return new Intl.PluralRules(intl).select(n) === 'one' ? forms.one : forms.other
+}
+
 /** Replaces `{name}` placeholders; unknown names are left visible so they're easy to spot. */
 export function fill(template: string, vars: FillVars): string {
   return template.replace(/\{(\w+)\}/g, (match, name: string) => (name in vars ? String(vars[name]) : match))

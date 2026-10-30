@@ -603,6 +603,7 @@ Kebutuhan yang belum dipenuhi backend, per baris matriks (baris *Ditunda* berpri
 | MOB-OTH-02 Presensi peserta ujian PMB (pengawas/penguji) | Pindai QR membutuhkan paket kamera; offline tidak didukung |
 | MOB-OTH-03 Input nilai seleksi PMB (nilai mentah/rubrik) oleh penguji | Penguji sengaja tak diberi pmb_applications.read, jadi tak ada data pendaftar selain nama/nomor peserta |
 | MOB-OTH-03 Input nilai seleksi PMB (nilai mentah/rubrik) oleh penguji | Tidak ada penyimpanan draf lokal/offline |
+| MOB-OTH-03 Input nilai seleksi PMB (nilai mentah/rubrik) oleh penguji | Catatan nilai tidak dapat dihapus: `ScoreService::write` memakai `$note ?: $score->note`, sehingga `note: null` mempertahankan catatan lama (aplikasi menolak pengosongan catatan dengan pesan jelas). Portal web `ScoringPage` juga memakai `scores[scores.length - 1]` tanpa memeriksa `examiner_user_id` — bagi pemegang `pmb_exams.update` atau saat ada baris impor bersama, skor penguji lain dapat tampil sebagai milik sendiri (aplikasi mobile sudah memilih baris milik pengguna). |
 | MOB-OTH-04 Lihat pengajuan persetujuan saya dan statusnya | Mahasiswa umumnya daftar kosong (belum ada alur mahasiswa yang memakainya) |
 
 ## 5. Kebutuhan infrastruktur lintas fitur (belum ada)

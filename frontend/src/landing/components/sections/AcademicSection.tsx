@@ -3,7 +3,7 @@ import { ArrowRight, CalendarRange, Check, FileBadge2, NotebookPen, Presentation
 import { fill, useLandingI18n } from '../../i18n'
 import type { Messages } from '../../i18n/messages/id'
 import { useAppEntry } from '../../hooks/useAppEntry'
-import { SECTION_IDS } from '../../paths'
+import { LANDING_PATHS, SECTION_IDS } from '../../paths'
 import { buttonClass } from '../ui/buttonClass'
 import { Reveal } from '../ui/Primitives'
 
@@ -38,6 +38,10 @@ export function AcademicSection() {
             <ArrowRight size={16} aria-hidden />
           </Link>
           <p className="mt-4 max-w-xs text-[0.8125rem] leading-relaxed text-lp-subtle">{a.signInNote}</p>
+          <Link to={LANDING_PATHS.faculties} className="group mt-6 inline-flex min-h-11 items-center gap-2 text-[0.9063rem] font-semibold text-lp-brand-text">
+            {a.facultiesCta}
+            <ArrowRight size={16} aria-hidden className="transition-transform duration-200 group-hover:translate-x-1" />
+          </Link>
         </Reveal>
 
         <ol className="grid gap-5 sm:grid-cols-2 lg:col-span-8">

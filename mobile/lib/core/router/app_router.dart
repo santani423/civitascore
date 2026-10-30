@@ -23,6 +23,7 @@ import '../../features/learning/learning_routes.dart';
 import '../../features/lecturer_assessment/lecturer_assessment_routes.dart';
 import '../../features/lecturer_home/lecturer_home_routes.dart';
 import '../../features/notifications/notifications_routes.dart';
+import '../../features/pmb_duty/pmb_duty_routes.dart';
 import '../../features/schedule_attendance/schedule_attendance_routes.dart';
 import '../../features/student_home/student_home_routes.dart';
 import '../../features/student_services/student_services_routes.dart';
@@ -285,6 +286,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ...examRoutes,
       ...advisingRoutes,
       ...hrRoutes,
+      ...pmbDutyRoutes,
     ],
     errorBuilder: (context, state) => const _NotFoundRedirect(),
   );

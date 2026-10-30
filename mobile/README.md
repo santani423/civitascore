@@ -8,14 +8,17 @@ dokumen ini hanya ringkasan praktis untuk menjalankan proyek.
 
 ## Status
 
-**Fase 0 — Bootstrap** selesai: struktur proyek, 3 flavor (dev/staging/prod),
-`core/network` (Dio + interceptor auth), `core/storage` (secure storage,
-shared_preferences, Hive), `core/theme` (light/dark, Material 3), `core/router`
-(go_router, route guard publik/terproteksi), dan modul **Auth** penuh (Login,
-Lupa Kata Sandi, Atur Ulang Kata Sandi, Keamanan/sesi & perangkat).
+Aplikasi mahasiswa & dosen (Android) dengan 19 modul fitur yang terintegrasi ke
+backend: auth & sesi, beranda per peran, akademik (KHS, transkrip, dokumen),
+jadwal & presensi, KRS, perkuliahan/LMS, ujian (mahasiswa & dosen, bank soal,
+laporan attempt), keuangan, layanan administrasi, pengumuman & notifikasi,
+perwalian KRS, layanan mandiri SDM, dan **tugas ujian PMB** (pengawas/penguji:
+presensi via QR kartu & input nilai). Tiga bahasa (ID/EN/ZH), tema terang/gelap,
+cache offline terenkripsi. Fitur yang backend-nya belum ada ditampilkan sebagai
+"Menunggu backend" tanpa data tiruan.
 
-Sisanya (Dashboard penuh, modul Akademik/Keuangan/dst., fitur Android modern,
-i18n) menyusul bertahap sesuai BAB 12 dokumen rancangan.
+Dokumentasi mobile: [`../docs/mobile/`](../docs/mobile/) — audit (01), matriks
+fitur (02), kontrak API & celah backend (03), arsitektur (04), setup & pengujian (05).
 
 ## Tech stack
 
@@ -40,8 +43,10 @@ flutter run --flavor dev -t lib/main_dev.dart \
   --dart-define=API_BASE_URL=http://192.168.1.10:8000/api/v1
 ```
 
-Backend Laravel (di root repo `../`) harus berjalan (`php artisan serve`) agar
-alur login bisa diuji end-to-end.
+Backend Laravel (di root repo `../`) harus berjalan agar alur login bisa diuji
+end-to-end. **Jangan** memakai `.env` root apa adanya — isinya mengarah ke basis
+data produksi. Jalankan backend lokal terisolasi (SQLite, `APP_ENV=mobilelocal`)
+sesuai [`../docs/mobile/05-panduan-setup-dan-pengujian.md`](../docs/mobile/05-panduan-setup-dan-pengujian.md) §4.
 
 ## Build
 

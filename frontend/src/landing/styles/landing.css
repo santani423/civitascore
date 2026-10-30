@@ -77,6 +77,7 @@
   /* Spacing rhythm */
   --lp-gutter: 1rem;
   --lp-section-y: 4.5rem;
+  /* Fallback until Navbar measures the header (useNavHeightVar). */
   --lp-nav-h: 4rem;
 
   /* Typography */
@@ -275,6 +276,12 @@
   mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
 }
 
+/* Fine vertical fluting, after classical columns — behind the Student Life Journey hero and teaser (charcoal). */
+.lp-flutes {
+  background-image: repeating-linear-gradient(to right, rgb(var(--lp-band-fg) / 0.05) 0 1px, transparent 1px 64px);
+  mask-image: radial-gradient(ellipse 65% 90% at 85% 45%, #000 15%, transparent 75%);
+}
+
 /* Warm off-white wash behind alternating sections. */
 .lp-warm {
   background:
@@ -397,14 +404,16 @@ html[data-lp-text='xl'] {
   font-size: 150%;
 }
 
-/* Desktop navigation vs hamburger. The 1024px breakpoint assumes 16px text, so larger text sizes switch to the hamburger at a wider viewport. */
+/* Desktop navigation vs hamburger. The wordmark, six items and the header controls fit on one line from
+   1440px at 16px text (narrower, the nav runs over the wordmark — Indonesian labels with "Buka Dashboard"
+   are the widest), so larger text sizes switch to the hamburger at a proportionally wider viewport. */
 .lp-root .lp-nav-desktop {
   display: none;
 }
 .lp-root .lp-nav-burger {
   display: inline-flex;
 }
-@media (min-width: 1024px) {
+@media (min-width: 1440px) {
   .lp-root .lp-nav-desktop {
     display: block;
   }
@@ -412,7 +421,7 @@ html[data-lp-text='xl'] {
     display: none;
   }
 }
-@media (min-width: 1024px) and (max-width: 1279px) {
+@media (min-width: 1440px) and (max-width: 1799px) {
   html[data-lp-text='lg'] .lp-root .lp-nav-desktop {
     display: none;
   }
@@ -420,7 +429,7 @@ html[data-lp-text='xl'] {
     display: inline-flex;
   }
 }
-@media (min-width: 1024px) and (max-width: 1535px) {
+@media (min-width: 1440px) and (max-width: 2159px) {
   html[data-lp-text='xl'] .lp-root .lp-nav-desktop {
     display: none;
   }

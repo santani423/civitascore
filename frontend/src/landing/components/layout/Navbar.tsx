@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Accessibility, ChevronRight, Menu, MessageSquare, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
@@ -7,72 +7,87 @@ import { useAppEntry, type AppEntry } from '../../hooks/useAppEntry'
 import { useActiveSection, useScrolled } from '../../hooks/useScroll'
 import { useLandingUi } from '../../store/ui'
 import { useA11y } from '../../store/a11y'
-import { LANDING_PATHS, SECTION_IDS } from '../../paths'
-import { NAV_ITEMS, SPY_SECTIONS } from '../../data/navigation'
+import { LANDING_PATHS, SECTION_IDS, normalizePath } from '../../paths'
+import { NAV_ITEMS, SPY_SECTIONS, childCurrent, isNavActive } from '../../data/navigation'
 import { Button, IconButton } from '../ui/Button'
 import { buttonClass } from '../ui/buttonClass'
 import { Drawer } from '../ui/Overlay'
 import { LanguageMenu, LanguageSegmented } from './LanguageSwitcher'
 import { ThemeSegmented, ThemeToggle } from './ThemeToggle'
 import { SectionLink } from './SectionLink'
+import { NavGroupMenu, NavUnderline } from './NavGroup'
+import { NAV_PAGE_ICONS, mobileLinkClass, navLinkClass } from './navStyles'
 import { Wordmark } from './Wordmark'
 import { AccessibilityButton } from '../a11y/AccessibilityPanel'
 
+/**
+ * Publishes the header's real height as `--lp-nav-h` on `.lp-root` (it grows
+ * with the desktop nav and with enlarged text), for content that sticks below it.
+ */
+function useNavHeightVar(ref: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const header = ref.current
+    const root = header?.closest<HTMLElement>('.lp-root')
+    if (!header || !root || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => root.style.setProperty('--lp-nav-h', `${header.offsetHeight}px`))
+    ro.observe(header)
+    return () => {
+      ro.disconnect()
+      root.style.removeProperty('--lp-nav-h')
+    }
+  }, [ref])
+}
+
 export function Navbar() {
   const { m } = useLandingI18n()
-  const { pathname } = useLocation()
-  const onHome = pathname === LANDING_PATHS.home
+  const path = normalizePath(useLocation().pathname)
+  const onHome = path === LANDING_PATHS.home
   const scrolled = useScrolled()
   const active = useActiveSection(onHome ? SPY_SECTIONS : [])
   const [menuOpen, setMenuOpen] = useState(false)
   const entry = useAppEntry()
   const EntryIcon = entry.icon
+  const headerRef = useRef<HTMLElement>(null)
+  useNavHeightVar(headerRef)
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         'fixed inset-x-0 top-0 z-50 border-b bg-lp-surface/95 backdrop-blur-xl backdrop-saturate-150 transition-[border-color,box-shadow] duration-300',
         scrolled ? 'border-lp-line shadow-lp-md' : 'border-lp-line/70',
       )}
     >
-      <div className="lp-container flex min-h-16 items-center gap-3 py-1 lg:min-h-[4.5rem]">
-        <SectionLink section={SECTION_IDS.home} className="-ml-1 min-w-0 rounded-lp-sm p-1" aria-current={undefined}>
+      {/* Wider than the page container: wordmark + six items + controls need ~80rem at desktop. */}
+      <div className="lp-container flex min-h-16 max-w-[90rem] items-center gap-3 py-1 lg:min-h-[4.5rem]">
+        <SectionLink section={SECTION_IDS.home} className="-ml-1 mr-auto min-w-0 rounded-lp-sm p-1" aria-current={undefined}>
           <span className="sr-only">{m.nav.homeLink}</span>
           <span aria-hidden className="flex min-w-0">
             <Wordmark />
           </span>
         </SectionLink>
 
-        <nav aria-label={m.nav.primary} className="lp-nav-desktop ml-auto h-full">
-          <ul className="flex h-full items-stretch gap-1 xl:gap-2">
+        <nav aria-label={m.nav.primary} className="lp-nav-desktop mr-4 h-full">
+          <ul className="flex h-full items-stretch gap-1">
             {NAV_ITEMS.map((item) => {
-              const isActive = onHome && item.covers.some((c) => c === active)
+              const isActive = isNavActive(item, path, active)
               return (
                 <li key={item.key} className="flex">
-                  <SectionLink
-                    section={item.target}
-                    aria-current={isActive ? 'location' : undefined}
-                    className={cn(
-                      'relative inline-flex min-h-16 items-center px-3 text-[0.9063rem] font-semibold transition-colors lg:min-h-[4.5rem] xl:px-4',
-                      isActive ? 'text-lp-brand-text' : 'text-lp-muted hover:text-lp-fg',
-                    )}
-                  >
-                    {m.nav[item.key]}
-                    <span
-                      aria-hidden
-                      className={cn(
-                        'absolute inset-x-3 -bottom-px h-[3px] rounded-t-full bg-lp-brand transition-[opacity,transform] duration-300 xl:inset-x-4',
-                        isActive ? 'scale-x-100 opacity-100' : 'scale-x-50 opacity-0',
-                      )}
-                    />
-                  </SectionLink>
+                  {'items' in item ? (
+                    <NavGroupMenu item={item} path={path} active={isActive} activeSection={active} />
+                  ) : (
+                    <SectionLink section={item.target} aria-current={isActive ? 'location' : undefined} className={navLinkClass(isActive)}>
+                      {m.nav[item.key]}
+                      <NavUnderline active={isActive} />
+                    </SectionLink>
+                  )}
                 </li>
               )
             })}
           </ul>
         </nav>
 
-        <div className="ml-auto flex shrink-0 items-center gap-1 lg:ml-4">
+        <div className="flex shrink-0 items-center gap-1">
           <LanguageMenu className="lp-hdr-extra hidden sm:block" />
           <ThemeToggle className="lp-hdr-extra hidden sm:inline-flex" />
           <AccessibilityButton />
@@ -92,7 +107,7 @@ export function Navbar() {
         </div>
       </div>
 
-      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} active={onHome ? active : null} entry={entry} />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} path={path} active={active} entry={entry} />
     </header>
   )
 }
@@ -100,11 +115,13 @@ export function Navbar() {
 function MobileMenu({
   open,
   onClose,
+  path,
   active,
   entry,
 }: {
   open: boolean
   onClose: () => void
+  path: string
   active: string | null
   entry: AppEntry
 }) {
@@ -127,19 +144,57 @@ function MobileMenu({
         <nav aria-label={m.nav.mobile}>
           <ul className="space-y-0.5">
             {NAV_ITEMS.map((item) => {
-              const isActive = item.covers.some((c) => c === active)
+              if ('items' in item) {
+                const groupId = `lp-mobile-${item.key}`
+                return (
+                  <li key={item.key} className="py-2">
+                    <p id={groupId} className="px-3 pb-1.5 pt-1 text-[0.75rem] font-semibold uppercase tracking-wider text-lp-subtle">
+                      {m.nav[item.key]}
+                    </p>
+                    <ul aria-labelledby={groupId} className="space-y-0.5">
+                      {item.items.map((child) => {
+                        const current = childCurrent(child, path, active)
+                        const Icon = NAV_PAGE_ICONS[child.key]
+                        const body = (
+                          <>
+                            <span className="flex min-w-0 items-center gap-3">
+                              <Icon size={18} aria-hidden className="shrink-0 opacity-80" />
+                              {m.nav[child.key]}
+                            </span>
+                            <ChevronRight size={17} aria-hidden className="shrink-0 text-lp-subtle" />
+                          </>
+                        )
+                        return (
+                          <li key={child.key}>
+                            {'path' in child ? (
+                              <Link to={child.path} onClick={onClose} aria-current={current} className={mobileLinkClass(current !== undefined)}>
+                                {body}
+                              </Link>
+                            ) : (
+                              <SectionLink
+                                section={child.target}
+                                onNavigate={onClose}
+                                aria-current={current === 'location' ? current : undefined}
+                                className={mobileLinkClass(current !== undefined)}
+                              >
+                                {body}
+                              </SectionLink>
+                            )}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </li>
+                )
+              }
+              const isActive = isNavActive(item, path, active)
               return (
                 <li key={item.key}>
                   <SectionLink
                     section={item.target}
                     onNavigate={onClose}
                     aria-current={isActive ? 'location' : undefined}
-                    className={cn(
-                      'flex h-12 items-center justify-between rounded-lp-sm border-l-[3px] px-3 text-[1rem] font-semibold transition-colors',
-                      isActive
-                        ? 'border-lp-brand bg-lp-brand-soft text-lp-brand-text'
-                        : 'border-transparent text-lp-muted hover:bg-lp-sunken hover:text-lp-fg',
-                    )}
+                    className={mobileLinkClass(isActive)}
                   >
                     {m.nav[item.key]}
                     <ChevronRight size={17} aria-hidden className="text-lp-subtle" />
