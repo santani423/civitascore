@@ -11,7 +11,7 @@ export const NAV_ITEMS: Array<{ key: NavKey; target: SectionId; covers: SectionI
   { key: 'about', target: SECTION_IDS.about, covers: [SECTION_IDS.about, SECTION_IDS.integration] },
   { key: 'services', target: SECTION_IDS.services, covers: [SECTION_IDS.services] },
   { key: 'academic', target: SECTION_IDS.academic, covers: [SECTION_IDS.academic] },
-  { key: 'info', target: SECTION_IDS.info, covers: [SECTION_IDS.info] },
+  { key: 'info', target: SECTION_IDS.info, covers: [SECTION_IDS.info, SECTION_IDS.tuition] },
 ]
 
 export const SPY_SECTIONS: SectionId[] = NAV_ITEMS.flatMap((item) => item.covers)

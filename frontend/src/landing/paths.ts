@@ -25,6 +25,7 @@ export const SECTION_IDS = {
   services: 'layanan',
   academic: 'akademik',
   info: 'informasi',
+  tuition: 'biaya',
 } as const
 
 export type SectionId = (typeof SECTION_IDS)[keyof typeof SECTION_IDS]

@@ -1,0 +1,184 @@
+{
+  "academicYear": "2026/2027",
+  "revision": "2.0",
+  "currency": "IDR",
+  "notes": ["extended", "matriculation", "fastTrackRecommendation", "fastTrackNbl"],
+  "programs": [
+    {
+      "key": "profession",
+      "hasMatriculation": true,
+      "durations": [{ "semesters": "2", "note": null }],
+      "studies": [
+        { "name": "Profesi Insinyur", "alumni": false, "spp": 4235000, "ukt": 12850000, "matriculation": null, "totals": [{ "base": 29935000, "withMatriculation": null, "note": null }] },
+        { "name": "Profesi Akuntansi", "alumni": false, "spp": 4000000, "ukt": 15000000, "matriculation": 1500000, "totals": [{ "base": 34000000, "withMatriculation": 35500000, "note": null }] },
+        { "name": "Profesi Psikolog", "alumni": false, "spp": 5000000, "ukt": 19670000, "matriculation": 5000000, "totals": [{ "base": null, "withMatriculation": 69010000, "note": null }] },
+        { "name": "Profesi Apoteker", "alumni": false, "spp": 17000000, "ukt": 23000000, "matriculation": null, "totals": [{ "base": 63000000, "withMatriculation": null, "note": null }] },
+        { "name": "Profesi Apoteker", "alumni": true, "spp": 4250000, "ukt": 23000000, "matriculation": null, "totals": [{ "base": 50250000, "withMatriculation": null, "note": null }] }
+      ]
+    },
+    {
+      "key": "master",
+      "hasMatriculation": true,
+      "durations": [
+        { "semesters": "3", "note": "fastTrackRecommendation" },
+        { "semesters": "4", "note": null }
+      ],
+      "studies": [
+        {
+          "name": "Magister Manajemen",
+          "alumni": false,
+          "spp": 14000000,
+          "ukt": 16500000,
+          "matriculation": 3000000,
+          "totals": [
+            { "base": 63500000, "withMatriculation": 66500000, "note": null },
+            { "base": 80000000, "withMatriculation": 83000000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Manajemen Rumah Sakit",
+          "alumni": false,
+          "spp": 14000000,
+          "ukt": 16500000,
+          "matriculation": 3000000,
+          "totals": [
+            { "base": 63500000, "withMatriculation": 66500000, "note": null },
+            { "base": 80000000, "withMatriculation": 83000000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Akuntansi",
+          "alumni": false,
+          "spp": 17000000,
+          "ukt": 12600000,
+          "matriculation": 2500000,
+          "totals": [
+            { "base": 54800000, "withMatriculation": 57300000, "note": null },
+            { "base": 67400000, "withMatriculation": 69900000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Ekonomi Terapan",
+          "alumni": false,
+          "spp": 12500000,
+          "ukt": 10870000,
+          "matriculation": 2250000,
+          "totals": [
+            { "base": 45110000, "withMatriculation": 47360000, "note": null },
+            { "base": 55980000, "withMatriculation": 58230000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Administrasi Bisnis",
+          "alumni": false,
+          "spp": 14000000,
+          "ukt": 14300000,
+          "matriculation": 2500000,
+          "totals": [
+            { "base": 56900000, "withMatriculation": 59400000, "note": null },
+            { "base": 71200000, "withMatriculation": 73700000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Teknik Mesin",
+          "alumni": false,
+          "spp": 3000000,
+          "ukt": 11550000,
+          "matriculation": 750000,
+          "totals": [
+            { "base": 37650000, "withMatriculation": 38400000, "note": null },
+            { "base": 49200000, "withMatriculation": 49950000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Teknik Elektro",
+          "alumni": false,
+          "spp": 2200000,
+          "ukt": 10700000,
+          "matriculation": 750000,
+          "totals": [
+            { "base": 34300000, "withMatriculation": 35050000, "note": null },
+            { "base": 45000000, "withMatriculation": 45750000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Bioteknologi",
+          "alumni": false,
+          "spp": 15000000,
+          "ukt": 13320000,
+          "matriculation": 5500000,
+          "totals": [
+            { "base": 54960000, "withMatriculation": 60460000, "note": null },
+            { "base": 68280000, "withMatriculation": 73780000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Psikologi",
+          "alumni": false,
+          "spp": 12000000,
+          "ukt": 16300000,
+          "matriculation": 2250000,
+          "totals": [
+            { "base": 60900000, "withMatriculation": 63150000, "note": "fastTrackNbl" },
+            { "base": 77200000, "withMatriculation": 79450000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Ilmu Hukum",
+          "alumni": false,
+          "spp": 12000000,
+          "ukt": 12260000,
+          "matriculation": 1400000,
+          "totals": [
+            { "base": 48780000, "withMatriculation": 50180000, "note": null },
+            { "base": 61040000, "withMatriculation": 62440000, "note": null }
+          ]
+        },
+        {
+          "name": "Magister Linguistik Terapan Bahasa Inggris",
+          "alumni": false,
+          "spp": 11000000,
+          "ukt": 17385000,
+          "matriculation": 3000000,
+          "totals": [
+            { "base": 63155000, "withMatriculation": 66155000, "note": null },
+            { "base": 80540000, "withMatriculation": 83540000, "note": "extended" }
+          ]
+        },
+        {
+          "name": "Magister Biomedik",
+          "alumni": false,
+          "spp": 12500000,
+          "ukt": 9500000,
+          "matriculation": 5500000,
+          "totals": [
+            { "base": 41000000, "withMatriculation": 46500000, "note": null },
+            { "base": 50500000, "withMatriculation": 56000000, "note": null }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "doctoral",
+      "hasMatriculation": true,
+      "durations": [{ "semesters": "6", "note": null }],
+      "studies": [
+        { "name": "Doktoral Psikologi", "alumni": false, "spp": 28000000, "ukt": 25320000, "matriculation": 5500000, "totals": [{ "base": 179920000, "withMatriculation": 185420000, "note": null }] },
+        { "name": "Doktoral Linguistik Terapan Bahasa Inggris", "alumni": false, "spp": 23000000, "ukt": 8750000, "matriculation": null, "totals": [{ "base": 75500000, "withMatriculation": null, "note": null }] }
+      ]
+    },
+    {
+      "key": "specialist",
+      "hasMatriculation": false,
+      "durations": [{ "semesters": "7/8", "note": null }],
+      "studies": [
+        { "name": "Spesialis Kedokteran Keluarga Layanan Primer", "alumni": false, "spp": 20000000, "ukt": 20000000, "matriculation": null, "totals": [{ "base": 160000000, "withMatriculation": null, "note": null }] },
+        { "name": "Spesialis Kedokteran Keluarga Layanan Primer", "alumni": true, "spp": 10000000, "ukt": 20000000, "matriculation": null, "totals": [{ "base": 150000000, "withMatriculation": null, "note": null }] },
+        { "name": "Spesialis Kedokteran Olahraga", "alumni": false, "spp": 70000000, "ukt": 20000000, "matriculation": null, "totals": [{ "base": 210000000, "withMatriculation": null, "note": null }] },
+        { "name": "Spesialis Kedokteran Olahraga", "alumni": true, "spp": 50000000, "ukt": 15000000, "matriculation": null, "totals": [{ "base": 155000000, "withMatriculation": null, "note": null }] },
+        { "name": "Spesialis Ilmu Penyakit Dalam", "alumni": false, "spp": 100000000, "ukt": 30000000, "matriculation": null, "totals": [{ "base": 340000000, "withMatriculation": null, "note": null }] },
+        { "name": "Spesialis Ilmu Penyakit Dalam", "alumni": true, "spp": 75000000, "ukt": 30000000, "matriculation": null, "totals": [{ "base": 315000000, "withMatriculation": null, "note": null }] }
+      ]
+    }
+  ]
+}

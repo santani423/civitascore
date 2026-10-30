@@ -10,12 +10,14 @@ import { IntegrationSection } from '../components/sections/IntegrationSection'
 import { ServicesSection } from '../components/sections/ServicesSection'
 import { AcademicSection } from '../components/sections/AcademicSection'
 import { InfoSection } from '../components/sections/InfoSection'
+import { TuitionSection } from '../components/sections/TuitionSection'
 import { FinalCTA } from '../components/sections/FinalCTA'
 
 /**
  * One Atma Jaya home: hero → audience strip → about (advantages + integration)
- * → services → academic cycle → admissions news & access guide → CTA.
- * The order matches the navbar (Beranda, Tentang Kami, Layanan, Akademik, Informasi).
+ * → services → academic cycle → admissions news & access guide → postgraduate
+ * tuition → CTA. The order matches the navbar (Beranda, Tentang Kami, Layanan,
+ * Akademik, Informasi — which also covers the tuition section).
  */
 export function HomePage() {
   const { m } = useLandingI18n()
@@ -38,6 +40,7 @@ export function HomePage() {
       <ServicesSection />
       <AcademicSection />
       <InfoSection />
+      <TuitionSection />
       <FinalCTA />
     </>
   )
