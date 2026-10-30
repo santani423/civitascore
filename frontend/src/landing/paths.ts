@@ -9,6 +9,13 @@ export const LANDING_PATHS = {
   ormawa: '/daftar-ormawa',
   ukm: '/daftar-ukm',
   faculties: '/fakultas',
+  // Not `/alumni`: that path belongs to the staff Alumni module (constants/routes.ts).
+  alumni: '/komunitas-alumni',
+  alumniDirectory: '/komunitas-alumni/direktori',
+  alumniEvents: '/komunitas-alumni/kegiatan',
+  alumniCareers: '/komunitas-alumni/karier',
+  alumniStories: '/komunitas-alumni/kisah',
+  alumniContributions: '/komunitas-alumni/kontribusi',
   privacy: '/kebijakan-privasi',
   terms: '/syarat-layanan',
 } as const
@@ -18,7 +25,14 @@ export type LandingPath = (typeof LANDING_PATHS)[keyof typeof LANDING_PATHS]
 const ALL: string[] = Object.values(LANDING_PATHS)
 
 /** List pages whose items each have a detail page at `<list>/:slug`. */
-export const DETAIL_PARENTS = [LANDING_PATHS.activities, LANDING_PATHS.ormawa, LANDING_PATHS.ukm, LANDING_PATHS.faculties] as const
+export const DETAIL_PARENTS = [
+  LANDING_PATHS.activities,
+  LANDING_PATHS.ormawa,
+  LANDING_PATHS.ukm,
+  LANDING_PATHS.faculties,
+  LANDING_PATHS.alumniDirectory,
+  LANDING_PATHS.alumniStories,
+] as const
 export type DetailParent = (typeof DETAIL_PARENTS)[number]
 
 /** Every landing route, as router patterns (App.tsx registers these). */

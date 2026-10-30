@@ -1,8 +1,20 @@
 import { LANDING_PATHS, SECTION_IDS, type LandingPath, type SectionId } from '../paths'
 
-export type NavKey = 'home' | 'about' | 'services' | 'academic' | 'studentAffairs' | 'info'
+export type NavKey = 'home' | 'about' | 'services' | 'academic' | 'studentAffairs' | 'alumni' | 'info'
 /** Items inside a group. */
-export type NavChildKey = 'faculties' | 'academicCycle' | 'studentLife' | 'activities' | 'ormawa' | 'ukm'
+export type NavChildKey =
+  | 'faculties'
+  | 'academicCycle'
+  | 'studentLife'
+  | 'activities'
+  | 'ormawa'
+  | 'ukm'
+  | 'alumniOverview'
+  | 'alumniDirectory'
+  | 'alumniEvents'
+  | 'alumniCareers'
+  | 'alumniStories'
+  | 'alumniContributions'
 
 /** A home-page section: `target` is scrolled to; `covers` are the sections that mark the item active. */
 export interface SectionNavItem {
@@ -15,6 +27,8 @@ export interface SectionNavItem {
 export interface PageNavItem {
   key: NavChildKey
   path: LandingPath
+  /** The other pages of its section sit below this path, so they don't count as inside it. */
+  exact?: boolean
 }
 
 /** A home-page section listed inside a group. */
@@ -46,6 +60,16 @@ export const STUDENT_AFFAIRS_PAGES: PageNavItem[] = [
   { key: 'ukm', path: LANDING_PATHS.ukm },
 ]
 
+/** The Alumni section's own navigation: the navbar group, the bar below the navbar, and the footer column. */
+export const ALUMNI_PAGES: PageNavItem[] = [
+  { key: 'alumniOverview', path: LANDING_PATHS.alumni, exact: true },
+  { key: 'alumniDirectory', path: LANDING_PATHS.alumniDirectory },
+  { key: 'alumniEvents', path: LANDING_PATHS.alumniEvents },
+  { key: 'alumniCareers', path: LANDING_PATHS.alumniCareers },
+  { key: 'alumniStories', path: LANDING_PATHS.alumniStories },
+  { key: 'alumniContributions', path: LANDING_PATHS.alumniContributions },
+]
+
 /** Navbar items, in home-page order (the Student Life Journey teaser sits between Akademik and Informasi). */
 export const NAV_ITEMS: NavItem[] = [
   { key: 'home', target: SECTION_IDS.home, covers: [SECTION_IDS.home] },
@@ -53,6 +77,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'services', target: SECTION_IDS.services, covers: [SECTION_IDS.services] },
   { key: 'academic', items: ACADEMIC_ITEMS },
   { key: 'studentAffairs', items: STUDENT_AFFAIRS_PAGES },
+  { key: 'alumni', items: ALUMNI_PAGES },
   { key: 'info', target: SECTION_IDS.info, covers: [SECTION_IDS.info, SECTION_IDS.undergraduateTuition, SECTION_IDS.tuition] },
 ]
 
@@ -66,7 +91,7 @@ export const SPY_SECTIONS: SectionId[] = HOME_SECTION_ITEMS.flatMap((item) => it
 /** `page` on the page itself, `true` on one of its detail pages. */
 export function pageCurrent(item: PageNavItem, path: string): 'page' | 'true' | undefined {
   if (path === item.path) return 'page'
-  return path.startsWith(`${item.path}/`) ? 'true' : undefined
+  return !item.exact && path.startsWith(`${item.path}/`) ? 'true' : undefined
 }
 
 function sectionCurrent(item: SectionNavItem | SectionChildItem, path: string, activeSection: string | null): 'location' | undefined {

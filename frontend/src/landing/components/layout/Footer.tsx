@@ -6,7 +6,7 @@ import { PMB } from '@/pmb/routes'
 import { fill, useLandingI18n } from '../../i18n'
 import { landingConfig } from '../../config'
 import { useAppEntry } from '../../hooks/useAppEntry'
-import { HOME_SECTION_ITEMS, STUDENT_AFFAIRS_PAGES } from '../../data/navigation'
+import { ALUMNI_PAGES, HOME_SECTION_ITEMS, STUDENT_AFFAIRS_PAGES } from '../../data/navigation'
 import { PHOTOS, PHOTO_LICENSE } from '../../data/photos'
 import { FACULTIES } from '../../data/faculties'
 import { LANDING_PATHS, detailPath } from '../../paths'
@@ -83,7 +83,7 @@ export function Footer() {
             <p className="lp-small mt-6 max-w-sm text-lp-band-muted">{m.footer.description}</p>
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-4 lg:col-span-8">
+          <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 md:grid-cols-3 lg:col-span-8 xl:grid-cols-5">
             <Column title={m.footer.columns.explore}>
               {HOME_SECTION_ITEMS.map((item) => (
                 <li key={item.key}>
@@ -95,6 +95,15 @@ export function Footer() {
             </Column>
             <Column title={m.nav.studentAffairs}>
               {STUDENT_AFFAIRS_PAGES.map((page) => (
+                <li key={page.key}>
+                  <Link to={page.path} className={linkClass}>
+                    {m.nav[page.key]}
+                  </Link>
+                </li>
+              ))}
+            </Column>
+            <Column title={m.nav.alumni}>
+              {ALUMNI_PAGES.map((page) => (
                 <li key={page.key}>
                   <Link to={page.path} className={linkClass}>
                     {m.nav[page.key]}

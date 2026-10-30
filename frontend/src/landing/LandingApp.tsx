@@ -9,6 +9,7 @@ import { DETAIL_PARENTS, LANDING_PATHS, normalizePath } from './paths'
 // Kegiatan, Ormawa and UKM (with their sample data), and the faculty pages, are fetched only when opened.
 const StudentAffairsPage = lazy(() => import('./pages/student-affairs/StudentAffairsPage'))
 const FacultyPages = lazy(() => import('./pages/faculty/FacultyPages'))
+const AlumniPages = lazy(() => import('./pages/alumni/AlumniPages'))
 
 function isUnder(path: string, parent: string): boolean {
   return path === parent || path.startsWith(`${parent}/`)
@@ -34,6 +35,13 @@ export default function LandingApp() {
 }
 
 function renderPage(path: string) {
+  if (isUnder(path, LANDING_PATHS.alumni)) {
+    return (
+      <Suspense fallback={<div className="min-h-screen" />}>
+        <AlumniPages path={path} />
+      </Suspense>
+    )
+  }
   if (isUnder(path, LANDING_PATHS.faculties)) {
     return (
       <Suspense fallback={<div className="min-h-screen" />}>

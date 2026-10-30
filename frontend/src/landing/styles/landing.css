@@ -404,7 +404,7 @@ html[data-lp-text='xl'] {
   font-size: 150%;
 }
 
-/* Desktop navigation vs hamburger. The wordmark, six items and the header controls fit on one line from
+/* Desktop navigation vs hamburger. The wordmark, seven items and the header controls fit on one line from
    1440px at 16px text (narrower, the nav runs over the wordmark — Indonesian labels with "Buka Dashboard"
    are the widest), so larger text sizes switch to the hamburger at a proportionally wider viewport. */
 .lp-root .lp-nav-desktop {

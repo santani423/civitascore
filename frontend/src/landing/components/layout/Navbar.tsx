@@ -58,7 +58,7 @@ export function Navbar() {
         scrolled ? 'border-lp-line shadow-lp-md' : 'border-lp-line/70',
       )}
     >
-      {/* Wider than the page container: wordmark + six items + controls need ~80rem at desktop. */}
+      {/* Wider than the page container: wordmark + seven items + controls need ~85rem at desktop. */}
       <div className="lp-container flex min-h-16 max-w-[90rem] items-center gap-3 py-1 lg:min-h-[4.5rem]">
         <SectionLink section={SECTION_IDS.home} className="-ml-1 mr-auto min-w-0 rounded-lp-sm p-1" aria-current={undefined}>
           <span className="sr-only">{m.nav.homeLink}</span>

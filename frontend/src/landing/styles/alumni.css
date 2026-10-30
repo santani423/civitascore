@@ -1,0 +1,54 @@
+/**
+ * Komunitas Alumni — the few things Tailwind utilities can't say. Colors stay
+ * in the landing tokens (landing.css); this file loads with the alumni chunk.
+ */
+
+/* Editorial voice of Alumni Stories: a serif already on the device, so no extra font download. */
+.lp-root .lp-serif {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Noto Serif', 'Times New Roman', serif;
+}
+html[data-lp-font='readable'] .lp-root .lp-serif {
+  font-family: var(--lp-font-sans);
+}
+
+.lp-root .lp-dropcap::first-letter {
+  float: left;
+  margin: 0.08em 0.1em 0 0;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Noto Serif', 'Times New Roman', serif;
+  font-size: 4.25em;
+  font-weight: 600;
+  line-height: 0.82;
+  color: rgb(var(--lp-brand-text));
+}
+html[data-lp-easy='on'] .lp-root .lp-dropcap::first-letter,
+html[data-lp-font='readable'] .lp-root .lp-dropcap::first-letter {
+  float: none;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* Tells phones the sideways list continues: the bar's items fade out at its edges. */
+.lp-root .lp-scroll-fade {
+  mask-image: linear-gradient(to right, transparent 0, #000 1rem, #000 calc(100% - 1.5rem), transparent 100%);
+}
+@media (min-width: 1024px) {
+  .lp-root .lp-scroll-fade {
+    mask-image: none;
+  }
+}
+
+/* Keeps a jump target clear of the fixed navbar and the sticky Alumni bar. */
+.lp-root .lp-below-bars {
+  scroll-margin-top: calc(var(--lp-nav-h) + 4.5rem);
+}
+
+/* Chart marks grow from the baseline the first time they scroll into view. */
+.lp-root .lp-grow {
+  transition:
+    height 0.8s cubic-bezier(0.2, 0.7, 0.2, 1),
+    width 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
