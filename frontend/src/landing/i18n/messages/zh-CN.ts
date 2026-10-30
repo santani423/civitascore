@@ -834,6 +834,56 @@ export const zhCN: Messages = {
     register: '注册为报考者',
     ask: '咨询学费',
   },
+  undergraduateTuition: {
+    title: '本科（S1）课程学费',
+    description: '{year} 学年报考者在 {n} 个专项计划下的第一学期学费明细。请选择计划，查看各专业的收费标准。',
+    badge: '{year} 学年',
+    programsLabel: '选择专项计划',
+    programs: {
+      banggaAtma: 'Bangga Atma',
+      familyAlumni: '校友家庭',
+      siblings: '兄弟姐妹',
+      teacherStaffChildren: '学校教职工子女',
+      atmaPriority: 'Atma Priority Program',
+      atmaUnggul: 'Atma Unggul',
+      futureLeaders: 'Future Leaders',
+    },
+    summary: {
+      sppFrom: '专项 SPP {amount} 起',
+      initialPaymentFrom: 'Initial Payment {amount} 起',
+    },
+    caption: '{program} {year} 学年第一学期学费明细（印尼盾）',
+    columns: {
+      regularSpp: '常规 SPP',
+      specialSpp: '专项 SPP：{program}',
+      semesterFee: '每学期学费',
+    },
+    regularSppNote: '常规 SPP 以删除线显示；实际适用所选计划的专项 SPP。',
+    initialPayment: {
+      title: 'Initial Payment 金额',
+      categories: {
+        general: '其他专业',
+        medicine: 'Kedokteran（医学）专业',
+        education: 'Fakultas Pendidikan dan Bahasa 各专业',
+      },
+      installments: 'Initial Payment/确认之后的学费分期信息，请参阅 {link}。',
+    },
+    notesTitle: '说明',
+    notes: {
+      oneTimeFees: 'SPP（教育发展捐助费）和校服费仅在被录取为新生时缴纳一次。',
+      firstSemester:
+        '第一学期学费包括：SPP + 按学分（SKS）或套餐计算的学费 + 基础学费（Tarif Kuliah Pokok）+ 学期注册费 + 校服费（仅限 Pariwisata 专业：{tourismUniform}；Teknik Mesin 专业：{mechanicalUniform}）。',
+      nextSemesters: '第二学期及以后的学费包括：按学分（SKS）或套餐计算的学费 + 基础学费（Tarif Kuliah Pokok）+ 学期注册费。',
+      fullPayment:
+        '一次性付清可享第一学期剩余应缴费用（扣除 Initial Payment 后）3% 的减免。一次性付清须在 MyAtma 所示到期日前 1 个工作日完成。3% 的减免金额将转为第二学期费用的预存款。',
+      fixedRates:
+        '学费标准 5 年内保持不变（不含医学院临床教育阶段）。学生 5 年内未完成学业的，自下一学年起按低一届学生的学费标准收费，此后各年依此类推。',
+      otherFees: '因违反学术或财务规定而产生的其他费用，另按相关规定执行（如欠款罚金、选课（KRS）罚金、休学罚金、旷课罚金、候考罚金等）。',
+    },
+    source: '来源：{year} 学年报考者本科（S1）课程学费表。',
+    ctaTitle: '准备好加入阿特玛加亚了吗？',
+    ctaBody: '本科课程须通过招生（PMB）网站、使用报名账户进行报名。',
+  },
   cta: {
     title: '开启您的校园生活',
     description: '通过一个数字生态系统，获取阿特玛加亚的教学服务与资讯。',

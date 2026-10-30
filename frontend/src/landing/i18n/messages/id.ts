@@ -872,6 +872,58 @@ export const id = {
     register: 'Daftar sebagai calon mahasiswa',
     ask: 'Tanyakan biaya kuliah',
   },
+  undergraduateTuition: {
+    title: 'Biaya Kuliah Program Sarjana (S1)',
+    description:
+      'Rincian tarif kuliah semester 1 bagi calon mahasiswa Tahun Akademik {year} pada {n} program khusus. Pilih program untuk melihat tarif di setiap program studi.',
+    badge: 'T.A. {year}',
+    programsLabel: 'Pilih program khusus',
+    programs: {
+      banggaAtma: 'Bangga Atma',
+      familyAlumni: 'Keluarga Alumni',
+      siblings: 'Siblings',
+      teacherStaffChildren: 'Anak Guru & Karyawan Sekolah',
+      atmaPriority: 'Atma Priority Program',
+      atmaUnggul: 'Atma Unggul',
+      futureLeaders: 'Future Leaders',
+    },
+    summary: {
+      sppFrom: 'SPP khusus mulai {amount}',
+      initialPaymentFrom: 'Initial Payment mulai {amount}',
+    },
+    caption: 'Rincian tarif kuliah semester 1 {program}, Tahun Akademik {year}, dalam Rupiah',
+    columns: {
+      regularSpp: 'Tarif SPP reguler',
+      specialSpp: 'Tarif SPP khusus {program}',
+      semesterFee: 'Tarif kuliah per semester',
+    },
+    regularSppNote: 'Tarif SPP reguler ditampilkan dicoret; yang berlaku adalah tarif SPP khusus program yang dipilih.',
+    initialPayment: {
+      title: 'Besaran Initial Payment',
+      categories: {
+        general: 'Program studi lainnya',
+        medicine: 'Kedokteran',
+        education: 'Prodi pada Fakultas Pendidikan dan Bahasa',
+      },
+      installments: 'Informasi cicilan pembayaran biaya kuliah setelah Initial Payment/konfirmasi dapat dilihat pada {link}.',
+    },
+    notesTitle: 'Keterangan',
+    notes: {
+      oneTimeFees: 'Tarif SPP (Sumbangan Pengembangan Pendidikan) dan seragam hanya sekali dibayar pada saat diterima sebagai mahasiswa baru.',
+      firstSemester:
+        'Biaya kuliah semester 1 terdiri dari SPP + tarif kuliah SKS atau tarif kuliah paket + Tarif Kuliah Pokok + Tarif Pendaftaran Semester + seragam (khusus prodi Pariwisata: {tourismUniform} dan Teknik Mesin: {mechanicalUniform}).',
+      nextSemesters: 'Biaya semester 2 dan selanjutnya terdiri dari tarif kuliah SKS atau tarif kuliah paket + Tarif Kuliah Pokok + Tarif Pendaftaran Semester.',
+      fullPayment:
+        'Pembayaran lunas mendapatkan potongan 3% dari sisa kewajiban pembayaran biaya kuliah semester 1 (setelah pembayaran Initial Payment). Pembayaran lunas wajib dibayarkan H-1 (hari kerja) sebelum tanggal jatuh tempo pembayaran yang tertera di MyAtma. Potongan 3% akan menjadi deposit untuk pembayaran semester 2.',
+      fixedRates:
+        'Tarif berlaku tetap selama 5 tahun (tidak termasuk pendidikan klinik Fakultas Kedokteran). Apabila mahasiswa belum menyelesaikan studi selama 5 tahun, pada tahun akademik berikutnya dikenakan tarif kuliah angkatan di bawahnya, demikian berlaku untuk tahun berikutnya.',
+      otherFees:
+        'Biaya lain yang timbul akibat sanksi peraturan akademik/peraturan keuangan diatur dengan peraturan tersendiri (seperti denda hutang, denda KRS, denda cuti, denda bolos, denda tunggu ujian, dan lain-lain).',
+    },
+    source: 'Sumber: Tabel Tarif Kuliah Program Sarjana (S1) Calon Mahasiswa Akademik {year}.',
+    ctaTitle: 'Siap menjadi mahasiswa Atma Jaya?',
+    ctaBody: 'Pendaftaran program sarjana dilakukan melalui website PMB dengan akun pendaftar.',
+  },
   cta: {
     title: 'Mulai Aktivitas Kampus Anda',
     description: 'Akses layanan dan informasi akademik Atma Jaya melalui satu ekosistem digital.',

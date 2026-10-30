@@ -52,7 +52,7 @@ export function TuitionSection() {
   const vars = { year: TUITION.academicYear, revision: TUITION.revision }
 
   return (
-    <section id={SECTION_IDS.tuition} aria-labelledby="tuition-title" className="lp-section lp-warm">
+    <section id={SECTION_IDS.tuition} aria-labelledby="tuition-title" className="lp-section bg-lp-canvas">
       <div className="lp-container">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <SectionHeader id="tuition-title" eyebrow={t.eyebrow} title={t.title} description={fill(t.description, vars)} />
@@ -296,7 +296,6 @@ function TuitionCards({ program, durationIndex }: { program: TuitionProgram; dur
 function ProgramFooter({ program }: { program: TuitionProgram }) {
   const { m } = useLandingI18n()
   const t = m.tuition
-  const openContact = useLandingUi((s) => s.openContact)
 
   return (
     <div className="mt-6 grid gap-5 lg:grid-cols-12">
@@ -327,25 +326,35 @@ function ProgramFooter({ program }: { program: TuitionProgram }) {
         <p className="mt-5 border-t border-lp-line pt-4 text-[0.8125rem] leading-relaxed text-lp-subtle">{t.exclusions}</p>
       </div>
 
-      <div className="flex flex-col gap-6 rounded-lp border border-lp-brand/20 bg-lp-brand-soft p-5 sm:p-6 lg:col-span-4">
-        <div>
-          <span className="flex h-11 w-11 items-center justify-center rounded-lp bg-lp-brand text-lp-onbrand shadow-lp-sm">
-            <GraduationCap size={20} aria-hidden />
-          </span>
-          <h3 className="lp-h3 mt-4 text-lp-fg">{t.ctaTitle}</h3>
-          <p className="lp-small mt-2 text-lp-muted">{t.ctaBody}</p>
-          <p className="mt-3 text-[0.75rem] leading-relaxed text-lp-subtle">{fill(t.source, { year: TUITION.academicYear, revision: TUITION.revision })}</p>
-        </div>
-        <div className="mt-auto flex flex-col gap-3">
-          <Link to={PMB.register} className={buttonClass('primary', 'md', 'w-full')}>
-            {t.register}
-            <ArrowRight size={16} aria-hidden />
-          </Link>
-          <Button variant="secondary" onClick={openContact} className="w-full">
-            <MessageSquare size={16} aria-hidden />
-            {t.ask}
-          </Button>
-        </div>
+      <TuitionCta title={t.ctaTitle} body={t.ctaBody} source={fill(t.source, { year: TUITION.academicYear, revision: TUITION.revision })} />
+    </div>
+  )
+}
+
+/** The admissions entry points next to the notes, shared by the undergraduate and postgraduate tables. */
+export function TuitionCta({ title, body, source, className }: { title: string; body: string; source: string; className?: string }) {
+  const { m } = useLandingI18n()
+  const openContact = useLandingUi((s) => s.openContact)
+
+  return (
+    <div className={cn('flex flex-col gap-6 rounded-lp border border-lp-brand/20 bg-lp-brand-soft p-5 sm:p-6 lg:col-span-4', className)}>
+      <div>
+        <span className="flex h-11 w-11 items-center justify-center rounded-lp bg-lp-brand text-lp-onbrand shadow-lp-sm">
+          <GraduationCap size={20} aria-hidden />
+        </span>
+        <h3 className="lp-h3 mt-4 text-lp-fg">{title}</h3>
+        <p className="lp-small mt-2 text-lp-muted">{body}</p>
+        <p className="mt-3 text-[0.75rem] leading-relaxed text-lp-subtle">{source}</p>
+      </div>
+      <div className="mt-auto flex flex-col gap-3">
+        <Link to={PMB.register} className={buttonClass('primary', 'md', 'w-full')}>
+          {m.tuition.register}
+          <ArrowRight size={16} aria-hidden />
+        </Link>
+        <Button variant="secondary" onClick={openContact} className="w-full">
+          <MessageSquare size={16} aria-hidden />
+          {m.tuition.ask}
+        </Button>
       </div>
     </div>
   )
@@ -365,7 +374,7 @@ function StudyName({ study }: { study: TuitionStudy }) {
   )
 }
 
-function ColumnHint({ children }: { children: string }) {
+export function ColumnHint({ children }: { children: string }) {
   return <span className="mt-0.5 block text-[0.7188rem] font-normal leading-snug text-lp-subtle">{children}</span>
 }
 

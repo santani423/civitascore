@@ -53,7 +53,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: 'services', target: SECTION_IDS.services, covers: [SECTION_IDS.services] },
   { key: 'academic', items: ACADEMIC_ITEMS },
   { key: 'studentAffairs', items: STUDENT_AFFAIRS_PAGES },
-  { key: 'info', target: SECTION_IDS.info, covers: [SECTION_IDS.info, SECTION_IDS.tuition] },
+  { key: 'info', target: SECTION_IDS.info, covers: [SECTION_IDS.info, SECTION_IDS.undergraduateTuition, SECTION_IDS.tuition] },
 ]
 
 /** Every home-page section the navigation reaches, top-level or inside a group, in page order (the footer lists these). */

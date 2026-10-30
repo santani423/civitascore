@@ -1,0 +1,36 @@
+{
+  "academicYear": "2027/2028",
+  "currency": "IDR",
+  "uniform": { "tourism": 2500000, "mechanicalEngineering": 300000 },
+  "programs": [
+    { "key": "banggaAtma", "initialPayment": { "general": 5000000, "medicine": 30000000, "education": 3000000 } },
+    { "key": "familyAlumni", "initialPayment": { "general": 5000000, "medicine": 30000000, "education": 3000000 } },
+    { "key": "siblings", "initialPayment": { "general": 5000000, "medicine": 30000000, "education": 3000000 } },
+    { "key": "teacherStaffChildren", "initialPayment": { "general": 5000000, "medicine": 30000000, "education": 3000000 } },
+    { "key": "atmaPriority", "initialPayment": { "general": 3000000, "medicine": 30000000, "education": 1500000 } },
+    { "key": "atmaUnggul", "initialPayment": { "general": 5000000, "medicine": 30000000, "education": 3000000 } },
+    { "key": "futureLeaders", "initialPayment": { "general": 5000000, "medicine": 30000000, "education": 3000000 } }
+  ],
+  "studies": [
+    { "name": "Manajemen", "regularSpp": 35000000, "semesterFee": 19300000, "specialSpp": { "banggaAtma": 18250000, "familyAlumni": 15750000, "siblings": 15750000, "teacherStaffChildren": 15750000, "atmaPriority": 14000000, "atmaUnggul": 15750000, "futureLeaders": 15750000 } },
+    { "name": "Akuntansi", "regularSpp": 40000000, "semesterFee": 19754000, "specialSpp": { "banggaAtma": 20500000, "familyAlumni": 18000000, "siblings": 18000000, "teacherStaffChildren": 18000000, "atmaPriority": 16000000, "atmaUnggul": 18000000, "futureLeaders": 18000000 } },
+    { "name": "Ekonomi Pembangunan", "regularSpp": 16000000, "semesterFee": 14890000, "specialSpp": { "banggaAtma": 9700000, "familyAlumni": 7200000, "siblings": 7200000, "teacherStaffChildren": 7200000, "atmaPriority": 6400000, "atmaUnggul": 7200000, "futureLeaders": 7200000 } },
+    { "name": "Administrasi Bisnis", "regularSpp": 33000000, "semesterFee": 19180000, "specialSpp": { "banggaAtma": 17350000, "familyAlumni": 14850000, "siblings": 14850000, "teacherStaffChildren": 14850000, "atmaPriority": 13200000, "atmaUnggul": 14850000, "futureLeaders": 14850000 } },
+    { "name": "Ilmu Komunikasi", "regularSpp": 40000000, "semesterFee": 18862000, "specialSpp": { "banggaAtma": 20500000, "familyAlumni": 18000000, "siblings": 18000000, "teacherStaffChildren": 18000000, "atmaPriority": 16000000, "atmaUnggul": 18000000, "futureLeaders": 18000000 } },
+    { "name": "Pariwisata", "regularSpp": 32000000, "semesterFee": 20600000, "specialSpp": { "banggaAtma": 16900000, "familyAlumni": 14400000, "siblings": 14400000, "teacherStaffChildren": 14400000, "atmaPriority": 12800000, "atmaUnggul": 14400000, "futureLeaders": 14400000 } },
+    { "name": "Pendidikan Bahasa Inggris", "regularSpp": 23000000, "semesterFee": 12500000, "specialSpp": { "banggaAtma": 12850000, "familyAlumni": 10350000, "siblings": 10350000, "teacherStaffChildren": 10350000, "atmaPriority": 9200000, "atmaUnggul": 10350000, "futureLeaders": 10350000 } },
+    { "name": "Pendidikan Keagamaan Katolik", "regularSpp": 6000000, "semesterFee": 6000000, "specialSpp": { "banggaAtma": 4000000, "familyAlumni": 2700000, "siblings": 2700000, "teacherStaffChildren": 2700000, "atmaPriority": 2400000, "atmaUnggul": 2700000, "futureLeaders": 2700000 } },
+    { "name": "Bimbingan dan Konseling", "regularSpp": 6000000, "semesterFee": 10000000, "specialSpp": { "banggaAtma": 4000000, "familyAlumni": 2700000, "siblings": 2700000, "teacherStaffChildren": 2700000, "atmaPriority": 2400000, "atmaUnggul": 2700000, "futureLeaders": 2700000 } },
+    { "name": "Pendidikan Guru Sekolah Dasar", "regularSpp": 9000000, "semesterFee": 10750000, "specialSpp": { "banggaAtma": 6000000, "familyAlumni": 4050000, "siblings": 4050000, "teacherStaffChildren": 4050000, "atmaPriority": 3600000, "atmaUnggul": 4050000, "futureLeaders": 4050000 } },
+    { "name": "Teknik Mesin", "regularSpp": 29654000, "semesterFee": 22119000, "specialSpp": { "banggaAtma": 15844300, "familyAlumni": 13344300, "siblings": 13344300, "teacherStaffChildren": 13344300, "atmaPriority": 11861000, "atmaUnggul": 13344300, "futureLeaders": 13344300 } },
+    { "name": "Teknik Elektro", "regularSpp": 24255000, "semesterFee": 19221000, "specialSpp": { "banggaAtma": 13414750, "familyAlumni": 10914750, "siblings": 10914750, "teacherStaffChildren": 10914750, "atmaPriority": 9702000, "atmaUnggul": 10914750, "futureLeaders": 10914750 } },
+    { "name": "Teknik Industri", "regularSpp": 28300000, "semesterFee": 20827000, "specialSpp": { "banggaAtma": 15235000, "familyAlumni": 12735000, "siblings": 12735000, "teacherStaffChildren": 12735000, "atmaPriority": 11320000, "atmaUnggul": 12735000, "futureLeaders": 12735000 } },
+    { "name": "Sistem Informasi", "regularSpp": 15000000, "semesterFee": 15700000, "specialSpp": { "banggaAtma": 9250000, "familyAlumni": 6750000, "siblings": 6750000, "teacherStaffChildren": 6750000, "atmaPriority": 6000000, "atmaUnggul": 6750000, "futureLeaders": 6750000 } },
+    { "name": "Ilmu Hukum", "regularSpp": 36500000, "semesterFee": 19660000, "specialSpp": { "banggaAtma": 19000000, "familyAlumni": 16425000, "siblings": 16425000, "teacherStaffChildren": 16425000, "atmaPriority": 14600000, "atmaUnggul": 16425000, "futureLeaders": 16425000 } },
+    { "name": "Kedokteran", "regularSpp": 457000000, "semesterFee": 42275000, "specialSpp": { "banggaAtma": 379900000, "familyAlumni": 339000000, "siblings": 339000000, "teacherStaffChildren": 339000000, "atmaPriority": 319900000, "atmaUnggul": 339000000, "futureLeaders": 339000000 } },
+    { "name": "Farmasi", "regularSpp": 27500000, "semesterFee": 15100000, "specialSpp": { "banggaAtma": 14875000, "familyAlumni": 12375000, "siblings": 12375000, "teacherStaffChildren": 12375000, "atmaPriority": 11000000, "atmaUnggul": 12375000, "futureLeaders": 12375000 } },
+    { "name": "Psikologi", "regularSpp": 45000000, "semesterFee": 23405000, "specialSpp": { "banggaAtma": 23250000, "familyAlumni": 20250000, "siblings": 20250000, "teacherStaffChildren": 20250000, "atmaPriority": 18000000, "atmaUnggul": 20250000, "futureLeaders": 20250000 } },
+    { "name": "Bioteknologi", "regularSpp": 54000000, "semesterFee": 27569000, "specialSpp": { "banggaAtma": 27300000, "familyAlumni": 24300000, "siblings": 24300000, "teacherStaffChildren": 24300000, "atmaPriority": 21600000, "atmaUnggul": 24300000, "futureLeaders": 24300000 } },
+    { "name": "Teknologi Pangan", "regularSpp": 54000000, "semesterFee": 28520000, "specialSpp": { "banggaAtma": 27300000, "familyAlumni": 24300000, "siblings": 24300000, "teacherStaffChildren": 24300000, "atmaPriority": 21600000, "atmaUnggul": 24300000, "futureLeaders": 24300000 } }
+  ]
+}

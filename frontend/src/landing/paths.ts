@@ -51,6 +51,7 @@ export const SECTION_IDS = {
   services: 'layanan',
   academic: 'akademik',
   info: 'informasi',
+  undergraduateTuition: 'biaya-sarjana',
   tuition: 'biaya',
 } as const
 

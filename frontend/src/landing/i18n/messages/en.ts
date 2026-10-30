@@ -853,6 +853,58 @@ export const en: Messages = {
     register: 'Register as a prospective student',
     ask: 'Ask about tuition',
   },
+  undergraduateTuition: {
+    title: "Bachelor's Program (S1) Tuition Fees",
+    description:
+      'First-semester tuition details for prospective students of Academic Year {year}, across {n} special programs. Choose a program to see its rates for each study program.',
+    badge: 'AY {year}',
+    programsLabel: 'Choose a special program',
+    programs: {
+      banggaAtma: 'Bangga Atma',
+      familyAlumni: 'Alumni Family',
+      siblings: 'Siblings',
+      teacherStaffChildren: 'Children of School Teachers & Staff',
+      atmaPriority: 'Atma Priority Program',
+      atmaUnggul: 'Atma Unggul',
+      futureLeaders: 'Future Leaders',
+    },
+    summary: {
+      sppFrom: 'Special SPP from {amount}',
+      initialPaymentFrom: 'Initial Payment from {amount}',
+    },
+    caption: 'First-semester tuition details, {program}, Academic Year {year}, in Indonesian Rupiah',
+    columns: {
+      regularSpp: 'Regular SPP',
+      specialSpp: 'Special SPP: {program}',
+      semesterFee: 'Tuition per semester',
+    },
+    regularSppNote: 'The regular SPP is shown struck through; the special SPP of the selected program is the rate that applies.',
+    initialPayment: {
+      title: 'Initial Payment Amount',
+      categories: {
+        general: 'Other study programs',
+        medicine: 'Kedokteran (Medicine)',
+        education: 'Study programs in the Fakultas Pendidikan dan Bahasa',
+      },
+      installments: 'Installment details for tuition after the Initial Payment/confirmation are available at {link}.',
+    },
+    notesTitle: 'Notes',
+    notes: {
+      oneTimeFees: 'SPP (Education Development Contribution) and the uniform are paid only once, upon acceptance as a new student.',
+      firstSemester:
+        'First-semester tuition consists of SPP + per-credit (SKS) or package tuition + Core Tuition (Tarif Kuliah Pokok) + Semester Registration Fee + uniform (Pariwisata: {tourismUniform} and Teknik Mesin: {mechanicalUniform} only).',
+      nextSemesters: 'Tuition for the second semester onward consists of per-credit (SKS) or package tuition + Core Tuition (Tarif Kuliah Pokok) + Semester Registration Fee.',
+      fullPayment:
+        'Paying in full earns a 3% discount on the remaining first-semester balance (after the Initial Payment). Full payment must be made one working day before the payment due date shown in MyAtma. The 3% discount becomes a deposit toward the second-semester payment.',
+      fixedRates:
+        'Rates stay fixed for 5 years (excluding clinical education at the Faculty of Medicine). Students who have not completed their studies within 5 years are charged the tuition rate of the cohort below theirs in the following academic year, and likewise for each year after that.',
+      otherFees:
+        'Other charges arising from sanctions under academic or financial regulations are governed by separate regulations (such as penalties for debts, course registration (KRS), leave, truancy, exam waiting, and others).',
+    },
+    source: "Source: Bachelor's Program (S1) Tuition Table for Prospective Students of Academic Year {year}.",
+    ctaTitle: 'Ready to join Atma Jaya?',
+    ctaBody: "Applications for bachelor's programs are made on the admissions (PMB) website with an applicant account.",
+  },
   cta: {
     title: 'Start Your Campus Activities',
     description: 'Access Atma Jaya academic services and information through one digital ecosystem.',

@@ -11,6 +11,7 @@ import { AcademicSection } from '../components/sections/AcademicSection'
 import { StudentLifeTeaser } from '../components/sections/StudentLifeTeaser'
 import { InfoSection } from '../components/sections/InfoSection'
 import { TuitionSection } from '../components/sections/TuitionSection'
+import { UndergraduateTuitionSection } from '../components/sections/UndergraduateTuitionSection'
 import { FinalCTA } from '../components/sections/FinalCTA'
  
 export function HomePage() {
@@ -28,6 +29,7 @@ export function HomePage() {
       <AcademicSection />
       <StudentLifeTeaser />
       <InfoSection />
+      <UndergraduateTuitionSection />
       <TuitionSection />
       <FinalCTA />
     </>
