@@ -19,8 +19,12 @@ abstract final class AppTheme {
         ).copyWith(
           primary: AppColorsLight.primary,
           onPrimary: Colors.white,
+          primaryContainer: AppColorsLight.primaryLight,
+          onPrimaryContainer: AppColorsLight.primaryHover,
           secondary: AppColorsLight.accent,
           onSecondary: Colors.white,
+          secondaryContainer: AppColorsLight.primaryLight,
+          onSecondaryContainer: AppColorsLight.primaryHover,
           error: AppColorsLight.danger,
           surface: AppColorsLight.surface,
           onSurface: AppColorsLight.textPrimary,
@@ -30,6 +34,7 @@ abstract final class AppTheme {
           surfaceContainerLowest: Colors.white,
           surfaceContainerLow: AppColorsLight.background,
           surfaceContainer: AppColorsLight.surfaceHover,
+          surfaceContainerHigh: AppColorsLight.cream,
         ),
     background: AppColorsLight.background,
     palette: AppPalette.light,
@@ -42,10 +47,14 @@ abstract final class AppTheme {
           seedColor: AppColorsDark.primary,
           brightness: Brightness.dark,
         ).copyWith(
-          primary: AppColorsDark.primaryHover,
+          primary: AppColorsDark.primary,
           onPrimary: AppColorsDark.textInverted,
+          primaryContainer: AppColorsDark.primaryLight,
+          onPrimaryContainer: AppColorsDark.primaryHover,
           secondary: AppColorsDark.accent,
           onSecondary: AppColorsDark.textInverted,
+          secondaryContainer: AppColorsDark.primaryLight,
+          onSecondaryContainer: AppColorsDark.primaryHover,
           error: AppColorsDark.danger,
           surface: AppColorsDark.surface,
           onSurface: AppColorsDark.textPrimary,
@@ -55,6 +64,7 @@ abstract final class AppTheme {
           surfaceContainerLowest: AppColorsDark.background,
           surfaceContainerLow: AppColorsDark.background,
           surfaceContainer: AppColorsDark.surfaceHover,
+          surfaceContainerHigh: AppColorsDark.surfaceElevated,
         ),
     background: AppColorsDark.background,
     palette: AppPalette.dark,
@@ -67,7 +77,7 @@ abstract final class AppTheme {
     required AppPalette palette,
   }) {
     final text = AppTextTheme.build(scheme.onSurface, scheme.onSurfaceVariant);
-    final radius = BorderRadius.circular(AppRadius.sm);
+    final radius = BorderRadius.circular(AppRadius.md);
     final isDark = brightness == Brightness.dark;
 
     return ThemeData(
@@ -175,10 +185,21 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         indicatorColor: scheme.primaryContainer,
         elevation: 0,
-        height: 68,
-        labelTextStyle: WidgetStatePropertyAll(
-          text.labelSmall?.copyWith(color: scheme.onSurface),
-        ),
+        height: 72,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            size: 24,
+            color: selected ? scheme.primary : scheme.onSurfaceVariant,
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return text.labelSmall?.copyWith(
+            color: selected ? scheme.primary : scheme.onSurfaceVariant,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          );
+        }),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: scheme.surface,

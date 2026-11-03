@@ -8,6 +8,7 @@ import '../../../../core/pending/pending_features.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/home_hero.dart';
 import '../../../../core/widgets/notification_bell.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
@@ -51,21 +52,11 @@ class LecturerHomeScreen extends ConsumerWidget {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(AppSpacing.lg),
               children: [
-                Text(
-                  s.greeting(user?.name ?? ''),
-                  style: Theme.of(context).textTheme.headlineSmall,
+                HomeHeroCard(
+                  title: s.greeting(user?.name ?? ''),
+                  initial: user?.name ?? '',
+                  roles: roles,
                 ),
-                if (roles.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.sm),
-                    child: Wrap(
-                      spacing: AppSpacing.sm,
-                      children: [
-                        for (final r in roles)
-                          StatusChip(label: r, tone: StatusTone.primary),
-                      ],
-                    ),
-                  ),
                 if (unread > 0)
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.md),

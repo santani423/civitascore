@@ -48,8 +48,14 @@ void main() {
       ..get('/notifications/unread-count', {'unread_count': 2});
     await pumpApp(t, const LecturerHomeScreen(), api: api, user: testLecturer);
     expect(find.text('Algoritma'), findsOneWidget);
+    await t.dragUntilVisible(
+      find.text('Andi Pratama'),
+      find.byType(ListView),
+      const Offset(0, -200),
+    );
     expect(find.text('Andi Pratama'), findsOneWidget);
     expect(find.textContaining('3 pengajuan'), findsOneWidget);
+    await t.ensureVisible(find.text('Jadwal'));
     await t.tap(find.text('Jadwal'));
     await t.pumpAndSettle();
     expect(find.text('route:/l/schedule'), findsOneWidget);

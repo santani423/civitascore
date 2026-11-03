@@ -4,6 +4,7 @@ import '../../../../core/l10n/core_strings.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/home_hero.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../domain/finance_summary.dart';
 import '../../domain/portal_links.dart';
@@ -37,8 +38,6 @@ class ProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
     final s = context.homeStr;
     final name = profile?.name.isNotEmpty == true
         ? profile!.name
@@ -48,57 +47,15 @@ class ProfileHeader extends StatelessWidget {
       if (profile?.studyProgram != null) profile!.studyProgram!,
       if (profile?.semester != null) '${s.semester} ${profile!.semester}',
     ];
-    final statusTone = switch (profile?.statusValue) {
-      'active' => StatusTone.success,
-      'leave' || 'inactive' => StatusTone.warning,
-      null => StatusTone.neutral,
-      _ => StatusTone.info,
-    };
     return Padding(
       padding: _hPad,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: scheme.primaryContainer,
-            child: Text(
-              name.isEmpty ? '?' : name.characters.first.toUpperCase(),
-              style: text.titleLarge?.copyWith(
-                color: scheme.onPrimaryContainer,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(_greeting(context), style: text.bodySmall),
-                Text(
-                  name,
-                  style: text.titleLarge,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (details.isNotEmpty)
-                  Text(
-                    details.join(' · '),
-                    style: text.bodySmall,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                if (profile?.statusLabel != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  StatusChip(
-                    label: profile!.statusLabel!,
-                    tone: statusTone,
-                    dense: true,
-                  ),
-                ],
-              ],
-            ),
-          ),
+      child: HomeHeroCard(
+        kicker: _greeting(context),
+        title: name,
+        initial: name,
+        roles: [
+          ...details,
+          if (profile?.statusLabel != null) profile!.statusLabel!,
         ],
       ),
     );
