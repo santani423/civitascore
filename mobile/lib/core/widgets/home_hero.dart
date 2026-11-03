@@ -4,8 +4,8 @@ import '../theme/app_colors.dart';
 import '../theme/app_dimensions.dart';
 
 /// Kartu sapaan di bagian atas beranda: avatar inisial, judul sapaan, dan
-/// chip peran. Light mode memakai gradien orange brand; dark mode memakai
-/// surface elevated agar tidak menyilaukan.
+/// chip peran. Light mode memakai navy solid (warna sekunder brand) agar
+/// orange tetap menjadi aksen; dark mode memakai surface elevated.
 class HomeHeroCard extends StatelessWidget {
   const HomeHeroCard({
     super.key,
@@ -31,39 +31,26 @@ class HomeHeroCard extends StatelessWidget {
     final fg = isDark ? theme.colorScheme.onSurface : Colors.white;
     final chipBg = isDark
         ? theme.colorScheme.primary.withValues(alpha: 0.18)
-        : Colors.white.withValues(alpha: 0.2);
+        : Colors.white.withValues(alpha: 0.14);
 
     return Container(
-      clipBehavior: Clip.antiAlias,
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
+        color: isDark ? AppColorsDark.surfaceElevated : AppColorsLight.navy,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        gradient: isDark
-            ? const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColorsDark.surfaceElevated, AppColorsDark.surface],
-              )
-            : const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppColorsLight.primary, AppColorsLight.primaryHover],
-              ),
         border: isDark
             ? Border.all(color: theme.colorScheme.outlineVariant)
             : null,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           CircleAvatar(
-            radius: 26,
-            backgroundColor: isDark
-                ? theme.colorScheme.primary
-                : Colors.white.withValues(alpha: 0.22),
+            radius: 24,
+            backgroundColor: theme.colorScheme.primary,
             child: Text(
               initial.isEmpty ? '?' : initial.characters.first.toUpperCase(),
-              style: text.titleLarge?.copyWith(color: fg),
+              style: text.titleLarge?.copyWith(color: Colors.white),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -75,10 +62,15 @@ class HomeHeroCard extends StatelessWidget {
                   Text(
                     kicker!,
                     style: text.bodySmall?.copyWith(
-                      color: fg.withValues(alpha: 0.85),
+                      color: fg.withValues(alpha: 0.8),
                     ),
                   ),
-                Text(title, style: text.titleLarge?.copyWith(color: fg)),
+                Text(
+                  title,
+                  style: text.titleLarge?.copyWith(color: fg),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 if (roles.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.sm),

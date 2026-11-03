@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/brand_title.dart';
 import '../../../../core/widgets/notification_bell.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../domain/student_dashboard.dart';
-import '../../l10n/student_home_strings.dart';
 import '../providers.dart';
 import '../widgets/home_sections.dart';
 
@@ -24,7 +24,7 @@ class StudentHomeScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.homeStr.title),
+        title: const BrandAppBarTitle(),
         actions: const [NotificationBellButton()],
       ),
       body: AsyncValueView<StudentDashboard>(
@@ -70,6 +70,8 @@ class _Content extends ConsumerWidget {
     final finance = canSeeFinance
         ? ref.watch(studentFinanceSummaryProvider)
         : null;
+    // Urutan mengikuti prioritas: identitas → yang perlu perhatian → ringkasan
+    // akademik → aksi cepat → pengumuman → agenda → nilai → keuangan.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -77,23 +79,23 @@ class _Content extends ConsumerWidget {
         AlertsSection(alerts: data.alerts),
         if (data.academic != null)
           AcademicSection(academic: data.academic!, krs: data.krs),
-        ScheduleSection(today: data.todaySchedule, nextClass: data.nextClass),
-        if (data.attendance != null)
-          AttendanceSection(attendance: data.attendance!),
-        ExamsSection(exams: data.upcomingExams),
-        AssignmentsSection(assignments: data.assignmentsDue),
-        GradesSection(grades: data.recentGrades),
+        QuickActionsGrid(canSeeFinance: canSeeFinance),
         AnnouncementsSection(
           latest: data.latestAnnouncements,
           unread: data.unreadAnnouncements,
         ),
+        ScheduleSection(today: data.todaySchedule, nextClass: data.nextClass),
+        ExamsSection(exams: data.upcomingExams),
+        AssignmentsSection(assignments: data.assignmentsDue),
+        if (data.attendance != null)
+          AttendanceSection(attendance: data.attendance!),
+        GradesSection(grades: data.recentGrades),
         if (finance != null)
           FinanceCard(
             summary: finance.valueOrNull,
             error: finance.hasError ? finance.error : null,
             onRetry: () => ref.invalidate(studentFinanceSummaryProvider),
           ),
-        QuickActionsGrid(canSeeFinance: canSeeFinance),
       ],
     );
   }

@@ -186,6 +186,7 @@ abstract final class AppTheme {
         indicatorColor: scheme.primaryContainer,
         elevation: 0,
         height: 72,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return IconThemeData(

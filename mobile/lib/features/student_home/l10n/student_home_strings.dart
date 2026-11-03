@@ -16,6 +16,9 @@ class StudentHomeStrings {
   String get statusLabel => _p('Status', 'Status', '状态');
   String get academicSummary =>
       _p('Ringkasan akademik', 'Academic summary', '学业概览');
+  String get activeSemester => _p('Semester aktif', 'Active semester', '当前学期');
+  String get academicProgress =>
+      _p('Progres akademik', 'Academic progress', '学业进度');
   String get ipk => _p('IPK', 'GPA', '累计GPA');
   String get ips => _p('IPS', 'Term GPA', '学期GPA');
   String get credits => _p('SKS', 'Credits', '学分');

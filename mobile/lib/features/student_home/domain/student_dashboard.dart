@@ -93,6 +93,7 @@ class HomeAcademic {
     this.passedCredits,
     this.currentTermCredits,
     this.maxCredits,
+    this.remainingCredits,
     this.termLabel,
     this.advisorName,
   });
@@ -107,6 +108,7 @@ class HomeAcademic {
       passedCredits: asInt(j['passed_credits']),
       currentTermCredits: asInt(j['current_term_credits']),
       maxCredits: asInt(j['max_credits']),
+      remainingCredits: asInt(j['remaining_credits']),
       termLabel: asString(asMap(j['current_term'])['label']),
       advisorName: asString(asMap(j['academic_advisor'])['name']),
     );
@@ -119,6 +121,9 @@ class HomeAcademic {
   final int? passedCredits;
   final int? currentTermCredits;
   final int? maxCredits;
+
+  /// SKS yang masih harus ditempuh untuk kurikulum (null bila belum diketahui).
+  final int? remainingCredits;
   final String? termLabel;
   final String? advisorName;
 }

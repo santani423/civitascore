@@ -5,6 +5,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/home_hero.dart';
+import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../domain/finance_summary.dart';
 import '../../domain/portal_links.dart';
@@ -108,6 +109,8 @@ class _AlertTile extends StatelessWidget {
   }
 }
 
+/// Ringkasan akademik: tiga statistik sejajar (tinggi sama) lalu kartu
+/// semester aktif dengan progres SKS.
 class AcademicSection extends StatelessWidget {
   const AcademicSection({super.key, required this.academic, this.krs});
   final HomeAcademic academic;
@@ -116,85 +119,176 @@ class AcademicSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.homeStr;
-    final text = Theme.of(context).textTheme;
-    final termCredits = academic.currentTermCredits;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: s.academicSummary),
         Padding(
           padding: _hPad,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: StatTile(
-                  label: s.ipk,
-                  value: academic.ipk == null
-                      ? '—'
-                      : context.formatNumber(academic.ipk),
-                  icon: Icons.school_outlined,
-                  onTap: () => openAppRoute(context, RoutePaths.studentGrades),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: StatTile(
+                    label: s.ipk,
+                    value: academic.ipk == null
+                        ? '—'
+                        : context.formatNumber(academic.ipk),
+                    icon: Icons.school_outlined,
+                    onTap: () =>
+                        openAppRoute(context, RoutePaths.studentGrades),
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: StatTile(
-                  label: s.ips,
-                  value: academic.ips == null
-                      ? '—'
-                      : context.formatNumber(academic.ips),
-                  icon: Icons.trending_up,
-                  tone: StatusTone.accent,
-                  onTap: () => openAppRoute(context, RoutePaths.studentKhs),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: StatTile(
+                    label: s.ips,
+                    value: academic.ips == null
+                        ? '—'
+                        : context.formatNumber(academic.ips),
+                    icon: Icons.trending_up,
+                    onTap: () => openAppRoute(context, RoutePaths.studentKhs),
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: StatTile(
-                  label: s.creditsPassed,
-                  value:
-                      '${academic.passedCredits ?? academic.totalCredits ?? 0}',
-                  icon: Icons.menu_book_outlined,
-                  tone: StatusTone.info,
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: StatTile(
+                    label: s.creditsPassed,
+                    value:
+                        '${academic.passedCredits ?? academic.totalCredits ?? 0}',
+                    icon: Icons.menu_book_outlined,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        if (krs != null || academic.advisorName != null || termCredits != null)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              0,
-            ),
-            child: AppSurfaceCard(
-              onTap: krs == null
-                  ? null
-                  : () => openAppRoute(context, RoutePaths.studentKrs),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (academic.termLabel != null)
-                    Text(academic.termLabel!, style: text.titleSmall),
-                  if (termCredits != null)
-                    InfoRow(
-                      label: s.creditsThisTerm,
-                      value: s.creditsOf(termCredits, academic.maxCredits),
-                    ),
-                  if (krs != null)
-                    InfoRow(
-                      label: s.krsStatus,
-                      value: krs!.statusLabel ?? krs!.status,
-                    ),
-                  if (academic.advisorName != null)
-                    InfoRow(label: s.advisor, value: academic.advisorName!),
-                ],
-              ),
-            ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.lg,
+            0,
           ),
+          child: _TermCard(academic: academic, krs: krs),
+        ),
+      ],
+    );
+  }
+}
+
+/// Status KRS → nada chip. Status yang tidak dikenal memakai netral.
+StatusTone toneForKrsStatus(String status) => switch (status) {
+  'approved' => StatusTone.success,
+  'rejected' => StatusTone.danger,
+  'submitted' || 'pending' => StatusTone.warning,
+  _ => StatusTone.neutral,
+};
+
+class _TermCard extends StatelessWidget {
+  const _TermCard({required this.academic, this.krs});
+  final HomeAcademic academic;
+  final HomeKrs? krs;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.homeStr;
+    final text = Theme.of(context).textTheme;
+    final termCredits = academic.currentTermCredits;
+    final maxCredits = academic.maxCredits;
+    final passed = academic.passedCredits;
+    final remaining = academic.remainingCredits;
+    final curriculum = passed != null && remaining != null
+        ? passed + remaining
+        : null;
+    return AppSurfaceCard(
+      onTap: krs == null
+          ? null
+          : () => openAppRoute(context, RoutePaths.studentKrs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  academic.termLabel ?? s.activeSemester,
+                  style: text.titleSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (krs != null) ...[
+                const SizedBox(width: AppSpacing.sm),
+                StatusChip(
+                  label: krs!.statusLabel ?? krs!.status,
+                  tone: toneForKrsStatus(krs!.status),
+                  dense: true,
+                ),
+              ],
+            ],
+          ),
+          if (termCredits != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            _ProgressRow(
+              label: s.creditsThisTerm,
+              value: s.creditsOf(termCredits, maxCredits),
+              fraction: maxCredits == null || maxCredits == 0
+                  ? null
+                  : termCredits / maxCredits,
+            ),
+          ],
+          if (curriculum != null && curriculum > 0) ...[
+            const SizedBox(height: AppSpacing.md),
+            _ProgressRow(
+              label: s.academicProgress,
+              value: s.creditsOf(passed, curriculum),
+              fraction: passed! / curriculum,
+            ),
+          ],
+          if (academic.advisorName != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: InfoRow(label: s.advisor, value: academic.advisorName!),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Label + nilai di atas bar progres. [fraction] null → bar tidak ditampilkan
+/// sebagai persentase (tetap sejajar dengan baris lain).
+class _ProgressRow extends StatelessWidget {
+  const _ProgressRow({
+    required this.label,
+    required this.value,
+    required this.fraction,
+  });
+  final String label;
+  final String value;
+  final double? fraction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(label, style: theme.textTheme.bodySmall)),
+            Text(value, style: theme.textTheme.labelMedium),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        LinearProgressIndicator(
+          value: fraction?.clamp(0.0, 1.0).toDouble(),
+          minHeight: 6,
+          color: theme.colorScheme.primary,
+          backgroundColor: theme.colorScheme.outlineVariant,
+        ),
       ],
     );
   }
@@ -717,7 +811,7 @@ class FinanceCard extends StatelessWidget {
         ],
       );
     } else {
-      body = const LinearProgressIndicator();
+      body = const SkeletonBox(height: 56);
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -757,61 +851,110 @@ class QuickActionsGrid extends StatelessWidget {
       (Icons.mail_outline, s.qaRequests, RoutePaths.studentRequests),
       (Icons.event_outlined, s.qaCalendar, RoutePaths.studentCalendar),
     ];
-    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(title: s.quickActions),
         Padding(
           padding: _hPad,
-          child: LayoutBuilder(
-            builder: (context, c) {
-              final cols = c.maxWidth >= 560 ? 8 : 4;
-              final w = (c.maxWidth - (cols - 1) * AppSpacing.sm) / cols;
-              return Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
-                children: [
-                  for (final (icon, label, path) in items)
-                    SizedBox(
-                      width: w,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(AppRadius.lg),
-                        onTap: () => openAppRoute(context, path),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircleAvatar(
-                                radius: 24,
-                                backgroundColor: scheme.primaryContainer,
-                                child: Icon(
-                                  icon,
-                                  color: scheme.onPrimaryContainer,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                label,
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
+          child: AppSurfaceCard(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.md,
+            ),
+            child: _QuickActionGrid(items: items),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Fixed 4-column grid. Short final rows get empty cells rather than wider
+/// tiles, so every column keeps the same width at any screen size.
+class _QuickActionGrid extends StatelessWidget {
+  const _QuickActionGrid({required this.items});
+  final List<(IconData, String, String)> items;
+
+  static const _columns = 4;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      for (var i = 0; i < items.length; i += _columns)
+        items.skip(i).take(_columns).toList(),
+    ];
+    return Column(
+      children: [
+        for (var r = 0; r < rows.length; r++)
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: r == rows.length - 1 ? 0 : AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                for (var c = 0; c < _columns; c++)
+                  Expanded(
+                    child: c < rows[r].length
+                        ? _QuickActionTile(
+                            icon: rows[r][c].$1,
+                            label: rows[r][c].$2,
+                            onTap: () => openAppRoute(context, rows[r][c].$3),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _QuickActionTile extends StatelessWidget {
+  const _QuickActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs,
+          vertical: AppSpacing.sm,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer,
+                borderRadius: BorderRadius.circular(AppRadius.md),
+              ),
+              child: Icon(icon, size: 22, color: scheme.onPrimaryContainer),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              label,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

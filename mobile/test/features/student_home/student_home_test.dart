@@ -197,6 +197,52 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('sections follow overview → quick access → announcements', (
+      tester,
+    ) async {
+      await pumpApp(tester, const StudentHomeScreen(), api: api());
+      double dy(String text) => tester.getTopLeft(find.text(text).first).dy;
+      expect(dy('Ringkasan akademik'), lessThan(dy('Menu cepat')));
+      expect(dy('Menu cepat'), lessThan(dy('Pengumuman')));
+      expect(dy('Pengumuman'), lessThan(dy('Kelas hari ini')));
+    });
+
+    testWidgets('academic stat tiles share one height', (tester) async {
+      await pumpApp(tester, const StudentHomeScreen(), api: api());
+      double tileHeight(String label) => tester
+          .getSize(
+            find
+                .ancestor(of: find.text(label), matching: find.byType(Card))
+                .first,
+          )
+          .height;
+      expect({
+        tileHeight('IPK'),
+        tileHeight('IPS'),
+        tileHeight('SKS lulus'),
+      }, hasLength(1));
+    });
+
+    testWidgets('term card shows SKS and academic progress from data', (
+      tester,
+    ) async {
+      await pumpApp(tester, const StudentHomeScreen(), api: api());
+      expect(find.text('2026/2027 Genap'), findsOneWidget);
+      expect(find.text('20/24'), findsOneWidget); // SKS semester ini
+      expect(find.text('88/92'), findsOneWidget); // lulus / (lulus + sisa)
+      expect(find.text('Disetujui'), findsWidgets);
+    });
+
+    testWidgets('term card falls back to a generic title', (tester) async {
+      final dash = dashboardJson();
+      dash['academic'] = {
+        ...(dash['academic'] as Map<String, dynamic>),
+        'current_term': null,
+      };
+      await pumpApp(tester, const StudentHomeScreen(), api: api(dash: dash));
+      expect(find.text('Semester aktif'), findsOneWidget);
+    });
+
     testWidgets('finance failure does not break dashboard', (tester) async {
       await pumpApp(
         tester,
@@ -275,7 +321,7 @@ void main() {
         themeMode: ThemeMode.dark,
         size: TestScreens.smallPhone,
       );
-      expect(find.text('Home'), findsOneWidget);
+      expect(find.text('One Atma'), findsOneWidget);
       expect(find.text('Quick actions'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -288,7 +334,7 @@ void main() {
         language: AppLanguage.zh,
         size: TestScreens.smallPhone,
       );
-      expect(find.text('首页'), findsOneWidget);
+      expect(find.text('One Atma'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });

@@ -140,7 +140,9 @@ class InfoRow extends StatelessWidget {
 }
 
 /// Bordered card with consistent padding; tappable when [onTap] is set.
-class AppSurfaceCard extends StatelessWidget {
+/// A tappable card eases to 98% while pressed, so the tap has a physical
+/// response on top of the ink splash.
+class AppSurfaceCard extends StatefulWidget {
   const AppSurfaceCard({
     super.key,
     required this.child,
@@ -154,15 +156,33 @@ class AppSurfaceCard extends StatelessWidget {
   final Color? color;
 
   @override
+  State<AppSurfaceCard> createState() => _AppSurfaceCardState();
+}
+
+class _AppSurfaceCardState extends State<AppSurfaceCard> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      color: color,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: padding ?? const EdgeInsets.all(AppSpacing.lg),
-          child: child,
+    final interactive = widget.onTap != null;
+    return AnimatedScale(
+      scale: _pressed ? 0.98 : 1,
+      duration: const Duration(milliseconds: 120),
+      curve: Curves.easeOut,
+      child: Card(
+        color: widget.color,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: widget.onTap,
+          onHighlightChanged: interactive
+              ? (highlighted) {
+                  if (mounted) setState(() => _pressed = highlighted);
+                }
+              : null,
+          child: Padding(
+            padding: widget.padding ?? const EdgeInsets.all(AppSpacing.lg),
+            child: widget.child,
+          ),
         ),
       ),
     );
@@ -306,6 +326,9 @@ class MenuTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
       onTap: onTap,
+      // Ikon sejajar dengan tepi gutter halaman (judul bagian & kartu), bukan
+      // digeser oleh padding internal ListTile.
+      contentPadding: EdgeInsets.zero,
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(

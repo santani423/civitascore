@@ -517,6 +517,7 @@ void main() {
           tester,
           const PayScreen(invoiceId: 'INV1'),
           api: api,
+          size: const Size(411, 1000),
           overrides: [
             uploadPickerProvider.overrideWithValue(
               (context, {required maxMb}) async => const PickedUpload(
@@ -596,7 +597,13 @@ void main() {
           '$_p/transactions/TX1/cancel',
           (_) => FakeResponse.ok(manualTxJson(status: 'cancelled')),
         );
-      await pumpApp(tester, const PayScreen(invoiceId: 'INV1'), api: api);
+      await pumpApp(
+        tester,
+        const PayScreen(invoiceId: 'INV1'),
+        api: api,
+        // Halaman bayar manual lebih tinggi dari layar 891dp default.
+        size: const Size(411, 1000),
+      );
       await tester.tap(find.text('Buat instruksi transfer'));
       await tester.pumpAndSettle();
       await tester.ensureVisible(find.text('Batalkan transaksi'));

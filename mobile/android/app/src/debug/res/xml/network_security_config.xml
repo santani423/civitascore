@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Khusus build debug: menimpa network_security_config di src/main agar HTTP
+     polos diizinkan ke IP LAN mesin pengembang (mis. 192.168.x.x:8000) dari
+     HP fisik. Alamat LAN berubah-ubah, dan network_security_config tidak
+     mendukung CIDR, jadi izin cleartext dibuka untuk seluruh domain. Build
+     release tidak memakai file ini dan tetap wajib HTTPS. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

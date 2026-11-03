@@ -8,6 +8,7 @@ import '../../../../core/pending/pending_features.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/brand_title.dart';
 import '../../../../core/widgets/home_hero.dart';
 import '../../../../core/widgets/notification_bell.dart';
 import '../../../../core/widgets/ui_kit.dart';
@@ -40,7 +41,7 @@ class LecturerHomeScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.navHome),
+        title: const BrandAppBarTitle(),
         actions: const [NotificationBellButton()],
       ),
       body: RefreshIndicator(
@@ -135,26 +136,29 @@ class _TeachingSection extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: StatTile(
-                        label: s.classesTaught,
-                        value: '${classes.length}',
-                        icon: Icons.class_outlined,
-                        onTap: () => context.push(RoutePaths.lecturerTeaching),
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: StatTile(
+                          label: s.classesTaught,
+                          value: '${classes.length}',
+                          icon: Icons.class_outlined,
+                          onTap: () =>
+                              context.push(RoutePaths.lecturerTeaching),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: StatTile(
-                        label: s.todaySessions,
-                        value: '${today.length}',
-                        icon: Icons.today_outlined,
-                        tone: StatusTone.info,
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: StatTile(
+                          label: s.todaySessions,
+                          value: '${today.length}',
+                          icon: Icons.today_outlined,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 if (today.isEmpty)

@@ -149,6 +149,31 @@ class SkeletonList extends StatelessWidget {
   }
 }
 
+/// Single shimmering block for a card that is still loading. Use it inside
+/// the card's own frame so the layout does not jump when data arrives.
+class SkeletonBox extends StatelessWidget {
+  const SkeletonBox({super.key, required this.height, this.width});
+  final double height;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Shimmer.fromColors(
+      baseColor: p.subtleSurface,
+      highlightColor: Theme.of(context).colorScheme.surface,
+      child: Container(
+        height: height,
+        width: width,
+        decoration: BoxDecoration(
+          color: p.subtleSurface,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+      ),
+    );
+  }
+}
+
 /// Renders an [AsyncValue] with consistent loading / error / data states.
 /// Keeps showing previous data while refreshing.
 class AsyncValueView<T> extends StatelessWidget {
