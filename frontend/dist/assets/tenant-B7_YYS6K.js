@@ -1,1 +1,0 @@
-var e=`civitasone-pmb-campus`;function t(){try{let t=new URLSearchParams(window.location.search).get(`kampus`);if(t)return window.localStorage.setItem(e,t),t;let n=window.localStorage.getItem(e);if(n)return n}catch{}return`UAJ`}export{t};

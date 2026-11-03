@@ -64,9 +64,10 @@ class DashboardStatsService
         return [
             'summary' => [
                 'total_students' => (clone $studentQuery)->count(),
-                'total_lecturers' => Lecturer::query()->count(),
+                // Dosen & prodi difilter fakultas (sama dengan tautan kartunya ke /dosen & /program-studi).
+                'total_lecturers' => Lecturer::query()->when($filters['faculty_id'] ?? null, fn ($q, $v) => $q->where('faculty_id', $v))->count(),
                 'total_employees' => Employee::query()->educationStaff()->count(),
-                'total_study_programs' => StudyProgram::query()->count(),
+                'total_study_programs' => StudyProgram::query()->when($filters['faculty_id'] ?? null, fn ($q, $v) => $q->where('faculty_id', $v))->count(),
                 'active_students' => (clone $studentQuery)->where('status', StudentStatus::Active)->count(),
                 'active_classes' => (clone $classQuery)->where('is_active', true)->count(),
                 'unpaid_invoices' => Invoice::query()->whereIn('status', [InvoiceStatus::Unpaid, InvoiceStatus::Partial])->count(),

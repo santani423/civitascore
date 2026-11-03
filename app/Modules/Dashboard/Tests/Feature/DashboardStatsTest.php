@@ -214,6 +214,30 @@ test('the faculty filter narrows student counts to that faculty only', function 
     expect($response->json('data.summary.total_students'))->toBe(2);
 });
 
+test('the faculty filter also narrows lecturer and study program counts, matching their card links', function () {
+    $university = University::factory()->create();
+    app(TenantContext::class)->setUniversityId($university->id);
+
+    $facultyA = Faculty::factory()->create(['university_id' => $university->id]);
+    $facultyB = Faculty::factory()->create(['university_id' => $university->id]);
+    StudyProgram::factory()->count(2)->create(['university_id' => $university->id, 'faculty_id' => $facultyA->id]);
+    StudyProgram::factory()->create(['university_id' => $university->id, 'faculty_id' => $facultyB->id]);
+    Lecturer::factory()->count(3)->create(['university_id' => $university->id, 'faculty_id' => $facultyA->id]);
+    Lecturer::factory()->create(['university_id' => $university->id, 'faculty_id' => $facultyB->id]);
+    app(TenantContext::class)->setUniversityId(null);
+
+    $user = User::factory()->create();
+    grantDashboardPermissions($user, $university, ['lecturers.read', 'study_programs.read']);
+
+    $response = $this->actingAs($user)
+        ->withHeader('X-University-ID', $university->id)
+        ->getJson('/api/v1/dashboard?faculty_id='.$facultyA->id)
+        ->assertApiSuccess();
+
+    $response->assertJsonPath('data.summary.total_lecturers', 3)
+        ->assertJsonPath('data.summary.total_study_programs', 2);
+});
+
 test('a role without a permission never receives that field, even omitted rather than zero', function () {
     $university = University::factory()->create();
     seedAcademicFixture($university);

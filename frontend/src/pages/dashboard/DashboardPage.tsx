@@ -42,6 +42,8 @@ export function DashboardPage() {
   const userName = useAuthStore((state) => state.session?.user.name)
   const navigate = useNavigate()
   const isLecturer = usePermission('lecturer_profile.read')
+  const canReadAgenda = usePermission('academic_calendar.read')
+  const canReadAudit = usePermission('audit_logs.read')
   const [filters, setFilters] = useState<DashboardQueryFilters>({})
 
   const fetchStats = useCallback(() => dashboardService.getStats(filters), [filters])
@@ -185,12 +187,14 @@ export function DashboardPage() {
         <div className="lg:col-span-2">
           <PendingApprovalsTable />
         </div>
-        <div className="lg:col-span-1">
-          <AcademicAgendaList />
-        </div>
+        {canReadAgenda && (
+          <div className="lg:col-span-1">
+            <AcademicAgendaList />
+          </div>
+        )}
       </div>
 
-      <RecentActivityList />
+      {canReadAudit && <RecentActivityList />}
     </div>
   )
 }

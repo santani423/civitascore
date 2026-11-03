@@ -45,7 +45,8 @@ const columns: DataTableColumn<ApprovalRequest>[] = [
 
 export function PendingApprovalsTable() {
   const fetchPending = useCallback(
-    () => approvalRequestService.index({ per_page: 5, filter: { status: 'submitted' } }),
+    // Sama dengan filter kartu "Menunggu Persetujuan" (submitted + in_progress) supaya angka dan daftarnya cocok.
+    () => approvalRequestService.index({ per_page: 5, filter: { status: 'submitted,in_progress' } }),
     [],
   )
   const { data } = useFetch(fetchPending)

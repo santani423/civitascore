@@ -124,31 +124,15 @@ export interface DashboardQueryFilters {
   date_to?: string
 }
 
-export type ActivityType =
-  | 'student_registered'
-  | 'krs_submitted'
-  | 'grade_published'
-  | 'payment_received'
-  | 'letter_approved'
-  | 'complaint_resolved'
-
-export interface ActivityItem {
-  id: string
-  type: ActivityType
-  title: string
-  description: string
-  actor: string
-  timestamp: string
-}
-
-export type AgendaCategory = 'krs' | 'exam' | 'payment' | 'grading' | 'graduation'
-
-export interface AgendaItem {
+/** Satu agenda dari GET /academic-calendar-events (tanggal format YYYY-MM-DD). */
+export interface AcademicCalendarEvent {
   id: string
   title: string
-  category: AgendaCategory
-  startDate: string
-  endDate: string
+  /** Slug enum backend (mis. "midterm_exam") — dipakai menentukan warna badge. */
+  category: string
+  category_label: string
+  start_date: string
+  end_date: string
 }
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'danger'
