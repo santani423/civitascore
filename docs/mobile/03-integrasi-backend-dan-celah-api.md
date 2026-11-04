@@ -380,15 +380,15 @@ Kebutuhan yang belum dipenuhi backend, per baris matriks (baris *Ditunda* berpri
 | MOB-ATT-05 Cek kelayakan ikut ujian berdasarkan kehadiran | GET /krs-items/{krsItem}/exam-eligibility (rancangan D14) belum ada |
 | MOB-ATT-05 Cek kelayakan ikut ujian berdasarkan kehadiran | Tidak ada enforcement di server saat mulai ujian |
 | MOB-ATT-05 Cek kelayakan ikut ujian berdasarkan kehadiran | Kebijakan: apakah memblokir atau hanya memperingatkan belum diputuskan |
-| MOB-ATT-06 Presensi mandiri dengan QR (scan QR dosen) | Kontrak endpoint belum final: D11 /lms/attendance/qr-check-in vs D14 /student/attendance/qr-scan |
-| MOB-ATT-06 Presensi mandiri dengan QR (scan QR dosen) | Tabel attendance_qr_tokens, lecture_sessions, kolom method/lecture_session_id belum ada |
+| MOB-ATT-06 Presensi mandiri dengan QR (scan QR dosen) | Diimplementasikan: `POST /api/v1/student/attendance/qr-scan` (kontrak D14 dipilih); sesi dan QR dosen di `POST /class-sections/{id}/attendance-sessions`, `GET /attendance-sessions/{id}/qr`, `POST /attendance-sessions/{id}/close` |
+| MOB-ATT-06 Presensi mandiri dengan QR (scan QR dosen) | Diganti desainnya: tabel `attendance_sessions` dan kolom `attendances.method`; token dihitung dari secret sesi dan slot 30 detik, tidak disimpan |
 | MOB-ATT-06 Presensi mandiri dengan QR (scan QR dosen) | Aturan geofence/lokasi belum ditetapkan |
 | MOB-ATT-08 Ajukan izin/sakit dengan surat pendukung | Tidak ada endpoint pengajuan izin presensi; belum jelas apakah berupa attendance-correction (D14) |
 | MOB-ATT-09 Ajukan koreksi presensi (mahasiswa) | POST /attendance-corrections (rancangan D14) belum ada |
 | MOB-ATT-09 Ajukan koreksi presensi (mahasiswa) | Bukti: POST /file-uploads sudah ada |
 | MOB-ATT-10 Rekam presensi per pertemuan (batch) | Kepemilikan kelas tidak dipaksa saat flag OFF (dosen dapat merekam kelas lain) |
-| MOB-ATT-10 Rekam presensi per pertemuan (batch) | Tidak ada validasi tanggal vs jadwal / duplikat pertemuan |
-| MOB-ATT-11 Koreksi presensi yang sudah direkam (oleh dosen) | Tidak ada log alasan/riwayat koreksi |
+| MOB-ATT-10 Rekam presensi per pertemuan (batch) | Tanggal tidak boleh di masa depan (zona waktu universitas) dan harus berada dalam periode semester kelas |
+| MOB-ATT-11 Koreksi presensi yang sudah direkam (oleh dosen) | Setiap perubahan tercatat di `audit_logs` (nilai lama dan baru, pengguna, waktu). Alasan opsional dikirim sebagai `reason` |
 | MOB-ATT-11 Koreksi presensi yang sudah direkam (oleh dosen) | Tidak ada endpoint ambil pertemuan tunggal; harus filter dari /attendances |
 | MOB-ATT-12 Lihat riwayat/daftar presensi kelas (dosen) | Tidak ada endpoint daftar pertemuan per kelas; harus group by meeting_number di klien |
 | MOB-ATT-13 Rekap presensi per kelas / per mahasiswa (dosen) | GET /class-sections/{cs}/attendance-recap (D14) belum ada; agregasi klien rapuh untuk kelas besar |

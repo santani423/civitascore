@@ -188,7 +188,7 @@ Rancangan: `RANCANGAN-APLIKASI.md` §4.1–4.22, `RANCANGAN-AKUN-AKADEMIK.md`, `
 | KRS: status `revision_requested`/`locked`, periode add/drop, paket KRS semester awal, riwayat persetujuan terstruktur | ❌ | A.4 |
 | Batas SKS & skala nilai sebagai pengaturan tenant (sekarang hardcoded `SKS_LIMIT_TIERS`, `LetterGrade`) | ❌ | A.4, A.6 |
 | Jurnal mengajar/BAP (`lecture_sessions`), koreksi presensi berotorisasi, batas minimal kehadiran ujian | ❌ | A.5 |
-| Presensi QR, PIN, GPS/geofencing, NFC, wajah, mesin absensi | ❌ | §4.14, `02-edlink` B.3 |
+| Presensi QR mandiri (sesi per pertemuan, QR 30 detik, Android). PIN, GPS/geofencing, NFC, wajah, mesin absensi | ⚠️ | §4.14, `02-edlink` B.3 |
 | Komponen & bobot nilai (`assessment_components`), publikasi nilai, revisi nilai berjejak, pemutihan, nilai tertunda | ❌ | A.6 |
 | Perwalian: catatan konsultasi, daftar bimbingan, mahasiswa berisiko, janji temu | ❌ | A.7 |
 | Mesin cekal generik (sumber akademik, kehadiran, perpustakaan, kemahasiswaan), simulasi aturan | ❌ | A.8 |

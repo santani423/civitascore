@@ -243,7 +243,7 @@ Bagian dari cakupan "akademik" di blueprint besar (`RANCANGAN-APLIKASI.md`) yang
 | §4.9 Jadwal Perkuliahan | Penyusunan jadwal drag-and-drop, deteksi bentrok dosen/mahasiswa/ruangan, jadwal pengganti — belum ada. `class_sections` saat ini tidak punya kolom hari/jam/ruangan sama sekali. |
 | §4.11 Perkuliahan (pertemuan) | Jurnal mengajar, materi, tautan online, diskusi kelas — belum ada. |
 | §4.12 Tugas Mahasiswa | Tugas individu/kelompok, pengumpulan, deteksi keterlambatan — belum ada modul `Assignment`. |
-| §4.14 (metode lanjutan) | Absensi saat ini hanya manual oleh dosen (§4.4) — QR Code, PIN, GPS/geofencing, pengenalan wajah di blueprint belum diimplementasikan. |
+| §4.14 (metode lanjutan) | QR presensi mandiri sudah ada: dosen membuka sesi per pertemuan, QR berganti setiap 30 detik, mahasiswa memindai dari aplikasi Android. PIN, GPS/geofencing, pengenalan wajah, dan mesin absensi belum diimplementasikan. |
 | Cuti mahasiswa, Surat/Dokumen, Wisuda, Evaluasi Dosen, Kuis | Disebut di Portal Mahasiswa (§4.7) tapi **tidak ada satu pun** modul backend — bukan kasus "tinggal sambungkan API", tapi "bangun dari nol". |
 
 ---
@@ -284,6 +284,10 @@ PUT    krs-items/{krsItem}/grade                       grades.create, grades.upd
 
 GET    attendances                                   attendance.read
 POST   class-sections/{classSection}/attendances       attendance.create, attendance.update
+POST   class-sections/{classSection}/attendance-sessions       attendance.create, attendance.update
+GET    attendance-sessions/{attendanceSession}/qr       attendance.create, attendance.update
+POST   attendance-sessions/{attendanceSession}/close       attendance.create, attendance.update
+POST   student/attendance/qr-scan                       student_portal.update
 
 GET    exams                                         exams.read
 POST   exams                                         exams.create
@@ -356,7 +360,7 @@ Skala ini juga **hardcoded** di enum, belum bisa dikustomisasi per universitas l
 
 ### 6.3 Status Kehadiran
 
-Implementasi aktual (`AttendanceStatus`) — **4 status**: `present` (Hadir), `permitted` (Izin), `sick` (Sakit), `absent` (Alpa). Blueprint §4.14 menyebut 6 status (+ Terlambat, Dispensasi) dan metode absensi lanjutan (QR/GPS/wajah) — belum ada, absensi murni input manual oleh dosen per pertemuan.
+Implementasi aktual (`AttendanceStatus`) — **4 status**: `present` (Hadir), `permitted` (Izin), `sick` (Sakit), `absent` (Alpa). Blueprint §4.14 menyebut 6 status (+ Terlambat, Dispensasi) dan metode absensi lanjutan (QR/GPS/wajah) — belum ada, absensi diisi dosen per pertemuan, atau mandiri oleh mahasiswa lewat QR (`method` = `qr`). GPS dan pengenalan wajah belum ada.
 
 ### 6.4 Status Mahasiswa
 
@@ -418,7 +422,7 @@ Berlaku untuk seluruh resource Akademik tanpa kecuali (`TenantScoped` trait): da
 
 Bukan bug baru ditemukan — celah yang **dengan sengaja dibiarkan tercatat** di [BLACK-BOX-TESTING.md](./BLACK-BOX-TESTING.md) §12-13 (skenario NIL-09/ABS-08) supaya tidak terlupa sebelum modul ini dianggap "selesai":
 
-1. **Dosen belum divalidasi harus pengampu kelas.** `PUT /krs-items/{id}/grade` dan `POST /class-sections/{id}/attendances` saat ini menerima aksi dosen mana pun (dengan `grades.create`/`attendance.create`) untuk kelas mana pun di tenant-nya — belum ada pengecekan "apakah dosen ini benar-benar diampu ke `class_section` ini". Perbaikannya butuh relasi eksplisit dosen↔kelas (yang saat ini tidak ada di `class_sections`) plus pengecekan di `GradePolicy`/`AttendancePolicy`.
+1. **Kepemilikan dosen atas kelas.** `PUT /krs-items/{id}/grade`, `POST /class-sections/{id}/attendances`, dan sesi presensi mandiri hanya dapat dipakai dosen pengampu kelas itu bila flag `academic.lecturer_ownership` menyala. Flag tidak bisa dinyalakan selama masih ada kelas aktif di semester berjalan yang belum punya dosen pengampu (`LecturerOwnershipReadiness`).
 2. **Portal Mahasiswa dan data akademik nyata adalah dua jalur terpisah** (§4.7) — risiko terbesar dari sisi produk: pengguna bisa mengira submit KRS lewat portal benar-benar tersimpan padahal tidak ada request yang terkirim sama sekali.
 3. **Identity link Dosen/Pegawai → User tidak ada** (beda dari `Student.user_id` yang sudah ada) — memblokir Bimbingan Akademik (§4.8) dan validasi kepemilikan kelas di atas (poin 1) sekaligus, karena keduanya butuh cara aman mengaitkan `auth()->user()` ke baris `Lecturer` miliknya.
 4. **Dekan/Kaprodi belum ter-scope ke fakultas/prodi masing-masing** — permission mereka secara teknis membuka baca ke seluruh data tenant, bukan cuma unit organisasi mereka (§2, baris `dean`/`head_of_study_program`).
@@ -458,13 +462,13 @@ Bukan bug baru ditemukan — celah yang **dengan sengaja dibiarkan tercatat** di
 | Portal Mahasiswa — Akademik (KRS/Jadwal/KHS/Nilai/Absensi/Transkrip) | 🧩 UI ada, nol pemanggilan API — data statis |
 | Identity link Student → User | ✅ Ada (`students.user_id`, `StudentUserAccountSeeder`) |
 | Identity link Lecturer/Employee → User | ❌ Belum ada |
-| Validasi dosen = pengampu kelas (Nilai/Absensi) | ❌ Belum ada — celah terdokumentasi (§8) |
+| Validasi dosen = pengampu kelas (Nilai/Absensi) | ✅ Ada di `ClassSectionAccess` dan `AttendancePolicy`; aktif per universitas lewat flag `academic.lecturer_ownership` (default mati) |
 | Bimbingan Akademik (Dosen PA) | ❌ Belum ada tabel/endpoint sama sekali |
 | Jadwal Perkuliahan (drag-and-drop, deteksi bentrok) | ❌ Belum ada |
 | Tugas/Kuis mahasiswa | ❌ Belum ada |
 | Cuti/Surat/Wisuda/Evaluasi Dosen | ❌ Belum ada |
 | Batas SKS & skala nilai huruf — konfigurasi per universitas | ❌ Hardcoded di kode, bukan `system_settings` |
-| Metode absensi lanjutan (QR/GPS/wajah) | ❌ Belum ada — murni input manual |
+| Metode absensi lanjutan (QR/GPS/wajah) | ⚠️ QR presensi mandiri ✅; GPS, wajah, dan PIN ❌ |
 | Scoping baca Dekan/Kaprodi ke fakultas/prodi sendiri | ❌ Belum ada — akses baca efektif ke seluruh tenant |
 
 ---
@@ -473,7 +477,7 @@ Bukan bug baru ditemukan — celah yang **dengan sengaja dibiarkan tercatat** di
 
 Urutan realistis berdasarkan apa yang sudah punya fondasi vs yang butuh desain dari nol:
 
-1. **Validasi kepemilikan kelas untuk dosen** (§8 poin 1) — risiko keamanan/integritas data paling murah diperbaiki karena hanya butuh tambah relasi dosen↔kelas + satu pengecekan di `GradePolicy`/`AttendancePolicy`, tidak butuh tabel/modul baru.
+1. **Kepemilikan kelas untuk dosen** (§8 poin 1) sudah diterapkan di balik flag. Langkah berikutnya: isi dosen pengampu semua kelas aktif, lalu nyalakan flag `academic.lecturer_ownership`.
 2. **Identity link Lecturer → User** — prasyarat langsung untuk poin 1 secara aman, dan untuk Bimbingan Akademik (§4.8). Ikuti pola `Student.user_id` yang sudah terbukti jalan.
 3. **Sambungkan Portal Mahasiswa (Akademik) ke API asli** — enam halaman (KRS, Jadwal, KHS, Nilai, Absensi, Transkrip) secara teknis sudah bisa dikerjakan sekarang karena `Student.user_id` sudah ada; ini pekerjaan integrasi, bukan pekerjaan modul backend baru.
 4. **Selesaikan layar pengerjaan ujian mahasiswa di Flutter** — endpoint backend sudah lengkap dan teruji (`StudentExamController`), murni pekerjaan UI.
