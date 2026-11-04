@@ -1,0 +1,1 @@
+import{t as e}from"./cn-BrBgqFhF.js";function t(t=!1,n){return e(`rounded-lp-lg border border-lp-line bg-lp-surface shadow-lp-sm`,t&&`group block transition-[box-shadow,transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-lp-brand/30 hover:shadow-lp-lg`,n)}var n=`font-semibold text-lp-brand-text underline-offset-4 hover:underline`;export{n,t};
