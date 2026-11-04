@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Modules\Academic\Controllers\AcademicAdministrationController;
 use Modules\Academic\Controllers\AcademicCalendarEventController;
 use Modules\Academic\Controllers\AttendanceController;
+use Modules\Academic\Controllers\AttendanceCheckInController;
+use Modules\Academic\Controllers\AttendanceSessionController;
 use Modules\Academic\Controllers\ClassSectionController;
 use Modules\Academic\Controllers\CourseController;
 use Modules\Academic\Controllers\CurriculumController;
@@ -80,6 +82,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('attendances', [AttendanceController::class, 'index'])->middleware('permission:attendance.read');
     Route::post('class-sections/{classSection}/attendances', [AttendanceController::class, 'batchStore'])->middleware('permission:attendance.create,attendance.update');
+    Route::post('class-sections/{classSection}/attendance-sessions', [AttendanceSessionController::class, 'store'])->middleware('permission:attendance.create,attendance.update');
+    Route::get('attendance-sessions/{attendanceSession}/qr', [AttendanceSessionController::class, 'qr'])->middleware('permission:attendance.create,attendance.update');
+    Route::post('attendance-sessions/{attendanceSession}/close', [AttendanceSessionController::class, 'close'])->middleware('permission:attendance.create,attendance.update');
 
     Route::get('exams', [ExamController::class, 'index'])->middleware('permission:exams.read');
     Route::post('exams', [ExamController::class, 'store'])->middleware('permission:exams.create');
@@ -153,6 +158,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('student/calendar', [StudentAcademicRecordController::class, 'calendar']);
     });
     Route::patch('student/profile', [StudentProfileController::class, 'update'])->middleware('permission:student_portal.update');
+    Route::post('student/attendance/qr-scan', [AttendanceCheckInController::class, 'scan'])->middleware('permission:student_portal.update');
 
     Route::get('student/krs', [StudentKrsController::class, 'show'])->middleware('permission:krs_self_service.read');
     Route::get('student/krs/offerings', [StudentKrsController::class, 'offerings'])->middleware('permission:krs_self_service.read');

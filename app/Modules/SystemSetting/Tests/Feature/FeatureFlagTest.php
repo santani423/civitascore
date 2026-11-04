@@ -2,6 +2,10 @@
 
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
+use Modules\Academic\Models\AcademicTerm;
+use Modules\Academic\Models\ClassSection;
+use Modules\Academic\Models\Course;
+use Modules\Academic\Models\StudyProgram;
 use Modules\Academic\Support\AcademicFeature;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
 use Modules\SystemSetting\Models\FeatureFlag;
@@ -126,4 +130,40 @@ test('the academic flags exist and are disabled by default', function () {
     $this->seed(FeatureFlagSeeder::class);
 
     expect(FeatureFlag::query()->where('key', AcademicFeature::SHORT_TERM)->value('is_enabled'))->toBeTrue();
+});
+
+test('lecturer ownership cannot be enabled while an active class has no lecturer', function () {
+    $university = University::factory()->create();
+    $flag = FeatureFlag::factory()->create(['key' => AcademicFeature::LECTURER_OWNERSHIP, 'is_enabled' => false]);
+
+    app(TenantContext::class)->setUniversityId($university->id);
+    $program = StudyProgram::factory()->create(['university_id' => $university->id]);
+    $term = AcademicTerm::factory()->create(['university_id' => $university->id]);
+    $course = Course::factory()->create(['university_id' => $university->id, 'study_program_id' => $program->id]);
+    $classSection = ClassSection::factory()->create([
+        'university_id' => $university->id, 'study_program_id' => $program->id, 'academic_term_id' => $term->id,
+        'course_id' => $course->id, 'lecturer_id' => null, 'is_active' => true,
+    ]);
+    app(TenantContext::class)->setUniversityId(null);
+
+    actingAsUserWithUniversityPermissions($university, ['feature_flags.update']);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->putJson("/api/v1/feature-flags/{$flag->id}", ['is_enabled' => true])
+        ->assertApiError(409);
+
+    expect(app(FeatureFlagService::class)->isEnabled(AcademicFeature::LECTURER_OWNERSHIP, $university->id))->toBeFalse();
+
+    // Kelas tanpa dosen di semester yang sudah berakhir tidak menghalangi.
+    $pastTerm = AcademicTerm::factory()->create([
+        'university_id' => $university->id, 'academic_year' => '2025/2026',
+        'start_date' => now()->subYear(), 'end_date' => now()->subMonth(),
+    ]);
+    $classSection->update(['academic_term_id' => $pastTerm->id, 'is_active' => true]);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->putJson("/api/v1/feature-flags/{$flag->id}", ['is_enabled' => true])
+        ->assertApiSuccess();
+
+    expect(app(FeatureFlagService::class)->isEnabled(AcademicFeature::LECTURER_OWNERSHIP, $university->id))->toBeTrue();
 });

@@ -7,6 +7,8 @@ use App\Support\Http\ApiResponse;
 use App\Support\Http\ListQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Modules\Academic\Enums\AttendanceStatus;
 use Modules\Academic\Models\Attendance;
 use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Requests\RecordAttendanceBatchRequest;
@@ -38,6 +40,15 @@ class AttendanceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Attendance::class);
+
+        $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+            'filter' => ['nullable', 'array'],
+            'filter.student_id' => ['nullable', 'string', 'max:26'],
+            'filter.class_section_id' => ['nullable', 'string', 'max:26'],
+            'filter.status' => ['nullable', Rule::enum(AttendanceStatus::class)],
+        ]);
 
         $query = Attendance::query()->with(['krsItem.student', 'krsItem.classSection.course']);
         $this->access->restrictToOwnClasses($query, $request->user(), through: 'krsItem');

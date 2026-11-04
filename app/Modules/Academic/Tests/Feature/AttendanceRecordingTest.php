@@ -4,11 +4,14 @@ use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Str;
 use Modules\Academic\Enums\KrsItemStatus;
 use Modules\Academic\Models\AcademicTerm;
+use Modules\Academic\Models\Attendance;
 use Modules\Academic\Models\ClassSection;
 use Modules\Academic\Models\Course;
 use Modules\Academic\Models\KrsItem;
 use Modules\Academic\Models\Student;
 use Modules\Academic\Models\StudyProgram;
+use Modules\AuditLog\Enums\AuditAction;
+use Modules\AuditLog\Models\AuditLog;
 use Modules\Tenancy\Models\University;
 
 function makeClassRosterFixture(University $university, int $studentCount = 2): array
@@ -134,4 +137,105 @@ test('an invalid attendance status is rejected by validation', function () {
             'entries' => [['krs_item_id' => $fixture['krsItems'][0]->id, 'status' => 'not-a-real-status']],
         ])
         ->assertApiError(422);
+});
+
+test('a meeting date in the future is rejected', function () {
+    $university = University::factory()->create();
+    $fixture = makeClassRosterFixture($university, 1);
+
+    actingAsUserWithUniversityPermissions($university, ['attendance.create']);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->postJson("/api/v1/class-sections/{$fixture['classSection']->id}/attendances", [
+            'meeting_number' => 1,
+            'meeting_date' => now()->addDays(2)->toDateString(),
+            'entries' => [['krs_item_id' => $fixture['krsItems'][0]->id, 'status' => 'present']],
+        ])
+        ->assertApiError(422)
+        ->assertJsonValidationErrors('meeting_date');
+});
+
+test('a meeting date outside the class term is rejected', function () {
+    $university = University::factory()->create();
+    $fixture = makeClassRosterFixture($university, 1);
+
+    actingAsUserWithUniversityPermissions($university, ['attendance.create']);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->postJson("/api/v1/class-sections/{$fixture['classSection']->id}/attendances", [
+            'meeting_number' => 1,
+            'meeting_date' => now()->subYear()->toDateString(),
+            'entries' => [['krs_item_id' => $fixture['krsItems'][0]->id, 'status' => 'present']],
+        ])
+        ->assertApiError(422)
+        ->assertJsonValidationErrors('meeting_date');
+});
+
+test('correcting a recorded attendance is written to the audit log with its reason', function () {
+    $university = University::factory()->create();
+    $fixture = makeClassRosterFixture($university, 1);
+    $krsItemId = $fixture['krsItems'][0]->id;
+    $url = "/api/v1/class-sections/{$fixture['classSection']->id}/attendances";
+
+    actingAsUserWithUniversityPermissions($university, ['attendance.create', 'attendance.update']);
+
+    $this->withHeader('X-University-ID', $university->id)->postJson($url, [
+        'meeting_number' => 1,
+        'meeting_date' => now()->toDateString(),
+        'entries' => [['krs_item_id' => $krsItemId, 'status' => 'absent']],
+    ])->assertApiSuccess(201);
+
+    $this->withHeader('X-University-ID', $university->id)->postJson($url, [
+        'meeting_number' => 1,
+        'meeting_date' => now()->toDateString(),
+        'entries' => [['krs_item_id' => $krsItemId, 'status' => 'present']],
+        'reason' => 'Salah input, mahasiswa hadir',
+    ])->assertApiSuccess(201);
+
+    $attendanceId = Attendance::query()->where('krs_item_id', $krsItemId)->value('id');
+
+    $created = AuditLog::query()->where('auditable_type', Attendance::class)->where('auditable_id', $attendanceId)
+        ->where('action', AuditAction::Created)->sole();
+    $updated = AuditLog::query()->where('auditable_type', Attendance::class)->where('auditable_id', $attendanceId)
+        ->where('action', AuditAction::Updated)->sole();
+
+    expect($created->new_values['status'])->toBe('absent')
+        ->and($updated->old_values['status'])->toBe('absent')
+        ->and($updated->new_values['status'])->toBe('present')
+        ->and($updated->reason)->toBe('Salah input, mahasiswa hadir');
+});
+
+test('resubmitting an identical attendance does not write a new audit entry', function () {
+    $university = University::factory()->create();
+    $fixture = makeClassRosterFixture($university, 1);
+    $payload = [
+        'meeting_number' => 1,
+        'meeting_date' => now()->toDateString(),
+        'entries' => [['krs_item_id' => $fixture['krsItems'][0]->id, 'status' => 'present']],
+    ];
+    $url = "/api/v1/class-sections/{$fixture['classSection']->id}/attendances";
+
+    actingAsUserWithUniversityPermissions($university, ['attendance.create', 'attendance.update']);
+
+    $this->withHeader('X-University-ID', $university->id)->postJson($url, $payload)->assertApiSuccess(201);
+    $this->withHeader('X-University-ID', $university->id)->postJson($url, $payload)->assertApiSuccess(201);
+
+    expect(AuditLog::query()->where('auditable_type', Attendance::class)->count())->toBe(1);
+});
+
+test('the attendance list rejects malformed date and status filters', function () {
+    $university = University::factory()->create();
+    makeClassRosterFixture($university, 1);
+
+    actingAsUserWithUniversityPermissions($university, ['attendance.read']);
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->getJson('/api/v1/attendances?date_from=bukan-tanggal')
+        ->assertApiError(422)
+        ->assertJsonValidationErrors('date_from');
+
+    $this->withHeader('X-University-ID', $university->id)
+        ->getJson('/api/v1/attendances?filter[status]=hadir-saja')
+        ->assertApiError(422)
+        ->assertJsonValidationErrors('filter.status');
 });

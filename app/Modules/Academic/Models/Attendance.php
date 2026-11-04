@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Modules\Academic\Database\Factories\AttendanceFactory;
 use Modules\Academic\Enums\AttendanceStatus;
+use Modules\AuditLog\Support\Auditable;
 use Modules\Tenancy\Models\University;
 
 /**
@@ -21,6 +22,7 @@ use Modules\Tenancy\Models\University;
  * @property CarbonImmutable $meeting_date
  * @property AttendanceStatus $status
  * @property string|null $notes
+ * @property string $method manual|qr
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read KrsItem $krsItem
@@ -28,9 +30,9 @@ use Modules\Tenancy\Models\University;
 class Attendance extends Model implements ScopesToInstitution
 {
     /** @use HasFactory<AttendanceFactory> */
-    use HasFactory, HasUlids, TenantScoped;
+    use Auditable, HasFactory, HasUlids, TenantScoped;
 
-    protected $fillable = ['university_id', 'krs_item_id', 'meeting_number', 'meeting_date', 'status', 'notes'];
+    protected $fillable = ['university_id', 'krs_item_id', 'meeting_number', 'meeting_date', 'status', 'notes', 'method'];
 
     protected function casts(): array
     {

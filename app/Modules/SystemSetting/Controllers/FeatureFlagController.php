@@ -9,6 +9,8 @@ use App\Support\Http\ListQuery;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\Academic\Support\AcademicFeature;
+use Modules\Academic\Support\LecturerOwnershipReadiness;
 use Modules\SystemSetting\Models\FeatureFlag;
 use Modules\SystemSetting\Requests\UpdateFeatureFlagRequest;
 use Modules\SystemSetting\Resources\FeatureFlagResource;
@@ -24,6 +26,7 @@ class FeatureFlagController extends Controller
     public function __construct(
         private readonly FeatureFlagService $flags,
         private readonly TenantContext $tenant,
+        private readonly LecturerOwnershipReadiness $lecturerOwnership,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -45,7 +48,20 @@ class FeatureFlagController extends Controller
     {
         $this->authorize('update', FeatureFlag::class);
 
-        $featureFlag = $this->flags->set($featureFlag, $request->validated('is_enabled'), $request->user());
+        $enabled = $request->validated('is_enabled');
+
+        if ($enabled && $featureFlag->key === AcademicFeature::LECTURER_OWNERSHIP) {
+            $unassigned = $this->lecturerOwnership->unassignedClassCount();
+
+            if ($unassigned > 0) {
+                throw new ConflictException(sprintf(
+                    'Isi dosen pengampu untuk %d kelas aktif terlebih dahulu sebelum mengaktifkan kepemilikan dosen.',
+                    $unassigned,
+                ));
+            }
+        }
+
+        $featureFlag = $this->flags->set($featureFlag, $enabled, $request->user());
 
         return ApiResponse::success(
             new FeatureFlagResource($featureFlag),

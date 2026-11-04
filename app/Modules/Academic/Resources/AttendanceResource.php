@@ -27,6 +27,7 @@ class AttendanceResource extends JsonResource
             'meeting_number' => $this->meeting_number,
             'meeting_date' => $this->meeting_date->toDateString(),
             'status' => $this->status->value,
+            'method' => $this->method,
             'notes' => $this->notes,
             'created_at' => $this->created_at->toIso8601String(),
         ];
