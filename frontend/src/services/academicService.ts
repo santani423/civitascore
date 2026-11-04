@@ -3,6 +3,8 @@ import type { ApiSuccessResponse, ListParams, PaginatedResult } from '@/types/ap
 import type {
   AnswerExamAttemptPayload,
   Attendance,
+  AttendanceQr,
+  AttendanceSession,
   ClassSection,
   Course,
   Curriculum,
@@ -22,6 +24,7 @@ import type {
   Lecturer,
   LecturerAccountCredentials,
   LecturerWithCredentials,
+  OpenAttendanceSessionPayload,
   QuestionBankItem,
   RecordAttendanceBatchPayload,
   RecordExamViolationPayload,
@@ -505,6 +508,26 @@ export const attendanceService = {
     const response = await apiClient.post<ApiSuccessResponse<Attendance[]>>(
       `/class-sections/${classSectionId}/attendances`,
       payload,
+    )
+    return response.data.data
+  },
+
+  async openSession(classSectionId: string, payload: OpenAttendanceSessionPayload): Promise<AttendanceSession> {
+    const response = await apiClient.post<ApiSuccessResponse<AttendanceSession>>(
+      `/class-sections/${classSectionId}/attendance-sessions`,
+      payload,
+    )
+    return response.data.data
+  },
+
+  async currentQr(sessionId: string): Promise<AttendanceQr> {
+    const response = await apiClient.get<ApiSuccessResponse<AttendanceQr>>(`/attendance-sessions/${sessionId}/qr`)
+    return response.data.data
+  },
+
+  async closeSession(sessionId: string): Promise<AttendanceSession> {
+    const response = await apiClient.post<ApiSuccessResponse<AttendanceSession>>(
+      `/attendance-sessions/${sessionId}/close`,
     )
     return response.data.data
   },

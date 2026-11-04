@@ -284,8 +284,31 @@ export interface Attendance {
   meeting_number: number
   meeting_date: string
   status: AttendanceStatus
+  method: 'manual' | 'qr'
   notes: string | null
   created_at: string
+}
+
+export interface AttendanceSession {
+  id: string
+  class_section_id: string
+  meeting_number: number
+  meeting_date: string
+  expires_at: string
+  closed_at: string | null
+}
+
+/** QR berjalan: `payload` berganti setiap 30 detik, klien meminta ulang saat `expires_at` tercapai. */
+export interface AttendanceQr {
+  payload: string
+  expires_at: string
+  session_expires_at: string
+}
+
+export interface OpenAttendanceSessionPayload {
+  meeting_number: number
+  meeting_date: string
+  duration_minutes?: number
 }
 
 export interface EnrollKrsPayload {
@@ -308,6 +331,7 @@ export interface RecordAttendanceBatchPayload {
   meeting_number: number
   meeting_date: string
   entries: AttendanceEntryPayload[]
+  reason?: string
 }
 
 export type QuestionSelectionMode = 'all' | 'random' | 'manual'

@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/Card'
 import { Badge, type BadgeVariant } from '@/components/ui/Badge'
 import { useFetch } from '@/hooks/useFetch'
 import { dashboardService } from '@/services/dashboardService'
-import { formatDateRange } from '@/utils/formatters'
+import { formatDateRange, toLocalIsoDate } from '@/utils/formatters'
 
 const AGENDA_WINDOW_DAYS = 90
 const AGENDA_LIMIT = 6
@@ -17,13 +17,6 @@ const CATEGORY_VARIANT: Record<string, BadgeVariant> = {
   holiday: 'neutral',
   graduation: 'success',
   other: 'neutral',
-}
-
-/** Tanggal lokal YYYY-MM-DD (bukan UTC) supaya cocok dengan filter tanggal di backend. */
-function toLocalIsoDate(date: Date): string {
-  const offsetMs = date.getTimezoneOffset() * 60_000
-
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 10)
 }
 
 export function AcademicAgendaList() {

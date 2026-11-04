@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, QrCode } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Card } from '@/components/ui/Card'
@@ -18,6 +18,9 @@ import type { NormalizedApiError } from '@/services/api'
 import type { Attendance, AttendanceStatus, ClassSection, KrsItem } from '@/types/academic'
 import { ROUTES } from '@/constants/routes'
 import { pickFilterParams } from '@/utils/listInitial'
+import { fetchAllPages } from '@/utils/fetchAllPages'
+import { toLocalIsoDate } from '@/utils/formatters'
+import { AttendanceCheckInModal } from './AttendanceCheckInModal'
 
 const STATUS_LABEL: Record<AttendanceStatus, string> = {
   present: 'Hadir',
@@ -46,6 +49,7 @@ export function AttendancePage() {
 
   const list = usePaginatedList<Attendance>({ fetcher: attendanceService.index, initialFilter })
   const [showRecordModal, setShowRecordModal] = useState(false)
+  const [showCheckInModal, setShowCheckInModal] = useState(false)
 
   const columns: DataTableColumn<Attendance>[] = [
     { header: 'Tanggal', cell: (row) => row.meeting_date },
@@ -70,7 +74,12 @@ export function AttendancePage() {
     },
     {
       header: 'Status',
-      cell: (row) => <Badge variant={STATUS_VARIANT[row.status]}>{STATUS_LABEL[row.status]}</Badge>,
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <Badge variant={STATUS_VARIANT[row.status]}>{STATUS_LABEL[row.status]}</Badge>
+          {row.method === 'qr' && <span className="text-xs text-ink-tertiary">QR mandiri</span>}
+        </div>
+      ),
     },
   ]
 
@@ -82,9 +91,14 @@ export function AttendancePage() {
         breadcrumb={[{ label: 'Dashboard', path: ROUTES.dashboard }, { label: 'Akademik' }, { label: 'Absensi' }]}
         actions={
           canRecord && (
-            <Button leftIcon={<Plus className="size-4" />} onClick={() => setShowRecordModal(true)}>
-              Rekam Kehadiran
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" leftIcon={<QrCode className="size-4" />} onClick={() => setShowCheckInModal(true)}>
+                Presensi QR
+              </Button>
+              <Button leftIcon={<Plus className="size-4" />} onClick={() => setShowRecordModal(true)}>
+                Rekam Kehadiran
+              </Button>
+            </div>
           )
         }
       />
@@ -106,6 +120,8 @@ export function AttendancePage() {
         <ListPagination meta={list.meta} page={list.page} onPageChange={list.setPage} itemLabel="data absensi" />
       </Card>
 
+      {showCheckInModal && <AttendanceCheckInModal onClose={() => setShowCheckInModal(false)} />}
+
       {showRecordModal && (
         <RecordAttendanceModal
           onClose={() => setShowRecordModal(false)}
@@ -125,7 +141,8 @@ function RecordAttendanceModal({ onClose, onSaved }: { onClose: () => void; onSa
 
   const [classSectionId, setClassSectionId] = useState('')
   const [meetingNumber, setMeetingNumber] = useState('1')
-  const [meetingDate, setMeetingDate] = useState(() => new Date().toISOString().slice(0, 10))
+  const [meetingDate, setMeetingDate] = useState(() => toLocalIsoDate())
+  const [reason, setReason] = useState('')
 
   const [roster, setRoster] = useState<KrsItem[] | null>(null)
   const [rosterError, setRosterError] = useState<string | null>(null)
@@ -135,9 +152,8 @@ function RecordAttendanceModal({ onClose, onSaved }: { onClose: () => void; onSa
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    classSectionService
-      .index({ per_page: 100 })
-      .then((result) => setClassSections(result.data))
+    fetchAllPages((params) => classSectionService.index(params))
+      .then(setClassSections)
       .catch((error: NormalizedApiError) => setLoadError(error.message))
   }, [])
 
@@ -150,11 +166,12 @@ function RecordAttendanceModal({ onClose, onSaved }: { onClose: () => void; onSa
     setRoster(null)
     setRosterError(null)
 
-    krsItemService
-      .index({ per_page: 100, filter: { class_section_id: classSectionId, status: 'enrolled' } })
-      .then((result) => {
-        setRoster(result.data)
-        setStatuses(Object.fromEntries(result.data.map((krsItem) => [krsItem.id, 'present' as AttendanceStatus])))
+    fetchAllPages((params) => krsItemService.index(params), {
+      filter: { class_section_id: classSectionId, status: 'enrolled' },
+    })
+      .then((rows) => {
+        setRoster(rows)
+        setStatuses(Object.fromEntries(rows.map((krsItem) => [krsItem.id, 'present' as AttendanceStatus])))
       })
       .catch((error: NormalizedApiError) => setRosterError(error.message))
   }, [classSectionId])
@@ -169,6 +186,7 @@ function RecordAttendanceModal({ onClose, onSaved }: { onClose: () => void; onSa
         meeting_number: Number(meetingNumber),
         meeting_date: meetingDate,
         entries: roster.map((krsItem) => ({ krs_item_id: krsItem.id, status: statuses[krsItem.id] ?? 'present' })),
+        reason: reason.trim() || undefined,
       })
       onSaved()
     } catch (error) {
@@ -217,6 +235,14 @@ function RecordAttendanceModal({ onClose, onSaved }: { onClose: () => void; onSa
               onChange={(event) => setMeetingDate(event.target.value)}
             />
           </div>
+
+          <Input
+            label="Alasan perubahan (opsional)"
+            placeholder="Diisi saat mengoreksi kehadiran yang sudah tercatat"
+            value={reason}
+            maxLength={255}
+            onChange={(event) => setReason(event.target.value)}
+          />
 
           {rosterError && <Alert variant="danger">{rosterError}</Alert>}
 
