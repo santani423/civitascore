@@ -108,26 +108,21 @@ const kPendingFeatures = <PendingFeature>[
     ],
   ),
   PendingFeature(
-    key: 'qr_attendance',
-    icon: Icons.qr_code_scanner,
+    key: 'attendance_permissions',
+    icon: Icons.event_busy_outlined,
     audience: _s,
-    titleId: 'Presensi QR & izin',
-    titleEn: 'QR attendance & leave',
-    titleZh: '扫码签到与请假',
-    descId:
-        'Presensi mandiri dengan memindai QR dosen, serta pengajuan izin/sakit.',
-    descEn:
-        'Self check-in by scanning the lecturer\'s QR, and sick/leave requests.',
-    descZh: '扫描教师二维码自助签到，以及病假/事假申请。',
-    endpoints: [
-      'POST /api/v1/student/attendance/qr-scan',
-      'POST /api/v1/student/attendance/permissions',
-    ],
+    titleId: 'Pengajuan izin & sakit',
+    titleEn: 'Leave & sick requests',
+    titleZh: '请假与病假申请',
+    descId: 'Pengajuan izin atau sakit beserta surat pendukung.',
+    descEn: 'Submit leave or sick requests with supporting documents.',
+    descZh: '提交请假或病假申请及证明文件。',
+    endpoints: ['POST /api/v1/student/attendance/permissions'],
     sources: [
       'docs/academic-learning/02-edlink-lms.md',
       'docs/academic-learning/08-api-specification.md',
     ],
-    matrixIds: ['MOB-ATT-06', 'MOB-ATT-08', 'MOB-ATT-09'],
+    matrixIds: ['MOB-ATT-08', 'MOB-ATT-09'],
   ),
   PendingFeature(
     key: 'teaching_journal',

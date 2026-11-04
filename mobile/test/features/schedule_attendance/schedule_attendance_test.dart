@@ -205,12 +205,27 @@ void main() {
     expect(find.text('60%'), findsOneWidget);
     expect(find.text('90,5%'), findsOneWidget);
     expect(find.byKey(const Key('term_selector')), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Presensi QR & izin'), 200);
-    expect(find.text('Presensi QR & izin'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Pengajuan izin & sakit'), 200);
+    expect(find.text('Pengajuan izin & sakit'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Algoritma'), -200);
     await tester.tap(find.text('Algoritma'));
     await tester.pumpAndSettle();
     expect(find.text('route:/s/attendance/k1'), findsOneWidget);
+  });
+
+  testWidgets('attendance check-in button opens the QR scanner route', (
+    tester,
+  ) async {
+    final api = FakeApi()..get('/student/attendance', _summary());
+    await pumpApp(
+      tester,
+      const StudentAttendanceScreen(),
+      api: api,
+      size: TestScreens.smallPhone,
+    );
+    await tester.tap(find.byKey(const Key('check_in_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('route:/s/attendance/check-in'), findsOneWidget);
   });
 
   testWidgets('attendance without threshold shows no banner', (tester) async {

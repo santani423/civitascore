@@ -90,6 +90,32 @@ class ScheduleAttendanceStrings {
       ? _p('Pertemuan', 'Meeting', '课次')
       : _p('Pertemuan $n', 'Meeting $n', '第 $n 次');
 
+  String get checkInAction => _p('Lakukan Presensi', 'Check in', '扫码签到');
+  String get checkInTitle => _p('Presensi mandiri', 'Self check-in', '自助签到');
+  String get checkInHint => _p(
+    'Arahkan kamera ke QR yang ditampilkan dosen di kelas.',
+    'Point the camera at the QR shown by your lecturer in class.',
+    '将摄像头对准教师在课堂上显示的二维码。',
+  );
+  String get checkInInvalidQr => _p(
+    'Ini bukan QR presensi CivitasOne.',
+    'This is not a CivitasOne attendance QR code.',
+    '这不是 CivitasOne 出勤二维码。',
+  );
+  String get checkInSuccessTitle =>
+      _p('Kehadiran tercatat', 'Attendance recorded', '出勤已记录');
+  String get checkInAlreadyTitle =>
+      _p('Sudah tercatat', 'Already recorded', '已记录');
+  String get checkInEnterCode => _p('Masukkan kode', 'Enter code', '输入代码');
+  String get checkInCodeLabel => _p('Kode QR', 'QR code', '二维码代码');
+  String get checkInDone => _p('Selesai', 'Done', '完成');
+  String get checkInScanAgain => _p('Pindai lagi', 'Scan again', '重新扫描');
+  String get checkInCameraError => _p(
+    'Kamera tidak dapat dibuka',
+    'The camera could not be opened',
+    '无法打开相机',
+  );
+
   String meetingStatus(String status, String? serverLabel) => switch (status) {
     'present' => present,
     'permitted' => permitted,

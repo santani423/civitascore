@@ -307,3 +307,42 @@ class AttendanceDetail {
     );
   }
 }
+
+/// Hasil presensi mandiri lewat QR (`POST /student/attendance/qr-scan`).
+class CheckInResult {
+  const CheckInResult({
+    required this.courseName,
+    this.courseCode,
+    this.classCode,
+    this.meetingNumber,
+    this.meetingDate,
+    required this.status,
+    this.statusLabel,
+    this.alreadyRecorded = false,
+  });
+
+  final String courseName;
+  final String? courseCode;
+  final String? classCode;
+  final int? meetingNumber;
+  final DateTime? meetingDate;
+  final String status;
+  final String? statusLabel;
+
+  /// Pindaian kedua untuk pertemuan yang sama: kehadiran sudah tercatat, tidak ditulis ulang.
+  final bool alreadyRecorded;
+
+  factory CheckInResult.fromJson(Object? data) {
+    final j = asMap(data);
+    return CheckInResult(
+      courseName: asString(j['course_name']) ?? '',
+      courseCode: asString(j['course_code']),
+      classCode: asString(j['class_code']),
+      meetingNumber: asInt(j['meeting_number']),
+      meetingDate: asDateTime(j['meeting_date']),
+      status: asString(j['status']) ?? '',
+      statusLabel: asString(j['status_label']),
+      alreadyRecorded: asBool(j['already_recorded']),
+    );
+  }
+}

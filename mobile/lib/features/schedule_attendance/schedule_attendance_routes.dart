@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import 'presentation/screens/attendance_check_in_screen.dart';
 import 'presentation/screens/attendance_detail_screen.dart';
 import 'presentation/screens/attendance_screen.dart';
 import 'presentation/screens/calendar_screen.dart';
@@ -18,6 +19,11 @@ final List<RouteBase> scheduleAttendanceRoutes = <RouteBase>[
     path: '/s/attendance',
     builder: (_, _) => const StudentAttendanceScreen(),
     routes: [
+      // Harus sebelum ':krsItemId' agar 'check-in' tidak dibaca sebagai id KRS.
+      GoRoute(
+        path: 'check-in',
+        builder: (_, _) => const StudentAttendanceCheckInScreen(),
+      ),
       GoRoute(
         path: ':krsItemId',
         builder: (_, state) => StudentAttendanceDetailScreen(

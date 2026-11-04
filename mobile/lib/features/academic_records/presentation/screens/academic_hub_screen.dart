@@ -20,7 +20,7 @@ const _pendingKeys = [
   'thesis',
   'student_affairs',
   'scholarships',
-  'qr_attendance',
+  'attendance_permissions',
 ];
 
 /// Student "Akademik" tab.

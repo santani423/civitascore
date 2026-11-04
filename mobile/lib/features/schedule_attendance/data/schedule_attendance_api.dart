@@ -43,4 +43,12 @@ class ScheduleAttendanceApi {
     cache: true,
     decode: AttendanceDetail.fromJson,
   );
+
+  /// Presensi mandiri. Mahasiswa diresolusi dari akun yang login di server;
+  /// klien hanya mengirim payload QR.
+  Future<CheckInResult> checkInByQr(String payload) => _api.post(
+    '/student/attendance/qr-scan',
+    data: {'payload': payload},
+    decode: CheckInResult.fromJson,
+  );
 }

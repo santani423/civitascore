@@ -155,10 +155,22 @@ class _StudentAttendanceScreenState
           ),
         ),
         const SizedBox(height: AppSpacing.md),
+        FilledButton.icon(
+          key: const Key('check_in_button'),
+          onPressed: () async {
+            await context.push(RoutePaths.studentAttendanceCheckIn);
+            ref.invalidate(studentAttendanceProvider(_termId));
+          },
+          icon: const Icon(Icons.qr_code_scanner),
+          label: Text(sa.checkInAction),
+        ),
+        const SizedBox(height: AppSpacing.md),
         for (final c in d.courses) _CourseCard(course: c, minimum: min),
       ],
       const SizedBox(height: AppSpacing.md),
-      PendingFeatureTile(feature: pendingFeatureByKey('qr_attendance')!),
+      PendingFeatureTile(
+        feature: pendingFeatureByKey('attendance_permissions')!,
+      ),
     ];
   }
 }

@@ -42,6 +42,7 @@ abstract final class RoutePaths {
   static const studentSchedule = '/s/schedule';
   static const studentCalendar = '/s/calendar';
   static const studentAttendance = '/s/attendance';
+  static const studentAttendanceCheckIn = '/s/attendance/check-in';
   static String studentAttendanceDetail(String krsItemId) =>
       '/s/attendance/$krsItemId';
 
