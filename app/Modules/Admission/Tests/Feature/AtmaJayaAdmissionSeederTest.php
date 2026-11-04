@@ -37,17 +37,18 @@ it('seeds a published PMB configuration that the public site, admin and applican
 
     $period = pmbOk($w->asPublic('GET', 'public/periods/active'))->json('data.0');
     expect($period['code'])->toBe('PMB2027')
-        ->and(collect($period['waves'])->pluck('status', 'code')->all())->toBe(['G1' => 'open', 'G2' => 'scheduled']);
+        ->and(collect($period['waves'])->pluck('status', 'code')->all())->toBe(['G1' => 'closed', 'G2' => 'open', 'G3' => 'scheduled']);
 
     expect(pmbOk($w->asPublic('GET', 'public/paths'))->json('data'))->toHaveCount(3)
         ->and(pmbOk($w->asPublic('GET', 'public/paths/usm'))->json('data.waves.0.selection_components'))->toEqualCanonicalizing(['Seleksi Administrasi', 'Tes Potensi Akademik (CBT)', 'Nilai Rapor'])
+        ->and(pmbOk($w->asPublic('GET', 'public/paths/prestasi'))->json('data.waves.0.selection_components'))->toEqualCanonicalizing(['Seleksi Administrasi', 'Nilai Prestasi', 'Nilai Rapor', 'Wawancara'])
         ->and(collect(pmbOk($w->asPublic('GET', 'public/programs/teknik-informatika'))->json('data.fees'))->where('code', 'DPP')->pluck('amount')->sort()->values()->all())->toBe(['12500000.00', '25000000.00'])
         ->and(pmbOk($w->asPublic('GET', 'public/contents?type=faq'))->json('data'))->toHaveCount(6)
         ->and(pmbOk($w->asPublic('GET', 'public/site'))->json('data.legal.terms'))->not->toBeNull();
 
     $w->tenant();
     $periodId = Period::query()->where('code', 'PMB2027')->value('id');
-    $wavePathId = WavePath::query()->whereHas('wave', fn ($q) => $q->where('code', 'G1'))->whereHas('admissionPath', fn ($q) => $q->where('code', 'RAPOR'))->value('id');
+    $wavePathId = WavePath::query()->whereHas('wave', fn ($q) => $q->where('code', 'G2'))->whereHas('admissionPath', fn ($q) => $q->where('code', 'RAPOR'))->value('id');
 
     $admin = User::query()->where('email', 'pmb.admin@atmajaya.com')->firstOrFail();
     expect(pmbOk($w->asStaff($admin, 'GET', "periods/{$periodId}/publish-checklist"))->json('data.ready'))->toBeTrue();
@@ -66,9 +67,10 @@ it('can be re-run without duplicating data', function (): void {
         return [Quota::query()->count(), FeeComponent::query()->count(), Content::query()->count(), WavePath::query()->count(), ExamSession::query()->count(), CbtQuestion::query()->count()];
     };
 
+    // 3 gelombang × 3 jalur; per gelombang 4 sesi CBT + 2 sesi wawancara, 12 soal TPA.
     seedAtmaJayaAdmission();
-    expect($counts())->toBe([25, 34, 16, 6, 8, 24]);
+    expect($counts())->toBe([25, 34, 19, 9, 18, 36]);
 
     seedAtmaJayaAdmission();
-    expect($counts())->toBe([25, 34, 16, 6, 8, 24]);
+    expect($counts())->toBe([25, 34, 19, 9, 18, 36]);
 });

@@ -82,7 +82,7 @@ Gunakan berkas lingkungan terpisah. Laravel memuat `.env.{APP_ENV}` **sebagai pe
 | `dosen@atmajaya.com` | `password` | Dosen + Dosen PA, Universitas Atma Jaya (UAJ) |
 | `dosenpa@atmajaya.com` | `password` | Dosen PA, UAJ |
 
-Seeder bawaan **tidak** membuat sesi ujian PMB beserta penguji dan peserta (periode `PMB2027` sudah dibuat seeder lain sehingga `AtmaJayaAdmissionSeeder::seedPeriod` dilewati). Untuk mencoba modul *Tugas ujian PMB*, buat jadwal, sesi, peserta, dan penugasan `pmb_exam_session_examiners` untuk dosen di basis data lokal tersebut.
+Seeder bawaan membuat sesi ujian PMB Atma Jaya beserta penugasan `dosen@atmajaya.com` (pengawas CBT Lab 1 dan pewawancara Jalur Prestasi, tiga gelombang). Sesi Gelombang 1 sudah selesai dan nilainya terkunci; sesi Gelombang 2 berisi peserta terjadwal (CBT dan wawancara) untuk mencoba modul *Tugas ujian PMB*. Daftar akun pendaftar demo ada di [README](../../README.md#demo-pmb--universitas-atma-jaya-uaj).
 
 ## 5. Keterbatasan emulator
 

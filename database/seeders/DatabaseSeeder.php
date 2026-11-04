@@ -10,6 +10,7 @@ use Modules\Academic\Database\Seeders\LecturerUserAccountSeeder;
 use Modules\Academic\Database\Seeders\StudentUserAccountSeeder;
 use Modules\Admission\Database\Seeders\AdmissionDemoSeeder;
 use Modules\Admission\Database\Seeders\AtmaJayaAdmissionSeeder;
+use Modules\Admission\Database\Seeders\AtmaJayaApplicantDemoSeeder;
 use Modules\HumanResource\Database\Seeders\HumanResourceSeeder;
 use Modules\Notification\Database\Seeders\NotificationChannelSeeder;
 use Modules\SystemSetting\Database\Seeders\FeatureFlagSeeder;
@@ -88,8 +89,8 @@ class DatabaseSeeder extends Seeder
         $this->call(AtmaJayaAccountSeeder::class);
 
         // Data demo website PMB (periode, jalur, kuota, biaya, profil prodi,
-        // konten) untuk setiap kampus. Setelah DemoUniversitiesSeeder, yang
-        // membuat prodi — termasuk Teknik Informatika Atma Jaya.
+        // konten) untuk setiap kampus selain Atma Jaya (punya seeder PMB
+        // sendiri di bawah). Setelah DemoUniversitiesSeeder, yang membuat prodi.
         $this->call(AdmissionDemoSeeder::class);
 
         // Same for lecturers.user_id — every dosen with an email gets a
@@ -98,8 +99,14 @@ class DatabaseSeeder extends Seeder
         // Atma Jaya seeders above are linked too (matched by email).
         $this->call(LecturerUserAccountSeeder::class);
 
-        // PMB Atma Jaya siap pakai: periode terpublikasi, jalur, kuota,
-        // biaya, ujian CBT, konten website, staf PMB, dan pendaftar demo.
+        // PMB Atma Jaya siap pakai: periode terpublikasi (3 gelombang),
+        // jalur, kuota, biaya, ujian CBT & wawancara (penguji dosen@ dari
+        // LecturerUserAccountSeeder di atas), voucher, konten, staf PMB.
         $this->call(AtmaJayaAdmissionSeeder::class);
+
+        // Pendaftar demo di setiap tahap PMB (draft s.d. konversi NIM),
+        // pembayaran, verifikasi, ujian, seleksi & pengesahan, pengumuman,
+        // daftar ulang, chat, broadcast, dan statistik harian dashboard.
+        $this->call(AtmaJayaApplicantDemoSeeder::class);
     }
 }

@@ -20,8 +20,10 @@ use Modules\Admission\Enums\ConsentType;
 use Modules\Admission\Enums\ContentStatus;
 use Modules\Admission\Enums\ContentType;
 use Modules\Admission\Enums\DocumentStage;
+use Modules\Admission\Enums\ExaminerRole;
 use Modules\Admission\Enums\ExamMode;
 use Modules\Admission\Enums\ExamScheduleStatus;
+use Modules\Admission\Enums\InvoiceType;
 use Modules\Admission\Enums\PathCategory;
 use Modules\Admission\Enums\PeriodStatus;
 use Modules\Admission\Enums\SchemeStatus;
@@ -36,6 +38,7 @@ use Modules\Admission\Models\DocumentType;
 use Modules\Admission\Models\ExamRoom;
 use Modules\Admission\Models\ExamSchedule;
 use Modules\Admission\Models\ExamSession;
+use Modules\Admission\Models\ExamSessionExaminer;
 use Modules\Admission\Models\ExamVenue;
 use Modules\Admission\Models\FeeComponent;
 use Modules\Admission\Models\FormTemplate;
@@ -45,6 +48,7 @@ use Modules\Admission\Models\Quota;
 use Modules\Admission\Models\SelectionComponent;
 use Modules\Admission\Models\SelectionScheme;
 use Modules\Admission\Models\StudySystem;
+use Modules\Admission\Models\Voucher;
 use Modules\Admission\Models\Wave;
 use Modules\Admission\Models\WavePath;
 use Modules\Admission\Services\Account\AccountService;
@@ -68,13 +72,17 @@ use RuntimeException;
 /**
  * Konfigurasi PMB siap pakai untuk kampus Atma Jaya (UAJ): modul admission
  * aktif, staf per role PMB, prodi + profil publik, jalur, formulir, skema
- * seleksi (terkunci), periode PMB 2027/2028 terpublikasi dengan dua
+ * seleksi (terkunci), periode PMB 2027/2028 terpublikasi dengan tiga
  * gelombang, kuota, biaya, persyaratan dokumen, ujian CBT + bank soal,
- * konten website (legal, FAQ, berita, panduan), dan satu akun pendaftar demo.
+ * wawancara jalur Prestasi (penguji dosen@atmajaya.com), voucher, konten
+ * website (legal, pernyataan, FAQ, berita, panduan), dan satu akun pendaftar
+ * demo. Pendaftar contoh di setiap tahap dibuat AtmaJayaApplicantDemoSeeder.
  *
- * Tanggal gelombang relatif terhadap waktu seeding (Gelombang 1 langsung
- * dibuka). Dijalankan ulang aman: data yang sudah ada TIDAK ditimpa (kunci
- * alami + firstOrCreate), sehingga perubahan admin tetap terjaga.
+ * Tanggal gelombang relatif terhadap waktu seeding: Gelombang 1 sudah lewat
+ * (ujian, pengumuman, daftar ulang sedang berjalan), Gelombang 2 sedang
+ * dibuka, Gelombang 3 terjadwal. Dijalankan ulang aman: data yang sudah ada
+ * TIDAK ditimpa (kunci alami + firstOrCreate), sehingga perubahan admin tetap
+ * terjaga.
  *
  * university_id selalu diisi eksplisit dan konfigurasi dibuat langsung lewat
  * model (bukan service): DatabaseSeeder memakai WithoutModelEvents sehingga
@@ -85,11 +93,14 @@ use RuntimeException;
  */
 class AtmaJayaAdmissionSeeder extends Seeder
 {
-    private const UNIVERSITY_CODE = 'UAJ';
+    public const UNIVERSITY_CODE = 'UAJ';
 
     private const STAFF_DOMAIN = 'atmajaya.com';
 
-    private const PERIOD_CODE = 'PMB2027';
+    public const PERIOD_CODE = 'PMB2027';
+
+    /** Penguji wawancara & pengawas CBT (akun demo dosen DemoUniversitiesSeeder); fallback panitia seleksi. */
+    public const EXAMINER_EMAIL = 'dosen@atmajaya.com';
 
     public const DEMO_APPLICANT_EMAIL = 'calon.mahasiswa@example.com';
 
@@ -102,6 +113,8 @@ class AtmaJayaAdmissionSeeder extends Seeder
         'pmb.verifikator' => ['Petugas Verifikasi PMB Atma Jaya', 'admission_verifier'],
         'pmb.seleksi' => ['Panitia Seleksi PMB Atma Jaya', 'admission_selection_committee'],
         'pmb.daftarulang' => ['Petugas Daftar Ulang PMB Atma Jaya', 'admission_registrar'],
+        // Verifikasi bukti bayar & pengaju refund; keuangan@atmajaya.com (Kepala Keuangan) yang menyetujui refund (BR-20).
+        'pmb.keuangan' => ['Petugas Keuangan PMB Atma Jaya', 'finance_administrator'],
     ];
 
     private const FACULTIES = [
@@ -155,7 +168,7 @@ class AtmaJayaAdmissionSeeder extends Seeder
         'USM' => ['Ujian Saringan Masuk (CBT)', PathCategory::Regular, true,
             'Seleksi melalui Tes Potensi Akademik berbasis komputer (CBT) di kampus, dikombinasikan dengan nilai rapor.', 350_000, 'SCH-USM', 60, 15],
         'PRESTASI' => ['Jalur Prestasi', PathCategory::Achievement, false,
-            'Untuk siswa berprestasi akademik/non-akademik minimal tingkat kabupaten/kota. Potongan Dana Pengembangan 50%.', 250_000, 'SCH-PRESTASI', 10, 5],
+            'Untuk siswa berprestasi akademik/non-akademik minimal tingkat kabupaten/kota, dilanjutkan wawancara. Potongan Dana Pengembangan 50%.', 250_000, 'SCH-PRESTASI', 3, 2],
     ];
 
     /** Kuota Kelas Karyawan per prodi (hanya jalur Rapor & USM). */
@@ -174,9 +187,26 @@ class AtmaJayaAdmissionSeeder extends Seeder
             ['RAPOR', 'Nilai Rapor', ComponentSource::ReportCard, 30, 2, ['semesters' => [1, 2, 3, 4, 5]]],
         ]],
         'SCH-PRESTASI' => ['Skema Jalur Prestasi', 60, [
-            ['PRESTASI', 'Nilai Prestasi', ComponentSource::Achievement, 60, 1, ['max_items' => 3, 'cap' => 100]],
-            ['RAPOR', 'Nilai Rapor', ComponentSource::ReportCard, 40, 2, ['semesters' => [1, 2, 3, 4, 5]]],
+            ['PRESTASI', 'Nilai Prestasi', ComponentSource::Achievement, 50, 1, ['max_items' => 3, 'cap' => 100]],
+            ['RAPOR', 'Nilai Rapor', ComponentSource::ReportCard, 30, 2, ['semesters' => [1, 2, 3, 4, 5]]],
+            ['WAWANCARA', 'Wawancara', ComponentSource::Interview, 20, 3, null],
         ]],
+    ];
+
+    /**
+     * kode => [nama, urutan, buka, tutup, pengumuman, tutup daftar ulang] (hari relatif terhadap hari seeding).
+     * Gelombang 1 sudah lewat, Gelombang 2 sedang dibuka, Gelombang 3 terjadwal (BR-02: tanpa tumpang tindih).
+     */
+    private const WAVES = [
+        'G1' => ['Gelombang 1', 1, -75, -40, -28, 14],
+        'G2' => ['Gelombang 2', 2, -14, 30, 42, 57],
+        'G3' => ['Gelombang 3', 3, 31, 75, 87, 102],
+    ];
+
+    /** kode => [nama, jenis, nilai, maks potongan, jalur (null = semua), kuota pemakaian] — berlaku selama Gelombang 2. */
+    private const VOUCHERS = [
+        'EARLYBIRD27' => ['Early Bird Gelombang 2', 'percent', 50, 150_000, null, 200],
+        'SEKOLAHMITRA' => ['Sekolah Mitra Atma Jaya', 'fixed', 100_000, null, 'RAPOR', null],
     ];
 
     /** [kode dokumen, tahap, wajib, instruksi] — berlaku untuk semua jalur. */
@@ -251,6 +281,7 @@ class AtmaJayaAdmissionSeeder extends Seeder
                     $this->seedPeriod($paths, $template, $schemes, $programs, $systems);
                 }
 
+                $this->seedVouchers($paths);
                 $this->seedDemoApplicant();
             });
         } finally {
@@ -301,7 +332,12 @@ class AtmaJayaAdmissionSeeder extends Seeder
             $users[$roleSlug] = $user;
         }
 
-        return $users['admission_administrator'];
+        return $users['admission_administrator'] ?? throw new RuntimeException('Staf Administrator PMB tidak terdaftar di STAFF.');
+    }
+
+    private function timezone(): string
+    {
+        return (string) ($this->university->getAttribute('timezone') ?: 'Asia/Jakarta');
     }
 
     /** @return array<string, StudyProgram> kode => prodi */
@@ -369,12 +405,15 @@ class AtmaJayaAdmissionSeeder extends Seeder
             $this->content($type, $type->value, $title, $body, null, $i);
         }
 
+        // Pernyataan wajib dicentang saat mengirim formulir (ApplicationService::activeDeclarations).
+        $this->content(ContentType::Declaration, 'pernyataan-kebenaran-data', 'Pernyataan Kebenaran Data', '<p>Saya menyatakan bahwa seluruh data dan dokumen yang saya kirimkan adalah benar dan dapat dipertanggungjawabkan. Saya bersedia menerima pembatalan kelulusan bila terbukti tidak benar.</p>', null, 0);
+
         $faqs = [
             ['Pendaftaran', 'Apakah saya boleh memilih lebih dari satu program studi?', 'Ya. Setiap jalur mengizinkan hingga dua pilihan program studi dengan urutan prioritas.'],
             ['Pendaftaran', 'Apakah lulusan tahun sebelumnya dapat mendaftar?', 'Dapat, untuk lulusan maksimal dua tahun terakhir pada semua jalur.'],
             ['Pembayaran', 'Bagaimana cara membayar biaya pendaftaran?', 'Setelah formulir dikirim, tagihan muncul di portal. Bayar melalui transfer bank lalu unggah bukti transfer, atau bayar tunai di loket kampus.'],
             ['Pembayaran', 'Berapa lama pembayaran diverifikasi?', 'Bukti transfer diverifikasi bagian keuangan maksimal 1×24 jam kerja.'],
-            ['Seleksi', 'Kapan jadwal ujian CBT untuk jalur USM?', 'Jadwal dan sesi ujian tercantum di kartu peserta yang dapat diunduh di portal setelah berkas diverifikasi.'],
+            ['Seleksi', 'Kapan jadwal ujian CBT untuk jalur USM?', 'Jadwal dan sesi ujian tercantum di kartu peserta yang dapat diunduh di portal setelah berkas diverifikasi. Peserta Jalur Prestasi mengikuti wawancara di hari berikutnya.'],
             ['Daftar Ulang', 'Apa yang harus dilakukan setelah dinyatakan lulus?', 'Konfirmasi penerimaan di portal, lengkapi data daftar ulang, bayar biaya awal, lalu unggah dokumen daftar ulang sebelum batas waktu.'],
         ];
 
@@ -383,9 +422,11 @@ class AtmaJayaAdmissionSeeder extends Seeder
         }
 
         $news = [
-            ['PMB Atma Jaya 2027/2028 Resmi Dibuka', 'Pendaftaran mahasiswa baru tahun akademik 2027/2028 resmi dibuka melalui Jalur Rapor, Ujian Saringan Masuk (CBT), dan Jalur Prestasi. Gelombang 1 dibuka mulai hari ini.', 1],
-            ['Jalur Prestasi: Potongan Dana Pengembangan 50%', 'Calon mahasiswa dengan prestasi minimal tingkat kabupaten/kota berkesempatan memperoleh potongan Dana Pengembangan Pendidikan sebesar 50%.', 3],
-            ['Simulasi Ujian CBT untuk Peserta USM', 'Peserta jalur Ujian Saringan Masuk dapat mempelajari contoh soal Tes Potensi Akademik di halaman Panduan sebelum hari ujian.', 5],
+            ['Pendaftaran Gelombang 2 Dibuka', 'Pendaftaran Gelombang 2 PMB 2027/2028 dibuka melalui Jalur Rapor, Ujian Saringan Masuk (CBT), dan Jalur Prestasi. Gunakan kode voucher EARLYBIRD27 untuk potongan biaya pendaftaran 50%.', 14],
+            ['Pengumuman Hasil Seleksi Gelombang 1', 'Hasil seleksi Gelombang 1 telah diumumkan dan dapat dilihat di portal pendaftar. Peserta yang diterima wajib menyelesaikan daftar ulang sebelum batas waktu.', 28],
+            ['Simulasi Ujian CBT untuk Peserta USM', 'Peserta jalur Ujian Saringan Masuk dapat mempelajari contoh soal Tes Potensi Akademik di halaman Panduan sebelum hari ujian.', 45],
+            ['Jalur Prestasi: Potongan Dana Pengembangan 50%', 'Calon mahasiswa dengan prestasi minimal tingkat kabupaten/kota berkesempatan memperoleh potongan Dana Pengembangan Pendidikan sebesar 50%.', 60],
+            ['PMB Atma Jaya 2027/2028 Resmi Dibuka', 'Pendaftaran mahasiswa baru tahun akademik 2027/2028 resmi dibuka dalam tiga gelombang melalui Jalur Rapor, Ujian Saringan Masuk (CBT), dan Jalur Prestasi.', 75],
         ];
 
         foreach ($news as $i => [$title, $body, $daysAgo]) {
@@ -402,7 +443,7 @@ class AtmaJayaAdmissionSeeder extends Seeder
             $this->content(ContentType::Guide, Str::slug($title), $title, $body, null, $i);
         }
 
-        $this->content(ContentType::Banner, 'gelombang-1-dibuka', 'Pendaftaran Gelombang 1 Dibuka', '<p>Daftar sekarang melalui Jalur Rapor, USM (CBT), atau Jalur Prestasi.</p>', null, 0);
+        $this->content(ContentType::Banner, 'gelombang-2-dibuka', 'Pendaftaran Gelombang 2 Dibuka', '<p>Daftar sekarang melalui Jalur Rapor, USM (CBT), atau Jalur Prestasi. Hasil seleksi Gelombang 1 sudah diumumkan.</p>', null, 0);
         $this->content(ContentType::ReRegistrationInfo, 'info-daftar-ulang', 'Informasi Daftar Ulang', '<p>Peserta yang dinyatakan diterima wajib melakukan daftar ulang sesuai jadwal gelombang: konfirmasi penerimaan, lengkapi data, bayar biaya awal minimal cicilan pertama, dan serahkan dokumen asli untuk diperiksa petugas.</p>', null, 0);
     }
 
@@ -527,31 +568,27 @@ class AtmaJayaAdmissionSeeder extends Seeder
             ['is_current' => false, 'start_date' => '2027-08-01', 'end_date' => '2028-01-31'],
         );
 
-        $today = CarbonImmutable::now($this->university->timezone ?: 'Asia/Jakarta')->startOfDay();
+        $today = CarbonImmutable::now($this->timezone())->startOfDay();
         $at = fn (int $days, int $hour = 23, int $minute = 59) => $today->addDays($days)->setTime($hour, $minute)->setTimezone(config('app.timezone'));
 
         $period = Period::query()->create([
             'university_id' => $uid, 'entry_academic_term_id' => $term->getKey(), 'code' => self::PERIOD_CODE, 'name' => 'PMB 2027/2028',
             'description' => 'Penerimaan mahasiswa baru program sarjana tahun akademik 2027/2028.',
-            'starts_on' => $today->subDays(14)->toDateString(), 'ends_on' => $today->addDays(180)->toDateString(),
+            'starts_on' => $today->subDays(90)->toDateString(), 'ends_on' => $today->addDays(180)->toDateString(),
             'status' => PeriodStatus::Draft, 'created_by' => $adminId, 'updated_by' => $adminId,
         ]);
 
-        // Gelombang 1 sedang dibuka; Gelombang 2 menyusul tanpa tumpang tindih (BR-02).
-        $waves = [
-            ['G1', 'Gelombang 1', 1, -7, 30],
-            ['G2', 'Gelombang 2', 2, 31, 75],
-        ];
         $venue = $this->seedExamVenue();
+        $examiner = $this->examiner();
 
-        foreach ($waves as [$code, $name, $sequence, $opens, $closes]) {
+        foreach (self::WAVES as $code => [$name, $sequence, $opens, $closes, $announce, $reRegistrationCloses]) {
             $wave = Wave::query()->create([
                 'university_id' => $uid, 'period_id' => $period->getKey(), 'code' => $code, 'name' => $name, 'sequence' => $sequence,
                 'registration_opens_at' => $at($opens, 8, 0), 'registration_closes_at' => $at($closes),
                 'payment_deadline_at' => $at($closes + 2), 'form_lock_at' => $at($closes + 3),
                 'exam_starts_on' => $today->addDays($closes + 5)->toDateString(), 'exam_ends_on' => $today->addDays($closes + 6)->toDateString(),
-                'announcement_at' => $at($closes + 10, 10, 0),
-                're_registration_opens_at' => $at($closes + 10, 10, 0), 're_registration_closes_at' => $at($closes + 25),
+                'announcement_at' => $at($announce, 10, 0),
+                're_registration_opens_at' => $at($announce, 10, 0), 're_registration_closes_at' => $at($reRegistrationCloses),
                 'is_ods' => false, 'status' => WaveStatus::Draft, 'created_by' => $adminId, 'updated_by' => $adminId,
             ]);
 
@@ -568,7 +605,11 @@ class AtmaJayaAdmissionSeeder extends Seeder
                 $this->seedDocumentRequirements($wavePath, $pathCode);
 
                 if ($pathCode === 'USM') {
-                    $this->seedCbtSchedule($wave, $wavePath, $schemes[$schemeCode], $venue);
+                    $this->seedCbtSchedule($wave, $wavePath, $schemes[$schemeCode], $venue, $examiner);
+                }
+
+                if ($pathCode === 'PRESTASI') {
+                    $this->seedInterviewSchedule($wave, $wavePath, $schemes[$schemeCode], $venue, $examiner);
                 }
             }
         }
@@ -676,18 +717,31 @@ class AtmaJayaAdmissionSeeder extends Seeder
             'map_url' => 'https://maps.google.com/?q=Universitas+Katolik+Indonesia+Atma+Jaya+Semanggi', 'is_active' => true,
         ]);
 
-        foreach ([['LAB-1', 'Laboratorium Komputer 1', 40, false], ['LAB-2', 'Laboratorium Komputer 2', 40, true]] as [$code, $name, $capacity, $accessible]) {
+        $rooms = [
+            ['LAB-1', 'Laboratorium Komputer 1', 40, false, ['komputer', 'AC', 'proyektor']],
+            ['LAB-2', 'Laboratorium Komputer 2', 40, true, ['komputer', 'AC', 'proyektor']],
+            ['WWC-1', 'Ruang Wawancara Gedung Yustinus', 10, true, ['meja wawancara', 'AC']],
+        ];
+
+        foreach ($rooms as [$code, $name, $capacity, $accessible, $facilities]) {
             ExamRoom::query()->firstOrCreate(['venue_id' => $venue->getKey(), 'code' => $code], [
                 'university_id' => $this->university->getKey(), 'name' => $name, 'capacity' => $capacity, 'is_accessible' => $accessible,
-                'facilities' => ['komputer', 'AC', 'proyektor'], 'is_active' => true,
+                'facilities' => $facilities, 'is_active' => true,
             ]);
         }
 
         return $venue;
     }
 
-    /** Jadwal CBT terpublikasi (2 sesi × 2 lab) + bank soal TPA untuk jalur USM. */
-    private function seedCbtSchedule(Wave $wave, WavePath $wavePath, SelectionScheme $scheme, ExamVenue $venue): void
+    /** Dosen demo bila ada (DemoUniversitiesSeeder), selain itu panitia seleksi — penguji tidak pernah kosong. */
+    private function examiner(): User
+    {
+        return User::query()->where('email', self::EXAMINER_EMAIL)->first()
+            ?? User::query()->where('email', 'pmb.seleksi@'.self::STAFF_DOMAIN)->firstOrFail();
+    }
+
+    /** Jadwal CBT terpublikasi (2 sesi × 2 lab, pengawas di Lab 1) + bank soal TPA untuk jalur USM. */
+    private function seedCbtSchedule(Wave $wave, WavePath $wavePath, SelectionScheme $scheme, ExamVenue $venue, User $proctor): void
     {
         $uid = $this->university->getKey();
         $component = $scheme->components()->where('code', 'TPA')->firstOrFail();
@@ -700,16 +754,15 @@ class AtmaJayaAdmissionSeeder extends Seeder
             'status' => ExamScheduleStatus::Published, 'published_at' => now(), 'created_by' => $this->admin->getKey(),
         ]);
 
-        $examDay = CarbonImmutable::parse($wave->exam_starts_on->toDateString(), $this->university->timezone ?: 'Asia/Jakarta');
+        $examDay = CarbonImmutable::parse($wave->exam_starts_on->toDateString(), $this->timezone());
 
-        foreach (ExamRoom::query()->where('venue_id', $venue->getKey())->orderBy('code')->get() as $room) {
+        foreach (ExamRoom::query()->where('venue_id', $venue->getKey())->where('code', 'like', 'LAB-%')->orderBy('code')->get() as $room) {
             foreach ([['S1', 8], ['S2', 10]] as [$slot, $hour]) {
-                $starts = $examDay->setTime($hour, 0);
-                ExamSession::query()->create([
-                    'university_id' => $uid, 'schedule_id' => $schedule->getKey(), 'room_id' => $room->getKey(), 'code' => $slot.'-'.$room->code,
-                    'starts_at' => $starts->setTimezone(config('app.timezone')), 'ends_at' => $starts->addMinutes(90)->setTimezone(config('app.timezone')),
-                    'checkin_opens_at' => $starts->subMinutes(30)->setTimezone(config('app.timezone')), 'capacity' => $room->capacity, 'participants_count' => 0,
-                ]);
+                $session = $this->examSession($schedule, $room, $slot.'-'.$room->code, $examDay->setTime($hour, 0), 90);
+
+                if ($room->code === 'LAB-1') {
+                    ExamSessionExaminer::query()->create(['university_id' => $uid, 'session_id' => $session->getKey(), 'user_id' => $proctor->getKey(), 'role' => ExaminerRole::Proctor->value]);
+                }
             }
         }
 
@@ -718,6 +771,65 @@ class AtmaJayaAdmissionSeeder extends Seeder
                 'university_id' => $uid, 'schedule_id' => $schedule->getKey(), 'question' => $question,
                 'options' => array_map(fn ($text, $key) => ['key' => $key, 'text' => $text], $options, ['A', 'B', 'C', 'D']),
                 'correct_option' => $correct, 'points' => 1, 'sort_order' => $i,
+            ]);
+        }
+    }
+
+    /**
+     * Wawancara jalur Prestasi di hari kedua jendela ujian (sehari setelah CBT,
+     * sehingga penguji tidak bentrok dengan tugas pengawasnya): 2 sesi.
+     */
+    private function seedInterviewSchedule(Wave $wave, WavePath $wavePath, SelectionScheme $scheme, ExamVenue $venue, User $interviewer): void
+    {
+        $uid = $this->university->getKey();
+        $component = $scheme->components()->where('code', 'WAWANCARA')->firstOrFail();
+        $schedule = ExamSchedule::query()->create([
+            'university_id' => $uid, 'wave_id' => $wave->getKey(), 'selection_component_id' => $component->getKey(),
+            'wave_path_ids' => [$wavePath->getKey()], 'mode' => ExamMode::Interview, 'title' => 'Wawancara Jalur Prestasi '.$wave->name,
+            'exam_date' => $wave->exam_ends_on->toDateString(),
+            'instructions' => 'Bawa sertifikat prestasi asli dan kartu peserta. Wawancara ±15 menit per peserta.',
+            'status' => ExamScheduleStatus::Published, 'published_at' => now(), 'created_by' => $this->admin->getKey(),
+        ]);
+
+        $day = CarbonImmutable::parse($wave->exam_ends_on->toDateString(), $this->timezone());
+        $room = ExamRoom::query()->where('venue_id', $venue->getKey())->where('code', 'WWC-1')->firstOrFail();
+
+        foreach ([['W1', 9], ['W2', 13]] as [$slot, $hour]) {
+            $session = $this->examSession($schedule, $room, $slot.'-'.$room->code, $day->setTime($hour, 0), 180);
+            ExamSessionExaminer::query()->create(['university_id' => $uid, 'session_id' => $session->getKey(), 'user_id' => $interviewer->getKey(), 'role' => ExaminerRole::Interviewer->value]);
+        }
+    }
+
+    private function examSession(ExamSchedule $schedule, ExamRoom $room, string $code, CarbonImmutable $starts, int $minutes): ExamSession
+    {
+        return ExamSession::query()->create([
+            'university_id' => $this->university->getKey(), 'schedule_id' => $schedule->getKey(), 'room_id' => $room->getKey(), 'code' => $code,
+            'starts_at' => $starts->setTimezone(config('app.timezone')), 'ends_at' => $starts->addMinutes($minutes)->setTimezone(config('app.timezone')),
+            'checkin_opens_at' => $starts->subMinutes(30)->setTimezone(config('app.timezone')), 'capacity' => $room->capacity, 'participants_count' => 0,
+        ]);
+    }
+
+    /**
+     * Voucher biaya pendaftaran (menu Pengaturan → Voucher) yang berlaku selama Gelombang 2.
+     *
+     * @param  array<string, AdmissionPath>  $paths
+     */
+    private function seedVouchers(array $paths): void
+    {
+        $wave = Wave::query()->where('code', 'G2')->whereHas('period', fn ($q) => $q->where('code', self::PERIOD_CODE))->first();
+
+        if ($wave === null) {
+            return;
+        }
+
+        foreach (self::VOUCHERS as $code => [$name, $type, $value, $maxDiscount, $pathCode, $maxUses]) {
+            Voucher::query()->firstOrCreate(['code' => $code], [
+                'university_id' => $this->university->getKey(), 'name' => $name, 'applies_to' => InvoiceType::RegistrationFee,
+                'discount_type' => $type, 'discount_value' => number_format($value, 2, '.', ''),
+                'max_discount' => $maxDiscount === null ? null : number_format($maxDiscount, 2, '.', ''),
+                'scope' => $pathCode === null ? null : ['admission_path_ids' => [$paths[$pathCode]->getKey()]],
+                'max_uses' => $maxUses, 'used_count' => 0, 'valid_from' => $wave->registration_opens_at, 'valid_until' => $wave->registration_closes_at,
+                'is_active' => true, 'created_by' => $this->admin->getKey(),
             ]);
         }
     }
