@@ -36,3 +36,30 @@ class BrandAppBarTitle extends StatelessWidget {
     );
   }
 }
+
+/// Logo aplikasi besar (layar masuk & sesi): crest Universitas Atma Jaya di
+/// ubin putih, latarnya sama dengan ikon launcher agar identitas konsisten.
+class AppLogoMark extends StatelessWidget {
+  const AppLogoMark({super.key, this.size = 72});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.xl),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Image.asset(
+        'assets/images/logo_atma_jaya.png',
+        height: size * 0.7,
+        semanticLabel: 'Universitas Atma Jaya',
+      ),
+    );
+  }
+}

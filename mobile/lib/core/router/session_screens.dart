@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../l10n/core_strings.dart';
 import '../theme/app_dimensions.dart';
+import '../widgets/brand_title.dart';
 import '../widgets/state_views.dart';
 import '../widgets/ui_kit.dart';
 
@@ -13,7 +14,6 @@ class SplashScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authControllerProvider);
-    final scheme = Theme.of(context).colorScheme;
     if (auth.hasError) {
       return Scaffold(
         body: ErrorView(
@@ -27,19 +27,7 @@ class SplashScreen extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: scheme.primary,
-                borderRadius: BorderRadius.circular(AppRadius.xl),
-              ),
-              child: Icon(
-                Icons.school_rounded,
-                size: 40,
-                color: scheme.onPrimary,
-              ),
-            ),
+            const AppLogoMark(),
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.l10n.appName,

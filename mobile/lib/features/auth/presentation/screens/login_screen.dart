@@ -9,6 +9,7 @@ import '../../../../core/storage/local_prefs.dart';
 import '../../../../core/storage/storage_keys.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/brand_title.dart';
 import '../../../../core/widgets/language_menu_button.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../l10n/auth_strings.dart';
@@ -74,7 +75,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final s = context.l10n;
     final a = context.authL10n;
     final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
     final fieldError =
         _failure?.fieldError(_byNim ? 'nim' : 'email') ??
         _failure?.fieldError('password');
@@ -95,21 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Center(
-                      child: Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: scheme.primary,
-                          borderRadius: BorderRadius.circular(AppRadius.xl),
-                        ),
-                        child: Icon(
-                          Icons.school_rounded,
-                          size: 40,
-                          color: scheme.onPrimary,
-                        ),
-                      ),
-                    ),
+                    const Center(child: AppLogoMark()),
                     const SizedBox(height: AppSpacing.lg),
                     Text(
                       s.appName,
