@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CalendarClock, Download, MapPin, MonitorPlay } from 'lucide-react'
 import { pmbApplicant, type CbtAttempt, type ExamParticipation } from '@/pmb/api/applicant'
 import { useLoad } from '@/pmb/components/useLoad'
+import { usePmbTheme } from '@/pmb/components/usePmbTheme'
 import { Feedback, useAction } from '@/pmb/components/useAction'
 import { StatusBadge } from '@/pmb/components/StatusBadge'
 import { FormDialog, toFormData } from '@/pmb/components/FormDialog'
@@ -71,6 +72,8 @@ export function ExamsPage() {
 
 /** Pengerjaan CBT layar penuh: simpan otomatis, hitung mundur server, deteksi pindah tab. */
 export function CbtPage() {
+  // Di luar PortalLayout, jadi pasang temanya sendiri.
+  usePmbTheme()
   const { participantId = '' } = useParams()
   const navigate = useNavigate()
   const [attempt, setAttempt] = useState<CbtAttempt | null>(null)
@@ -135,14 +138,14 @@ export function CbtPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-surface px-4 py-3">
         <span className="text-sm font-medium">Soal {index + 1} / {attempt.questions.length} · terjawab {answered}</span>
-        <span className="font-mono text-lg font-semibold text-primary">{countdown(attempt.deadline_at, now)}</span>
+        <span className="lp-tabular font-display text-lg font-extrabold text-lp-brand-text">{countdown(attempt.deadline_at, now)}</span>
       </header>
       <div className="mx-auto grid max-w-5xl gap-6 p-4 md:grid-cols-4">
         <Card className="md:col-span-3">
           <p className="whitespace-pre-line text-ink-primary">{q.question}</p>
           <div className="mt-4 flex flex-col gap-2">
             {q.options.map((o) => (
-              <button key={o.key} type="button" onClick={() => answer(o.key)} className={cn('rounded-lg border px-4 py-3 text-left text-sm', q.answer === o.key ? 'border-primary bg-primary-50 text-primary-800 dark:bg-primary-950' : 'border-border hover:bg-surface-hover')}>
+              <button key={o.key} type="button" onClick={() => answer(o.key)} className={cn('rounded-lg border px-4 py-3 text-left text-sm', q.answer === o.key ? 'border-lp-brand bg-lp-brand-soft text-lp-brand-text' : 'border-border hover:bg-surface-hover')}>
                 <span className="mr-2 font-semibold">{o.key}.</span>{o.text}
               </button>
             ))}
@@ -178,7 +181,7 @@ export function ResultPage() {
       {result.error?.status === 404 && <Card><EmptyState icon={CalendarClock} title="Hasil seleksi belum tersedia" description="Hasil diumumkan sesuai jadwal gelombang. Anda akan menerima notifikasi." /></Card>}
       {r && (
         <Card>
-          <div className={cn('rounded-xl p-6 text-center', r.decision === 'accepted' ? 'bg-primary-50 dark:bg-primary-950' : r.decision === 'waitlisted' ? 'bg-amber-50 dark:bg-amber-950' : 'bg-surface-hover')}>
+          <div className={cn('rounded-xl p-6 text-center', r.decision === 'accepted' ? 'bg-lp-ok/10' : r.decision === 'waitlisted' ? 'bg-lp-gold/10' : 'bg-surface-hover')}>
             <p className="text-sm text-ink-secondary">Keputusan</p>
             <p className="mt-1 text-2xl font-bold text-ink-primary">{DECISION_LABELS[r.decision] ?? r.decision}</p>
             {r.program && <p className="mt-1 text-ink-primary">{r.program} · {r.study_system}</p>}

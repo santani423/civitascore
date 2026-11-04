@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
 import { KeyValue } from '@/pmb/components/KeyValue'
+import { linkClass } from '@/pmb/components/siteClass'
 import { DECISION_LABELS } from '@/pmb/lib/labels'
 import { date } from '@/pmb/lib/format'
 import { PMB } from '@/pmb/routes'
@@ -60,7 +61,7 @@ export function StatusCheckPage() {
                 ['Hasil seleksi', result.decision_summary ? DECISION_LABELS[result.decision_summary.decision] ?? result.decision_summary.decision : 'Belum diumumkan'],
                 ...(result.decision_summary?.program ? [['Program studi', `${result.decision_summary.program} (${result.decision_summary.study_system})`] as [string, string]] : []),
               ]} />
-              <Link to={PMB.login} className="mt-4 inline-block text-sm text-primary">Masuk portal untuk detail & langkah berikutnya</Link>
+              <Link to={PMB.login} className={`${linkClass} mt-4 inline-block text-sm`}>Masuk portal untuk detail & langkah berikutnya</Link>
             </Card>
           )}
         </div>
@@ -76,13 +77,13 @@ export function LoaVerifyPage() {
 
   return (
     <Section title="Verifikasi Surat Penerimaan">
-      {loading && <p className="text-sm text-ink-secondary">Memeriksa...</p>}
+      {loading && <p className="lp-small text-lp-muted">Memeriksa...</p>}
       {error && <Alert variant="danger">Kode verifikasi tidak dikenal. Surat ini tidak diterbitkan oleh sistem PMB kami.</Alert>}
       {data && (
-        <Card>
-          <div className="mb-4 flex items-center gap-2">
-            {data.valid ? <CheckCircle2 className="size-6 text-primary" /> : <XCircle className="size-6 text-danger" />}
-            <p className="font-semibold text-ink-primary">{data.valid ? 'Surat asli dan berlaku' : data.revoked ? 'Surat telah DICABUT' : 'Surat tidak berlaku'}</p>
+        <Card className="max-w-3xl">
+          <div className={`mb-5 flex items-center gap-3 rounded-lp-lg px-4 py-3 ${data.valid ? 'bg-lp-ok/10 text-lp-ok' : 'bg-lp-bad/10 text-lp-bad'}`}>
+            {data.valid ? <CheckCircle2 className="size-6 shrink-0" aria-hidden /> : <XCircle className="size-6 shrink-0" aria-hidden />}
+            <p className="font-semibold">{data.valid ? 'Surat asli dan berlaku' : data.revoked ? 'Surat telah DICABUT' : 'Surat tidak berlaku'}</p>
           </div>
           <KeyValue items={[['Nomor surat', data.letter_number], ['Nama', data.name_masked], ['Program studi', data.program], ['Sistem kuliah', data.study_system], ['Tanggal terbit', date(data.issued_at)], ...(data.revoked_at ? [['Dicabut', date(data.revoked_at)] as [string, string]] : [])]} />
         </Card>

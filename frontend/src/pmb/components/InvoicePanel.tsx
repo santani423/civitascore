@@ -116,7 +116,7 @@ function TransactionInstructions({ transaction: t, onProof, onCancel, onRefresh 
   const blocks = Array.isArray(t.instructions) ? (t.instructions as Array<{ title?: string; steps?: string[] }>) : []
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-primary-200 bg-primary-50/50 p-3 dark:bg-primary-950/30">
+    <div className="flex flex-col gap-3 rounded-lg border border-lp-brand/25 bg-lp-brand-soft/50 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-medium text-ink-primary">Menunggu pembayaran · {t.channel}</p>
         <span className="text-xs text-ink-secondary">Berlaku s.d. {dateTime(t.expires_at)}</span>

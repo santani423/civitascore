@@ -5,7 +5,7 @@ import { useApplicantStore } from '@/pmb/stores/applicantStore'
 import { useSite } from '@/pmb/components/SiteContext'
 import { Captcha } from '@/pmb/components/Captcha'
 import { describeError } from '@/pmb/components/useAction'
-import { Card } from '@/components/ui/Card'
+import { cardClass, linkClass } from '@/pmb/components/siteClass'
 import { Input } from '@/components/ui/Input'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 import { Checkbox } from '@/components/ui/Checkbox'
@@ -20,15 +20,38 @@ const INFO_SOURCES = [
   ['friend_family', 'Teman / keluarga'], ['alumni', 'Alumni'], ['maukuliah', 'Portal MauKuliah'], ['search_engine', 'Mesin pencari'], ['other', 'Lainnya'],
 ].map(([value, label]) => ({ value, label }))
 
+const STEPS = ['Buat akun dan verifikasi email', 'Isi formulir dan unggah dokumen', 'Bayar biaya pendaftaran dan ikuti seleksi', 'Lihat hasil dan lakukan daftar ulang']
+
+/** Formulir akun di kanan; di layar lebar didampingi panel charcoal alur pendaftaran (gaya hero landing). */
 function AuthCard({ title, description, children, footer }: { title: string; description?: string; children: ReactNode; footer?: ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-md px-4 py-10">
-      <Card>
-        <h1 className="text-xl font-semibold text-ink-primary">{title}</h1>
-        {description && <p className="mt-1 text-sm text-ink-secondary">{description}</p>}
-        <div className="mt-5">{children}</div>
-      </Card>
-      {footer && <div className="mt-4 text-center text-sm text-ink-secondary">{footer}</div>}
+    <div className="relative isolate">
+      <div aria-hidden className="lp-grid-bg pointer-events-none absolute inset-x-0 top-0 -z-10 h-96" />
+      <div className="lp-container grid max-w-5xl items-start gap-8 py-10 sm:py-14 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)] lg:gap-10">
+        <aside aria-label="Alur pendaftaran" className="lp-on-band relative isolate hidden overflow-hidden rounded-lp-xl bg-lp-band p-10 text-lp-band-fg shadow-lp-lg lg:sticky lg:top-24 lg:block">
+          <div aria-hidden className="lp-flutes pointer-events-none absolute inset-0 -z-10" />
+          <div aria-hidden className="lp-sweep-br absolute -bottom-px right-0 -z-10 h-24 w-40 bg-lp-accent" />
+          <p className="lp-eyebrow text-lp-accent">Portal Pendaftar</p>
+          <p className="lp-h2 mt-3 text-lp-band-fg">Satu akun untuk seluruh tahap pendaftaran</p>
+          <ol className="mt-8 space-y-5 pb-10">
+            {STEPS.map((step, i) => (
+              <li key={step} className="flex items-start gap-4">
+                <span aria-hidden className="flex size-8 shrink-0 items-center justify-center rounded-full border border-lp-band-fg/30 font-display text-[0.875rem] font-bold text-lp-accent">{i + 1}</span>
+                <span className="pt-1 text-[0.9375rem] text-lp-band-muted">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </aside>
+        <div className="mx-auto w-full max-w-md lg:max-w-none">
+          <div className={cardClass(false, 'p-6 shadow-lp-lg sm:p-8')}>
+            <p className="lp-eyebrow text-lp-brand-text">Portal Pendaftar</p>
+            <h1 className="lp-h3 mt-2 text-[1.5rem] text-lp-fg">{title}</h1>
+            {description && <p className="lp-small mt-2 text-lp-muted">{description}</p>}
+            <div className="mt-6">{children}</div>
+          </div>
+          {footer && <div className="mt-5 text-center text-sm text-lp-muted">{footer}</div>}
+        </div>
+      </div>
     </div>
   )
 }
@@ -86,7 +109,7 @@ export function RegisterPage() {
 
   if (done) {
     return (
-      <AuthCard title="Cek email Anda" footer={<Link to={PMB.login} className="text-primary">Kembali ke halaman masuk</Link>}>
+      <AuthCard title="Cek email Anda" footer={<Link to={PMB.login} className={linkClass}>Kembali ke halaman masuk</Link>}>
         <Alert variant="success">Jika data valid, tautan verifikasi telah dikirim ke <strong>{values.email}</strong>. Buka email dan klik tautan untuk mengaktifkan akun (berlaku 24 jam).</Alert>
       </AuthCard>
     )
@@ -95,7 +118,7 @@ export function RegisterPage() {
   const set = (key: keyof typeof values) => (e: { target: { value: string } }) => setValues({ ...values, [key]: e.target.value })
 
   return (
-    <AuthCard title="Daftar Akun PMB" description="Buat akun untuk mengisi formulir pendaftaran." footer={<>Sudah punya akun? <Link to={PMB.login} className="text-primary">Masuk</Link></>}>
+    <AuthCard title="Daftar Akun PMB" description="Buat akun untuk mengisi formulir pendaftaran." footer={<>Sudah punya akun? <Link to={PMB.login} className={linkClass}>Masuk</Link></>}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         {formError && <Alert variant="danger">{formError}</Alert>}
         <Input label="Nama lengkap (sesuai ijazah)" required minLength={3} value={values.name} onChange={set('name')} error={errors.name} />
@@ -109,9 +132,9 @@ export function RegisterPage() {
         <Select label="Dari mana Anda mengetahui PMB kami?" placeholder="Pilih (opsional)" options={INFO_SOURCES} value={values.info_source} onChange={set('info_source')} />
         <div className="space-y-2 text-sm">
           <Checkbox checked={consents.privacy_policy} onChange={(e) => setConsents({ ...consents, privacy_policy: e.target.checked })} label="Saya menyetujui Kebijakan Privasi" />
-          {site?.legal.privacy_policy && <Link to={to(PMB.legal, { type: 'privacy_policy' })} target="_blank" className="ml-6 text-xs text-primary">Baca Kebijakan Privasi</Link>}
+          {site?.legal.privacy_policy && <Link to={to(PMB.legal, { type: 'privacy_policy' })} target="_blank" className={`${linkClass} ml-6 text-xs`}>Baca Kebijakan Privasi</Link>}
           <Checkbox checked={consents.terms} onChange={(e) => setConsents({ ...consents, terms: e.target.checked })} label="Saya menyetujui Ketentuan Pendaftaran" />
-          {site?.legal.terms && <Link to={to(PMB.legal, { type: 'terms' })} target="_blank" className="ml-6 text-xs text-primary">Baca Ketentuan</Link>}
+          {site?.legal.terms && <Link to={to(PMB.legal, { type: 'terms' })} target="_blank" className={`${linkClass} ml-6 text-xs`}>Baca Ketentuan</Link>}
           <Checkbox checked={consents.marketing_optional} onChange={(e) => setConsents({ ...consents, marketing_optional: e.target.checked })} label="Saya bersedia menerima informasi promosi (opsional)" />
           {(errors['consents.privacy_policy'] || errors['consents.terms']) && <p className="text-xs text-danger">Kebijakan privasi dan ketentuan wajib disetujui.</p>}
         </div>
@@ -150,15 +173,15 @@ export function LoginPage() {
   }
 
   return (
-    <AuthCard title="Masuk Portal PMB" footer={<>Belum punya akun? <Link to={PMB.register} className="text-primary">Daftar</Link></>}>
+    <AuthCard title="Masuk Portal PMB" footer={<>Belum punya akun? <Link to={PMB.register} className={linkClass}>Daftar</Link></>}>
       <form onSubmit={submit} className="flex flex-col gap-4">
         {error && <Alert variant="danger">{error}</Alert>}
         <Input label="Email atau nomor HP" required value={login} onChange={(e) => setLogin(e.target.value)} autoComplete="username" />
         <PasswordInput label="Kata sandi" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
         <Button type="submit" isLoading={busy}>Masuk</Button>
         <div className="flex justify-between text-sm">
-          <Link to={PMB.forgot} className="text-primary">Lupa kata sandi?</Link>
-          <Link to={PMB.recovery} className="text-ink-secondary hover:text-primary">Tidak bisa akses email?</Link>
+          <Link to={PMB.forgot} className={linkClass}>Lupa kata sandi?</Link>
+          <Link to={PMB.recovery} className="text-lp-muted underline-offset-4 hover:text-lp-brand-text hover:underline">Tidak bisa akses email?</Link>
         </div>
       </form>
     </AuthCard>
@@ -191,7 +214,7 @@ export function VerifyPage() {
   return (
     <AuthCard title={isEmailChange ? 'Konfirmasi Email Baru' : 'Verifikasi Akun'}>
       {state === 'loading' && <p className="text-sm text-ink-secondary">Memverifikasi...</p>}
-      {state === 'ok' && <><Alert variant="success">{isEmailChange ? 'Email baru telah dikonfirmasi.' : 'Akun Anda aktif. Silakan masuk untuk memulai pendaftaran.'}</Alert><Link to={PMB.login} className="mt-4 inline-block text-sm text-primary">Masuk</Link></>}
+      {state === 'ok' && <><Alert variant="success">{isEmailChange ? 'Email baru telah dikonfirmasi.' : 'Akun Anda aktif. Silakan masuk untuk memulai pendaftaran.'}</Alert><Link to={PMB.login} className={`${linkClass} mt-4 inline-block text-sm`}>Masuk</Link></>}
       {state === 'error' && <><Alert variant="danger">{message || 'Tautan tidak valid atau kedaluwarsa.'}</Alert><p className="mt-3 text-sm text-ink-secondary">Masuk ke portal untuk meminta tautan verifikasi baru.</p></>}
     </AuthCard>
   )
@@ -221,7 +244,7 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthCard title="Lupa Kata Sandi" footer={<Link to={PMB.login} className="text-primary">Kembali ke halaman masuk</Link>}>
+    <AuthCard title="Lupa Kata Sandi" footer={<Link to={PMB.login} className={linkClass}>Kembali ke halaman masuk</Link>}>
       {done ? (
         <Alert variant="success">Jika akun terdaftar, tautan atau kode pengaturan ulang telah dikirim.</Alert>
       ) : (
@@ -230,7 +253,7 @@ export function ForgotPasswordPage() {
           <Input label="Email atau nomor HP terdaftar" required value={login} onChange={(e) => setLogin(e.target.value)} />
           <Captcha onToken={setCaptcha} />
           <Button type="submit" isLoading={busy}>Kirim</Button>
-          <Link to={`${PMB.resetPassword}?mode=otp`} className="text-center text-sm text-primary">Saya menerima kode OTP lewat SMS</Link>
+          <Link to={`${PMB.resetPassword}?mode=otp`} className={`${linkClass} text-center text-sm`}>Saya menerima kode OTP lewat SMS</Link>
         </form>
       )}
     </AuthCard>
@@ -274,7 +297,7 @@ export function ResetPasswordPage() {
   return (
     <AuthCard title="Atur Kata Sandi Baru">
       {done ? (
-        <><Alert variant="success">Kata sandi berhasil diatur. Silakan masuk.</Alert><Link to={PMB.login} className="mt-4 inline-block text-sm text-primary">Masuk</Link></>
+        <><Alert variant="success">Kata sandi berhasil diatur. Silakan masuk.</Alert><Link to={PMB.login} className={`${linkClass} mt-4 inline-block text-sm`}>Masuk</Link></>
       ) : (
         <form onSubmit={submit} className="flex flex-col gap-4">
           {error && <Alert variant="danger">{error}</Alert>}

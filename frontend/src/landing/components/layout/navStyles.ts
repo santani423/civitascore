@@ -20,8 +20,8 @@ export const NAV_PAGE_ICONS: Record<NavChildKey, LucideIcon> = {
 /** Desktop navbar item styling, shared by section links and the group button. */
 export function navLinkClass(active: boolean): string {
   return cn(
-    // px-2.5: seven labels (three with a chevron) fit next to the wordmark from 1440px.
-    'relative inline-flex min-h-16 items-center gap-0.5 whitespace-nowrap px-2.5 text-[0.9063rem] font-semibold transition-colors lg:min-h-[4.5rem]',
+    // px-2: seven labels (three with a chevron) fit between the wordmark and the header controls (PMB button included) from 1440px.
+    'relative inline-flex min-h-16 items-center gap-0.5 whitespace-nowrap px-2 text-[0.9063rem] font-semibold transition-colors lg:min-h-[4.5rem]',
     active ? 'text-lp-brand-text' : 'text-lp-muted hover:text-lp-fg',
   )
 }

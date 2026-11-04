@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Accessibility, ChevronRight, Menu, MessageSquare, X } from 'lucide-react'
+import { Accessibility, ChevronRight, GraduationCap, Menu, MessageSquare, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { PMB } from '@/pmb/routes'
 import { useLandingI18n } from '../../i18n'
 import { useAppEntry, type AppEntry } from '../../hooks/useAppEntry'
 import { useActiveSection, useScrolled } from '../../hooks/useScroll'
@@ -67,7 +68,7 @@ export function Navbar() {
           </span>
         </SectionLink>
 
-        <nav aria-label={m.nav.primary} className="lp-nav-desktop mr-4 h-full">
+        <nav aria-label={m.nav.primary} className="lp-nav-desktop mr-2 h-full">
           <ul className="flex h-full items-stretch gap-1">
             {NAV_ITEMS.map((item) => {
               const isActive = isNavActive(item, path, active)
@@ -91,6 +92,13 @@ export function Navbar() {
           <LanguageMenu className="lp-hdr-extra hidden sm:block" />
           <ThemeToggle className="lp-hdr-extra hidden sm:inline-flex" />
           <AccessibilityButton />
+          {/* For visitors only: applicants use their own PMB account, and "Buka Dashboard" leaves no room for it at desktop width. */}
+          {!entry.authenticated && (
+            <Link to={PMB.home} title={m.nav.admissionsFull} className={buttonClass('secondary', 'sm', 'lp-hdr-pmb ml-1 hidden px-3.5 lg:inline-flex')}>
+              <GraduationCap size={16} aria-hidden />
+              {m.nav.admissions}
+            </Link>
+          )}
           <Link to={entry.to} className={buttonClass('primary', 'sm', 'lp-hdr-extra ml-1 hidden px-5 sm:inline-flex')}>
             <EntryIcon size={16} aria-hidden />
             {entry.label}
@@ -220,6 +228,10 @@ function MobileMenu({
         <Link to={entry.to} onClick={onClose} className={buttonClass('primary', 'md', 'w-full')}>
           <EntryIcon size={17} aria-hidden />
           {entry.label}
+        </Link>
+        <Link to={PMB.home} onClick={onClose} className={buttonClass('secondary', 'md', 'w-full')}>
+          <GraduationCap size={17} aria-hidden />
+          {m.nav.admissionsFull}
         </Link>
         <Button
           variant="secondary"
