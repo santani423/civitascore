@@ -111,6 +111,40 @@ final class PmbPermission
 
     public const AUDIT_READ = 'pmb_audit.read';
 
+    // One Atma Talent (docs/one-atma-talent/03 §4). Pemetaan nama dokumen ke aksi standar:
+    // view→read, create→create, archive→delete, invalidate→reject, review→update, monitor→read.
+    public const ASSESSMENTS_READ = 'pmb_assessments.read';
+
+    public const ASSESSMENTS_CREATE = 'pmb_assessments.create';
+
+    public const ASSESSMENTS_MANAGE = 'pmb_assessments.update';
+
+    public const ASSESSMENTS_ARCHIVE = 'pmb_assessments.delete';
+
+    public const ASSESSMENTS_APPROVE = 'pmb_assessments.approve';
+
+    public const ASSESSMENTS_PUBLISH = 'pmb_assessments.publish';
+
+    public const ASSESSMENT_QUESTIONS_READ = 'pmb_assessment_questions.read';
+
+    public const ASSESSMENT_QUESTIONS_CREATE = 'pmb_assessment_questions.create';
+
+    public const ASSESSMENT_QUESTIONS_MANAGE = 'pmb_assessment_questions.update';
+
+    public const ASSESSMENT_QUESTIONS_DELETE = 'pmb_assessment_questions.delete';
+
+    public const ASSESSMENT_RESULTS_READ = 'pmb_assessment_results.read';
+
+    public const ASSESSMENT_RESULTS_REVIEW = 'pmb_assessment_results.update';
+
+    public const ASSESSMENT_RESULTS_PUBLISH = 'pmb_assessment_results.publish';
+
+    public const ASSESSMENT_SESSIONS_READ = 'pmb_assessment_sessions.read';
+
+    public const ASSESSMENT_SESSIONS_INVALIDATE = 'pmb_assessment_sessions.reject';
+
+    public const ASSESSMENT_AUDIT_READ = 'pmb_assessment_audit_logs.read';
+
     /**
      * resource => actions, dipakai RolePermissionSeeder.
      *
@@ -139,6 +173,11 @@ final class PmbPermission
         'pmb_reports' => ['read', 'export'],
         'pmb_communication' => ['publish', 'update'],
         'pmb_audit' => ['read'],
+        'pmb_assessments' => ['read', 'create', 'update', 'delete', 'approve', 'publish'],
+        'pmb_assessment_questions' => ['read', 'create', 'update', 'delete'],
+        'pmb_assessment_results' => ['read', 'update', 'publish'],
+        'pmb_assessment_sessions' => ['read', 'reject'],
+        'pmb_assessment_audit_logs' => ['read'],
     ];
 
     /** @return array<int, string> */

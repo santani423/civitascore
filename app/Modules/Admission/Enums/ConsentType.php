@@ -11,6 +11,7 @@ enum ConsentType: string
     case GuardianConsent = 'guardian_consent';
     case Declaration = 'declaration';
     case AcademicTerms = 'academic_terms';
+    case AssessmentTalent = 'assessment_talent';
 
     /** @return array<int, string> */
     public static function values(): array

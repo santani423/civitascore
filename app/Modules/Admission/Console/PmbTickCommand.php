@@ -6,6 +6,7 @@ use App\Support\Tenancy\TenantContext;
 use Illuminate\Console\Command;
 use Modules\Admission\Outbox\OutboxProcessor;
 use Modules\Admission\Services\Announcement\PublicationService;
+use Modules\Admission\Services\Assessment\AssessmentSessionService;
 use Modules\Admission\Services\Configuration\PeriodService;
 use Modules\Admission\Services\Conversion\ConversionService;
 use Modules\Admission\Services\Exam\CbtService;
@@ -18,7 +19,8 @@ use Throwable;
 /**
  * Job tiap menit: publikasi terjadwal (FR-ANN-03), outbox, konversi,
  * callback tertunda, polling transaksi (F.4 aturan 6), kedaluwarsa transaksi,
- * klaim verifikasi kedaluwarsa, status gelombang, auto-submit CBT.
+ * klaim verifikasi kedaluwarsa, status gelombang, auto-submit CBT, dan penutupan
+ * sesi asesmen One Atma Talent yang melewati batas waktu.
  */
 class PmbTickCommand extends Command
 {
@@ -47,6 +49,8 @@ class PmbTickCommand extends Command
             $this->runStep("klaim verifikasi [{$universityId}]", fn () => app(VerificationService::class)->expireClaims());
             $this->runStep("status gelombang [{$universityId}]", fn () => app(PeriodService::class)->refreshWaveStatuses());
             $this->runStep("cbt [{$universityId}]", fn () => app(CbtService::class)->autoSubmitExpired());
+            // One Atma Talent: sesi asesmen yang melewati batas waktu ditutup (docs/one-atma-talent/04). Idempoten per sesi.
+            $this->runStep("expirasi asesmen [{$universityId}]", fn () => app(AssessmentSessionService::class)->expireDue());
         }
 
         $tenant->setUniversityId(null);

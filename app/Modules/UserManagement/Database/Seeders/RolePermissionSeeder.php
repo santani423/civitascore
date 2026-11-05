@@ -319,6 +319,12 @@ class RolePermissionSeeder extends Seeder
         'pmb_reports' => [PermissionAction::Read, PermissionAction::Export],
         'pmb_communication' => [PermissionAction::Publish, PermissionAction::Update],
         'pmb_audit' => [PermissionAction::Read],
+        // One Atma Talent (docs/one-atma-talent/01 §2 D11): konfigurasi versi dan hasil dipisah.
+        'pmb_assessments' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete, PermissionAction::Approve, PermissionAction::Publish],
+        'pmb_assessment_questions' => [PermissionAction::Read, PermissionAction::Create, PermissionAction::Update, PermissionAction::Delete],
+        'pmb_assessment_results' => [PermissionAction::Read, PermissionAction::Update, PermissionAction::Publish],
+        'pmb_assessment_sessions' => [PermissionAction::Read, PermissionAction::Reject],
+        'pmb_assessment_audit_logs' => [PermissionAction::Read],
 
         // Modul KEU — Administrasi Keuangan Mahasiswa (app/Modules/Finance,
         // katalog lengkap Modules\Finance\Support\KeuPermission). `invoices`
