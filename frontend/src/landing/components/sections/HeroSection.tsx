@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, MapPin } from 'lucide-react'
+import { ArrowRight, GraduationCap, MapPin } from 'lucide-react'
+import { PMB } from '@/pmb/routes'
 import { useLandingI18n } from '../../i18n'
 import { PHOTOS } from '../../data/photos'
 import { SECTION_IDS } from '../../paths'
@@ -55,6 +56,18 @@ export function HeroSection() {
               {m.hero.secondaryCta}
             </SectionLink>
           </div>
+          {/* Applicants don't sign in here: they register on the PMB website with their own account. */}
+          <p className="mt-6 flex flex-wrap items-center gap-x-2 text-[0.9063rem] text-lp-band-muted">
+            <GraduationCap size={17} aria-hidden className="shrink-0 text-lp-accent" />
+            {m.hero.admissionsLead}
+            <Link
+              to={PMB.home}
+              className="group inline-flex min-h-11 items-center gap-1.5 rounded-lp-sm font-semibold text-lp-band-fg underline decoration-lp-accent decoration-2 underline-offset-4 transition-colors hover:decoration-lp-band-fg"
+            >
+              {m.hero.admissionsCta}
+              <ArrowRight size={15} aria-hidden className="transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </p>
           <SectionLink
             section={SECTION_IDS.about}
             className="mt-10 hidden min-h-11 items-center gap-3 rounded-lp-sm text-[0.8125rem] font-medium text-lp-band-muted transition-colors hover:text-lp-band-fg md:inline-flex"

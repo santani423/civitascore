@@ -1,0 +1,1 @@
+import{r as e}from"./rolldown-runtime-QTnfLwEv.js";import{p as t}from"./index-B6-IxW2a.js";/* empty css                */var n=e(t(),1),r=[`lp-theme`,`pmb-theme`];function i(){(0,n.useLayoutEffect)(()=>(document.body.classList.add(...r),()=>document.body.classList.remove(...r)),[])}export{i as t};

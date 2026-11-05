@@ -417,8 +417,9 @@ class ConfigurationController extends AdminController
             'sequence' => [$req, 'integer', 'min:1', 'max:99'],
             'registration_opens_at' => [$req, 'date'],
             'registration_closes_at' => [$req, 'date'],
-            'payment_deadline_at' => ['nullable', 'date'],
-            'form_lock_at' => ['nullable', 'date'],
+            // Kolom NOT NULL & wajib menurut 03 §A.3 — jangan nullable agar tidak jadi 500.
+            'payment_deadline_at' => [$req, 'date'],
+            'form_lock_at' => [$req, 'date'],
             'exam_starts_on' => ['nullable', 'date'],
             'exam_ends_on' => ['nullable', 'date'],
             'announcement_at' => [$req, 'date'],

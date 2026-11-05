@@ -17,6 +17,10 @@ use Modules\Tenancy\Enums\UniversityStatus;
  * @property string $code
  * @property string $slug
  * @property string $name
+ * @property string|null $short_name
+ * @property string|null $email
+ * @property string|null $phone
+ * @property string|null $website
  * @property UniversityStatus $status
  * @property bool $is_active
  */

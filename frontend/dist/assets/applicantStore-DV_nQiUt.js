@@ -1,0 +1,1 @@
+import{a as e,o as t}from"./cn-BpjsD_5z.js";var n=t()(e(e=>({token:null,expiresAt:null,account:null,setSession:(t,n,r)=>e({token:t,expiresAt:n,account:r}),setAccount:t=>e({account:t}),clear:()=>e({token:null,expiresAt:null,account:null})}),{name:`civitasone-pmb-applicant`}));export{n as t};

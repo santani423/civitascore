@@ -22,6 +22,32 @@ final class NotificationCatalog
     public const COMMON_PLACEHOLDERS = ['applicant_name', 'university_name', 'portal_url', 'contact'];
 
     /**
+     * Tombol utama email untuk event bertautan sekali pakai: event_key => [placeholder, label].
+     *
+     * @var array<string, array{0: string, 1: string}>
+     */
+    public const MAIL_ACTIONS = [
+        'pmb.account.verification_requested' => ['verification_url', 'Verifikasi Akun'],
+        'pmb.account.password_reset' => ['reset_url', 'Atur Ulang Kata Sandi'],
+    ];
+
+    /**
+     * Data tombol email (`link` + `action_text`) dari placeholder rahasia event.
+     * HANYA untuk kanal mail — tautan sekali pakai tidak boleh ikut tersimpan
+     * di notifikasi database.
+     *
+     * @param  array<string, mixed>  $placeholders
+     * @return array{link?: string, action_text?: string}
+     */
+    public static function mailAction(string $eventKey, array $placeholders): array
+    {
+        [$placeholder, $label] = self::MAIL_ACTIONS[$eventKey] ?? [null, null];
+        $url = $placeholder !== null ? (string) ($placeholders[$placeholder] ?? '') : '';
+
+        return preg_match('#^https?://#i', $url) === 1 ? ['link' => $url, 'action_text' => (string) $label] : [];
+    }
+
+    /**
      * event_key => [channels(mail|database|sms), priority, subject, body, placeholders tambahan]
      *
      * @var array<string, array{0: array<int, string>, 1: string, 2: string, 3: string, 4: array<int, string>}>

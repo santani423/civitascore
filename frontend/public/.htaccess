@@ -1,9 +1,7 @@
-# Apache (mis. Niagahoster): reverse proxy /api/* ke backend + fallback SPA.
-# Butuh mod_rewrite + mod_proxy + mod_proxy_http (+ SSL proxy engine). Pada
-# shared hosting yang tidak mengizinkan [P], pakai nginx/Node — lihat docs.
+# Apache (mis. Niagahoster): fallback SPA. Browser memanggil backend langsung
+# lewat VITE_API_BASE_URL, jadi tidak ada reverse proxy /api di sini.
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteRule ^api/(.*)$ https://beoneatma.santani.dev/api/$1 [P,L,QSA]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

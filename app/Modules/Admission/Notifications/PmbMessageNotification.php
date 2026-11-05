@@ -6,6 +6,8 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Modules\Admission\Channels\PmbSmsChannel;
+use Modules\Admission\Support\PmbSettings;
+use Modules\Notification\Support\MailBrand;
 
 /**
  * Notifikasi PMB yang isinya SUDAH dirender (dalam konteks tenant, oleh
@@ -38,16 +40,37 @@ class PmbMessageNotification extends Notification
         ));
     }
 
+    /**
+     * Tampilan: tema "civitas" (resources/views/vendor/mail) dengan identitas
+     * PMB tenant — label "PMB", tanda tangan panitia, dan kontak `pmb.contact`.
+     * `data.action_text` (lihat NotificationCatalog::mailAction) mengganti label
+     * tombol bawaan, mis. "Verifikasi Akun".
+     */
     public function toMail(object $notifiable): MailMessage
     {
-        $message = (new MailMessage)->subject($this->subject);
+        $brand = MailBrand::current();
+        $contact = array_filter(
+            (array) (app(PmbSettings::class)->get('pmb.contact') ?: []),
+            fn ($value): bool => is_string($value) && trim($value) !== '',
+        );
+
+        $message = (new MailMessage)
+            ->subject($this->subject)
+            ->markdown('notifications::email', [
+                'brand' => $brand,
+                'brandLabel' => 'PMB',
+                'eyebrow' => 'Penerimaan Mahasiswa Baru',
+                'signature' => 'Panitia PMB '.$brand->name,
+                'contact' => $contact !== [] ? $contact : $brand->contact,
+                'homeUrl' => rtrim((string) config('pmb.frontend_url'), '/').'/pmb',
+            ]);
 
         foreach (preg_split('/\R{2,}/', $this->body) ?: [$this->body] as $paragraph) {
             $message->line($paragraph);
         }
 
         if (! empty($this->data['link'])) {
-            $message->action('Buka Portal', (string) $this->data['link']);
+            $message->action((string) ($this->data['action_text'] ?? 'Buka Portal PMB'), (string) $this->data['link']);
         }
 
         return $message;

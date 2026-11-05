@@ -1,20 +1,28 @@
 import type { ReactNode } from 'react'
 
-/** Bagian halaman publik dengan lebar konten standar. */
+/**
+ * Halaman publik: kepala charcoal seperti hero halaman dalam landing (bila ada judul), lalu isi
+ * selebar kontainer landing. `actions` tampil di atas charcoal — pakai buttonClass('primary' | 'bandOutline').
+ */
 export function Section({ title, description, children, actions }: { title?: string; description?: string; children: ReactNode; actions?: ReactNode }) {
   return (
-    <section className="mx-auto w-full max-w-6xl px-4 py-8">
+    <>
       {(title || actions) && (
-        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            {title && <h1 className="text-2xl font-semibold text-ink-primary">{title}</h1>}
-            {description && <p className="mt-1 text-sm text-ink-secondary">{description}</p>}
+        <div className="lp-on-band relative isolate overflow-hidden bg-lp-band">
+          <div aria-hidden className="lp-flutes pointer-events-none absolute inset-0 -z-10" />
+          <div aria-hidden className="pointer-events-none absolute -right-48 -top-48 -z-10 h-[30rem] w-[30rem] rounded-full bg-lp-accent/[0.12] blur-3xl" />
+          <div className="lp-container flex flex-wrap items-end justify-between gap-6 py-10 sm:py-12 lg:py-14">
+            <div className="max-w-3xl">
+              <p className="lp-eyebrow text-lp-accent">Penerimaan Mahasiswa Baru</p>
+              {title && <h1 className="lp-h2 mt-3 text-lp-band-fg">{title}</h1>}
+              {description && <p className="lp-lead mt-3 text-lp-band-muted">{description}</p>}
+            </div>
+            {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
           </div>
-          {actions}
         </div>
       )}
-      {children}
-    </section>
+      <section className="lp-container py-10 sm:py-12">{children}</section>
+    </>
   )
 }
 

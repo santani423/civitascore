@@ -83,7 +83,7 @@ export function ApplicationPage() {
             const complete = key === 'declarations' ? a.form_status !== 'draft' : completeness[key]?.complete
 
             return (
-              <button key={key} type="button" onClick={() => setStep(key)} className={cn('flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm', step === key ? 'bg-primary-100 text-primary-700' : 'text-ink-secondary hover:bg-surface-hover')}>
+              <button key={key} type="button" onClick={() => setStep(key)} className={cn('flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm', step === key ? 'bg-lp-brand-soft font-semibold text-lp-brand-text' : 'text-ink-secondary hover:bg-surface-hover')}>
                 {complete ? <CheckCircle2 className="size-4 text-primary" /> : <CircleAlert className="size-4 text-amber-500" />}{STEP_LABELS[key]}
               </button>
             )

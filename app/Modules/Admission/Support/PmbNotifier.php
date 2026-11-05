@@ -148,9 +148,11 @@ class PmbNotifier
             }
 
             $content = $this->render($universityId, $eventKey, $channel, $placeholders);
+            // Satu notifikasi per kanal, jadi tautan rahasia untuk tombol email tidak ikut ke kanal database.
+            $channelData = $channel === 'mail' ? [...$data, ...NotificationCatalog::mailAction($eventKey, $placeholders)] : $data;
 
             try {
-                $notifiable->notifyNow(new PmbMessageNotification($eventKey, $content['subject'], $content['body'], [$channel], $data));
+                $notifiable->notifyNow(new PmbMessageNotification($eventKey, $content['subject'], $content['body'], [$channel], $channelData));
             } catch (Throwable $e) {
                 Log::warning('[pmb-notify] pengiriman gagal', ['event' => $eventKey, 'channel' => $channel, 'error' => $e->getMessage()]);
                 $failed[] = $channel;

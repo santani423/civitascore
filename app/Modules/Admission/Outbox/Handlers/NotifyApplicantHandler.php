@@ -8,6 +8,7 @@ use Modules\Admission\Models\OutboxEvent;
 use Modules\Admission\Notifications\PmbMessageNotification;
 use Modules\Admission\Outbox\OutboxHandler;
 use Modules\Admission\Outbox\OutboxRecorder;
+use Modules\Admission\Support\NotificationCatalog;
 use Modules\Admission\Support\PmbNotifier;
 use RuntimeException;
 
@@ -32,7 +33,7 @@ class NotifyApplicantHandler implements OutboxHandler
         if (! empty($payload['override_email'])) {
             // Verifikasi ganti email: dikirim ke alamat BARU, bukan alamat akun.
             $content = $this->notifier->render((string) $account->university_id, (string) $payload['event_key'], 'mail', [...$placeholders, 'applicant_name' => $account->name]);
-            Notification::route('mail', (string) $payload['override_email'])->notifyNow(new PmbMessageNotification((string) $payload['event_key'], $content['subject'], $content['body'], ['mail']));
+            Notification::route('mail', (string) $payload['override_email'])->notifyNow(new PmbMessageNotification((string) $payload['event_key'], $content['subject'], $content['body'], ['mail'], NotificationCatalog::mailAction((string) $payload['event_key'], $placeholders)));
 
             return;
         }

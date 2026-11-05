@@ -252,8 +252,10 @@ class ReportService
             ];
 
             foreach ($metrics as $metric => $value) {
+                // Kunci tanggal sebagai Carbon: format binding = format simpan cast `date`, sehingga
+                // pencarian cocok juga di SQLite (string 'Y-m-d' ≠ 'Y-m-d H:i:s' → duplikat unique).
                 DailyStat::query()->updateOrCreate(
-                    ['stat_date' => $date->toDateString(), 'period_id' => $period->getKey(), 'wave_id' => '', 'admission_path_id' => '', 'study_program_id' => '', 'metric' => $metric],
+                    ['stat_date' => $date->startOfDay(), 'period_id' => $period->getKey(), 'wave_id' => '', 'admission_path_id' => '', 'study_program_id' => '', 'metric' => $metric],
                     ['value' => $value],
                 );
                 $count++;

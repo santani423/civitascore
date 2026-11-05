@@ -85,7 +85,7 @@ function ApplicationCard({ app }: { app: ApplicationSummary }) {
       <ol className="mb-4 flex flex-wrap gap-x-4 gap-y-2">
         {STAGES.map(([key, label], i) => (
           <li key={key} className={cn('flex items-center gap-1.5 text-xs', i <= current ? 'text-primary' : 'text-ink-tertiary')}>
-            {i < current ? <CheckCircle2 className="size-4" /> : <Circle className={cn('size-4', i === current && 'fill-primary-100')} />}{label}
+            {i < current ? <CheckCircle2 className="size-4" /> : <Circle className={cn('size-4', i === current && 'fill-lp-brand-soft')} />}{label}
           </li>
         ))}
       </ol>
@@ -158,7 +158,7 @@ export function NotificationsPage() {
         {list.data?.data.length === 0 && <EmptyState title="Belum ada notifikasi" />}
         <ul className="divide-y divide-border">
           {(list.data?.data ?? []).map((n) => (
-            <li key={n.id} className={cn('flex items-start justify-between gap-3 p-4', !n.read_at && 'bg-primary-50/40 dark:bg-primary-950/20')}>
+            <li key={n.id} className={cn('flex items-start justify-between gap-3 p-4', !n.read_at && 'bg-lp-brand-soft/60')}>
               <div>
                 <p className="text-sm font-medium text-ink-primary">{n.title}</p>
                 <p className="text-sm text-ink-secondary">{n.message}</p>

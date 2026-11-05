@@ -1,1 +1,0 @@
-import{n as e}from"./index-BhJn_2hQ.js";import{t}from"./FormDialog-Y67yzE_e.js";var n=e();function r({reasonLabel:e=`Alasan`,reasonName:r=`reason`,extraFields:i=[],confirmLabel:a=`Konfirmasi`,...o}){return(0,n.jsx)(t,{...o,submitLabel:a,fields:[...i,{name:r,label:e,type:`textarea`,required:!0}],onSubmit:o.onConfirm})}export{r as t};

@@ -45,6 +45,9 @@ export const id = {
     info: 'Informasi',
     signIn: 'Masuk',
     openDashboard: 'Buka Dashboard',
+    /** Short label of the header's PMB button (it must stay short to fit at 1440px); `admissionsFull` is its tooltip and the mobile menu's label. */
+    admissions: 'PMB',
+    admissionsFull: 'Penerimaan Mahasiswa Baru (PMB)',
     contact: 'Hubungi Kami',
     openMenu: 'Buka menu',
     closeMenu: 'Tutup menu',
@@ -95,6 +98,8 @@ export const id = {
       'Terhubung dalam satu platform untuk mendukung aktivitas akademik, administrasi, dan kehidupan kampus Universitas Katolik Indonesia Atma Jaya.',
     primaryCta: 'Masuk ke Sistem',
     secondaryCta: 'Jelajahi Layanan',
+    admissionsLead: 'Calon mahasiswa baru?',
+    admissionsCta: 'Daftar melalui website PMB',
     scrollCue: 'Gulir untuk menjelajahi',
     photoCaption: 'Kampus Semanggi, Jakarta',
   },

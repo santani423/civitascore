@@ -192,3 +192,29 @@ it('supports applicant chat and targeted broadcasts', function (): void {
     // Broadcast berisi NIK ditolak (13 §A.5).
     $w->asStaff('admission_administrator', 'POST', 'broadcasts', ['title' => 'X', 'channel' => 'email', 'content_body' => 'NIK 3171010101050001'])->assertStatus(422);
 });
+
+it('rejects duplicate wave codes and missing deadlines with 422 instead of 500', function (): void {
+    $w = PmbWorld::create($this);
+    $admin = 'admission_administrator';
+    $period = pmbOk($w->asStaff($admin, 'POST', 'periods', ['entry_academic_term_id' => $w->term->getKey(), 'code' => 'PMB27', 'name' => 'PMB 2027/2028', 'starts_on' => '2026-10-01', 'ends_on' => '2027-06-30']))->json('data.id');
+
+    $body = [
+        'code' => 'G3', 'name' => 'Gelombang 3', 'sequence' => 4,
+        'registration_opens_at' => '2026-11-30T08:16:00.000Z', 'registration_closes_at' => '2026-12-31T08:11:00.000Z',
+        'payment_deadline_at' => '2026-12-31T08:11:00.000Z', 'form_lock_at' => '2027-01-01T08:11:00.000Z',
+        'exam_starts_on' => '2026-11-01', 'exam_ends_on' => '2026-11-30',
+        'announcement_at' => '2026-12-29T08:11:00.000Z',
+        're_registration_opens_at' => '2027-01-12T08:11:00.000Z', 're_registration_closes_at' => '2027-01-28T08:12:00.000Z',
+        'is_ods' => true,
+    ];
+
+    $wave = pmbOk($w->asStaff($admin, 'POST', "periods/{$period}/waves", $body))->assertStatus(201)->json('data.id');
+
+    $w->asStaff($admin, 'POST', "periods/{$period}/waves", $body)->assertStatus(422)->assertJsonValidationErrors('code');
+    $w->asStaff($admin, 'POST', "periods/{$period}/waves", [...$body, 'code' => 'G4', 'payment_deadline_at' => null, 'form_lock_at' => null])
+        ->assertStatus(422)->assertJsonValidationErrors(['payment_deadline_at', 'form_lock_at']);
+
+    $other = pmbOk($w->asStaff($admin, 'POST', "periods/{$period}/waves", [...$body, 'code' => 'G4', 'name' => 'Gelombang 4']))->json('data.id');
+    $w->asStaff($admin, 'PATCH', "waves/{$other}", ['code' => 'G3'])->assertStatus(422)->assertJsonValidationErrors('code');
+    pmbOk($w->asStaff($admin, 'PATCH', "waves/{$wave}", ['code' => 'G3', 'name' => 'Gelombang 3 (revisi)']));
+});

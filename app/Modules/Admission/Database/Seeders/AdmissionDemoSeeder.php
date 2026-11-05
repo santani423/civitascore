@@ -9,7 +9,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Modules\Academic\Models\AcademicTerm;
-use Modules\Academic\Models\Faculty;
 use Modules\Academic\Models\StudyProgram;
 use Modules\Admission\Models\AdmissionPath;
 use Modules\Admission\Models\Content;
@@ -34,7 +33,8 @@ use Modules\Tenancy\Models\University;
  * formulir, skema seleksi terkunci, persyaratan dokumen, kuota, biaya, profil
  * prodi terpublikasi, dan konten (legal, pernyataan, FAQ, berita, panduan),
  * sehingga halaman publik Prodi/Jalur/Biaya/Jadwal dan pendaftaran dapat
- * dicoba. Bukan untuk tenant produksi.
+ * dicoba. Bukan untuk tenant produksi. Kampus Atma Jaya (UAJ) memakai
+ * AtmaJayaAdmissionSeeder + AtmaJayaApplicantDemoSeeder dan dilewati run().
  *
  * Jadwal dihitung relatif terhadap waktu seeding. Idempoten (firstOrCreate
  * per kode): menjalankan ulang tidak menggeser jadwal maupun menimpa ubahan
@@ -43,37 +43,17 @@ use Modules\Tenancy\Models\University;
 class AdmissionDemoSeeder extends Seeder
 {
     /**
-     * Katalog prodi per kode universitas. AtmaJayaStudentSeeder hanya membuat
-     * Teknik Informatika (roster nyata), sehingga filter jenjang/fakultas di
-     * halaman Prodi tidak dapat dicoba tanpa prodi tambahan. Tenant lain
-     * memakai prodi hasil AcademicSeeder dengan profil generik.
-     *
-     * kode prodi => [kode fakultas, nama, jenjang, gelar, akreditasi, kelas karyawan, [uang pangkal, SPP/semester], ringkasan, prospek karier]
+     * Kampus dengan seeder PMB khusus — dilewati run() agar tidak ada dua
+     * konfigurasi bertabrakan (kode periode PMB{tahun} sama: periode generik
+     * yang terbuat lebih dulu membuat seeder khusus melewati seluruh periodenya).
      */
-    private const CATALOG = [
-        'UAJ' => [
-            'TI1' => ['TEK', 'Teknik Informatika', 'S1', 'S.Kom.', 'Unggul', true, [20_000_000, 9_000_000], 'Rekayasa perangkat lunak, kecerdasan artifisial, dan keamanan siber dengan proyek industri sejak tahun kedua.', 'Software engineer, data scientist, analis keamanan siber, konsultan TI'],
-            'TIN' => ['TEK', 'Teknik Industri', 'S1', 'S.T.', 'Baik Sekali', false, [18_000_000, 8_500_000], 'Perancangan dan optimasi sistem produksi, rantai pasok, serta manajemen mutu.', 'Supply chain analyst, process engineer, quality manager, konsultan operasional'],
-            'TME' => ['TEK', 'Teknik Mesin', 'S1', 'S.T.', 'Baik Sekali', false, [18_000_000, 8_500_000], 'Perancangan mesin, manufaktur, energi terbarukan, dan otomasi.', 'Design engineer, maintenance engineer, energy analyst'],
-            'MNJ' => ['FEB', 'Manajemen', 'S1', 'S.M.', 'Unggul', true, [17_500_000, 8_000_000], 'Manajemen pemasaran, keuangan, SDM, dan kewirausahaan berbasis studi kasus.', 'Manajer pemasaran, analis keuangan, HR specialist, wirausahawan'],
-            'AKT' => ['FEB', 'Akuntansi', 'S1', 'S.Ak.', 'Unggul', true, [17_500_000, 8_000_000], 'Akuntansi keuangan, audit, perpajakan, dan sistem informasi akuntansi.', 'Auditor, konsultan pajak, akuntan publik, financial controller'],
-            'MM' => ['FEB', 'Magister Manajemen', 'S2', 'M.M.', 'Unggul', true, [10_000_000, 14_000_000], 'Program magister untuk profesional dengan konsentrasi strategi, keuangan, dan pemasaran.', 'Manajer senior, konsultan bisnis, pemimpin unit usaha'],
-            'HKM' => ['FH', 'Ilmu Hukum', 'S1', 'S.H.', 'Unggul', false, [17_000_000, 7_500_000], 'Hukum bisnis, pidana, tata negara, dan hukum internasional dengan klinik hukum.', 'Advokat, notaris, legal officer, hakim, jaksa'],
-            'PSI' => ['FPSI', 'Psikologi', 'S1', 'S.Psi.', 'Unggul', false, [18_500_000, 8_500_000], 'Psikologi klinis, industri-organisasi, pendidikan, dan sosial.', 'HR specialist, asesor, konselor, peneliti perilaku'],
-            'KED' => ['FKIK', 'Kedokteran', 'S1', 'S.Ked.', 'Unggul', false, [250_000_000, 25_000_000], 'Pendidikan dokter dengan kurikulum berbasis kompetensi dan rumah sakit pendidikan.', 'Dokter umum, peneliti biomedis, dokter spesialis (lanjutan)'],
-        ],
-    ];
+    private const DEDICATED = [AtmaJayaAdmissionSeeder::UNIVERSITY_CODE];
 
-    /** kode fakultas => nama (dipakai bila fakultas katalog belum ada) */
-    private const FACULTIES = [
-        'TEK' => 'Fakultas Teknik',
-        'FEB' => 'Fakultas Ekonomi dan Bisnis',
-        'FH' => 'Fakultas Hukum',
-        'FPSI' => 'Fakultas Psikologi',
-        'FKIK' => 'Fakultas Kedokteran dan Ilmu Kesehatan',
-    ];
-
-    /** jenjang => [lama studi, uang pangkal, SPP/semester] untuk prodi di luar katalog */
+    /**
+     * jenjang => [lama studi, uang pangkal, SPP/semester]
+     *
+     * @var array<string, array{0: string, 1: int, 2: int}>
+     */
     private const LEVEL_DEFAULTS = [
         'D3' => ['3 tahun (6 semester)', 10_000_000, 6_000_000],
         'D4' => ['4 tahun (8 semester)', 12_000_000, 7_000_000],
@@ -132,7 +112,7 @@ class AdmissionDemoSeeder extends Seeder
 
     public function run(): void
     {
-        foreach (University::query()->get() as $university) {
+        foreach (University::query()->whereNotIn('code', self::DEDICATED)->get() as $university) {
             $this->seedUniversity($university);
         }
     }
@@ -188,29 +168,16 @@ class AdmissionDemoSeeder extends Seeder
     }
 
     /**
-     * Prodi aktif tenant (ditambah katalog bila ada) beserta profil PMB-nya.
+     * Prodi aktif tenant beserta profil PMB generiknya.
      *
      * @return Collection<int, array{program: StudyProgram, karyawan: bool, fees: array{0: int, 1: int}}>
      */
     private function programs(): Collection
     {
-        $catalog = self::CATALOG[$this->university->code] ?? [];
-
-        foreach ($catalog as $code => [$facultyCode, $name, $level]) {
-            $faculty = Faculty::query()->firstOrCreate(
-                ['university_id' => $this->university->getKey(), 'code' => $facultyCode],
-                ['name' => self::FACULTIES[$facultyCode], 'is_active' => true],
-            );
-            StudyProgram::query()->firstOrCreate(
-                ['university_id' => $this->university->getKey(), 'code' => $code],
-                ['faculty_id' => $faculty->getKey(), 'name' => $name, 'degree_level' => $level, 'is_active' => true],
-            );
-        }
-
-        return StudyProgram::query()->where('is_active', true)->with('faculty')->orderBy('name')->get()->map(function (StudyProgram $program) use ($catalog): array {
+        return StudyProgram::query()->where('is_active', true)->with('faculty')->orderBy('name')->get()->map(function (StudyProgram $program): array {
             [$duration, $upfront, $tuition] = self::LEVEL_DEFAULTS[$program->degree_level] ?? self::LEVEL_DEFAULTS['S1'];
-            [, , , $title, $accreditation, $karyawan, $fees, $summary, $careers] = $catalog[$program->code]
-                ?? [null, null, null, null, 'Baik Sekali', in_array($program->degree_level, ['S2', 'S3'], true), [$upfront, $tuition], null, null];
+            $karyawan = in_array($program->degree_level, ['S2', 'S3'], true);
+            $fees = [$upfront, $tuition];
             $slug = Str::slug($program->degree_level.' '.$program->name);
 
             if (ProgramProfile::query()->where('slug', $slug)->where('study_program_id', '!=', $program->getKey())->exists()) {
@@ -219,10 +186,10 @@ class AdmissionDemoSeeder extends Seeder
 
             ProgramProfile::query()->firstOrCreate(['study_program_id' => $program->getKey()], [
                 'university_id' => $this->university->getKey(), 'slug' => $slug,
-                'summary' => $summary ?? "Program {$program->degree_level} {$program->name} di {$program->faculty?->name}.",
-                'description' => '<p>'.($summary ?? "Program studi {$program->name} menyiapkan lulusan yang kompeten dan siap bersaing.").'</p><p>Perkuliahan memadukan teori, praktikum, dan proyek bersama mitra industri.</p>',
-                'accreditation_label' => $accreditation, 'accreditation_valid_until' => now()->addYears(3)->toDateString(),
-                'degree_title' => $title, 'study_duration' => $duration, 'career_prospects' => $careers, 'is_published' => true,
+                'summary' => "Program {$program->degree_level} {$program->name} di {$program->faculty?->name}.",
+                'description' => "<p>Program studi {$program->name} menyiapkan lulusan yang kompeten dan siap bersaing.</p><p>Perkuliahan memadukan teori, praktikum, dan proyek bersama mitra industri.</p>",
+                'accreditation_label' => 'Baik Sekali', 'accreditation_valid_until' => now()->addYears(3)->toDateString(),
+                'study_duration' => $duration, 'is_published' => true,
             ]);
 
             return ['program' => $program, 'karyawan' => $karyawan, 'fees' => $fees];
