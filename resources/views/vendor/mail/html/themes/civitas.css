@@ -1,0 +1,491 @@
+/*
+ * Tema email "civitas" — mengikuti palet portal PMB
+ * (frontend/src/landing/styles/landing.css → .lp-theme, dipakai pmb.css):
+ *   canvas  #faf8f5   surface #ffffff   sunken #f5f1ec
+ *   line    #eae5df   line-strong #d6cfc7
+ *   fg      #1f1c1a   muted #57514c     subtle #736c66
+ *   brand   #c8460c   brand-hover #ae3b09  brand-text #c2410c  brand-soft #fdf0e7
+ *   gold    #d68c18   gold-text #96600a
+ *   ok      #126830   bad #c2272d
+ * Font: Plus Jakarta Sans (judul) + Inter (isi), dengan cadangan sistem.
+ * File ini di-inline ke tiap elemen oleh CssToInlineStyles; media query
+ * ada di <style> layout.blade.php.
+ */
+
+/* Base */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+}
+
+/* Font isi per elemen (bukan lewat `body *` yang spesifisitasnya
+   mengalahkan font judul h1–h3 dan kelas brand). */
+body,
+table,
+td,
+th,
+p,
+a,
+span,
+div,
+ul,
+ol,
+li,
+blockquote,
+strong,
+em {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    -ms-text-size-adjust: none;
+    background-color: #faf8f5;
+    color: #57514c;
+    height: 100%;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol,
+blockquote {
+    line-height: 1.7;
+    text-align: left;
+}
+
+a {
+    color: #c2410c;
+    text-decoration: underline;
+}
+
+a img {
+    border: none;
+}
+
+img {
+    max-width: 100%;
+}
+
+strong {
+    color: #1f1c1a;
+    font-weight: 600;
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid #eae5df;
+    margin: 28px 0;
+}
+
+/* Typography */
+
+h1,
+h2,
+h3 {
+    font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #1f1c1a;
+    margin-top: 0;
+    text-align: left;
+}
+
+h1 {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    margin-bottom: 12px;
+}
+
+h3 {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+p {
+    color: #57514c;
+    font-size: 15px;
+    margin-top: 0;
+    margin-bottom: 16px;
+}
+
+ul,
+ol {
+    color: #57514c;
+    font-size: 15px;
+    margin: 0 0 16px;
+    padding-left: 22px;
+}
+
+li {
+    margin-bottom: 6px;
+}
+
+p.sub {
+    font-size: 12px;
+}
+
+.eyebrow {
+    color: #c2410c;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1.3;
+    margin: 0 0 12px;
+    text-transform: uppercase;
+}
+
+.salutation {
+    color: #57514c;
+    margin-top: 28px;
+    margin-bottom: 0;
+}
+
+.salutation strong {
+    color: #1f1c1a;
+    font-weight: 700;
+}
+
+/* Layout */
+
+.wrapper {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #faf8f5;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.wrapper-cell {
+    padding: 32px 16px 40px;
+}
+
+.content {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Header — wordmark kampus di atas kartu */
+
+.header {
+    padding: 0 0 20px;
+}
+
+.header-inner {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 600px;
+    margin: 0 auto;
+    width: 600px;
+}
+
+.header-cell {
+    padding: 0 4px;
+    text-align: left;
+}
+
+.brand-mark-cell {
+    padding-right: 12px;
+}
+
+.brand-mark {
+    background-color: #c8460c;
+    border-radius: 10px;
+    color: #ffffff;
+    font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    height: 44px;
+    letter-spacing: 0.02em;
+    line-height: 44px;
+    text-align: center;
+    text-transform: uppercase;
+    width: 44px;
+}
+
+.brand-logo {
+    border: 0;
+    display: block;
+    height: 44px;
+    width: auto;
+}
+
+.brand-name {
+    color: #1f1c1a;
+    font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.brand-label {
+    color: #c2410c;
+    font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.brand-subtitle {
+    color: #736c66;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    padding-top: 3px;
+}
+
+/* Body — kartu putih dengan aksen oranye di atas */
+
+.body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #faf8f5;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.inner-body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 600px;
+    background-color: #ffffff;
+    border: 1px solid #eae5df;
+    border-top: 4px solid #c8460c;
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(42, 39, 37, 0.05), 0 8px 20px -10px rgba(42, 39, 37, 0.14);
+    margin: 0 auto;
+    padding: 0;
+    width: 600px;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 40px 44px;
+}
+
+.inner-body a {
+    word-break: break-word;
+}
+
+/* Subcopy */
+
+.subcopy {
+    border-top: 1px solid #eae5df;
+    margin-top: 32px;
+    padding-top: 20px;
+}
+
+.subcopy p {
+    color: #736c66;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+.subcopy strong {
+    color: #57514c;
+}
+
+/* Footer */
+
+.footer-row {
+    padding-top: 8px;
+}
+
+.footer {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 600px;
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    width: 600px;
+}
+
+.footer-cell {
+    padding: 24px 24px 0;
+}
+
+.footer p {
+    color: #736c66;
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0 0 4px;
+    text-align: center;
+}
+
+.footer a {
+    color: #736c66;
+    text-decoration: underline;
+}
+
+.footer .footer-brand {
+    color: #1f1c1a;
+    font-family: 'Plus Jakarta Sans', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.footer .footer-note {
+    margin-top: 14px;
+}
+
+.footer .footer-copy {
+    color: #a39b94;
+    margin-top: 10px;
+}
+
+/* Tables */
+
+.table table {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 24px auto;
+    width: 100%;
+}
+
+.table th {
+    border-bottom: 1px solid #d6cfc7;
+    color: #1f1c1a;
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0;
+    padding-bottom: 8px;
+    text-align: left;
+}
+
+.table td {
+    border-bottom: 1px solid #eae5df;
+    color: #57514c;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    padding: 10px 0;
+}
+
+/* Buttons */
+
+.action {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 28px 0 24px;
+    padding: 0;
+    width: 100%;
+    float: unset;
+}
+
+.button-cell {
+    border-radius: 12px;
+}
+
+.button-cell-primary {
+    background-color: #c8460c;
+}
+
+.button-cell-success {
+    background-color: #126830;
+}
+
+.button-cell-error {
+    background-color: #c2272d;
+}
+
+.button {
+    -webkit-text-size-adjust: none;
+    border-radius: 12px;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.005em;
+    line-height: 1.2;
+    overflow: hidden;
+    text-align: center;
+    text-decoration: none;
+}
+
+.button-blue,
+.button-primary {
+    background-color: #c8460c;
+    border-bottom: 14px solid #c8460c;
+    border-left: 28px solid #c8460c;
+    border-right: 28px solid #c8460c;
+    border-top: 14px solid #c8460c;
+}
+
+.button-green,
+.button-success {
+    background-color: #126830;
+    border-bottom: 14px solid #126830;
+    border-left: 28px solid #126830;
+    border-right: 28px solid #126830;
+    border-top: 14px solid #126830;
+}
+
+.button-red,
+.button-error {
+    background-color: #c2272d;
+    border-bottom: 14px solid #c2272d;
+    border-left: 28px solid #c2272d;
+    border-right: 28px solid #c2272d;
+    border-top: 14px solid #c2272d;
+}
+
+/* Panels — kotak info hangat (brand-soft) */
+
+.panel {
+    margin: 24px 0;
+}
+
+.panel-content {
+    background-color: #fdf0e7;
+    border: 1px solid #f6d9c4;
+    border-radius: 12px;
+    color: #57514c;
+    padding: 16px 20px;
+}
+
+.panel-content p {
+    color: #57514c;
+}
+
+.panel-item {
+    padding: 0;
+}
+
+.panel-item p:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Utilities */
+
+.break-all {
+    word-break: break-all;
+}

@@ -1,5 +1,7 @@
 <?php
 
+use League\CommonMark\Extension\Autolink\AutolinkExtension;
+
 return [
 
     /*
@@ -113,6 +115,31 @@ return [
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tampilan Email (Markdown Mail)
+    |--------------------------------------------------------------------------
+    |
+    | Komponen & tema di resources/views/vendor/mail (tema "civitas" mengikuti
+    | palet portal PMB: oranye Atma Jaya, charcoal, latar off-white hangat).
+    | Autolink membuat URL polos di isi email (mis. tautan verifikasi) bisa diklik.
+    |
+    */
+
+    'markdown' => [
+        'theme' => env('MAIL_MARKDOWN_THEME', 'civitas'),
+        'paths' => [resource_path('views/vendor/mail')],
+        'extensions' => [AutolinkExtension::class],
+    ],
+
+    /*
+    | Logo di kepala email. Harus URL publik permanen (bukan URL bertanda tangan
+    | yang kedaluwarsa); bila kosong dipakai monogram inisial kampus.
+    */
+    'brand' => [
+        'logo_url' => env('MAIL_LOGO_URL'),
     ],
 
 ];
