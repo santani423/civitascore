@@ -77,6 +77,9 @@ class OrganizationalRoleSeeder extends Seeder
         'pmb_exams.update', 'pmb_exam_attendance.update', 'pmb_selection.finalize', 'pmb_results.read', 'pmb_results.update',
         'pmb_waitlist.update', 'pmb_reregistration.read', 'pmb_reregistration.update', 'pmb_conversion.read', 'pmb_conversion.update',
         'pmb_nim.update', 'pmb_reports.read', 'pmb_reports.export', 'pmb_communication.publish', 'pmb_communication.update', 'pmb_audit.read',
+        'pmb_assessments.read', 'pmb_assessments.create', 'pmb_assessments.update', 'pmb_assessments.delete', 'pmb_assessments.approve',
+        'pmb_assessment_questions.read', 'pmb_assessment_questions.create', 'pmb_assessment_questions.update', 'pmb_assessment_questions.delete',
+        'pmb_assessment_results.read', 'pmb_assessment_results.update', 'pmb_assessment_sessions.read', 'pmb_assessment_sessions.reject', 'pmb_assessment_audit_logs.read',
         'approval_requests.read',
     ];
 
@@ -245,7 +248,12 @@ class OrganizationalRoleSeeder extends Seeder
         'academic_advisor' => [...self::HR_SELF_SERVICE, 'krs_advising.read', 'krs_advising.approve'],
         'employee' => self::HR_SELF_SERVICE,
         'admission_administrator' => self::PMB_ADMIN,
-        'admission_approver' => ['pmb_config.read', 'pmb_applications.read', 'pmb_results.approve', 'pmb_results.read', 'pmb_reports.read', 'approval_requests.read'],
+        'admission_approver' => [
+            'pmb_config.read', 'pmb_applications.read', 'pmb_results.approve', 'pmb_results.read', 'pmb_reports.read', 'approval_requests.read',
+            // One Atma Talent: pejabat pengesah menyetujui dan menerbitkan instrumen serta hasil (pemisahan tugas dari penyusun).
+            'pmb_assessments.read', 'pmb_assessments.approve', 'pmb_assessments.publish', 'pmb_assessment_questions.read',
+            'pmb_assessment_results.read', 'pmb_assessment_results.publish', 'pmb_assessment_sessions.read', 'pmb_assessment_audit_logs.read',
+        ],
         'admission_verifier' => [
             'pmb_config.read', 'pmb_applications.read', 'pmb_applications.create', 'pmb_sensitive.read', 'pmb_documents.read',
             'pmb_verification.approve', 'pmb_payments.read', 'pmb_reports.read', 'pmb_communication.update',

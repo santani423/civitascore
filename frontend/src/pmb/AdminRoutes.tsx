@@ -12,6 +12,10 @@ const exams = () => import('@/pmb/pages/admin/ExamPages')
 const selection = () => import('@/pmb/pages/admin/SelectionPages')
 const outcome = () => import('@/pmb/pages/admin/OutcomePages')
 const insight = () => import('@/pmb/pages/admin/InsightPages')
+const talentDashboard = () => import('@/pmb/pages/admin/TalentDashboardPage')
+const talentAssessments = () => import('@/pmb/pages/admin/TalentAssessmentPages')
+const talentQuestions = () => import('@/pmb/pages/admin/TalentQuestionBankPage')
+const talentMonitoring = () => import('@/pmb/pages/admin/TalentMonitoringPages')
 
 const pages = {
   DashboardPage: named(() => import('@/pmb/pages/admin/DashboardPage'), 'DashboardPage'),
@@ -41,6 +45,14 @@ const pages = {
   ReportsPage: named(insight, 'ReportsPage'),
   CommunicationPage: named(insight, 'CommunicationPage'),
   AuditPage: named(insight, 'AuditPage'),
+  TalentDashboardPage: named(talentDashboard, 'TalentDashboardPage'),
+  TalentAssessmentsPage: named(talentAssessments, 'TalentAssessmentsPage'),
+  TalentTypePage: named(talentAssessments, 'TalentTypePage'),
+  TalentVersionPage: named(talentAssessments, 'TalentVersionPage'),
+  TalentQuestionBankPage: named(talentQuestions, 'TalentQuestionBankPage'),
+  TalentParticipantsPage: named(talentMonitoring, 'TalentParticipantsPage'),
+  TalentSessionPage: named(talentMonitoring, 'TalentSessionPage'),
+  TalentAuditPage: named(talentMonitoring, 'TalentAuditPage'),
 }
 
 function S({ children }: { children: ReactNode }) {
@@ -78,4 +90,12 @@ export const PMB_ADMIN_ROUTES: Array<{ path: string; element: ReactNode }> = [
   { path: PMB.admin.reports, element: el(pages.ReportsPage) },
   { path: PMB.admin.communication, element: el(pages.CommunicationPage) },
   { path: PMB.admin.audit, element: el(pages.AuditPage) },
+  { path: PMB.admin.talent, element: el(pages.TalentDashboardPage) },
+  { path: PMB.admin.talentAssessments, element: el(pages.TalentAssessmentsPage) },
+  { path: PMB.admin.talentType, element: el(pages.TalentTypePage) },
+  { path: PMB.admin.talentVersion, element: el(pages.TalentVersionPage) },
+  { path: PMB.admin.talentQuestions, element: el(pages.TalentQuestionBankPage) },
+  { path: PMB.admin.talentParticipants, element: el(pages.TalentParticipantsPage) },
+  { path: PMB.admin.talentSession, element: el(pages.TalentSessionPage) },
+  { path: PMB.admin.talentAudit, element: el(pages.TalentAuditPage) },
 ]

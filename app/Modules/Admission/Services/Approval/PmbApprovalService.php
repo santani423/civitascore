@@ -32,6 +32,8 @@ class PmbApprovalService
 
     public const PUBLICATION_ACCELERATION = 'pmb_publication_acceleration';
 
+    public const ASSESSMENT_VERSION = 'pmb_assessment_version';
+
     /**
      * Alur default per jenis: [nama, [[nama langkah, role slug], ...]].
      * Pengesahan hasil dua langkah: Ketua Panitia → Pejabat Pengesah (Q-ANN-01 default).
@@ -43,6 +45,8 @@ class PmbApprovalService
         self::REFUND => ['Pengembalian Dana PMB', [['Kepala Keuangan', 'finance_administrator']]],
         self::BULK_EXTENSION => ['Perpanjangan Massal Daftar Ulang PMB', [['Pejabat Pengesah', 'admission_approver']]],
         self::PUBLICATION_ACCELERATION => ['Percepatan Publikasi Hasil PMB', [['Pejabat Pengesah', 'admission_approver']]],
+        // One Atma Talent (docs/one-atma-talent/05): penelaahan dua pihak, penyusun tidak boleh menyetujui sendiri.
+        self::ASSESSMENT_VERSION => ['Pengesahan Instrumen Asesmen', [['Penelaah Asesmen', 'admission_administrator'], ['Pejabat Pengesah', 'admission_approver']]],
     ];
 
     public function __construct(private readonly ApprovalRequestService $requests) {}

@@ -12,6 +12,7 @@ const check = () => import('@/pmb/pages/public/CheckPages')
 const auth = () => import('@/pmb/pages/auth/AuthPages')
 const portal = () => import('@/pmb/pages/portal/PortalPages')
 const stage = () => import('@/pmb/pages/portal/StagePages')
+const assessment = () => import('@/pmb/pages/portal/AssessmentPages')
 
 const PublicLayout = named(() => import('@/pmb/layouts/PublicLayout'), 'PublicLayout')
 const PortalLayout = named(() => import('@/pmb/layouts/PortalLayout'), 'PortalLayout')
@@ -44,6 +45,10 @@ const ExamsPage = named(stage, 'ExamsPage')
 const CbtPage = named(stage, 'CbtPage')
 const ResultPage = named(stage, 'ResultPage')
 const ReRegistrationPage = named(stage, 'ReRegistrationPage')
+const AssessmentListPage = named(assessment, 'AssessmentListPage')
+const AssessmentStartPage = named(assessment, 'AssessmentStartPage')
+const AssessmentSessionPage = named(assessment, 'AssessmentSessionPage')
+const AssessmentResultPage = named(assessment, 'AssessmentResultPage')
 
 // Komponen dengan prop tetap (ContentListPage/ContentDetailPage) dibungkus.
 const ContentList = lazy(() => content().then((m) => ({ default: m.ContentListPage })))
@@ -92,6 +97,7 @@ export function pmbPublicRoutes() {
       </Route>
 
       <Route path={PMB.portal.cbt} element={<ApplicantOnly><S><CbtPage /></S></ApplicantOnly>} />
+      <Route path={PMB.portal.assessmentSession} element={<ApplicantOnly><S><AssessmentSessionPage /></S></ApplicantOnly>} />
 
       <Route element={<S><PortalLayout /></S>}>
         <Route path={PMB.portal.home} element={<S><PortalHomePage /></S>} />
@@ -99,6 +105,9 @@ export function pmbPublicRoutes() {
         <Route path={PMB.portal.newApplication} element={<S><NewApplicationPage /></S>} />
         <Route path={PMB.portal.application} element={<S><ApplicationPage /></S>} />
         <Route path={PMB.portal.exams} element={<S><ExamsPage /></S>} />
+        <Route path={PMB.portal.assessments} element={<S><AssessmentListPage /></S>} />
+        <Route path={PMB.portal.assessment} element={<S><AssessmentStartPage /></S>} />
+        <Route path={PMB.portal.assessmentResult} element={<S><AssessmentResultPage /></S>} />
         <Route path={PMB.portal.result} element={<S><ResultPage /></S>} />
         <Route path={PMB.portal.reRegistration} element={<S><ReRegistrationPage /></S>} />
         <Route path={PMB.portal.messages} element={<S><MessagesPage /></S>} />

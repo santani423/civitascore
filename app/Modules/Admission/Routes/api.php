@@ -126,6 +126,15 @@ Route::prefix('pmb')->group(function (): void {
         Route::post('exam-participants/{participantId}/cbt/violations', [Applicant\ExamController::class, 'cbtViolation']);
         Route::post('exam-participants/{participantId}/cbt/submit', [Applicant\ExamController::class, 'cbtSubmit']);
 
+        // One Atma Talent — asesmen minat (docs/one-atma-talent/01). Sesi selalu milik pendaftaran pada akun yang login.
+        Route::get('applications/{id}/assessments', [Applicant\AssessmentController::class, 'catalog']);
+        Route::post('applications/{id}/assessments/consent', [Applicant\AssessmentController::class, 'consent'])->middleware('pmb.applicant:verified');
+        Route::post('applications/{id}/assessments/{versionId}/sessions', [Applicant\AssessmentController::class, 'start'])->middleware('pmb.applicant:verified');
+        Route::get('assessment-sessions/{sessionId}', [Applicant\AssessmentController::class, 'show']);
+        Route::put('assessment-sessions/{sessionId}/responses', [Applicant\AssessmentController::class, 'saveResponses']);
+        Route::post('assessment-sessions/{sessionId}/submit', [Applicant\AssessmentController::class, 'submit']);
+        Route::get('assessment-sessions/{sessionId}/result', [Applicant\AssessmentController::class, 'result']);
+
         Route::get('applications/{id}/result', [Applicant\ResultController::class, 'result']);
         Route::get('applications/{id}/loa', [Applicant\ResultController::class, 'letter']);
         Route::get('applications/{id}/re-registration', [Applicant\ReRegistrationController::class, 'show']);
@@ -145,6 +154,59 @@ Route::prefix('pmb')->group(function (): void {
     Route::prefix('admin')->middleware(['auth:sanctum', 'pmb.staff', 'tenant.access', 'throttle:pmb-admin'])->group(function (): void {
         // Pemilih petugas (penugasan verifikasi, penguji, penanggung jawab chat).
         Route::get('staff', [Admin\ConfigurationController::class, 'staff'])->middleware('permission:'.P::CONFIG_READ.','.P::VERIFICATION_ASSIGN.','.P::EXAMS_MANAGE.','.P::COMMUNICATION_CHAT);
+
+        // One Atma Talent — konfigurasi, bank soal, dan monitoring (docs/one-atma-talent/03–06). Izin per aksi, lihat PmbPermission.
+        Route::middleware('permission:'.P::ASSESSMENT_SESSIONS_READ)->group(function (): void {
+            Route::get('assessment-dashboard', [Admin\AssessmentMonitoringController::class, 'dashboard']);
+            Route::get('assessment-sessions', [Admin\AssessmentMonitoringController::class, 'sessions']);
+            Route::get('assessment-sessions/{session}', [Admin\AssessmentMonitoringController::class, 'showSession']);
+        });
+        Route::middleware('permission:'.P::ASSESSMENTS_READ)->group(function (): void {
+            Route::get('assessment-types', [Admin\AssessmentController::class, 'types']);
+            Route::get('assessment-types/{type}/versions', [Admin\AssessmentController::class, 'versions']);
+            Route::get('assessment-versions/{version}', [Admin\AssessmentController::class, 'showVersion']);
+            Route::get('assessment-versions/{version}/diff/{other}', [Admin\AssessmentController::class, 'diff']);
+        });
+        Route::middleware('permission:'.P::ASSESSMENTS_CREATE)->group(function (): void {
+            Route::post('assessment-types', [Admin\AssessmentController::class, 'storeType']);
+            Route::post('assessment-types/{type}/versions', [Admin\AssessmentController::class, 'storeVersion']);
+            Route::post('assessment-versions/{version}/clone', [Admin\AssessmentController::class, 'cloneVersion']);
+        });
+        Route::middleware('permission:'.P::ASSESSMENTS_MANAGE)->group(function (): void {
+            Route::patch('assessment-types/{type}', [Admin\AssessmentController::class, 'updateType']);
+            Route::patch('assessment-versions/{version}', [Admin\AssessmentController::class, 'updateVersion']);
+            Route::post('assessment-versions/{version}/dimensions', [Admin\AssessmentController::class, 'storeDimension']);
+            Route::patch('assessment-dimensions/{dimension}', [Admin\AssessmentController::class, 'updateDimension']);
+            Route::delete('assessment-dimensions/{dimension}', [Admin\AssessmentController::class, 'destroyDimension']);
+            Route::post('assessment-versions/{version}/submit', [Admin\AssessmentController::class, 'submitVersion']);
+        });
+        Route::post('assessment-versions/{version}/decision', [Admin\AssessmentController::class, 'decideVersion'])->middleware('permission:'.P::ASSESSMENTS_APPROVE);
+        Route::post('assessment-versions/{version}/publish', [Admin\AssessmentController::class, 'publishVersion'])->middleware('permission:'.P::ASSESSMENTS_PUBLISH);
+        Route::middleware('permission:'.P::ASSESSMENTS_ARCHIVE)->group(function (): void {
+            Route::post('assessment-versions/{version}/archive', [Admin\AssessmentController::class, 'archiveVersion']);
+            Route::delete('assessment-versions/{version}', [Admin\AssessmentController::class, 'destroyVersion']);
+        });
+        Route::middleware('permission:'.P::ASSESSMENT_QUESTIONS_READ)->group(function (): void {
+            Route::get('assessment-questions', [Admin\AssessmentQuestionController::class, 'index']);
+            Route::get('assessment-items/{item}', [Admin\AssessmentQuestionController::class, 'show']);
+            Route::get('assessment-items/{item}/preview', [Admin\AssessmentQuestionController::class, 'preview']);
+        });
+        Route::middleware('permission:'.P::ASSESSMENT_QUESTIONS_CREATE)->group(function (): void {
+            Route::post('assessment-versions/{version}/items', [Admin\AssessmentQuestionController::class, 'store']);
+            Route::post('assessment-items/{item}/copy', [Admin\AssessmentQuestionController::class, 'copy']);
+        });
+        Route::patch('assessment-items/{item}', [Admin\AssessmentQuestionController::class, 'update'])->middleware('permission:'.P::ASSESSMENT_QUESTIONS_MANAGE);
+        Route::delete('assessment-items/{item}', [Admin\AssessmentQuestionController::class, 'destroy'])->middleware('permission:'.P::ASSESSMENT_QUESTIONS_DELETE);
+        Route::middleware('permission:'.P::ASSESSMENT_RESULTS_READ)->get('assessment-sessions/{session}/review', [Admin\AssessmentMonitoringController::class, 'review']);
+        Route::middleware('permission:'.P::ASSESSMENT_RESULTS_REVIEW)->group(function (): void {
+            Route::post('assessment-sessions/{session}/notes', [Admin\AssessmentMonitoringController::class, 'addNote']);
+            Route::post('assessment-sessions/{session}/flag', [Admin\AssessmentMonitoringController::class, 'flag']);
+            Route::post('assessment-sessions/{session}/unflag', [Admin\AssessmentMonitoringController::class, 'unflag']);
+            Route::post('assessment-sessions/{session}/review-complete', [Admin\AssessmentMonitoringController::class, 'completeReview']);
+        });
+        Route::post('assessment-sessions/{session}/invalidate', [Admin\AssessmentMonitoringController::class, 'invalidate'])->middleware('permission:'.P::ASSESSMENT_SESSIONS_INVALIDATE);
+        Route::post('assessment-sessions/{session}/publish', [Admin\AssessmentMonitoringController::class, 'publishSession'])->middleware('permission:'.P::ASSESSMENT_RESULTS_PUBLISH);
+        Route::get('assessment-audit-logs', [Admin\AssessmentMonitoringController::class, 'audit'])->middleware('permission:'.P::ASSESSMENT_AUDIT_READ);
 
         // Konfigurasi (11 §A.9)
         Route::middleware('permission:'.P::CONFIG_READ)->group(function (): void {

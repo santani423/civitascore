@@ -6,11 +6,13 @@ use App\Support\Tenancy\TenantContext;
 use Illuminate\Events\Dispatcher;
 use Modules\Admission\Enums\ChangeRequestStatus;
 use Modules\Admission\Enums\ChangeRequestType;
+use Modules\Admission\Models\AssessmentVersion;
 use Modules\Admission\Models\ChangeRequest;
 use Modules\Admission\Models\Refund;
 use Modules\Admission\Models\SelectionRun;
 use Modules\Admission\Services\Announcement\DecisionService;
 use Modules\Admission\Services\Announcement\PublicationService;
+use Modules\Admission\Services\Assessment\AssessmentApprovalService;
 use Modules\Admission\Services\Payment\RefundService;
 use Modules\Admission\Services\ReRegistration\ReRegistrationService;
 use Modules\Admission\Services\Selection\ScoreService;
@@ -57,10 +59,20 @@ class SyncApprovalDecisions
                 (new SelectionRun)->getMorphClass() => $this->run($request, $outcome),
                 (new Refund)->getMorphClass() => $this->refund($request, $outcome),
                 (new ChangeRequest)->getMorphClass() => $this->change($request, $outcome),
+                (new AssessmentVersion)->getMorphClass() => $this->assessmentVersion($request, $outcome),
                 default => null,
             };
         } finally {
             $tenant->setUniversityId($previous);
+        }
+    }
+
+    private function assessmentVersion(ApprovalRequest $request, string $outcome): void
+    {
+        $version = AssessmentVersion::query()->find($request->requestable_id);
+
+        if ($version !== null) {
+            app(AssessmentApprovalService::class)->onOutcome($version, $outcome);
         }
     }
 

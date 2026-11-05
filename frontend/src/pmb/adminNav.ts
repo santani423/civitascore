@@ -1,6 +1,7 @@
-import { ClipboardList, Settings2 } from 'lucide-react'
+import { ClipboardList, Settings2, Sparkles } from 'lucide-react'
 import type { NavItem } from '@/types/navigation'
 import { PMB } from '@/pmb/routes'
+import { TP } from '@/pmb/api/talent'
 
 /**
  * Menu admin PMB (docs/pmb/12 §2.2). Permission tiap item = gate baca
@@ -24,6 +25,18 @@ export const PMB_NAV_ITEMS: NavItem[] = [
       { label: 'Komunikasi', path: PMB.admin.communication, permission: ['pmb_communication.update', 'pmb_communication.publish', 'pmb_config.update', 'pmb_audit.read'] },
       { label: 'Laporan PMB', path: PMB.admin.reports, permission: 'pmb_reports.read' },
       { label: 'Audit PMB', path: PMB.admin.audit, permission: 'pmb_audit.read' },
+    ],
+  },
+  {
+    label: 'One Atma Talent',
+    path: PMB.admin.talent,
+    icon: Sparkles,
+    children: [
+      { label: 'Dashboard Talenta', path: PMB.admin.talent, permission: TP.SESSIONS_READ },
+      { label: 'Asesmen & Versi', path: PMB.admin.talentAssessments, permission: TP.ASSESSMENTS_READ },
+      { label: 'Bank Soal', path: PMB.admin.talentQuestions, permission: TP.QUESTIONS_READ },
+      { label: 'Peserta & Sesi', path: PMB.admin.talentParticipants, permission: TP.SESSIONS_READ },
+      { label: 'Audit Talenta', path: PMB.admin.talentAudit, permission: TP.AUDIT_READ },
     ],
   },
   {
@@ -52,4 +65,7 @@ export const PMB_DETAIL_ROUTE_PERMISSIONS: Record<string, string | string[]> = {
   [PMB.admin.examSession]: ['pmb_exam_attendance.update', 'pmb_exams.update'],
   [PMB.admin.selectionRun]: 'pmb_results.read',
   [PMB.admin.reRegistration]: 'pmb_reregistration.read',
+  [PMB.admin.talentType]: TP.ASSESSMENTS_READ,
+  [PMB.admin.talentVersion]: TP.ASSESSMENTS_READ,
+  [PMB.admin.talentSession]: TP.SESSIONS_READ,
 }

@@ -76,6 +76,7 @@ function ApplicationCard({ app }: { app: ApplicationSummary }) {
   const current = stageIndex(app.current_stage)
   const links: Array<[string, string]> = [[to(PMB.portal.application, { id: app.id }), app.form_status === 'draft' || app.form_status === 'revision_requested' ? 'Lanjutkan formulir' : 'Lihat formulir']]
   if (app.verification_status === 'verified') links.push([to(PMB.portal.exams, { id: app.id }), 'Ujian & kartu peserta'])
+  links.push([to(PMB.portal.assessments, { id: app.id }), 'Asesmen minat & bakat'])
   if (app.has_published_result) links.push([to(PMB.portal.result, { id: app.id }), 'Hasil seleksi'])
   if (app.re_registration_status) links.push([to(PMB.portal.reRegistration, { id: app.id }), 'Daftar ulang'])
 

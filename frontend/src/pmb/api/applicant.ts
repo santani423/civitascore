@@ -135,6 +135,47 @@ export interface ChatMessage {
   attachment_url: string | null
 }
 
+/** One Atma Talent — asesmen minat (docs/one-atma-talent/01). Kunci dan dimensi butir tidak pernah ada di respons ini. */
+export type AssessmentSessionStatus = 'in_progress' | 'submitted' | 'expired' | 'published' | 'invalidated'
+
+export interface AssessmentCatalogItem {
+  id: string
+  title: string
+  type: { code: string; name: string }
+  instructions: string | null
+  duration_minutes: number | null
+  available_from: string | null
+  available_until: string | null
+  session: { id: string; status: AssessmentSessionStatus; answered_count: number; total_count: number; submitted_at: string | null; published_at: string | null } | null
+  can_start: boolean
+  blocked_reason: string | null
+  blocked_message: string | null
+}
+
+export interface AssessmentSession {
+  id: string
+  status: AssessmentSessionStatus
+  version: { id: string; title: string; instructions: string | null; duration_minutes: number | null }
+  scale: { min: number; max: number }
+  started_at: string
+  deadline_at: string | null
+  submitted_at: string | null
+  server_time: string
+  total_count: number
+  answered_count: number
+  items: Array<{ id: string; stem: string; value: number | null }>
+}
+
+export interface AssessmentResult {
+  session_id: string
+  assessment: { title: string; type: string }
+  published_at: string | null
+  holland_code: string | null
+  dominant: Array<{ code: string; name: string }>
+  dimensions: Array<{ code: string; name: string; description: string | null; interpretation: string | null; item_count: number; raw_score: number; mean_score: number; percent_score: number; rank: number }>
+  disclaimer: string
+}
+
 export const pmbApplicant = {
   // Sesi & akun
   logout: () => send<null>('post', '/auth/logout'),
@@ -233,6 +274,16 @@ export const pmbApplicant = {
     send<{ status: string; lock_version: number }>('put', `/applications/${applicationId}/re-registration/data`, { ...data, lock_version: lockVersion }),
   submitReRegistration: (applicationId: string, lockVersion: number) => send<{ status: string }>('post', `/applications/${applicationId}/re-registration/submit`, { lock_version: lockVersion }),
   registrationProof: (applicationId: string) => get<{ url: string }>(`/applications/${applicationId}/re-registration/proof`),
+
+  // One Atma Talent
+  assessments: (applicationId: string) => get<{ assessments: AssessmentCatalogItem[] }>(`/applications/${applicationId}/assessments`),
+  assessmentConsent: (applicationId: string) => send<{ consented: boolean }>('post', `/applications/${applicationId}/assessments/consent`),
+  assessmentStart: (applicationId: string, versionId: string) => send<AssessmentSession>('post', `/applications/${applicationId}/assessments/${versionId}/sessions`),
+  assessmentSession: (sessionId: string) => get<AssessmentSession>(`/assessment-sessions/${sessionId}`),
+  assessmentSave: (sessionId: string, responses: Array<{ item_id: string; value: number }>) =>
+    send<{ saved: number; answered_count: number; total_count: number; saved_at: string }>('put', `/assessment-sessions/${sessionId}/responses`, { responses }),
+  assessmentSubmit: (sessionId: string) => send<AssessmentSession>('post', `/assessment-sessions/${sessionId}/submit`),
+  assessmentResult: (sessionId: string) => get<AssessmentResult>(`/assessment-sessions/${sessionId}/result`),
 
   // Pesan
   threads: () => get<ChatThreadSummary[]>('/chat-threads'),
