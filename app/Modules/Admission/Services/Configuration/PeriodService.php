@@ -224,6 +224,7 @@ class PeriodService
         }
 
         $attributes = $this->waveAttributes($data);
+        $this->assertWaveCodeAvailable($period, $attributes['code'] ?? null);
         $this->validateWaveDates($attributes, $period);
 
         $wave = Wave::query()->create([
@@ -252,6 +253,7 @@ class PeriodService
     {
         $attributes = $this->waveAttributes($data);
         $merged = [...$wave->only(array_keys($this->waveAttributes($wave->toArray()))), ...$attributes];
+        $this->assertWaveCodeAvailable($wave->period, $attributes['code'] ?? null, $wave);
         $this->validateWaveDates($merged, $wave->period);
 
         if ($this->waveHasSubmittedApplications($wave)) {
@@ -707,6 +709,24 @@ class PeriodService
             'code', 'name', 'sequence', 'registration_opens_at', 'registration_closes_at', 'payment_deadline_at', 'form_lock_at',
             'exam_starts_on', 'exam_ends_on', 'announcement_at', 're_registration_opens_at', 're_registration_closes_at', 'is_ods', 'status',
         ]);
+    }
+
+    /**
+     * Kode gelombang unik per periode (unique `pmb_waves(period_id, code)`);
+     * dicek di sini agar duplikat menjadi 422, bukan 500 dari constraint DB.
+     */
+    private function assertWaveCodeAvailable(Period $period, ?string $code, ?Wave $current = null): void
+    {
+        if ($code === null) {
+            return;
+        }
+
+        $duplicate = Wave::query()->where('period_id', $period->getKey())->where('code', $code)
+            ->when($current, fn ($q) => $q->whereKeyNot($current->getKey()))->exists();
+
+        if ($duplicate) {
+            throw ValidationException::withMessages(['code' => "Kode gelombang {$code} sudah dipakai pada periode ini."]);
+        }
     }
 
     /**
