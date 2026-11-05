@@ -4,13 +4,14 @@ import '../../../../core/l10n/core_strings.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/formatters.dart';
-import '../../../../core/widgets/home_hero.dart';
+import '../../../../core/widgets/campus_hero.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../domain/finance_summary.dart';
 import '../../domain/portal_links.dart';
 import '../../domain/student_dashboard.dart';
 import '../../l10n/student_home_strings.dart';
+import '../screens/student_menu_screen.dart';
 import 'home_navigation.dart';
 
 const _hPad = EdgeInsets.symmetric(horizontal: AppSpacing.lg);
@@ -22,11 +23,23 @@ StatusTone toneForSeverity(String severity) => switch (severity) {
   _ => StatusTone.info,
 };
 
-/// Greeting + identity (name, NIM, prodi, semester, status).
+/// Jarak kartu semester yang menimpa tepi bawah hero.
+const _semesterOverlap = 32.0;
+
+/// Hero beranda mahasiswa: foto kampus dengan sapaan dan identitas, lalu
+/// kartu semester aktif yang menumpang di tepi bawahnya (mockup One Atma).
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key, required this.profile, this.fallbackName});
+  const ProfileHeader({
+    super.key,
+    required this.profile,
+    this.fallbackName,
+    this.academic,
+    this.krs,
+  });
   final HomeProfile? profile;
   final String? fallbackName;
+  final HomeAcademic? academic;
+  final HomeKrs? krs;
 
   String _greeting(BuildContext context) {
     final h = DateTime.now().hour;
@@ -47,16 +60,101 @@ class ProfileHeader extends StatelessWidget {
       if (profile?.nim.isNotEmpty == true) '${s.nim} ${profile!.nim}',
       if (profile?.studyProgram != null) profile!.studyProgram!,
       if (profile?.semester != null) '${s.semester} ${profile!.semester}',
+      if (profile?.statusLabel != null) profile!.statusLabel!,
     ];
-    return Padding(
-      padding: _hPad,
-      child: HomeHeroCard(
-        kicker: _greeting(context),
-        title: name,
-        initial: name,
-        roles: [
-          ...details,
-          if (profile?.statusLabel != null) profile!.statusLabel!,
+    final term = academic;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: EdgeInsets.only(bottom: term == null ? 0 : _semesterOverlap),
+          child: CampusHeroBanner(
+            greeting: _greeting(context),
+            name: name,
+            welcome: s.heroWelcome,
+            details: details,
+            // Teks harus berhenti di atas kartu semester yang menumpang
+            // (kartu ±86 dp: tiga baris bila tanggal dan status KRS tampil).
+            bottomInset: term == null
+                ? AppSpacing.lg
+                : _semesterOverlap + AppSpacing.xl4,
+          ),
+        ),
+        if (term != null)
+          Positioned(
+            left: AppSpacing.lg,
+            right: AppSpacing.lg,
+            bottom: 0,
+            child: SemesterCard(academic: term, krs: krs),
+          ),
+      ],
+    );
+  }
+}
+
+/// Kartu semester aktif di tepi bawah hero: periode akademik dan status KRS.
+/// Ketuk untuk membuka KRS bila data KRS tersedia.
+class SemesterCard extends StatelessWidget {
+  const SemesterCard({super.key, required this.academic, this.krs});
+  final HomeAcademic academic;
+  final HomeKrs? krs;
+
+  @override
+  Widget build(BuildContext context) {
+    final s = context.homeStr;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final krsData = krs;
+    return AppSurfaceCard(
+      onTap: krsData == null
+          ? null
+          : () => openAppRoute(context, RoutePaths.studentKrs),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: scheme.primaryContainer,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Icon(
+              Icons.calendar_month_rounded,
+              size: 22,
+              color: scheme.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  academic.termLabel ?? s.activeSemester,
+                  style: text.titleSmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (academic.termEndDate != null)
+                  Text(
+                    s.activeUntil(context.formatDate(academic.termEndDate)),
+                    style: text.bodySmall,
+                  ),
+                if (krsData != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xs),
+                    child: StatusChip(
+                      label: krsData.statusLabel ?? krsData.status,
+                      tone: toneForKrsStatus(krsData.status),
+                      dense: true,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (krsData != null)
+            Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
         ],
       ),
     );
@@ -194,7 +292,6 @@ class _TermCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.homeStr;
-    final text = Theme.of(context).textTheme;
     final termCredits = academic.currentTermCredits;
     final maxCredits = academic.maxCredits;
     final passed = academic.passedCredits;
@@ -209,26 +306,6 @@ class _TermCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  academic.termLabel ?? s.activeSemester,
-                  style: text.titleSmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (krs != null) ...[
-                const SizedBox(width: AppSpacing.sm),
-                StatusChip(
-                  label: krs!.statusLabel ?? krs!.status,
-                  tone: toneForKrsStatus(krs!.status),
-                  dense: true,
-                ),
-              ],
-            ],
-          ),
           if (termCredits != null) ...[
             const SizedBox(height: AppSpacing.md),
             _ProgressRow(
@@ -636,7 +713,7 @@ class AnnouncementsSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: s.announcements,
+          title: s.announcementsLatest,
           action: context.l10n.seeAll,
           onAction: () =>
               openAppRoute(context, RoutePaths.studentAnnouncements),
@@ -670,6 +747,7 @@ class AnnouncementsSection extends StatelessWidget {
                     chipLabel: a.isPinned ? s.pinned : null,
                     chipTone: StatusTone.accent,
                     emphasized: !a.isRead,
+                    leadingIcon: Icons.campaign_outlined,
                     onTap: a.id.isEmpty
                         ? null
                         : () => openAppRoute(
@@ -692,6 +770,7 @@ class _ListCard extends StatelessWidget {
     this.chipLabel,
     this.chipTone = StatusTone.neutral,
     this.emphasized = false,
+    this.leadingIcon,
     this.onTap,
   });
   final String title;
@@ -699,11 +778,15 @@ class _ListCard extends StatelessWidget {
   final String? chipLabel;
   final StatusTone chipTone;
   final bool emphasized;
+
+  /// Ikon thumbnail di kiri kartu (mis. pengumuman). Null → tanpa thumbnail.
+  final IconData? leadingIcon;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: AppSurfaceCard(
@@ -711,6 +794,22 @@ class _ListCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
+            if (leadingIcon != null) ...[
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: scheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
+                child: Icon(
+                  leadingIcon,
+                  size: 26,
+                  color: scheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -836,20 +935,29 @@ class QuickActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = context.homeStr;
+    // Enam pintasan kategori seperti mockup. Layanan yang tidak tampil di sini
+    // tetap dapat dibuka dari Menu Utama (`RoutePaths.studentMenu`).
     final items = <(IconData, String, String)>[
-      (Icons.assignment_outlined, s.qaKrs, RoutePaths.studentKrs),
+      (Icons.school_outlined, s.qaAcademic, RoutePaths.studentAcademic),
+      if (canSeeFinance)
+        (
+          Icons.account_balance_wallet_outlined,
+          s.qaFinance,
+          RoutePaths.studentFinance,
+        ),
+      (
+        Icons.groups_outlined,
+        s.qaStudentAffairs,
+        '${RoutePaths.studentMenu}?kategori='
+            '${StudentMenuCategory.studentAffairs.key}',
+      ),
+      (Icons.mail_outline, s.qaAdminServices, RoutePaths.studentRequests),
       (
         Icons.calendar_view_week_outlined,
         s.qaSchedule,
         RoutePaths.studentSchedule,
       ),
-      (Icons.grade_outlined, s.qaGrades, RoutePaths.studentGrades),
-      (Icons.task_outlined, s.qaAssignments, RoutePaths.studentAssignments),
-      (Icons.quiz_outlined, s.qaExams, RoutePaths.studentExams),
-      if (canSeeFinance)
-        (Icons.receipt_long_outlined, s.qaInvoices, RoutePaths.studentInvoices),
-      (Icons.mail_outline, s.qaRequests, RoutePaths.studentRequests),
-      (Icons.event_outlined, s.qaCalendar, RoutePaths.studentCalendar),
+      (Icons.apps_rounded, s.qaMore, RoutePaths.studentMenu),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -857,26 +965,20 @@ class QuickActionsGrid extends StatelessWidget {
         SectionHeader(title: s.quickActions),
         Padding(
           padding: _hPad,
-          child: AppSurfaceCard(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xs,
-              vertical: AppSpacing.md,
-            ),
-            child: _QuickActionGrid(items: items),
-          ),
+          child: _QuickActionGrid(items: items),
         ),
       ],
     );
   }
 }
 
-/// Fixed 4-column grid. Short final rows get empty cells rather than wider
-/// tiles, so every column keeps the same width at any screen size.
+/// Fixed 3-column grid (mockup). Short final rows get empty cells rather than
+/// wider tiles, so every column keeps the same width at any screen size.
 class _QuickActionGrid extends StatelessWidget {
   const _QuickActionGrid({required this.items});
   final List<(IconData, String, String)> items;
 
-  static const _columns = 4;
+  static const _columns = 3;
 
   @override
   Widget build(BuildContext context) {
@@ -891,19 +993,24 @@ class _QuickActionGrid extends StatelessWidget {
             padding: EdgeInsets.only(
               bottom: r == rows.length - 1 ? 0 : AppSpacing.sm,
             ),
-            child: Row(
-              children: [
-                for (var c = 0; c < _columns; c++)
-                  Expanded(
-                    child: c < rows[r].length
-                        ? _QuickActionTile(
-                            icon: rows[r][c].$1,
-                            label: rows[r][c].$2,
-                            onTap: () => openAppRoute(context, rows[r][c].$3),
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-              ],
+            // Tile dalam satu baris memakai tinggi yang sama, meski labelnya
+            // ada yang satu baris dan ada yang dua baris.
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var c = 0; c < _columns; c++)
+                    Expanded(
+                      child: c < rows[r].length
+                          ? _QuickActionTile(
+                              icon: rows[r][c].$1,
+                              label: rows[r][c].$2,
+                              onTap: () => openAppRoute(context, rows[r][c].$3),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                ],
+              ),
             ),
           ),
       ],
@@ -924,13 +1031,13 @@ class _QuickActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.md),
-      onTap: onTap,
-      child: Padding(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+      child: AppSurfaceCard(
+        onTap: onTap,
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xs,
-          vertical: AppSpacing.sm,
+          vertical: AppSpacing.md,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,

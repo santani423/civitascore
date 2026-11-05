@@ -8,6 +8,7 @@ import '../../../core/session/app_experience.dart';
 import '../../../core/theme/app_dimensions.dart';
 import '../../../core/widgets/app_feedback.dart';
 import '../../../core/widgets/notification_bell.dart';
+import '../../../core/widgets/service_card.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
 import '../l10n/account_strings.dart';
@@ -42,11 +43,21 @@ class AccountScreen extends ConsumerWidget {
         title: Text(a.title),
         actions: const [NotificationBellButton()],
       ),
+      // Gutter halaman disediakan ListView agar kartu layanan (ServiceCard)
+      // tidak menempel ke tepi layar.
       body: ListView(
-        padding: const EdgeInsets.only(bottom: AppSpacing.xl2),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.xl2,
+        ),
         children: [
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.only(
+              top: AppSpacing.lg,
+              bottom: AppSpacing.sm,
+            ),
             child: AppSurfaceCard(
               onTap: () => context.push(
                 isStudent
@@ -111,7 +122,7 @@ class AccountScreen extends ConsumerWidget {
               ),
             ),
           ),
-          MenuTile(
+          ServiceCard(
             icon: Icons.badge_outlined,
             title: a.myProfile,
             subtitle: isStudent
@@ -124,30 +135,30 @@ class AccountScreen extends ConsumerWidget {
             ),
           ),
           if (isStudent) ...[
-            MenuTile(
+            ServiceCard(
               icon: Icons.assignment_outlined,
               title: a.services,
               subtitle: a.servicesSubtitle,
               onTap: () => context.push(RoutePaths.studentRequests),
             ),
-            MenuTile(
+            ServiceCard(
               icon: Icons.campaign_outlined,
               title: s.announcements,
               onTap: () => context.push(RoutePaths.studentAnnouncements),
             ),
           ] else if (user?.hasPermission('hr_self_service.read') ?? false)
-            MenuTile(
+            ServiceCard(
               icon: Icons.work_outline,
               title: a.hrSelfService,
               subtitle: a.hrSubtitle,
               onTap: () => context.push(RoutePaths.hrProfile),
             ),
-          MenuTile(
+          ServiceCard(
             icon: Icons.notifications_none_rounded,
             title: s.notifications,
             onTap: () => context.push(RoutePaths.notifications),
           ),
-          MenuTile(
+          ServiceCard(
             icon: Icons.hourglass_top_rounded,
             title: s.pendingFeaturesTitle,
             subtitle: a.pendingSubtitle,
@@ -159,13 +170,13 @@ class AccountScreen extends ConsumerWidget {
                         : RoutePaths.pendingFeaturesAdvisor),
             ),
           ),
-          MenuTile(
+          ServiceCard(
             icon: Icons.settings_outlined,
             title: s.settings,
             onTap: () => context.push(RoutePaths.settings),
           ),
           if (experiences.length > 1)
-            MenuTile(
+            ServiceCard(
               icon: Icons.swap_horiz_rounded,
               title: a.switchExperience,
               subtitle: isStudent ? s.roleLecturer : s.roleStudent,
@@ -187,7 +198,7 @@ class AccountScreen extends ConsumerWidget {
             ),
           const SizedBox(height: AppSpacing.lg),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            padding: EdgeInsets.zero,
             child: OutlinedButton.icon(
               key: const Key('account-logout'),
               style: OutlinedButton.styleFrom(foregroundColor: scheme.error),

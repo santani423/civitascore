@@ -6,6 +6,7 @@ import '../../../../core/pending/pending_feature_screen.dart';
 import '../../../../core/pending/pending_features.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/widgets/notification_bell.dart';
+import '../../../../core/widgets/service_card.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../domain/learning_models.dart';
@@ -41,13 +42,13 @@ class LearningHubScreen extends ConsumerWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.only(bottom: 24),
             children: [
-              MenuTile(
+              ServiceCard(
                 icon: Icons.menu_book_outlined,
                 title: s.shortcutMaterials,
                 subtitle: s.shortcutMaterialsSub,
                 onTap: () => context.push(RoutePaths.studentMaterials),
               ),
-              MenuTile(
+              ServiceCard(
                 icon: Icons.assignment_outlined,
                 title: s.shortcutAssignments,
                 subtitle: s.shortcutAssignmentsSub,
@@ -58,7 +59,7 @@ class LearningHubScreen extends ConsumerWidget {
                     : '${pending.valueOrNull!.assignments.length}',
                 onTap: () => context.push(RoutePaths.studentAssignments),
               ),
-              MenuTile(
+              ServiceCard(
                 icon: Icons.quiz_outlined,
                 title: s.shortcutExams,
                 subtitle: s.shortcutExamsSub,

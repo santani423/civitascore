@@ -9,8 +9,9 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/brand_title.dart';
-import '../../../../core/widgets/home_hero.dart';
+import '../../../../core/widgets/campus_hero.dart';
 import '../../../../core/widgets/notification_bell.dart';
+import '../../../../core/widgets/service_card.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../pmb_duty/presentation/providers.dart';
@@ -51,32 +52,45 @@ class LecturerHomeScreen extends ConsumerWidget {
             constraints: const BoxConstraints(maxWidth: 720),
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.only(bottom: AppSpacing.xl2),
               children: [
-                HomeHeroCard(
-                  title: s.greeting(user?.name ?? ''),
-                  initial: user?.name ?? '',
-                  roles: roles,
+                CampusHeroBanner(
+                  greeting: s.heroGreeting(DateTime.now().hour),
+                  name: user?.name ?? '',
+                  welcome: s.heroWelcome,
+                  details: roles,
                 ),
-                if (unread > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.md),
-                    child: MenuTile(
-                      icon: Icons.notifications_active_outlined,
-                      title: s.unreadNotifications,
-                      badge: '$unread',
-                      onTap: () => context.push(RoutePaths.notifications),
-                    ),
+                // Hero tepi-ke-tepi seperti beranda mahasiswa; konten di bawahnya
+                // mengikuti gutter halaman.
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (unread > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                          child: ServiceCard(
+                            icon: Icons.notifications_active_outlined,
+                            title: s.unreadNotifications,
+                            badge: '$unread',
+                            onTap: () => context.push(RoutePaths.notifications),
+                          ),
+                        ),
+                      if (user?.isLecturer ?? false) const _TeachingSection(),
+                      if (user?.isAdvisor ?? false) const _AdvisingSection(),
+                      const PmbDutyHomeSection(),
+                      const SizedBox(height: AppSpacing.md),
+                      PendingFeatureTile(
+                        feature: pendingFeatureByKey('lecturer_announcements')!,
+                      ),
+                      if (user?.isAdvisor ?? false)
+                        PendingFeatureTile(
+                          feature: pendingFeatureByKey('advisees')!,
+                        ),
+                    ],
                   ),
-                if (user?.isLecturer ?? false) const _TeachingSection(),
-                if (user?.isAdvisor ?? false) const _AdvisingSection(),
-                const PmbDutyHomeSection(),
-                const SizedBox(height: AppSpacing.md),
-                PendingFeatureTile(
-                  feature: pendingFeatureByKey('lecturer_announcements')!,
                 ),
-                if (user?.isAdvisor ?? false)
-                  PendingFeatureTile(feature: pendingFeatureByKey('advisees')!),
               ],
             ),
           ),
@@ -177,27 +191,27 @@ class _TeachingSection extends ConsumerWidget {
             bottom: AppSpacing.xs,
           ),
         ),
-        MenuTile(
+        ServiceCard(
           icon: Icons.class_outlined,
           title: s.myClasses,
           onTap: () => context.push(RoutePaths.lecturerTeaching),
         ),
-        MenuTile(
+        ServiceCard(
           icon: Icons.calendar_view_week_outlined,
           title: s.schedule,
           onTap: () => context.push(RoutePaths.lecturerSchedule),
         ),
-        MenuTile(
+        ServiceCard(
           icon: Icons.quiz_outlined,
           title: s.exams,
           onTap: () => context.push(RoutePaths.lecturerExams),
         ),
-        MenuTile(
+        ServiceCard(
           icon: Icons.library_books_outlined,
           title: s.questionBank,
           onTap: () => context.push(RoutePaths.lecturerQuestionBank),
         ),
-        MenuTile(
+        ServiceCard(
           icon: Icons.event_outlined,
           title: s.calendar,
           onTap: () => context.push(RoutePaths.lecturerCalendar),
@@ -292,7 +306,7 @@ class _AdvisingSection extends ConsumerWidget {
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     for (final k in sum.preview)
-                      MenuTile(
+                      ServiceCard(
                         icon: Icons.fact_check_outlined,
                         title: k.studentName ?? '—',
                         subtitle: k.nim,

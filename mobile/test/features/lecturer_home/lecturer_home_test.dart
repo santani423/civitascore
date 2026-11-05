@@ -56,6 +56,8 @@ void main() {
     expect(find.text('Andi Pratama'), findsOneWidget);
     expect(find.textContaining('3 pengajuan'), findsOneWidget);
     await t.ensureVisible(find.text('Jadwal'));
+    // Tunggu frame setelah scroll; posisi tap harus dihitung ulang dulu.
+    await t.pumpAndSettle();
     await t.tap(find.text('Jadwal'));
     await t.pumpAndSettle();
     expect(find.text('route:/l/schedule'), findsOneWidget);

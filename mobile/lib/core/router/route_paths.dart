@@ -16,6 +16,7 @@ abstract final class RoutePaths {
 
   // Shared ----------------------------------------------------------------
   static const notifications = '/notifications';
+  static const notificationPreferences = '/notifications/preferences';
   static const settings = '/settings';
   static const securitySessions = '/settings/security';
   static const pendingFeaturesStudent = '/pending/student';
@@ -25,6 +26,8 @@ abstract final class RoutePaths {
 
   // Student shell tabs ------------------------------------------------------
   static const studentHome = '/s/home';
+  // Menu Utama: pushed di atas bottom bar; `?kategori=` memilih chip awal.
+  static const studentMenu = '/s/menu';
   static const studentAcademic = '/s/academic';
   static const studentLearning = '/s/learning';
   static const studentFinance = '/s/finance';

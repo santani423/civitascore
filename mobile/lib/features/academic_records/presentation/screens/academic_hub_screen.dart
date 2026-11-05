@@ -7,6 +7,7 @@ import '../../../../core/pending/pending_features.dart';
 import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/widgets/notification_bell.dart';
+import '../../../../core/widgets/service_card.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../l10n/academic_records_strings.dart';
 import '../providers.dart';
@@ -33,7 +34,7 @@ class AcademicHubScreen extends ConsumerWidget {
     final summary = ref.watch(academicSummaryProvider);
 
     Widget entry(IconData icon, String title, String sub, String route) =>
-        MenuTile(
+        ServiceCard(
           icon: icon,
           title: title,
           subtitle: sub,

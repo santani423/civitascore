@@ -95,6 +95,7 @@ class HomeAcademic {
     this.maxCredits,
     this.remainingCredits,
     this.termLabel,
+    this.termEndDate,
     this.advisorName,
   });
 
@@ -110,6 +111,7 @@ class HomeAcademic {
       maxCredits: asInt(j['max_credits']),
       remainingCredits: asInt(j['remaining_credits']),
       termLabel: asString(asMap(j['current_term'])['label']),
+      termEndDate: asDateTime(asMap(j['current_term'])['end_date']),
       advisorName: asString(asMap(j['academic_advisor'])['name']),
     );
   }
@@ -125,6 +127,9 @@ class HomeAcademic {
   /// SKS yang masih harus ditempuh untuk kurikulum (null bila belum diketahui).
   final int? remainingCredits;
   final String? termLabel;
+
+  /// Tanggal akhir periode akademik aktif (`current_term.end_date`).
+  final DateTime? termEndDate;
   final String? advisorName;
 }
 

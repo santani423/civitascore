@@ -18,7 +18,8 @@ cache offline terenkripsi. Fitur yang backend-nya belum ada ditampilkan sebagai
 "Menunggu backend" tanpa data tiruan.
 
 Dokumentasi mobile: [`../docs/mobile/`](../docs/mobile/) — audit (01), matriks
-fitur (02), kontrak API & celah backend (03), arsitektur (04), setup & pengujian (05).
+fitur (02), kontrak API & celah backend (03), arsitektur (04), setup & pengujian (05),
+pemetaan mockup & sinkronisasi web (06).
 
 ## Tech stack
 

@@ -34,7 +34,8 @@ class StudentHomeScreen extends ConsumerWidget {
           onRefresh: () => _refresh(ref),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.only(bottom: 32, top: 16),
+            // Hero foto berada tepat di bawah AppBar.
+            padding: const EdgeInsets.only(bottom: 32),
             children: [
               Center(
                 child: ConstrainedBox(
@@ -75,7 +76,12 @@ class _Content extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ProfileHeader(profile: data.profile, fallbackName: fallbackName),
+        ProfileHeader(
+          profile: data.profile,
+          fallbackName: fallbackName,
+          academic: data.academic,
+          krs: data.krs,
+        ),
         AlertsSection(alerts: data.alerts),
         if (data.academic != null)
           AcademicSection(academic: data.academic!, krs: data.krs),

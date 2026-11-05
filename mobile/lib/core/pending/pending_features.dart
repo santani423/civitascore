@@ -379,6 +379,29 @@ const kPendingFeatures = <PendingFeature>[
     sources: ['docs/RANCANGAN-AKUN-SDM.md', 'docs/STATUS-IMPLEMENTASI.md#9'],
     matrixIds: ['MOB-HR-18'],
   ),
+  PendingFeature(
+    key: 'privacy_consent',
+    icon: Icons.privacy_tip_outlined,
+    audience: {PendingAudience.student, PendingAudience.lecturer},
+    titleId: 'Kebijakan privasi & data pribadi',
+    titleEn: 'Privacy policy & personal data',
+    titleZh: '隐私政策与个人数据',
+    descId:
+        'Melihat data milik sendiri, persetujuan (consent), dan permintaan '
+        'subjek data sesuai UU PDP.',
+    descEn:
+        'View your own data, manage consent, and submit data-subject '
+        'requests under the personal data protection law.',
+    descZh: '查看自己的数据、管理同意授权，并依据个人数据保护法提交数据主体请求。',
+    endpoints: [
+      '(belum didefinisikan) endpoint consent dan permintaan subjek data',
+    ],
+    sources: [
+      'docs/RANCANGAN-APLIKASI.md#21.3',
+      'docs/kemahasiswaan-kelulusan (privacy self-service)',
+    ],
+    matrixIds: ['MOB-AUTH-21'],
+  ),
 ];
 
 PendingFeature? pendingFeatureByKey(String key) {

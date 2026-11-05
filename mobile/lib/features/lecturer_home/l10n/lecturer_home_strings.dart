@@ -8,7 +8,16 @@ class LecturerHomeStrings {
   String _p(String id, String en, String zh) =>
       pick(_c, id: id, en: en, zh: zh);
 
-  String greeting(String name) => _p('Halo, $name', 'Hello, $name', '您好，$name');
+  /// Kicker hero beranda dosen, mengikuti jam seperti beranda mahasiswa.
+  String heroGreeting(int hour) {
+    if (hour < 11) return _p('Selamat pagi', 'Good morning', '早上好');
+    if (hour < 15) return _p('Selamat siang', 'Good afternoon', '中午好');
+    if (hour < 18) return _p('Selamat sore', 'Good evening', '下午好');
+    return _p('Selamat malam', 'Good night', '晚上好');
+  }
+
+  String get heroWelcome =>
+      _p('Selamat datang di One Atma', 'Welcome to One Atma', '欢迎使用 One Atma');
   String get todayTeaching => _p('Mengajar hari ini', 'Teaching today', '今日授课');
   String get noClassToday => _p(
     'Tidak ada jadwal mengajar hari ini.',

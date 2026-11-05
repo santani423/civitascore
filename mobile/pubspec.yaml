@@ -100,6 +100,8 @@ flutter:
   # Logo Universitas Atma Jaya untuk AppBar beranda.
   assets:
     - assets/images/logo_atma_jaya.png
+    # Foto fasad kampus Semanggi (sumber: frontend/src/landing/assets/photos).
+    - assets/images/kampus_fasad.webp
 
   # Plus Jakarta Sans (SIL OFL, lihat assets/fonts/OFL-PlusJakartaSans.txt).
   # Dibundel agar tampilan konsisten dan tetap berjalan offline.

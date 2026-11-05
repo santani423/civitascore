@@ -6,6 +6,7 @@ import '../../../../core/router/route_paths.dart';
 import '../../../../core/theme/app_dimensions.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/notification_bell.dart';
+import '../../../../core/widgets/service_card.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../../../core/widgets/ui_kit.dart';
 import '../../domain/finance_models.dart';
@@ -142,43 +143,43 @@ class _Content extends StatelessWidget {
           Card(
             child: Column(
               children: [
-                MenuTile(
+                ServiceCard(
                   icon: Icons.receipt_long_outlined,
                   title: f.invoices,
                   subtitle: f.invoicesSub,
                   onTap: () => context.push(RoutePaths.studentInvoices),
                 ),
-                MenuTile(
+                ServiceCard(
                   icon: Icons.history,
                   title: f.transactions,
                   subtitle: f.transactionsSub,
                   onTap: () => context.push(RoutePaths.studentTransactions),
                 ),
-                MenuTile(
+                ServiceCard(
                   icon: Icons.account_balance_wallet_outlined,
                   title: f.deposit,
                   subtitle: f.depositSub,
                   onTap: () => context.push(RoutePaths.studentDeposit),
                 ),
-                MenuTile(
+                ServiceCard(
                   icon: Icons.list_alt_outlined,
                   title: f.statement,
                   subtitle: f.statementSub,
                   onTap: () => context.push(RoutePaths.studentStatement),
                 ),
-                MenuTile(
+                ServiceCard(
                   icon: Icons.school_outlined,
                   title: f.ukt,
                   subtitle: f.uktSub,
                   onTap: () => context.push(RoutePaths.studentUkt),
                 ),
-                MenuTile(
+                ServiceCard(
                   icon: Icons.workspace_premium_outlined,
                   title: f.awards,
                   subtitle: f.awardsSub,
                   onTap: () => context.push(RoutePaths.studentAwards),
                 ),
-                MenuTile(
+                ServiceCard(
                   icon: Icons.gpp_maybe_outlined,
                   title: f.clearance,
                   subtitle: f.clearanceSub,

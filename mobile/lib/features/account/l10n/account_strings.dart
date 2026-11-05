@@ -63,6 +63,26 @@ class AccountStrings {
   String get changePassword =>
       _p('Ganti kata sandi', 'Change password', '修改密码');
   String get sessions => _p('Sesi & perangkat', 'Sessions & devices', '会话与设备');
+  String get editProfile => _p('Ubah profil', 'Edit profile', '编辑资料');
+  String get accountAndSecurity =>
+      _p('Akun & keamanan', 'Account & security', '账户与安全');
+  String get appPreferences =>
+      _p('Preferensi aplikasi', 'App preferences', '应用偏好设置');
+  String get displayMode => _p('Mode tampilan', 'Display mode', '显示模式');
+  String get notificationSettings =>
+      _p('Pengaturan notifikasi', 'Notification settings', '通知设置');
+  String get notificationSettingsSubtitle => _p(
+    'Pilih pemberitahuan yang ingin diterima',
+    'Choose which notices you receive',
+    '选择要接收的通知',
+  );
+  String get helpAndInfo =>
+      _p('Bantuan & informasi', 'Help & information', '帮助与信息');
+  String get aboutApp =>
+      _p('Tentang One Atma', 'About One Atma', '关于 One Atma');
+  String get privacyPolicy => _p('Kebijakan privasi', 'Privacy policy', '隐私政策');
+  String get notAvailableYet =>
+      _p('Belum tersedia', 'Not available yet', '暂不可用');
   String get about => _p('Tentang aplikasi', 'About', '关于');
   String get version => _p('Versi', 'Version', '版本');
   String get server => _p('Server', 'Server', '服务器');

@@ -32,7 +32,12 @@ Map<String, dynamic> dashboardJson() => {
     'current_term_credits': 20,
     'max_credits': 24,
     'remaining_credits': 4,
-    'current_term': {'id': 't2', 'label': '2026/2027 Genap'},
+    'current_term': {
+      'id': 't2',
+      'label': '2026/2027 Genap',
+      'start_date': '2026-08-01',
+      'end_date': '2027-01-31',
+    },
     'academic_advisor': {'id': 'l1', 'name': 'Dr. Maria', 'email': null},
   },
   'krs': {
@@ -145,6 +150,7 @@ void main() {
       expect(d.profile!.nim, '2101001');
       expect(d.academic!.ipk, 3.45);
       expect(d.academic!.ips, 3.6);
+      expect(d.academic!.termEndDate, DateTime(2027, 1, 31));
       expect(d.attendance!.belowMinimum.single.courseName, 'Kalkulus');
       expect(d.unreadAnnouncements, 2);
       expect(d.alerts, hasLength(2));
@@ -193,7 +199,7 @@ void main() {
       expect(find.text('Libur Nasional'), findsOneWidget);
       expect(find.text('Kalkulus · 60%'), findsOneWidget);
       expect(find.text('Rp 7.500.000'), findsOneWidget);
-      expect(find.text('Tagihan'), findsWidgets);
+      expect(find.text('Keuangan'), findsWidgets);
       expect(tester.takeException(), isNull);
     });
 
@@ -203,8 +209,8 @@ void main() {
       await pumpApp(tester, const StudentHomeScreen(), api: api());
       double dy(String text) => tester.getTopLeft(find.text(text).first).dy;
       expect(dy('Ringkasan akademik'), lessThan(dy('Menu cepat')));
-      expect(dy('Menu cepat'), lessThan(dy('Pengumuman')));
-      expect(dy('Pengumuman'), lessThan(dy('Kelas hari ini')));
+      expect(dy('Menu cepat'), lessThan(dy('Pengumuman terbaru')));
+      expect(dy('Pengumuman terbaru'), lessThan(dy('Kelas hari ini')));
     });
 
     testWidgets('academic stat tiles share one height', (tester) async {
@@ -228,6 +234,7 @@ void main() {
     ) async {
       await pumpApp(tester, const StudentHomeScreen(), api: api());
       expect(find.text('2026/2027 Genap'), findsOneWidget);
+      expect(find.text('Aktif hingga 31 Jan 2027'), findsOneWidget);
       expect(find.text('20/24'), findsOneWidget); // SKS semester ini
       expect(find.text('88/92'), findsOneWidget); // lulus / (lulus + sisa)
       expect(find.text('Disetujui'), findsWidgets);
@@ -282,14 +289,29 @@ void main() {
     testWidgets('quick action navigates', (tester) async {
       await pumpApp(tester, const StudentHomeScreen(), api: api());
       await tester.scrollUntilVisible(
-        find.text('Kalender'),
+        find.text('Layanan Administrasi'),
         300,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Kalender'));
+      await tester.tap(find.text('Layanan Administrasi'));
       await tester.pumpAndSettle();
-      expect(find.text('route:/s/calendar'), findsOneWidget);
+      expect(find.text('route:/s/requests'), findsOneWidget);
+    });
+
+    testWidgets('quick access "Kemahasiswaan" opens menu with that category', (
+      tester,
+    ) async {
+      await pumpApp(tester, const StudentHomeScreen(), api: api());
+      await tester.scrollUntilVisible(
+        find.text('Kemahasiswaan'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kemahasiswaan'));
+      await tester.pumpAndSettle();
+      expect(find.text('route:/s/menu?kategori=kemahasiswaan'), findsOneWidget);
     });
 
     testWidgets('empty sections degrade gracefully', (tester) async {

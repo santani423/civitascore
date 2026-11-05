@@ -64,6 +64,8 @@ class StudentHomeStrings {
   String get due => _p('Tenggat', 'Due', '截止');
   String get recentGrades => _p('Nilai terbaru', 'Recent grades', '最新成绩');
   String get announcements => _p('Pengumuman', 'Announcements', '公告');
+  String get announcementsLatest =>
+      _p('Pengumuman terbaru', 'Latest announcements', '最新公告');
   String get noAnnouncements =>
       _p('Belum ada pengumuman.', 'No announcements yet.', '暂无公告。');
   String get seeAll => _p('Lihat semua', 'See all', '查看全部');
@@ -93,15 +95,107 @@ class StudentHomeStrings {
     'This section could not be shown.',
     '无法显示此部分。',
   );
+  String get heroWelcome =>
+      _p('Selamat datang di One Atma', 'Welcome to One Atma', '欢迎使用 One Atma');
+  String activeUntil(String date) =>
+      _p('Aktif hingga $date', 'Active until $date', '有效至 $date');
   String get quickActions => _p('Menu cepat', 'Quick actions', '快捷入口');
-  String get qaKrs => _p('KRS', 'KRS', '选课');
+  String get qaAcademic => _p('Akademik', 'Academic', '学业');
+  String get qaFinance => _p('Keuangan', 'Finance', '财务');
+  String get qaStudentAffairs => _p('Kemahasiswaan', 'Student affairs', '学生事务');
+  String get qaAdminServices =>
+      _p('Layanan Administrasi', 'Admin services', '行政服务');
   String get qaSchedule => _p('Jadwal', 'Schedule', '课表');
-  String get qaGrades => _p('Nilai/KHS', 'Grades', '成绩');
-  String get qaAssignments => _p('Tugas', 'Assignments', '作业');
-  String get qaExams => _p('Ujian', 'Exams', '考试');
-  String get qaInvoices => _p('Tagihan', 'Invoices', '账单');
-  String get qaRequests => _p('Pengajuan', 'Requests', '申请');
-  String get qaCalendar => _p('Kalender', 'Calendar', '日历');
+  String get qaMore => _p('Lainnya', 'More', '更多');
+
+  String get menuTitle => _p('Menu Utama', 'Main Menu', '主菜单');
+  String get menuSearch => _p('Cari layanan', 'Search services', '搜索服务');
+  String get menuSearchTooltip => _p('Cari', 'Search', '搜索');
+  String get menuCategoryAll => _p('Semua', 'All', '全部');
+  String get menuCategoryServices => _p('Layanan', 'Services', '服务');
+  String get menuNoResults =>
+      _p('Layanan tidak ditemukan.', 'No services found.', '未找到服务。');
+  String get menuComingSoon => _p('Segera hadir', 'Coming soon', '即将推出');
+  String get menuKrsTitle => _p('KRS Online', 'Online KRS', '在线选课');
+  String get menuKrsDesc =>
+      _p('Pengisian Kartu Rencana Studi', 'Course registration', '课程选修登记');
+  String get menuKhsTitle => _p('KHS', 'Study result card', '学习成绩单');
+  String get menuKhsDesc => _p(
+    'Kartu hasil studi per semester',
+    'Study results per semester',
+    '每学期学习成绩',
+  );
+  String get menuTranscriptTitle => _p('Transkrip', 'Transcript', '成绩单');
+  String get menuTranscriptDesc => _p(
+    'Transkrip sementara dan IPK',
+    'Unofficial transcript and GPA',
+    '临时成绩单与GPA',
+  );
+  String get menuGradesTitle => _p('Nilai', 'Grades', '成绩');
+  String get menuGradesDesc =>
+      _p('Nilai per mata kuliah', 'Grades per course', '各课程成绩');
+  String get menuScheduleTitle => _p('Jadwal Kuliah', 'Class schedule', '课程表');
+  String get menuScheduleDesc =>
+      _p('Jadwal kelas dan ruangan', 'Class times and rooms', '上课时间与教室');
+  String get menuAttendanceTitle => _p('Presensi', 'Attendance', '出勤');
+  String get menuAttendanceDesc =>
+      _p('Kehadiran per mata kuliah', 'Attendance per course', '各课程出勤情况');
+  String get menuCalendarTitle =>
+      _p('Kalender Akademik', 'Academic calendar', '学术日历');
+  String get menuCalendarDesc =>
+      _p('Tanggal penting semester', 'Important semester dates', '学期重要日期');
+  String get menuCoursesTitle => _p('Mata Kuliah', 'Courses', '课程');
+  String get menuCoursesDesc =>
+      _p('Kelas yang sedang diikuti', 'Classes you are enrolled in', '在读课程');
+  String get menuMaterialsTitle => _p('Materi', 'Materials', '学习资料');
+  String get menuMaterialsDesc =>
+      _p('Materi perkuliahan', 'Course materials', '课程资料');
+  String get menuAssignmentsTitle => _p('Tugas', 'Assignments', '作业');
+  String get menuAssignmentsDesc =>
+      _p('Tugas dan tenggatnya', 'Assignments and deadlines', '作业与截止日期');
+  String get menuExamsTitle => _p('Ujian', 'Exams', '考试');
+  String get menuExamsDesc =>
+      _p('Jadwal dan hasil ujian', 'Exam schedule and results', '考试安排与结果');
+  String get menuDocumentsTitle =>
+      _p('Dokumen Akademik', 'Academic documents', '学术文件');
+  String get menuDocumentsDesc =>
+      _p('Unduh KHS dan transkrip', 'Download KHS and transcript', '下载成绩单与成绩表');
+  String get menuFinanceTitle => _p('Pembayaran', 'Payments', '缴费');
+  String get menuFinanceDesc => _p(
+    'Tagihan dan riwayat pembayaran',
+    'Invoices and payment history',
+    '账单与缴费记录',
+  );
+  String get menuAwardsTitle => _p('Beasiswa', 'Scholarships', '奖学金');
+  String get menuAwardsDesc => _p(
+    'Beasiswa dan potongan biaya',
+    'Scholarships and fee discounts',
+    '奖学金与费用减免',
+  );
+  String get menuActivitiesTitle =>
+      _p('Kegiatan Kemahasiswaan', 'Student activities', '学生活动');
+  String get menuActivitiesDesc => _p(
+    'Organisasi, kegiatan, dan poin',
+    'Organizations, activities, and points',
+    '社团、活动与积分',
+  );
+  String get menuRequestsTitle =>
+      _p('Layanan Administrasi', 'Admin services', '行政服务');
+  String get menuRequestsDesc => _p(
+    'Surat dan pengajuan administrasi',
+    'Letters and administrative requests',
+    '证明信与行政申请',
+  );
+  String get menuInfoTitle =>
+      _p('Pusat Informasi', 'Information center', '信息中心');
+  String get menuInfoDesc => _p(
+    'Berita dan pengumuman kampus',
+    'Campus news and announcements',
+    '校园新闻与公告',
+  );
+  String get menuNotificationsTitle => _p('Notifikasi', 'Notifications', '通知');
+  String get menuNotificationsDesc =>
+      _p('Pemberitahuan terbaru', 'Latest notices', '最新通知');
 
   String lastTermIps(String? label) => label == null ? ips : '$ips · $label';
   String creditsOf(int? used, int? max) =>

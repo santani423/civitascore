@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../l10n/core_strings.dart';
 import '../router/route_paths.dart';
 import '../theme/app_dimensions.dart';
+import '../widgets/service_card.dart';
 import '../widgets/state_views.dart';
 import '../widgets/ui_kit.dart';
 import 'pending_features.dart';
@@ -94,7 +95,7 @@ class PendingFeatureTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MenuTile(
+    return ServiceCard(
       icon: feature.icon,
       title: feature.title(context),
       subtitle: feature.description(context),
