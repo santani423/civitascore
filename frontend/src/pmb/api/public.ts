@@ -14,6 +14,8 @@ export interface SiteInfo {
   contact: { address?: string; phone?: string; email?: string; whatsapp?: string; hours?: string; map_url?: string }
   show_quota_status: boolean
   captcha: { driver: string; site_key: string | null }
+  /** Metode masuk tambahan yang aktif di backend (tanpa kredensial apa pun). */
+  auth?: { google: boolean }
   legal: { privacy_policy: { id: string; title: string; slug: string; version: number } | null; terms: { id: string; title: string; slug: string; version: number } | null }
   banners: Array<{ id: string; title: string; body: string | null }>
 }
@@ -144,4 +146,29 @@ export const pmbPublic = {
   verifyOtp: (body: Record<string, unknown>) => post<unknown>('/applicant/auth/otp/verify', body),
   confirmEmailChange: (token: string) => post<unknown>('/applicant/auth/email-change/confirm', { token }),
   recoveryRequest: (form: FormData) => publicClient.post('/applicant/auth/recovery-requests', form).then((r) => r.data),
+
+  // Google Sign-In (lihat pmb/lib/googleAuth.ts)
+  googleRedirect: (client_challenge: string) => get<{ authorization_url: string }>('/applicant/auth/google/redirect', { client_challenge }),
+  googleSession: (body: GoogleTicketBody) => post<GoogleSessionResult>('/applicant/auth/google/session', body),
+  googleLink: (body: GoogleTicketBody & { password: string }) => post<GoogleAuthenticated>('/applicant/auth/google/link', body),
+  googleRegister: (body: GoogleTicketBody & { name: string; phone: string | null; info_source: string | null; consents: Record<string, boolean> }) =>
+    post<GoogleAuthenticated>('/applicant/auth/google/register', body),
 }
+
+export interface GoogleTicketBody {
+  ticket: string
+  client_verifier: string
+  device_name?: string
+}
+
+export interface GoogleAuthenticated {
+  status: 'authenticated'
+  token: string
+  expires_at: string | null
+  account: ApplicantAccount
+}
+
+export type GoogleSessionResult =
+  | GoogleAuthenticated
+  | { status: 'link_required'; email: string; name: string | null }
+  | { status: 'registration_required'; email: string; name: string | null; avatar_url: string | null }

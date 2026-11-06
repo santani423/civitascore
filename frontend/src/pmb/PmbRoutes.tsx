@@ -30,6 +30,7 @@ const StatusCheckPage = named(check, 'StatusCheckPage')
 const LoaVerifyPage = named(check, 'LoaVerifyPage')
 const RegisterPage = named(auth, 'RegisterPage')
 const LoginPage = named(auth, 'LoginPage')
+const GoogleCallbackPage = named(auth, 'GoogleCallbackPage')
 const VerifyPage = named(auth, 'VerifyPage')
 const ForgotPasswordPage = named(auth, 'ForgotPasswordPage')
 const ResetPasswordPage = named(auth, 'ResetPasswordPage')
@@ -90,6 +91,7 @@ export function pmbPublicRoutes() {
         <Route path={PMB.loa} element={<S><LoaVerifyPage /></S>} />
         <Route path={PMB.register} element={<S><RegisterPage /></S>} />
         <Route path={PMB.login} element={<S><LoginPage /></S>} />
+        <Route path={PMB.googleCallback} element={<S><GoogleCallbackPage /></S>} />
         <Route path={PMB.verify} element={<S><VerifyPage /></S>} />
         <Route path={PMB.forgot} element={<S><ForgotPasswordPage /></S>} />
         <Route path={PMB.resetPassword} element={<S><ResetPasswordPage /></S>} />

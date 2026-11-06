@@ -53,7 +53,17 @@ Route::prefix('pmb')->group(function (): void {
         Route::post('otp/verify', [Applicant\AuthController::class, 'verifyOtp'])->middleware('throttle:pmb-login');
         Route::post('email-change/confirm', [Applicant\AuthController::class, 'confirmEmailChange'])->middleware('throttle:pmb-login');
         Route::post('recovery-requests', [Applicant\AuthController::class, 'recoveryRequest'])->middleware('throttle:pmb-register');
+
+        // Google Sign-In (OAuth 2.0 + PKCE / OpenID Connect) — lihat GoogleAuthService.
+        Route::get('google/redirect', [Applicant\GoogleAuthController::class, 'redirect'])->middleware('throttle:pmb-login');
+        Route::post('google/session', [Applicant\GoogleAuthController::class, 'session'])->middleware('throttle:pmb-login');
+        Route::post('google/link', [Applicant\GoogleAuthController::class, 'link'])->middleware('throttle:pmb-login');
+        Route::post('google/register', [Applicant\GoogleAuthController::class, 'register'])->middleware('throttle:pmb-login');
     });
+
+    // Redirect URI Google: dibuka browser tanpa header kampus — tenant diambil dari `state` sisi server.
+    Route::get('applicant/auth/google/callback', [Applicant\GoogleAuthController::class, 'callback'])
+        ->middleware('throttle:pmb-public')->name('pmb.applicant.google.callback');
 
     Route::prefix('applicant')->middleware(['auth:sanctum', 'pmb.applicant', 'throttle:pmb-applicant'])->group(function (): void {
         Route::post('auth/email/resend', [Applicant\AuthController::class, 'resendVerification'])->middleware('throttle:pmb-otp');

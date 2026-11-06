@@ -16,12 +16,14 @@ use Modules\Admission\Console\PmbDailyCommand;
 use Modules\Admission\Console\PmbInstallCommand;
 use Modules\Admission\Console\PmbTickCommand;
 use Modules\Admission\Contracts\CaptchaVerifier;
+use Modules\Admission\Contracts\GoogleIdentityProvider;
 use Modules\Admission\Contracts\SmsGateway;
 use Modules\Admission\Http\Middleware\EnsureApplicant;
 use Modules\Admission\Http\Middleware\EnsureStaff;
 use Modules\Admission\Http\Middleware\Idempotent;
 use Modules\Admission\Http\Middleware\ResolvePublicTenant;
 use Modules\Admission\Integrations\DisabledCaptchaVerifier;
+use Modules\Admission\Integrations\Google\SocialiteGoogleIdentityProvider;
 use Modules\Admission\Integrations\TurnstileCaptchaVerifier;
 use Modules\Admission\Listeners\SyncApprovalDecisions;
 use Modules\Admission\Outbox\Handlers;
@@ -78,6 +80,9 @@ class AdmissionServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(SmsGateway::class, fn () => config('pmb.sms.driver') === 'http' ? new HttpSmsGateway : new LogSmsGateway);
+
+        // Google Sign-In pendaftar; aktif hanya bila GOOGLE_CLIENT_ID & GOOGLE_CLIENT_SECRET diisi.
+        $this->app->bind(GoogleIdentityProvider::class, SocialiteGoogleIdentityProvider::class);
 
         $this->app->singleton(OutboxProcessor::class, fn ($app) => new OutboxProcessor($app->make(TenantContext::class), [
             OutboxRecorder::NOTIFY_APPLICANT => Handlers\NotifyApplicantHandler::class,

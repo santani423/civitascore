@@ -189,6 +189,10 @@ class AuthController extends ApplicantController
             'email_verified' => $account->email_verified_at !== null,
             'phone_verified' => $account->phone_verified_at !== null,
             'verified' => $account->isVerified(),
+            'auth_provider' => $account->auth_provider ?? 'email',
+            'google_linked' => $account->google_id !== null,
+            'has_password' => (bool) ($account->has_password ?? true),
+            'avatar_url' => $account->avatar_url,
         ];
     }
 

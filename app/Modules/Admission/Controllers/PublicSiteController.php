@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Modules\Admission\Contracts\CaptchaVerifier;
+use Modules\Admission\Contracts\GoogleIdentityProvider;
 use Modules\Admission\Enums\ContentStatus;
 use Modules\Admission\Enums\ContentType;
 use Modules\Admission\Enums\PeriodStatus;
@@ -59,6 +60,8 @@ class PublicSiteController extends Controller
                 'contact' => $this->settings->get('pmb.contact'),
                 'show_quota_status' => $this->settings->bool('pmb.show_quota_status'),
                 'captcha' => ['driver' => config('pmb.captcha.driver'), 'site_key' => config('pmb.captcha.turnstile_site_key')],
+                // Hanya flag ketersediaan — client ID/secret Google tidak pernah dikirim ke frontend.
+                'auth' => ['google' => app(GoogleIdentityProvider::class)->isConfigured()],
                 'legal' => ['privacy_policy' => $legal(ContentType::PrivacyPolicy), 'terms' => $legal(ContentType::Terms)],
                 'banners' => $this->publishedContents(ContentType::Banner)->map->only(['id', 'title', 'body', 'file_id', 'sort_order'])->values(),
             ];

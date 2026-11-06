@@ -305,12 +305,19 @@ export function AccountPage() {
             <Input label="Nama" value={current.name} onChange={(e) => setProfile({ ...current, name: e.target.value })} />
             <Input label="Nomor HP" value={current.phone} onChange={(e) => setProfile({ ...current, phone: e.target.value })} hint="Mengganti nomor HP membutuhkan verifikasi ulang." />
             <p className="text-sm text-ink-secondary">Email: {me?.account.email}</p>
+            {me?.account.google_linked && <p className="text-sm text-ink-secondary">Masuk dengan Google: <Badge variant="success">Terhubung</Badge></p>}
             <Button onClick={() => action.run(() => pmbApplicant.updateMe({ name: current.name, phone: current.phone || null }), 'Akun diperbarui.').then(reloadMe)}>Simpan</Button>
             <Checkbox label="Bersedia menerima informasi promosi" checked={me?.marketing_consent ?? false} onChange={(e) => action.run(() => pmbApplicant.marketingConsent(e.target.checked), 'Preferensi disimpan.').then(reloadMe)} />
           </div>
         </Card>
         <Card title="Ubah kata sandi">
           <div className="flex flex-col gap-3">
+            {me?.account.has_password === false && (
+              <Alert variant="info">
+                Akun ini dibuat dengan Google dan belum memiliki kata sandi. Untuk membuatnya (diperlukan untuk mengganti email atau menghapus akun), gunakan{' '}
+                <Link to={PMB.forgot} className="font-medium underline">Lupa kata sandi</Link> dengan email akun ini.
+              </Alert>
+            )}
             <PasswordInput label="Kata sandi saat ini" value={pw.current_password} onChange={(e) => setPw({ ...pw, current_password: e.target.value })} />
             <PasswordInput label="Kata sandi baru" value={pw.password} onChange={(e) => setPw({ ...pw, password: e.target.value })} />
             <PasswordInput label="Ulangi kata sandi baru" value={pw.password_confirmation} onChange={(e) => setPw({ ...pw, password_confirmation: e.target.value })} />

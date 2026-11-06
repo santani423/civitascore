@@ -20,6 +20,8 @@ export const PMB = {
 
   register: '/pmb/daftar',
   login: '/pmb/masuk',
+  /** Tujuan tetap redirect backend setelah Google (GoogleAuthService::FRONTEND_CALLBACK_PATH). */
+  googleCallback: '/pmb/masuk/google',
   verify: '/pmb/verifikasi',
   forgot: '/pmb/lupa-sandi',
   resetPassword: '/pmb/atur-sandi',

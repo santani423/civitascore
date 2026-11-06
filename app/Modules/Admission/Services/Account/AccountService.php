@@ -193,29 +193,49 @@ class AccountService
             ? ApplicantAccount::query()->where('email', $this->normalizeEmail($login))->first()
             : ApplicantAccount::query()->where('phone', $this->normalizePhone($login))->first();
 
-        $invalid = new DomainRuleException('Email/nomor HP atau kata sandi salah.', 'INVALID_CREDENTIALS', 401);
-
         if ($account === null) {
             Hash::check($password, '$2y$12$'.str_repeat('a', 53)); // waktu respons seragam
 
-            throw $invalid;
+            throw $this->invalidCredentials();
         }
 
+        $this->assertPassword($account, $password);
+
+        return $this->startSession($account, $deviceName, $ip);
+    }
+
+    /**
+     * Pemeriksaan sandi akun yang sudah ditemukan — dipakai login dan
+     * penautan akun Google (bukti kepemilikan akun lama). Gagal → hitungan
+     * gagal & penguncian akun yang sama dengan login biasa.
+     */
+    public function assertPassword(ApplicantAccount $account, string $password): void
+    {
         if ($account->status === AccountStatus::Locked && $account->locked_until !== null && $account->locked_until->isFuture()) {
             throw new DomainRuleException('Akun terkunci sementara. Coba lagi setelah '.$account->locked_until->setTimezone($this->timezone())->format('H:i').' atau atur ulang kata sandi.', 'ACCOUNT_LOCKED', 423, ['locked_until' => $account->locked_until->toIso8601String()]);
         }
 
         if (in_array($account->status, [AccountStatus::Suspended, AccountStatus::Deactivated], true)) {
-            throw $invalid;
+            throw $this->invalidCredentials();
         }
 
         if (! Hash::check($password, $account->password)) {
             $this->registerFailedLogin($account);
 
-            throw $invalid;
+            throw $this->invalidCredentials();
         }
+    }
 
-        return DB::transaction(function () use ($account, $deviceName, $ip): array {
+    /**
+     * Membuka sesi token Sanctum ber-ability `applicant` setelah identitas
+     * terbukti (sandi atau Google): reset hitungan gagal/kunci, catat
+     * last_login_at, batasi token aktif, dan audit.
+     *
+     * @return array{token: NewAccessToken, account: ApplicantAccount}
+     */
+    public function startSession(ApplicantAccount $account, string $deviceName, ?string $ip, string $method = 'password'): array
+    {
+        return DB::transaction(function () use ($account, $deviceName, $ip, $method): array {
             RateLimiter::clear($this->loginKey($account));
 
             $wasLocked = $account->status === AccountStatus::Locked;
@@ -236,10 +256,15 @@ class AccountService
 
             $token = $account->createToken(mb_substr($deviceName ?: 'browser', 0, 100), [ApplicantAccount::TOKEN_ABILITY], now()->addHours((int) config('pmb.applicant_token_ttl_hours', 12)));
 
-            $this->audit->recordAction($account, AuditAction::Updated, ['event' => 'applicant_login', 'ip' => $ip]);
+            $this->audit->recordAction($account, AuditAction::Updated, ['event' => 'applicant_login', 'method' => $method, 'ip' => $ip]);
 
             return ['token' => $token, 'account' => $account->refresh()];
         });
+    }
+
+    private function invalidCredentials(): DomainRuleException
+    {
+        return new DomainRuleException('Email/nomor HP atau kata sandi salah.', 'INVALID_CREDENTIALS', 401);
     }
 
     public function logout(ApplicantAccount $account): void
@@ -330,7 +355,7 @@ class AccountService
             throw ValidationException::withMessages(['current_password' => 'Kata sandi saat ini salah.']);
         }
 
-        $account->forceFill(['password' => $new])->save();
+        $account->forceFill(['password' => $new, 'has_password' => true])->save();
         $currentToken = $account->currentAccessToken();
         $account->tokens()->when($currentToken instanceof PersonalAccessToken, fn ($q) => $q->whereKeyNot($currentToken->getKey()))->delete();
         $this->outbox->notifyApplicant($account, 'pmb.account.security_alert', ['event_description' => 'kata sandi diubah']);
@@ -583,7 +608,8 @@ class AccountService
     private function applyNewPassword(ApplicantAccount $account, string $password, bool $alsoVerify): ApplicantAccount
     {
         return DB::transaction(function () use ($account, $password, $alsoVerify): ApplicantAccount {
-            $attributes = ['password' => $password, 'failed_login_count' => 0, 'locked_until' => null];
+            // Akun yang dibuat lewat Google memperoleh sandi pertamanya di sini.
+            $attributes = ['password' => $password, 'has_password' => true, 'failed_login_count' => 0, 'locked_until' => null];
 
             if ($account->status === AccountStatus::Locked) {
                 $attributes['status'] = $account->isVerified() || $alsoVerify ? AccountStatus::Active : AccountStatus::Unverified;

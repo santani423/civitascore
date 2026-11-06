@@ -1,6 +1,8 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { pmbPublic } from '@/pmb/api/public'
+import { pmbPublic, type GoogleAuthenticated } from '@/pmb/api/public'
+import { GoogleSignInButton, OrDivider } from '@/pmb/components/GoogleSignInButton'
+import { clearGoogleFlow, GOOGLE_ERROR_MESSAGES, readGoogleFlow, safeNext, useGoogleSignInEnabled, type GoogleFlow } from '@/pmb/lib/googleAuth'
 import { useApplicantStore } from '@/pmb/stores/applicantStore'
 import { useSite } from '@/pmb/components/SiteContext'
 import { Captcha } from '@/pmb/components/Captcha'
@@ -80,6 +82,7 @@ export function RegisterPage() {
   const [formError, setFormError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [busy, setBusy] = useState(false)
+  const googleEnabled = useGoogleSignInEnabled()
   const strength = passwordStrength(values.password)
 
   async function submit(event: FormEvent) {
@@ -141,6 +144,14 @@ export function RegisterPage() {
         <Captcha onToken={setCaptcha} />
         <Button type="submit" isLoading={busy} disabled={!consents.privacy_policy || !consents.terms}>Daftar</Button>
       </form>
+      {googleEnabled && (
+        <div className="mt-4 flex flex-col gap-4">
+          <OrDivider />
+          {/* Isian yang sudah diketik (HP, sumber info, persetujuan) dibawa ke langkah "lengkapi pendaftaran". */}
+          <GoogleSignInButton intent="register" draft={() => ({ phone: values.phone, info_source: values.info_source, consents })} />
+          <p className="text-center text-xs text-lp-muted">Email akun Google langsung terverifikasi. Anda tetap diminta melengkapi nama sesuai ijazah dan menyetujui ketentuan.</p>
+        </div>
+      )}
     </AuthCard>
   )
 }
@@ -154,6 +165,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const googleEnabled = useGoogleSignInEnabled()
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -183,6 +195,230 @@ export function LoginPage() {
           <Link to={PMB.forgot} className={linkClass}>Lupa kata sandi?</Link>
           <Link to={PMB.recovery} className="text-lp-muted underline-offset-4 hover:text-lp-brand-text hover:underline">Tidak bisa akses email?</Link>
         </div>
+      </form>
+      {googleEnabled && (
+        <div className="mt-4 flex flex-col gap-4">
+          <OrDivider />
+          <GoogleSignInButton intent="login" next={params.get('next')} />
+        </div>
+      )}
+    </AuthCard>
+  )
+}
+
+/**
+ * Tujuan redirect backend setelah Google: /pmb/masuk/google#ticket=… atau #error=….
+ * Tiket ditukar bersama verifier tab ini, lalu: langsung masuk, atau minta sandi
+ * akun lama (email sudah terdaftar), atau lengkapi pendaftaran (akun baru).
+ */
+export function GoogleCallbackPage() {
+  const navigate = useNavigate()
+  const setSession = useApplicantStore((s) => s.setSession)
+  const started = useRef(false)
+  const [phase, setPhase] = useState<'loading' | 'error' | 'link' | 'register'>('loading')
+  const [error, setError] = useState<string | null>(null)
+  const [flow, setFlow] = useState<GoogleFlow | null>(null)
+  const [ticket, setTicket] = useState('')
+  const [identity, setIdentity] = useState<{ email: string; name: string | null; avatar_url?: string | null } | null>(null)
+
+  const finish = (result: GoogleAuthenticated, next: string | null) => {
+    clearGoogleFlow()
+    setSession(result.token, result.expires_at, result.account)
+    navigate(safeNext(next) ?? PMB.portal.home, { replace: true })
+  }
+
+  const fail = (message: string) => {
+    clearGoogleFlow()
+    setError(message)
+    setPhase('error')
+  }
+
+  useEffect(() => {
+    // StrictMode menjalankan efek dua kali; tiket login hanya boleh ditukar sekali.
+    if (started.current) return
+    started.current = true
+
+    const fragment = new URLSearchParams(window.location.hash.slice(1))
+    // Hapus tiket dari bilah alamat & riwayat browser.
+    window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+    const errorCode = fragment.get('error')
+    const ticketValue = fragment.get('ticket')
+    const stored = readGoogleFlow()
+
+    if (errorCode) {
+      fail(GOOGLE_ERROR_MESSAGES[errorCode] ?? GOOGLE_ERROR_MESSAGES.google_error)
+
+      return
+    }
+
+    if (!ticketValue || !stored) {
+      fail('Sesi masuk dengan Google tidak ditemukan atau sudah kedaluwarsa. Ulangi dari halaman Masuk di tab browser yang sama.')
+
+      return
+    }
+
+    setFlow(stored)
+    setTicket(ticketValue)
+    pmbPublic.googleSession({ ticket: ticketValue, client_verifier: stored.verifier, device_name: navigator.userAgent.slice(0, 90) })
+      .then((result) => {
+        if (result.status === 'authenticated') {
+          finish(result, stored.next)
+        } else {
+          setIdentity(result)
+          setPhase(result.status === 'link_required' ? 'link' : 'register')
+        }
+      })
+      .catch((err: NormalizedApiError) => fail(err.status === 429 ? 'Terlalu banyak percobaan. Coba lagi beberapa saat lagi.' : describeError(err)))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sekali saat halaman dibuka
+  }, [])
+
+  if (phase === 'loading') {
+    return (
+      <AuthCard title="Masuk dengan Google">
+        <p role="status" className="flex items-center gap-2 text-sm text-lp-muted"><span aria-hidden className="size-4 animate-spin rounded-full border-2 border-lp-line border-t-lp-brand" />Memverifikasi akun Google Anda…</p>
+      </AuthCard>
+    )
+  }
+
+  if (phase === 'error' || !flow || !identity) {
+    return (
+      <AuthCard title="Masuk dengan Google tidak berhasil" footer={<Link to={PMB.login} className={linkClass}>Kembali ke halaman masuk</Link>}>
+        <div className="flex flex-col gap-4">
+          <Alert variant="danger">{error ?? GOOGLE_ERROR_MESSAGES.google_error}</Alert>
+          <GoogleSignInButton intent="login" />
+          <p className="text-center text-sm text-lp-muted">atau <Link to={PMB.login} className={linkClass}>masuk dengan email dan kata sandi</Link></p>
+        </div>
+      </AuthCard>
+    )
+  }
+
+  const body = { ticket, client_verifier: flow.verifier, device_name: navigator.userAgent.slice(0, 90) }
+
+  return phase === 'link'
+    ? <GoogleLinkForm email={identity.email} onLink={(password) => pmbPublic.googleLink({ ...body, password }).then((r) => finish(r, flow.next))} onExpired={fail} />
+    : <GoogleRegisterForm identity={identity} flow={flow} onRegister={(data) => pmbPublic.googleRegister({ ...body, ...data }).then((r) => finish(r, flow.next))} onExpired={fail} />
+}
+
+/** Kode error yang berarti tiket tidak bisa dipakai lagi → kembali ke awal alur. */
+const GOOGLE_RESTART_CODES = ['GOOGLE_SESSION_INVALID', 'GOOGLE_LINK_UNAVAILABLE', 'ACCOUNT_EXISTS', 'ACCOUNT_INACTIVE']
+
+function errorCode(err: NormalizedApiError): string | undefined {
+  const code = (err.errors as Record<string, unknown> | undefined)?.code
+
+  return typeof code === 'string' ? code : undefined
+}
+
+/** Email Google sama dengan akun PMB lama: buktikan kepemilikan dengan sandi akun lama. */
+function GoogleLinkForm({ email, onLink, onExpired }: { email: string; onLink: (password: string) => Promise<void>; onExpired: (message: string) => void }) {
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setBusy(true)
+    setError(null)
+
+    try {
+      await onLink(password)
+    } catch (err) {
+      const e = err as NormalizedApiError
+      const code = errorCode(e)
+
+      if (code && GOOGLE_RESTART_CODES.includes(code)) {
+        onExpired(e.message)
+
+        return
+      }
+
+      setError(code === 'INVALID_CREDENTIALS' ? 'Kata sandi salah.' : e.status === 429 ? 'Terlalu banyak percobaan. Coba lagi beberapa saat lagi.' : describeError(e))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <AuthCard title="Hubungkan akun Google" description="Email ini sudah terdaftar sebagai akun PMB." footer={<Link to={PMB.login} className={linkClass}>Batal</Link>}>
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <Alert variant="info">
+          Akun PMB dengan email <strong>{email}</strong> sudah ada. Demi keamanan, masukkan kata sandi akun tersebut satu kali untuk menghubungkannya dengan Google. Setelah itu Anda dapat masuk dengan Google maupun email dan kata sandi.
+        </Alert>
+        {error && <Alert variant="danger">{error}</Alert>}
+        <PasswordInput label="Kata sandi akun PMB" required value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+        <Button type="submit" isLoading={busy}>Hubungkan dan masuk</Button>
+        <div className="flex justify-between text-sm">
+          <Link to={PMB.forgot} className={linkClass}>Lupa kata sandi?</Link>
+        </div>
+      </form>
+    </AuthCard>
+  )
+}
+
+/** Akun baru dari Google: nama sesuai ijazah, HP opsional, dan persetujuan wajib (FR-ACC-01). */
+function GoogleRegisterForm({ identity, flow, onRegister, onExpired }: {
+  identity: { email: string; name: string | null; avatar_url?: string | null }
+  flow: GoogleFlow
+  onRegister: (data: { name: string; phone: string | null; info_source: string | null; consents: Record<string, boolean> }) => Promise<void>
+  onExpired: (message: string) => void
+}) {
+  const site = useSite()
+  const draft = flow.draft
+  const [values, setValues] = useState({ name: identity.name ?? '', phone: draft?.phone ?? '', info_source: draft?.info_source ?? '' })
+  const [consents, setConsents] = useState(draft?.consents ?? { privacy_policy: false, terms: false, marketing_optional: false })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [formError, setFormError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const set = (key: keyof typeof values) => (e: { target: { value: string } }) => setValues({ ...values, [key]: e.target.value })
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setBusy(true)
+    setErrors({})
+    setFormError(null)
+
+    try {
+      await onRegister({ name: values.name, phone: values.phone || null, info_source: values.info_source || null, consents })
+    } catch (err) {
+      const e = err as NormalizedApiError
+      const code = errorCode(e)
+
+      if (code && GOOGLE_RESTART_CODES.includes(code)) {
+        onExpired(e.message)
+
+        return
+      }
+
+      const fields = fieldErrors(e)
+      setErrors(fields)
+      if (Object.keys(fields).length === 0) setFormError(e.status === 429 ? 'Terlalu banyak percobaan. Coba lagi beberapa saat lagi.' : describeError(e))
+      setBusy(false)
+    }
+  }
+
+  return (
+    <AuthCard title="Lengkapi Pendaftaran" description="Satu langkah lagi untuk membuat akun PMB dengan Google." footer={<Link to={PMB.login} className={linkClass}>Batal</Link>}>
+      <form onSubmit={submit} className="flex flex-col gap-4">
+        <div className="flex items-center gap-3 rounded-lp-lg border border-lp-line bg-lp-sunken p-3">
+          {identity.avatar_url
+            ? <img src={identity.avatar_url} alt="" referrerPolicy="no-referrer" className="size-10 shrink-0 rounded-full" />
+            : <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-full bg-lp-brand-soft font-semibold text-lp-brand-text">{identity.email.charAt(0).toUpperCase()}</span>}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-lp-fg">{identity.email}</p>
+            <p className="text-xs text-lp-muted">Akun Google · email terverifikasi</p>
+          </div>
+        </div>
+        {formError && <Alert variant="danger">{formError}</Alert>}
+        <Input label="Nama lengkap (sesuai ijazah)" required minLength={3} value={values.name} onChange={set('name')} error={errors.name} hint="Periksa kembali: nama di akun Google bisa berbeda dengan nama di ijazah." />
+        <Input label="Nomor HP (WhatsApp)" type="tel" value={values.phone} onChange={set('phone')} error={errors.phone} hint="Opsional. Contoh: 081234567890" />
+        <Select label="Dari mana Anda mengetahui PMB kami?" placeholder="Pilih (opsional)" options={INFO_SOURCES} value={values.info_source} onChange={set('info_source')} />
+        <div className="space-y-2 text-sm">
+          <Checkbox checked={consents.privacy_policy} onChange={(e) => setConsents({ ...consents, privacy_policy: e.target.checked })} label="Saya menyetujui Kebijakan Privasi" />
+          {site?.legal.privacy_policy && <Link to={to(PMB.legal, { type: 'privacy_policy' })} target="_blank" className={`${linkClass} ml-6 text-xs`}>Baca Kebijakan Privasi</Link>}
+          <Checkbox checked={consents.terms} onChange={(e) => setConsents({ ...consents, terms: e.target.checked })} label="Saya menyetujui Ketentuan Pendaftaran" />
+          {site?.legal.terms && <Link to={to(PMB.legal, { type: 'terms' })} target="_blank" className={`${linkClass} ml-6 text-xs`}>Baca Ketentuan</Link>}
+          <Checkbox checked={consents.marketing_optional} onChange={(e) => setConsents({ ...consents, marketing_optional: e.target.checked })} label="Saya bersedia menerima informasi promosi (opsional)" />
+          {(errors['consents.privacy_policy'] || errors['consents.terms']) && <p className="text-xs text-danger">Kebijakan privasi dan ketentuan wajib disetujui.</p>}
+        </div>
+        <Button type="submit" isLoading={busy} disabled={!consents.privacy_policy || !consents.terms}>Buat akun dan masuk</Button>
       </form>
     </AuthCard>
   )

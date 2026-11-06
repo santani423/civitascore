@@ -49,4 +49,18 @@ return [
         'timeout' => (int) env('XENDIT_TIMEOUT', 10),
     ],
 
+    /*
+    | Google Sign-In (OAuth 2.0 / OpenID Connect) untuk akun pendaftar PMB —
+    | dipakai lewat Laravel Socialite. Client secret hanya dipakai backend
+    | (tukar authorization code) dan tidak pernah dikirim ke frontend.
+    | Tanpa client ID/secret, tombol Google disembunyikan dan endpoint-nya
+    | menjawab 503. `redirect` harus sama persis dengan "Authorized redirect
+    | URI" di Google Cloud Console.
+    */
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI') ?: rtrim((string) env('APP_URL', 'http://localhost'), '/').'/api/v1/pmb/applicant/auth/google/callback',
+    ],
+
 ];

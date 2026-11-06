@@ -42,6 +42,11 @@ use Modules\Tenancy\Models\University;
  * @property CarbonImmutable|null $deactivated_at
  * @property CarbonImmutable|null $anonymized_at
  * @property string|null $remember_token
+ * @property string|null $google_id klaim `sub` Google (bukan email)
+ * @property string $auth_provider email|google — metode saat akun dibuat
+ * @property bool $has_password false untuk akun Google yang belum mengatur sandi
+ * @property CarbonImmutable|null $google_linked_at
+ * @property string|null $avatar_url
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read University $university
@@ -63,7 +68,7 @@ class ApplicantAccount extends Authenticatable implements ScopesToInstitution
     protected $guarded = ['id'];
 
     /** @var array<int, string> */
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'remember_token', 'google_id'];
 
     protected function casts(): array
     {
@@ -78,6 +83,8 @@ class ApplicantAccount extends Authenticatable implements ScopesToInstitution
             'anonymized_at' => 'datetime',
             'failed_login_count' => 'integer',
             'lockout_count' => 'integer',
+            'has_password' => 'boolean',
+            'google_linked_at' => 'datetime',
         ];
     }
 

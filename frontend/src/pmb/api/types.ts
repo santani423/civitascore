@@ -8,6 +8,12 @@ export interface ApplicantAccount {
   email_verified: boolean
   phone_verified: boolean
   marketing_consent?: boolean
+  /** Metode saat akun dibuat. */
+  auth_provider?: 'email' | 'google'
+  google_linked?: boolean
+  /** false: akun dibuat lewat Google dan belum mengatur kata sandi. */
+  has_password?: boolean
+  avatar_url?: string | null
 }
 
 export interface Paginated<T> {
