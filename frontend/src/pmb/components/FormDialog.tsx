@@ -10,6 +10,7 @@ import { RichTextEditor } from '@/pmb/components/RichTextEditor'
 import { describeError } from '@/pmb/components/useAction'
 import { fromLocalInput, toLocalInput } from '@/pmb/lib/format'
 import type { NormalizedApiError } from '@/services/api'
+import { fitFileToLimit } from '@/utils/compressFile'
 
 export type FieldType = 'text' | 'email' | 'number' | 'date' | 'datetime' | 'textarea' | 'richtext' | 'select' | 'checkbox' | 'file' | 'json' | 'multiselect' | 'password'
 
@@ -24,6 +25,8 @@ export interface FieldDef {
   /** Tampilkan hanya bila fungsi bernilai true atas nilai form saat ini. */
   visible?: (values: Record<string, unknown>) => boolean
   accept?: string
+  /** Field file: batas ukuran (KB). Gambar yang melebihi batas dikompres otomatis sebelum `onSubmit`. */
+  maxSizeKb?: number
   /** Batas bawah/atas untuk field date, datetime, dan number (atribut HTML `min`/`max`). */
   min?: string
   max?: string
@@ -109,6 +112,19 @@ export function FormDialog({ open, title, fields, initial, submitLabel = 'Simpan
     setBusy(true)
 
     try {
+      for (const field of fields) {
+        const file = output[field.name]
+        if (field.type !== 'file' || !field.maxSizeKb || !(file instanceof File)) continue
+
+        try {
+          output[field.name] = await fitFileToLimit(file, field.maxSizeKb * 1024, { accept: field.accept })
+        } catch (err) {
+          setErrors({ [field.name]: (err as Error).message })
+
+          return
+        }
+      }
+
       await onSubmit(output)
       onClose()
     } catch (err) {

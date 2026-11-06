@@ -16,6 +16,7 @@ import { Alert } from '@/components/ui/Alert'
 import { Select } from '@/components/ui/Select'
 import { PMB, to } from '@/pmb/routes'
 import type { NormalizedApiError } from '@/services/api'
+import { fitFileToLimit } from '@/utils/compressFile'
 
 const INFO_SOURCES = [
   ['website', 'Website kampus'], ['social_media', 'Media sosial'], ['school_visit', 'Kunjungan ke sekolah'], ['expo', 'Pameran pendidikan'],
@@ -562,12 +563,13 @@ export function RecoveryPage() {
     if (!file) return
     setBusy(true)
     setError(null)
-    const form = new FormData()
-    Object.entries(values).forEach(([k, v]) => form.append(k, v))
-    form.append('identity_document', file)
-    if (captcha) form.append('captcha_token', captcha)
 
     try {
+      const form = new FormData()
+      Object.entries(values).forEach(([k, v]) => form.append(k, v))
+      // Batas backend 2 MB; foto KTP yang lebih besar dikompres otomatis.
+      form.append('identity_document', await fitFileToLimit(file, 2048 * 1024, { accept: 'image/jpeg,image/png,application/pdf' }))
+      if (captcha) form.append('captcha_token', captcha)
       await pmbPublic.recoveryRequest(form)
       setDone(true)
     } catch (err) {

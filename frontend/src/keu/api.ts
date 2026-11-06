@@ -1,4 +1,6 @@
 import { apiClient } from '@/services/api'
+import { DEFAULT_MAX_UPLOAD_BYTES } from '@/services/fileUploadService'
+import { fitFileToLimit } from '@/utils/compressFile'
 import type { Paginated } from '@/keu/types'
 
 /**
@@ -73,9 +75,9 @@ export const keuAdmin = client('/finance')
 export const keuStudent = client('/student/finance')
 
 /** Unggah berkas lewat FileManagement (POST /file-uploads) lalu kembalikan id-nya. */
-export async function uploadFile(file: File): Promise<string> {
+export async function uploadFile(file: File, maxBytes = DEFAULT_MAX_UPLOAD_BYTES): Promise<string> {
   const form = new FormData()
-  form.append('file', file)
+  form.append('file', await fitFileToLimit(file, maxBytes))
   form.append('is_public', 'false')
   const response = await apiClient.post<{ data: { id: string } }>('/file-uploads', form, { headers: { 'Content-Type': 'multipart/form-data' } })
 

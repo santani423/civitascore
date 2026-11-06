@@ -108,7 +108,7 @@ function Refunds() {
       <ReasonDialog open={deciding?.mode === 'fail'} title="Transfer refund gagal" description="Dana dikembalikan ke saldo deposit mahasiswa." onClose={() => setDeciding(null)}
         onConfirm={(v) => action.run(() => keuAdmin.post(`refunds/${deciding?.refund.id}/fail`, v), (x) => x.message).then(done)} />
       <FormDialog open={deciding?.mode === 'complete'} title="Catat transfer refund" onClose={() => setDeciding(null)}
-        fields={[{ name: 'execution_reference', label: 'Nomor referensi transfer', required: true }, { name: 'proof', label: 'Bukti transfer (PDF/JPG/PNG)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png' }]}
+        fields={[{ name: 'execution_reference', label: 'Nomor referensi transfer', required: true }, { name: 'proof', label: 'Bukti transfer (PDF/JPG/PNG)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png', maxSizeKb: 5120 }]}
         onSubmit={async (v) => {
           const proofId = v.proof instanceof File ? await uploadFile(v.proof) : null
           await action.run(() => keuAdmin.post(`refunds/${deciding?.refund.id}/complete`, { execution_reference: v.execution_reference, proof_file_id: proofId }), (x) => x.message).then(done)

@@ -1,11 +1,16 @@
 import { apiClient } from '@/services/api'
 import type { ApiSuccessResponse } from '@/types/api'
 import type { FileUpload } from '@/types/fileUpload'
+import { fitFileToLimit } from '@/utils/compressFile'
+
+/** Batas bawaan POST /file-uploads (pengaturan sistem `file.max_upload_size_mb`, default 10 MB). */
+export const DEFAULT_MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 export const fileUploadService = {
-  async upload(file: File, isPublic = false): Promise<FileUpload> {
+  /** Gambar yang melebihi `maxBytes` dikompres otomatis sebelum dikirim. */
+  async upload(file: File, isPublic = false, maxBytes = DEFAULT_MAX_UPLOAD_BYTES): Promise<FileUpload> {
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('file', await fitFileToLimit(file, maxBytes))
     formData.append('is_public', String(isPublic))
 
     const response = await apiClient.post<ApiSuccessResponse<FileUpload>>('/file-uploads', formData, {

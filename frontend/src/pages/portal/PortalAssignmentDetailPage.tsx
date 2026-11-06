@@ -15,6 +15,7 @@ import type { NormalizedApiError } from '@/services/api'
 import { ROUTES } from '@/constants/routes'
 import { formatCountdown, formatDateTime } from '@/utils/portalFormat'
 import { formatFileSize } from '@/utils/formatters'
+import { compressionNote, fitFileToLimit } from '@/utils/compressFile'
 
 export function PortalAssignmentDetailPage() {
   const { id = '' } = useParams()
@@ -24,6 +25,7 @@ export function PortalAssignmentDetailPage() {
   const [file, setFile] = useState<File | null>(null)
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [preparing, setPreparing] = useState(false)
   const [message, setMessage] = useState<{ variant: 'success' | 'danger'; text: string } | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -35,7 +37,7 @@ export function PortalAssignmentDetailPage() {
     }
   }
 
-  const pickFile = (picked: File | null) => {
+  const pickFile = async (picked: File | null) => {
     setMessage(null)
     if (!picked || !assignment) return setFile(null)
 
@@ -45,12 +47,19 @@ export function PortalAssignmentDetailPage() {
       setMessage({ variant: 'danger', text: `Format berkas tidak diizinkan. Format yang diterima: ${assignment.allowed_extensions.join(', ')}.` })
       return setFile(null)
     }
-    if (picked.size > assignment.max_file_size_mb * 1024 * 1024) {
-      setMessage({ variant: 'danger', text: `Ukuran berkas melebihi batas ${assignment.max_file_size_mb} MB.` })
-      return setFile(null)
-    }
 
-    setFile(picked)
+    // Gambar yang melebihi batas dikompres otomatis; berkas lain yang terlalu besar ditolak.
+    setPreparing(true)
+    try {
+      const ready = await fitFileToLimit(picked, assignment.max_file_size_mb * 1024 * 1024, { accept: assignment.allowed_extensions })
+      if (ready !== picked) setMessage({ variant: 'success', text: `Gambar${compressionNote(picked, ready)} agar sesuai batas ${assignment.max_file_size_mb} MB.` })
+      setFile(ready)
+    } catch (err) {
+      setMessage({ variant: 'danger', text: (err as Error).message })
+      setFile(null)
+    } finally {
+      setPreparing(false)
+    }
   }
 
   const submit = async () => {
@@ -59,7 +68,7 @@ export function PortalAssignmentDetailPage() {
     setMessage(null)
 
     try {
-      const upload = file ? await fileUploadService.upload(file) : null
+      const upload = file ? await fileUploadService.upload(file, false, assignment.max_file_size_mb * 1024 * 1024) : null
       const result = await studentPortalService.submitAssignment(assignment.id, { file_upload_id: upload?.id ?? null, notes: notes || null })
       setData(result.data)
       setFile(null)
@@ -165,13 +174,13 @@ export function PortalAssignmentDetailPage() {
                   type="file"
                   accept={assignment.allowed_extensions.map((extension) => `.${extension}`).join(',')}
                   className="hidden"
-                  onChange={(event) => pickFile(event.target.files?.[0] ?? null)}
+                  onChange={(event) => void pickFile(event.target.files?.[0] ?? null)}
                 />
-                <Button variant="outline" leftIcon={<Upload className="size-4" />} onClick={() => fileInput.current?.click()}>
+                <Button variant="outline" leftIcon={<Upload className="size-4" />} isLoading={preparing} onClick={() => fileInput.current?.click()}>
                   {file ? `${file.name} (${formatFileSize(file.size)})` : 'Pilih berkas'}
                 </Button>
                 <Textarea label="Catatan / jawaban (opsional)" rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} />
-                <Button isLoading={submitting} disabled={!file && !notes.trim()} onClick={submit}>
+                <Button isLoading={submitting} disabled={preparing || (!file && !notes.trim())} onClick={submit}>
                   Kumpulkan
                 </Button>
                 {assignment.is_past_due && <p className="text-xs text-danger">Batas waktu sudah lewat — pengumpulan akan ditandai terlambat.</p>}

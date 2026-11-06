@@ -94,7 +94,7 @@ export function InvoicePanel({ invoice, onChanged, allowInstallment = false }: {
         description={proofFor ? `Transfer tepat ${money(proofFor.amount)} (sudah termasuk kode unik).` : undefined}
         onClose={() => setProofFor(null)}
         fields={[
-          { name: 'file', label: 'Foto/PDF bukti transfer', type: 'file', required: true, accept: 'image/jpeg,image/png,application/pdf' },
+          { name: 'file', label: 'Foto/PDF bukti transfer', type: 'file', required: true, accept: 'image/jpeg,image/png,application/pdf', maxSizeKb: 2048 },
           { name: 'sender_bank', label: 'Bank pengirim', required: true },
           { name: 'sender_name', label: 'Nama pemilik rekening', required: true },
           { name: 'transfer_date', label: 'Tanggal transfer', type: 'date', required: true },

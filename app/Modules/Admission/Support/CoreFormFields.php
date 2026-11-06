@@ -31,7 +31,16 @@ final class CoreFormFields
         ],
     ];
 
-    public const INFO_SOURCES = ['website', 'social_media', 'school_visit', 'expo', 'friend_family', 'alumni', 'maukuliah', 'search_engine', 'other'];
+    /** Label field identitas untuk pesan kelengkapan yang dibaca pendaftar. */
+    public const IDENTITY_LABELS = [
+        'full_name' => 'Nama lengkap', 'nationality' => 'Kewarganegaraan', 'nik' => 'NIK', 'passport_number' => 'Nomor paspor',
+        'passport_country' => 'Negara penerbit paspor', 'birth_place' => 'Tempat lahir', 'birth_date' => 'Tanggal lahir', 'gender' => 'Jenis kelamin',
+        'address_line' => 'Alamat', 'rt' => 'RT', 'rw' => 'RW', 'village' => 'Kelurahan/desa', 'district' => 'Kecamatan',
+        'city' => 'Kota/kabupaten', 'province' => 'Provinsi', 'postal_code' => 'Kode pos', 'region_code' => 'Kode wilayah',
+        'special_needs' => 'Kebutuhan khusus', 'special_needs_note' => 'Keterangan kebutuhan khusus',
+    ];
+
+    public const INFO_SOURCES =['website', 'social_media', 'school_visit', 'expo', 'friend_family', 'alumni', 'maukuliah', 'search_engine', 'other'];
 
     /** @return array<int, string> */
     public static function keys(): array

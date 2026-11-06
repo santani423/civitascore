@@ -4,6 +4,7 @@ import { pmbAdmin } from '@/pmb/api/admin'
 import { adminClient } from '@/pmb/api/http'
 import { useLoad } from '@/pmb/components/useLoad'
 import { Feedback, useAction } from '@/pmb/components/useAction'
+import { fitFileToLimit } from '@/utils/compressFile'
 import { AdminList } from '@/pmb/components/AdminList'
 import { FormDialog, type FieldDef } from '@/pmb/components/FormDialog'
 import { StatusBadge } from '@/pmb/components/StatusBadge'
@@ -51,10 +52,11 @@ export function ContentsPage() {
 
   const uploadImage = async (file: File | undefined) => {
     if (!file) return
-    const form = new FormData()
-    form.append('file', file)
-    form.append('kind', file.type === 'application/pdf' ? 'document' : 'image')
     await action.run(async () => {
+      const form = new FormData()
+      // Batas unggah konten 5 MB; gambar yang lebih besar dikompres otomatis.
+      form.append('file', await fitFileToLimit(file, 5120 * 1024, { accept: 'image/jpeg,image/png,application/pdf' }))
+      form.append('kind', file.type === 'application/pdf' ? 'document' : 'image')
       const { data } = await adminClient.post<{ data: { url: string | null } }>('/pmb/admin/uploads/images', form)
       if (data.data.url) await navigator.clipboard?.writeText(data.data.url)
       return data.data
@@ -137,7 +139,7 @@ export function ProgramProfilesPage() {
         { name: 'slug', label: 'Slug URL' }, { name: 'summary', label: 'Ringkasan (maks 300 karakter)', type: 'textarea' }, { name: 'description', label: 'Deskripsi', type: 'richtext' },
         { name: 'accreditation_label', label: 'Akreditasi' }, { name: 'accreditation_valid_until', label: 'Akreditasi berlaku s.d.', type: 'date' },
         { name: 'degree_title', label: 'Gelar' }, { name: 'study_duration', label: 'Lama studi' }, { name: 'career_prospects', label: 'Prospek karier', type: 'textarea' },
-        { name: 'cover', label: 'Gambar sampul (JPG/PNG)', type: 'file', accept: 'image/jpeg,image/png' }, { name: 'brochure', label: 'Brosur (PDF)', type: 'file', accept: 'application/pdf' },
+        { name: 'cover', label: 'Gambar sampul (JPG/PNG)', type: 'file', accept: 'image/jpeg,image/png', maxSizeKb: 5120 }, { name: 'brochure', label: 'Brosur (PDF)', type: 'file', accept: 'application/pdf' },
       ]} initial={(editing?.profile ?? {}) as unknown as Record<string, unknown>} onClose={() => setEditing(null)} onSubmit={async (v) => {
         if (!editing) return
         const { cover, brochure, ...rest } = v

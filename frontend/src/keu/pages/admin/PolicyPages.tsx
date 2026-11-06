@@ -133,7 +133,7 @@ function Awards() {
           { name: 'start_term_id', label: 'Mulai semester', type: 'select', options: opts(lookups?.academic_terms, (t) => t.label) },
           { name: 'end_term_id', label: 'Sampai semester (kosong = seterusnya)', type: 'select', options: opts(lookups?.academic_terms, (t) => t.label) },
           { name: 'basis', label: 'Dasar penetapan (SK/nomor surat)', type: 'textarea', required: true },
-          { name: 'evidence', label: 'Dokumen pendukung (PDF/JPG/PNG)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png' },
+          { name: 'evidence', label: 'Dokumen pendukung (PDF/JPG/PNG)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png', maxSizeKb: 5120 },
         ]}
         onSubmit={async (v) => {
           if (!student) throw { status: 422, message: 'Pilih mahasiswa terlebih dahulu.' }

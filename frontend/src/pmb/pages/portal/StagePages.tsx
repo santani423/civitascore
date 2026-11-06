@@ -59,7 +59,7 @@ export function ExamsPage() {
         open={reschedule !== null}
         title="Ajukan jadwal ulang"
         description="Sertakan alasan kuat (sakit, bentrok jadwal resmi) dan bukti pendukung bila ada. Permintaan ditinjau panitia."
-        fields={[{ name: 'reason', label: 'Alasan', type: 'textarea', required: true }, { name: 'attachment', label: 'Bukti (opsional)', type: 'file', accept: 'image/jpeg,image/png,application/pdf' }]}
+        fields={[{ name: 'reason', label: 'Alasan', type: 'textarea', required: true }, { name: 'attachment', label: 'Bukti (opsional)', type: 'file', accept: 'image/jpeg,image/png,application/pdf', maxSizeKb: 2048 }]}
         onClose={() => setReschedule(null)}
         onSubmit={async (values) => {
           if (reschedule) await pmbApplicant.reschedule(reschedule.id, toFormData(values))

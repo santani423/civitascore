@@ -152,7 +152,7 @@ function ChangesTab() {
         { name: 'application_ids', label: 'ID aplikasi (pisahkan dengan koma)', type: 'textarea', required: true },
         { name: 'proposed', label: 'Usulan (JSON opsional: {"<id aplikasi>": {"decision":"accepted","quota_id":"..."}})', type: 'json' },
         { name: 'reason', label: 'Alasan', type: 'textarea', required: true },
-        { name: 'evidence', label: 'Bukti (opsional)', type: 'file' },
+        { name: 'evidence', label: 'Bukti (opsional)', type: 'file', maxSizeKb: 5120 },
       ]} onClose={() => setRequesting(false)} onSubmit={async (v) => {
         const form = new FormData()
         String(v.application_ids).split(/[\s,]+/).filter(Boolean).forEach((x) => form.append('application_ids[]', x))
@@ -311,7 +311,7 @@ export function ReRegistrationDetailPage() {
       ]} onClose={() => setDialog(null)} onSubmit={async (v) => { await pmbAdmin.post(`re-registrations/${id}/request-revision`, { targets: { documents: v.documents, fields: v.fields }, note: v.note }); rr.reload() }} />
       <ReasonDialog open={dialog === 'extend'} title="Perpanjang batas daftar ulang" extraFields={[{ name: 'until', label: 'Batas baru', type: 'datetime', required: true }]} onClose={() => setDialog(null)} onConfirm={async (v) => { await pmbAdmin.post(`re-registrations/${id}/extend`, v); rr.reload() }} />
       <ReasonDialog open={dialog === 'restore'} title="Pulihkan daftar ulang" reasonName="note" reasonLabel="Catatan" extraFields={[{ name: 'reason_code', label: 'Dasar pemulihan', type: 'select', required: true, options: [{ value: 'DECLINE_MISTAKE', label: 'Salah tolak (≤ 24 jam)' }, { value: 'LATE_CALLBACK', label: 'Pembayaran sah terlambat tercatat' }] }]} onClose={() => setDialog(null)} onConfirm={async (v) => { await pmbAdmin.post(`re-registrations/${id}/restore`, v); rr.reload() }} />
-      <FormDialog open={dialog === 'cancel'} title="Batalkan penerimaan" description="Memerlukan persetujuan; kursi dilepas dan LoA dicabut setelah disetujui." fields={[{ name: 'reason', label: 'Alasan', type: 'textarea', required: true }, { name: 'evidence', label: 'Bukti (opsional)', type: 'file' }]} onClose={() => setDialog(null)} onSubmit={async (v) => {
+      <FormDialog open={dialog === 'cancel'} title="Batalkan penerimaan" description="Memerlukan persetujuan; kursi dilepas dan LoA dicabut setelah disetujui." fields={[{ name: 'reason', label: 'Alasan', type: 'textarea', required: true }, { name: 'evidence', label: 'Bukti (opsional)', type: 'file', maxSizeKb: 5120 }]} onClose={() => setDialog(null)} onSubmit={async (v) => {
         const form = new FormData()
         form.append('reason', String(v.reason))
         if (v.evidence instanceof File) form.append('evidence', v.evidence)

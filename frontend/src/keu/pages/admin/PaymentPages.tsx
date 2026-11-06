@@ -224,7 +224,7 @@ export function CashierPage() {
         fields={[{ name: 'counted_total', label: 'Hasil hitung fisik (Rp)', type: 'number', required: true }, { name: 'note', label: 'Catatan (wajib bila ada selisih)', type: 'textarea' }]}
         onSubmit={(v) => action.run(() => keuAdmin.post(`cashier-sessions/${closing?.id}/close`, v), (r) => r.message).then((r) => r && refresh())} />
       <FormDialog open={depositing !== null} title="Catat setoran bank" onClose={() => setDepositing(null)}
-        fields={[{ name: 'deposit_reference', label: 'Nomor referensi setoran', required: true }, { name: 'file', label: 'Bukti setoran (PDF/JPG/PNG, opsional)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png' }]}
+        fields={[{ name: 'deposit_reference', label: 'Nomor referensi setoran', required: true }, { name: 'file', label: 'Bukti setoran (PDF/JPG/PNG, opsional)', type: 'file', accept: '.pdf,.jpg,.jpeg,.png', maxSizeKb: 5120 }]}
         onSubmit={async (v) => {
           const fileId = v.file instanceof File ? await uploadFile(v.file) : null
           await action.run(() => keuAdmin.post(`cashier-sessions/${depositing?.id}/deposit`, { deposit_reference: v.deposit_reference, deposit_file_id: fileId }), (r) => r.message).then((r) => r && refresh())

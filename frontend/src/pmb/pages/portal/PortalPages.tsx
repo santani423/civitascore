@@ -5,6 +5,7 @@ import { pmbApplicant, type ChatThreadSummary } from '@/pmb/api/applicant'
 import { usePortal } from '@/pmb/components/PortalContext'
 import { useLoad } from '@/pmb/components/useLoad'
 import { Feedback, useAction } from '@/pmb/components/useAction'
+import { fitFileToLimit } from '@/utils/compressFile'
 import { StatusBadge } from '@/pmb/components/StatusBadge'
 import { FormDialog, toFormData } from '@/pmb/components/FormDialog'
 import { useApplicantStore } from '@/pmb/stores/applicantStore'
@@ -215,7 +216,7 @@ export function MessagesPage() {
           { name: 'subject', label: 'Subjek', required: true },
           { name: 'application_id', label: 'Terkait pendaftaran', type: 'select', options: (apps.data ?? []).map((a) => ({ value: a.id, label: `${a.path?.name} · ${a.registration_number ?? 'draf'}` })) },
           { name: 'message', label: 'Pesan', type: 'textarea', required: true },
-          { name: 'attachment', label: 'Lampiran (opsional)', type: 'file', accept: 'image/jpeg,image/png,application/pdf' },
+          { name: 'attachment', label: 'Lampiran (opsional)', type: 'file', accept: 'image/jpeg,image/png,application/pdf', maxSizeKb: 2048 },
         ]}
         onSubmit={async (values) => {
           const thread = await pmbApplicant.openThread(toFormData(values))
@@ -234,10 +235,14 @@ function ThreadView({ threadId, onChanged }: { threadId: string; onChanged: () =
   const action = useAction()
 
   const send = async () => {
-    const form = new FormData()
-    form.append('body', body)
-    if (file) form.append('attachment', file)
-    const ok = await action.run(() => pmbApplicant.reply(threadId, form))
+    const ok = await action.run(async () => {
+      const form = new FormData()
+      form.append('body', body)
+      // Batas lampiran 2 MB; gambar yang lebih besar dikompres otomatis.
+      if (file) form.append('attachment', await fitFileToLimit(file, 2048 * 1024, { accept: 'image/jpeg,image/png,application/pdf' }))
+
+      return pmbApplicant.reply(threadId, form)
+    })
 
     if (ok !== undefined) {
       setBody('')

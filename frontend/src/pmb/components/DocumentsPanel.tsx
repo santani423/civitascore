@@ -8,6 +8,7 @@ import { StatusBadge } from '@/pmb/components/StatusBadge'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
+import { compressionNote, fitFileToLimit } from '@/utils/compressFile'
 
 /** POR-05 Dokumen: unggah per slot, versi, status tinjauan & alasan, tambah slot (dokumen multi). */
 export function DocumentsPanel({ applicationId, stage = 'application', editable = true, onChanged }: { applicationId: string; stage?: 'application' | 're_registration'; editable?: boolean; onChanged?: () => void }) {
@@ -24,17 +25,20 @@ export function DocumentsPanel({ applicationId, stage = 'application', editable 
   const upload = async (file: File | undefined) => {
     if (!file || !target) return
     const maxKb = target.document_type?.max_size_kb ?? 2048
-
-    if (file.size > maxKb * 1024) {
-      action.run(() => Promise.reject({ status: 422, message: `Ukuran berkas melebihi ${Math.round(maxKb / 102.4) / 10} MB.` }))
-
-      return
-    }
-
-    await action.run(() => pmbApplicant.uploadDocument(applicationId, target.id, file), 'Berkas diunggah.')
-    docs.reload()
-    onChanged?.()
     if (inputRef.current) inputRef.current.value = ''
+
+    // Gambar yang melebihi batas dikompres otomatis; PDF yang terlalu besar tetap ditolak dengan pesan.
+    const uploaded = await action.run(async () => {
+      const ready = await fitFileToLimit(file, maxKb * 1024, { accept: target.document_type?.allowed_mime_types })
+      await pmbApplicant.uploadDocument(applicationId, target.id, ready)
+
+      return ready
+    }, (ready) => `Berkas diunggah${compressionNote(file, ready)}.`)
+
+    if (uploaded) {
+      docs.reload()
+      onChanged?.()
+    }
   }
 
   return (

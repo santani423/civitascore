@@ -337,7 +337,7 @@ function RefundsTab() {
           <div className="flex justify-end"><Button disabled={!bulkTarget.wavePath || bulkReason.trim().length < 10} isLoading={bulkAction.busy} onClick={() => bulkAction.run(() => pmbAdmin.post(`wave-paths/${bulkTarget.wavePath}/bulk-refunds`, { reason: bulkReason }), 'Refund massal diajukan untuk persetujuan.').then(() => setReload(reload + 1))}>Ajukan</Button></div>
         </div>
       </Modal>
-      <FormDialog open={completing !== null} title="Catat refund selesai" fields={[{ name: 'proof', label: 'Bukti transfer', type: 'file', accept: 'image/jpeg,image/png,application/pdf' }, { name: 'completed_at', label: 'Waktu transfer', type: 'datetime' }]} onClose={() => setCompleting(null)} onSubmit={async (v) => { if (completing) await adminClient.post(`/pmb/admin/refunds/${completing.id}/complete`, toFormData(v)); setReload(reload + 1) }} />
+      <FormDialog open={completing !== null} title="Catat refund selesai" fields={[{ name: 'proof', label: 'Bukti transfer', type: 'file', accept: 'image/jpeg,image/png,application/pdf', maxSizeKb: 5120 }, { name: 'completed_at', label: 'Waktu transfer', type: 'datetime' }]} onClose={() => setCompleting(null)} onSubmit={async (v) => { if (completing) await adminClient.post(`/pmb/admin/refunds/${completing.id}/complete`, toFormData(v)); setReload(reload + 1) }} />
     </>
   )
 }

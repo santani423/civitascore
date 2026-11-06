@@ -8,6 +8,7 @@ import { AdminList } from '@/pmb/components/AdminList'
 import { FormDialog } from '@/pmb/components/FormDialog'
 import { ReasonDialog } from '@/pmb/components/ReasonDialog'
 import { StatusBadge } from '@/pmb/components/StatusBadge'
+import { DocumentPreviewModal } from '@/pmb/components/DocumentPreviewModal'
 import { Tabs } from '@/pmb/components/Tabs'
 import { KeyValue } from '@/pmb/components/KeyValue'
 import { AdminPage, Can, P, options, useLookups } from '@/pmb/components/admin'
@@ -123,6 +124,7 @@ export function ApplicationDetailPage() {
   const [revealed, setRevealed] = useState<Record<string, string>>({})
   const [revealField, setRevealField] = useState<string | null>(null)
   const [review, setReview] = useState<DocRow | null>(null)
+  const [preview, setPreview] = useState<{ doc: DocRow; versionId: string } | null>(null)
   const [note, setNote] = useState({ body: '', visibility: 'internal' })
   const lookups = useLookups()
 
@@ -132,6 +134,7 @@ export function ApplicationDetailPage() {
   const reload = () => { app.reload(); docs.reload(); timeline.reload() }
   const claimedByMe = a.assignment?.is_mine
   const decidable = canVerify && claimedByMe && ['submitted'].includes(a.statuses.form) && a.statuses.verification === 'in_review'
+  const canReview = (d: DocRow) => Boolean(d.current_version_id) && ['uploaded', 'in_review'].includes(d.status) && Boolean(decidable || d.stage === 're_registration')
   const sensitive = (field: string, masked: unknown) => (
     <span className="inline-flex items-center gap-1">{revealed[field] ?? String(masked ?? '—')}
       {a.can.reveal && Boolean(masked) && !revealed[field] && <button type="button" aria-label="Buka" title="Buka (tercatat)" onClick={() => setRevealField(field)}><Eye className="size-3.5 text-ink-tertiary" /></button>}
@@ -216,8 +219,8 @@ export function ApplicationDetailPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={d.status} />
-                    {d.versions.map((v) => <Can key={v.id} permission={P.DOCUMENTS_DOWNLOAD}><Button size="sm" variant="ghost" onClick={() => action.run(() => pmbAdmin.open(`document-versions/${v.id}/download`, { purpose: 'verifikasi dokumen' }))}>Lihat v{v.version_no}</Button></Can>)}
-                    {current && ['uploaded', 'in_review'].includes(d.status) && (decidable || (d.stage === 're_registration')) && <Button size="sm" onClick={() => setReview(d)}>Tinjau</Button>}
+                    {d.versions.length > 0 && <Can permission={P.DOCUMENTS_DOWNLOAD}><Button size="sm" variant="ghost" leftIcon={<Eye className="size-4" />} onClick={() => setPreview({ doc: d, versionId: current?.id ?? d.versions[0].id })}>Lihat{d.versions.length > 1 ? ` (${d.versions.length} versi)` : ''}</Button></Can>}
+                    {canReview(d) && <Button size="sm" onClick={() => setReview(d)}>Tinjau</Button>}
                     {a.can.override && d.status === 'approved' && <Button size="sm" variant="ghost" onClick={() => setReview({ ...d, status: 'reopen' })}>Buka kembali</Button>}
                   </div>
                 </div>
@@ -245,6 +248,27 @@ export function ApplicationDetailPage() {
         </Card>
       )}
 
+      {preview && (
+        <DocumentPreviewModal
+          title={`${preview.doc.type ?? 'Dokumen'}${preview.doc.slot > 1 ? ` #${preview.doc.slot}` : ''}`}
+          versions={preview.doc.versions}
+          initialVersionId={preview.versionId}
+          loadUrl={(versionId) => pmbAdmin.get<{ url: string }>(`document-versions/${versionId}/download`, { purpose: 'verifikasi dokumen' })}
+          onClose={() => setPreview(null)}
+          details={(
+            <div className="flex flex-col gap-2 border-t border-border pt-3">
+              <div className="flex flex-wrap items-center gap-1.5"><StatusBadge status={preview.doc.status} />{preview.doc.is_mandatory && <Badge>wajib</Badge>}{preview.doc.is_sensitive && <Badge variant="danger">sensitif</Badge>}{preview.doc.requires_original_check && <Badge variant="warning">cek dokumen asli</Badge>}</div>
+              {preview.doc.versions.some((v) => v.reviews.length > 0) && (
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs font-medium text-ink-secondary">Riwayat tinjauan</p>
+                  {preview.doc.versions.flatMap((v) => v.reviews.map((r, i) => <p key={`${v.id}-${i}`} className="text-xs text-ink-tertiary">v{v.version_no} · {statusLabel(r.decision)}{r.reason_code ? ` · ${r.reason_code}` : ''}{r.note_for_applicant ? ` — ${r.note_for_applicant}` : ''}{r.internal_note ? ` (internal: ${r.internal_note})` : ''}</p>))}
+                </div>
+              )}
+            </div>
+          )}
+          actions={canReview(preview.doc) ? <Button size="sm" onClick={() => { setReview(preview.doc); setPreview(null) }}>Tinjau dokumen ini</Button> : undefined}
+        />
+      )}
       <FormDialog open={review !== null} title={review?.status === 'reopen' ? `Buka kembali ${review?.type}` : `Tinjau ${review?.type ?? ''}`} fields={[
         ...(review?.status === 'reopen' ? [] : [{ name: 'decision', label: 'Keputusan', type: 'select' as const, required: true, options: [{ value: 'approved', label: 'Setujui' }, { value: 'revision_requested', label: 'Minta perbaikan' }, { value: 'rejected', label: 'Tolak' }] }]),
         { name: 'reason_code', label: 'Kode alasan', type: 'select', options: (docs.data?.reason_codes.document ?? []).map((c) => ({ value: c, label: c })), visible: (v) => review?.status === 'reopen' || v.decision !== 'approved' },

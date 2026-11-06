@@ -16,6 +16,7 @@ use Modules\Admission\Enums\ConsentType;
 use Modules\Admission\Enums\ContentStatus;
 use Modules\Admission\Enums\ContentType;
 use Modules\Admission\Enums\DocumentStage;
+use Modules\Admission\Enums\DocumentStatus;
 use Modules\Admission\Enums\FormStatus;
 use Modules\Admission\Enums\Lifecycle;
 use Modules\Admission\Enums\PathCategory;
@@ -379,7 +380,7 @@ class ApplicationService
             };
 
             if ($required && $blank($value)) {
-                $missing['identity'][] = ['field' => $field];
+                $missing['identity'][] = ['field' => $field, 'message' => (CoreFormFields::IDENTITY_LABELS[$field] ?? $field).' belum diisi.'];
             }
         }
 
@@ -387,20 +388,22 @@ class ApplicationService
         $education = $application->primaryEducation;
 
         if ($education === null) {
-            $missing['education'][] = ['field' => 'primary_education_id'];
+            $missing['education'][] = ['field' => 'primary_education_id', 'message' => $application->account->educations()->exists()
+                ? 'Belum ada riwayat pendidikan yang dipilih. Klik tombol "Pilih" pada riwayat pendidikan yang ingin dipakai untuk pendaftaran ini.'
+                : 'Belum ada riwayat pendidikan. Klik "Tambah riwayat pendidikan", lalu klik "Pilih" pada riwayat tersebut.'];
         } else {
             $category = $application->admissionPath->category;
 
             if (in_array($category, [PathCategory::Transfer, PathCategory::Rpl, PathCategory::Postgraduate], true) && $education->level === 'secondary') {
-                $missing['education'][] = ['field' => 'primary_education_id', 'message' => 'Jalur ini memerlukan riwayat pendidikan tinggi.'];
+                $missing['education'][] = ['field' => 'primary_education_id', 'message' => 'Jalur ini memerlukan riwayat pendidikan tinggi (Diploma/Sarjana/Magister). Tambahkan atau pilih riwayat pendidikan tinggi, bukan SMA/SMK.'];
             }
 
             if (in_array($category, [PathCategory::Transfer, PathCategory::Postgraduate], true) && $education->gpa === null) {
-                $missing['education'][] = ['field' => 'gpa'];
+                $missing['education'][] = ['field' => 'gpa', 'message' => 'IPK pada riwayat pendidikan yang dipilih belum diisi. Klik ikon ubah (pensil) untuk melengkapinya.'];
             }
 
             if ($education->level === 'secondary' && $blank($education->school_type)) {
-                $missing['education'][] = ['field' => 'school_type'];
+                $missing['education'][] = ['field' => 'school_type', 'message' => 'Jenis sekolah (SMA/SMK/MA/Paket C) pada riwayat pendidikan yang dipilih belum diisi. Klik ikon ubah (pensil) untuk melengkapinya.'];
             }
 
             $reportComponent = $application->wavePath?->selectionScheme?->components->first(fn (SelectionComponent $c) => $c->source === ComponentSource::ReportCard);
@@ -411,19 +414,19 @@ class ApplicationService
 
                 foreach ($semesters as $semester) {
                     if (! in_array($semester, $present, true)) {
-                        $missing['education'][] = ['field' => 'report_scores', 'semester' => $semester];
+                        $missing['education'][] = ['field' => 'report_scores', 'semester' => $semester, 'message' => "Nilai rapor semester {$semester} belum diisi. Klik tombol \"Nilai rapor\" untuk mengisinya."];
                     }
                 }
             }
 
             if ($requirement('nisn') === 'required' && $blank($education->nisn)) {
-                $missing['education'][] = ['field' => 'nisn'];
+                $missing['education'][] = ['field' => 'nisn', 'message' => 'NISN pada riwayat pendidikan yang dipilih belum diisi. Klik ikon ubah (pensil) untuk melengkapinya.'];
             }
         }
 
         // Pilihan
         if ($application->choices->isEmpty()) {
-            $missing['choices'][] = ['field' => 'choices'];
+            $missing['choices'][] = ['field' => 'choices', 'message' => 'Belum ada program studi yang dipilih. Pilih minimal satu program studi, lalu klik "Simpan pilihan".'];
         }
 
         // Data pendukung
@@ -439,7 +442,7 @@ class ApplicationService
         }
 
         if ($blank($application->info_source)) {
-            $missing['supporting'][] = ['field' => 'info_source'];
+            $missing['supporting'][] = ['field' => 'info_source', 'message' => 'Sumber informasi PMB belum dipilih.'];
         }
 
         if ($application->admissionPath->category === PathCategory::Achievement && $application->account->achievements()->doesntExist()) {
@@ -447,7 +450,7 @@ class ApplicationService
         }
 
         if ($application->admissionPath->category === PathCategory::KipAffirmation && $blank($application->kip_number) && $blank($application->kip_registration_number)) {
-            $missing['supporting'][] = ['field' => 'kip_number'];
+            $missing['supporting'][] = ['field' => 'kip_number', 'message' => 'Isi Nomor KIP atau Nomor pendaftaran KIP Kuliah.'];
         }
 
         foreach (FormField::query()->where('form_template_id', $application->form_template_id)->where('stage', 'application')->get() as $field) {
@@ -459,13 +462,18 @@ class ApplicationService
             $value = $answer?->value_json ?? $answer?->value_text;
 
             if ($field->is_required && $blank($value)) {
-                $missing[$this->stepForSection($field->section)][] = ['field' => $field->key, 'label' => $field->label];
+                $missing[$this->stepForSection($field->section)][] = ['field' => $field->key, 'label' => $field->label, 'message' => "{$field->label} belum diisi."];
             }
         }
 
         // Dokumen
         foreach ($this->documents->unmetMandatory($application, DocumentStage::Application, false, $context) as $doc) {
-            $missing['documents'][] = ['document_type' => $doc['document_type'], 'name' => $doc['name'], 'status' => $doc['status']];
+            $missing['documents'][] = ['document_type' => $doc['document_type'], 'name' => $doc['name'], 'status' => $doc['status'], 'message' => match ($doc['status']) {
+                DocumentStatus::Rejected->value => "Dokumen {$doc['name']} ditolak. Unggah ulang dokumen yang benar.",
+                DocumentStatus::RevisionRequested->value => "Dokumen {$doc['name']} perlu diperbaiki. Unggah ulang dokumennya.",
+                DocumentStatus::Missing->value => "Dokumen {$doc['name']} belum diunggah.",
+                default => "Berkas {$doc['name']} belum lolos pemeriksaan sistem. Muat ulang halaman beberapa saat lagi, atau unggah ulang bila statusnya tidak berubah.",
+            }];
         }
 
         // Pembayaran

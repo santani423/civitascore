@@ -102,7 +102,7 @@ function ScoresTab({ wavePath }: { wavePath: string }) {
       <FormDialog open={editing !== null} title={editing?.locked ? 'Ajukan koreksi nilai terkunci' : 'Koreksi nilai'} description={editing?.locked ? 'Nilai sudah dikunci oleh run — koreksi memerlukan persetujuan pejabat pengesah.' : undefined} fields={[
         ...(editing?.pass_fail ? [{ name: 'passed', label: 'Hasil', type: 'select' as const, options: [{ value: '1', label: 'Lulus' }, { value: '0', label: 'Tidak' }] }] : [{ name: 'raw_score', label: 'Nilai baru', type: 'number' as const }]),
         { name: 'reason', label: 'Alasan', type: 'textarea', required: true },
-        ...(editing?.locked ? [{ name: 'evidence', label: 'Bukti (opsional)', type: 'file' as const }] : []),
+        ...(editing?.locked ? [{ name: 'evidence', label: 'Bukti (opsional)', type: 'file' as const, maxSizeKb: 5120 }] : []),
       ]} initial={{ raw_score: editing?.raw_score, passed: editing?.passed === null || editing?.passed === undefined ? '' : editing.passed ? '1' : '0' }} onClose={() => setEditing(null)} onSubmit={async (v) => {
         if (!editing) return
         const passed = v.passed === undefined || v.passed === null ? undefined : v.passed === '1'

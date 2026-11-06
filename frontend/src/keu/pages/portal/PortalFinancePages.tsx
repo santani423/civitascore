@@ -182,7 +182,7 @@ function ProofDialog({ tx, onClose, onDone }: { tx: Transaction | null; onClose:
     <FormDialog open={tx !== null} title="Unggah bukti transfer" onClose={onClose}
       description={tx ? `Transfer tepat ${money(tx.amount)}${tx.unique_code ? ` (sudah termasuk kode unik ${tx.unique_code})` : ''}. Bukti berupa JPG/PNG/PDF maksimal 2 MB.` : undefined}
       fields={[
-        { name: 'file', label: 'Berkas bukti', type: 'file', required: true, accept: '.jpg,.jpeg,.png,.pdf' },
+        { name: 'file', label: 'Berkas bukti', type: 'file', required: true, accept: '.jpg,.jpeg,.png,.pdf', maxSizeKb: 2048 },
         { name: 'sender_bank', label: 'Bank pengirim', required: true },
         { name: 'sender_name', label: 'Nama pemilik rekening pengirim', required: true },
         { name: 'transfer_date', label: 'Tanggal transfer', type: 'date', required: true },
@@ -190,7 +190,6 @@ function ProofDialog({ tx, onClose, onDone }: { tx: Transaction | null; onClose:
       ]}
       onSubmit={async (v) => {
         if (!(v.file instanceof File)) throw { status: 422, message: 'Pilih berkas bukti transfer.' }
-        if (v.file.size > 2 * 1024 * 1024) throw { status: 422, message: 'Ukuran berkas maksimal 2 MB.' }
         const fileId = await uploadFile(v.file)
         const { file: _file, ...rest } = v
         const { message } = await keuStudent.post(`transactions/${tx?.id}/proof`, { ...rest, file_upload_id: fileId })
@@ -282,7 +281,7 @@ function MyUkt() {
         fields={[
           { name: 'requested_group_id', label: 'Golongan yang diharapkan (opsional)', type: 'select', options: (data?.groups ?? []).map((g) => ({ value: g.id, label: g.name })) },
           { name: 'reason', label: 'Alasan (minimal 20 karakter)', type: 'textarea', required: true },
-          { name: 'evidence', label: 'Bukti pendukung (PDF/JPG/PNG, maks. 5 MB)', type: 'file', required: true, accept: '.pdf,.jpg,.jpeg,.png' },
+          { name: 'evidence', label: 'Bukti pendukung (PDF/JPG/PNG, maks. 5 MB)', type: 'file', required: true, accept: '.pdf,.jpg,.jpeg,.png', maxSizeKb: 5120 },
         ]}
         onSubmit={async (v) => {
           if (!(v.evidence instanceof File)) throw { status: 422, message: 'Lampirkan bukti pendukung.' }

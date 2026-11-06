@@ -97,7 +97,8 @@ export function PortalProfilePage() {
     setMessage(null)
 
     try {
-      const upload = await fileUploadService.upload(file)
+      // Batas foto profil 2 MB (StudentProfileService::PHOTO_MAX_MB); foto lebih besar dikompres otomatis.
+      const upload = await fileUploadService.upload(file, false, 2 * 1024 * 1024)
       const result = await studentPortalService.updateProfile({ photo_file_id: upload.id })
       setProfile(result.data)
       setMessage({ variant: 'success', text: 'Foto profil diperbarui.' })
