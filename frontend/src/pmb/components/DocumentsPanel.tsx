@@ -5,6 +5,7 @@ import type { ApplicantDocument } from '@/pmb/api/types'
 import { useLoad } from '@/pmb/components/useLoad'
 import { Feedback, useAction } from '@/pmb/components/useAction'
 import { StatusBadge } from '@/pmb/components/StatusBadge'
+import { DocumentPreviewModal } from '@/pmb/components/DocumentPreviewModal'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Alert } from '@/components/ui/Alert'
@@ -16,6 +17,7 @@ export function DocumentsPanel({ applicationId, stage = 'application', editable 
   const action = useAction()
   const inputRef = useRef<HTMLInputElement>(null)
   const [target, setTarget] = useState<ApplicantDocument | null>(null)
+  const [preview, setPreview] = useState<ApplicantDocument | null>(null)
 
   const pick = (doc: ApplicantDocument) => {
     setTarget(doc)
@@ -61,7 +63,7 @@ export function DocumentsPanel({ applicationId, stage = 'application', editable 
               </div>
               <div className="flex items-center gap-2">
                 <StatusBadge status={doc.status} />
-                {doc.current_version && <Button size="sm" variant="ghost" leftIcon={<Eye className="size-4" />} onClick={() => action.run(async () => window.open((await pmbApplicant.documentUrl(applicationId, doc.id)).url, '_blank', 'noopener'))}>Lihat</Button>}
+                {doc.current_version && <Button size="sm" variant="ghost" leftIcon={<Eye className="size-4" />} onClick={() => setPreview(doc)}>Lihat</Button>}
                 {canUpload && <Button size="sm" variant={doc.current_version ? 'outline' : 'primary'} leftIcon={<Upload className="size-4" />} isLoading={action.busy && target?.id === doc.id} onClick={() => pick(doc)}>{doc.current_version ? 'Ganti' : 'Unggah'}</Button>}
               </div>
               {editable && doc.document_type?.allows_multiple && doc.current_version && (
@@ -71,6 +73,16 @@ export function DocumentsPanel({ applicationId, stage = 'application', editable 
           )
         })}
       </div>
+      {preview?.current_version && (
+        <DocumentPreviewModal
+          title={`${preview.document_type?.name ?? 'Dokumen'}${preview.slot > 1 ? ` #${preview.slot}` : ''}`}
+          // Peserta hanya melihat versi terkini; endpoint unduhnya menerima id dokumen, bukan id versi.
+          versions={[{ id: preview.id, version_no: preview.current_version.version_no, mime_type: preview.current_version.mime_type, size: preview.current_version.size, scan_status: preview.current_version.scan_status, created_at: preview.current_version.uploaded_at }]}
+          initialVersionId={preview.id}
+          loadUrl={() => pmbApplicant.documentUrl(applicationId, preview.id)}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </Card>
   )
 }

@@ -103,7 +103,7 @@ export interface ApplicantDocument {
   status: string
   instructions: string | null
   locked: boolean
-  current_version: { version_no: number; scan_status: string | null; original_name: string | null; uploaded_at: string | null } | null
+  current_version: { version_no: number; mime_type: string | null; size: number | null; scan_status: string | null; original_name: string | null; uploaded_at: string | null } | null
   versions_count: number
   last_review: { decision: string; reason_code: string | null; note: string | null } | null
 }

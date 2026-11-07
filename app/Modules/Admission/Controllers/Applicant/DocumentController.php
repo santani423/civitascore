@@ -38,7 +38,7 @@ class DocumentController extends ApplicantController
                     'stage' => $d->stage->value, 'slot' => $d->slot, 'is_mandatory' => $d->is_mandatory, 'status' => $d->status->value,
                     'instructions' => $requirements->get($d->document_type_id)?->instructions,
                     'locked' => $d->locked_at !== null,
-                    'current_version' => $d->currentVersion ? ['version_no' => $d->currentVersion->version_no, 'scan_status' => $d->currentVersion->fileUpload?->status?->value, 'original_name' => $d->currentVersion->fileUpload?->original_name, 'uploaded_at' => $d->currentVersion->created_at?->toIso8601String()] : null,
+                    'current_version' => $d->currentVersion ? ['version_no' => $d->currentVersion->version_no, 'mime_type' => $d->currentVersion->fileUpload?->mime_type, 'size' => $d->currentVersion->fileUpload?->size_bytes, 'scan_status' => $d->currentVersion->fileUpload?->status?->value, 'original_name' => $d->currentVersion->fileUpload?->original_name, 'uploaded_at' => $d->currentVersion->created_at?->toIso8601String()] : null,
                     'versions_count' => $d->versions->count(),
                     'last_review' => $lastReview ? ['decision' => $lastReview->decision->value, 'reason_code' => $masked ? null : $lastReview->reason_code, 'note' => $masked ? DocumentReasonCodes::MASKED_MESSAGE : $lastReview->note_for_applicant] : null,
                 ];

@@ -38,6 +38,10 @@ it('runs the document revision loop until verification', function (): void {
     expect($photo['status'])->toBe('revision_requested');
     pmbOk($w->asApplicant($token, 'POST', "applications/{$app}/documents/{$photo['id']}/versions", ['file' => UploadedFile::fake()->image('foto2.jpg', 450, 600)]));
 
+    // Pratinjau di portal memakai mime_type untuk memilih gambar atau PDF.
+    $photoNow = collect(pmbOk($w->asApplicant($token, 'GET', "applications/{$app}/documents"))->json('data'))->firstWhere('document_type.code', 'PHOTO');
+    expect($photoNow['current_version']['mime_type'])->toBe('image/jpeg');
+
     $lock = pmbOk($w->asApplicant($token, 'GET', "applications/{$app}"))->json('data.lock_version');
     pmbOk($w->asApplicant($token, 'POST', "applications/{$app}/submit", ['declarations' => [], 'lock_version' => $lock], ['Idempotency-Key' => (string) Str::uuid()]));
 
